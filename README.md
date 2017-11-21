@@ -9,7 +9,8 @@ By adding annotations to your class, you can easily make `beaverdi` generate a b
 - A service with injected dependencies
 
 ```swift
-final class MyService: Injectable {
+// beaverdi.parentResolver = MainDependencyResolver.self
+final class MyService {
   let dependencies: DependencyResolver
 
   // beaverdi.inject(from: .self(scope: .graph))
@@ -24,7 +25,7 @@ final class MyService: Injectable {
   // beaverdi.inject(from: .parent)
   // otherService: MyOtherServiceProtocol
 
-  init(_ dependencies: DependencyContainer) {
+  init(_ dependencies: DependencyResolver) {
     self.dependencies = dependencies
   }
   
@@ -45,6 +46,10 @@ final class MyService: Injectable {
 ```swift
 
 final class MyServiceDependencies: DependencyResolver {
+  init(_ parent: MainDependencyResolver) {
+    super.init(parent)
+  }
+
   override func registerDependencies(in store: DependencyStore) {
     store.register(APIProtocol.self, scope: .graph, builder: { _ in
       return API()
@@ -65,12 +70,16 @@ extension MyService {
     return dependencies.resolve(APIProtocol.self)
   }
   
-  var session: SessionProtocol? {
-    return dependencies.resolve(SessionProtocol.self)
+  var router: RouterProtocol {
+    return dependencies.resolve(RouterProtocol.self)
   }
   
-  var delegate: MyServiceDelegate {
-    return dependencies.resolve(MyServiceDelegate.self)
+  var session: SessionProtocol? {
+    return dependencies.resolve(Optional<SessionProtocol>.self)
+  }
+  
+  var otherService: MyOtherServiceProtocol {
+    return dependencies.resolve(MyOtherServiceProtocol.self)
   }
 }
 ```
