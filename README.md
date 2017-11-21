@@ -2,7 +2,7 @@
 
 A dependency injection system based on meta programmation and annotations
 
-# Annotate your classes
+# How does it work?
 
 By adding annotations to your class, you can easily make `beaverdi` generate a bunch of injected dependencies for you.
 
