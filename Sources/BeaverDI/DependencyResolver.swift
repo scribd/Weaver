@@ -1,6 +1,6 @@
 //
 //  DependencyResolver.swift
-//  BeaverDIPackageDescription
+//  BeaverDI
 //
 //  Created by Théophane Rupin on 2/20/18.
 //

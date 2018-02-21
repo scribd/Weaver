@@ -24,3 +24,31 @@ final class InstanceCacheMock: InstanceCaching {
         return builder()
     }
 }
+
+final class BuilderStoreMock: BuilderStoring {
+
+    private(set) var getCallCount = 0
+    
+    private(set) var setCallCount = 0
+    
+    private(set) var key: InstanceKey?
+    
+    private(set) var scope: Scope?
+
+    private(set) var builder: Any?
+    
+    weak var parent: BuilderStoring?
+
+    func get<B>(for key: InstanceKey, isCalledFromAChild: Bool) -> B? {
+        self.key = key
+        getCallCount += 1
+        return builder as? B
+    }
+    
+    func set<B>(builder: B, scope: Scope, for key: InstanceKey) {
+        self.builder = builder
+        self.scope = scope
+        self.key = key
+        setCallCount += 1
+    }
+}

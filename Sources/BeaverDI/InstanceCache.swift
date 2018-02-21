@@ -17,7 +17,7 @@ protocol InstanceCaching {
 // MARK: - Implementation
 
 final class InstanceCache: InstanceCaching {
-
+    
     private var instances: [InstanceKey: InstanceBox] = [:]
     
     /// Caches an instance and returns it.
@@ -66,12 +66,15 @@ private extension InstanceCache {
         private weak var weakInstance: AnyObject?
         private var strongInstance: AnyObject?
         
+        let scope: Scope
+        
         init(_ instance: AnyObject, scope: Scope) {
             if scope.isWeak {
                 weakInstance = instance
             } else {
                 strongInstance = instance
             }
+            self.scope = scope
         }
         
         var instance: AnyObject? {

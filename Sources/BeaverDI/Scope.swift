@@ -1,6 +1,6 @@
 //
 //  Scope.swift
-//  BeaverDIPackageDescription
+//  BeaverDI
 //
 //  Created by Théophane Rupin on 2/20/18.
 //
@@ -12,11 +12,13 @@ import Foundation
 /// Possible cases:
 /// - transient: the store always creates a new instance when the type is resolved.
 /// - graph: a new instance is created when resolved the first time and then lives for the time the store object lives.
-/// - weak: a new instance is created when resolved the first time and then lives for the time its strong references are living.
+/// - weak: a new instance is created when resolved the first time and then lives for the time its strong references are living and shared with children.
+/// - container: like graph, but shared with children.
 public enum Scope {
     case transient
-    case weak
     case graph
+    case weak
+    case container
 }
 
 // MARK: Rules
@@ -28,7 +30,8 @@ extension Scope {
         case .weak:
             return true
         case .transient,
-             .graph:
+             .graph,
+             .container:
             return false
         }
     }
@@ -38,7 +41,19 @@ extension Scope {
         case .transient:
             return true
         case .graph,
-             .weak:
+             .weak,
+             .container:
+            return false
+        }
+    }
+    
+    var allowsAccessFromChildren: Bool {
+        switch self {
+        case .weak,
+             .container:
+            return true
+        case .transient,
+             .graph:
             return false
         }
     }
