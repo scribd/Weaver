@@ -12,7 +12,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "BeaverDI"),
-        .testTarget(name: "BeaverDITests"),
+        .testTarget(name: "BeaverDITests", dependencies: ["BeaverDI"]),
         .target(name: "BeaverDICodeGen", dependencies: ["SourceKittenFramework"]),
         .testTarget(name: "BeaverDICodeGenTests"),
         .target(name: "BeaverDICommand", dependencies: ["Commander", "BeaverDICodeGen"])

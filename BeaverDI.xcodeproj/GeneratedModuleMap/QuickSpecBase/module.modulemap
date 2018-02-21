@@ -1,0 +1,4 @@
+module QuickSpecBase {
+    umbrella header "/Users/theophanerupin/Projects/Beaver/BeaverDI/.build/checkouts/Quick.git-2733117082000052066/Sources/QuickSpecBase/include/QuickSpecBase.h"
+    export *
+}
