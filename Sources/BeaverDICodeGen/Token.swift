@@ -10,11 +10,19 @@ import SourceKittenFramework
 
 enum TokenType {
     
+    enum ScopeType: String {
+        case transient = "transient"
+        case graph = "graph"
+        case weak = "weak"
+        case container = "container"
+        case parent = "parent"
+    }
+
     enum AnnotationType {
         case parentResolver(type: String)
         case register(name: String, type: String)
         case resolve(String)
-        case scope(name: String, scope: String)
+        case scope(name: String, scope: ScopeType)
     }
     
     case type
@@ -36,6 +44,7 @@ extension TokenType.AnnotationType {
     
     enum Error: Swift.Error {
         case invalidAnnotation(String)
+        case invalidScope(String)
     }
     
     init?(stringValue: String) throws {
@@ -66,24 +75,29 @@ extension TokenType.AnnotationType {
 private extension TokenType.AnnotationType {
     
     static func makeParentResolverAnnotation(from string: String) throws -> TokenType.AnnotationType? {
-        guard let matches = try NSRegularExpression(pattern: "^parent *= *(\\w+)").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: "^parent\\s*=\\s*(\\w+)").matches(in: string) else {
             return nil
         }
         return .parentResolver(type: matches[0])
     }
     
     static func makeRegisterAnnotation(from string: String) throws -> TokenType.AnnotationType? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+) *-> *(\\w+)").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*->\\s*(\\w+\\??)").matches(in: string) else {
             return nil
         }
         return .register(name: matches[0], type: matches[1])
     }
     
     static func makeScopeAnnotation(from string: String) throws -> TokenType.AnnotationType? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope *= *\\.(\\w+)").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)").matches(in: string) else {
             return nil
         }
-        return .scope(name: matches[0], scope: matches[1])
+
+        guard let scope = TokenType.ScopeType(rawValue: matches[1]) else {
+            throw Error.invalidScope(matches[1])
+        }
+        
+        return .scope(name: matches[0], scope: scope)
     }
 }
 
@@ -105,3 +119,57 @@ private extension NSRegularExpression {
     }
 }
 
+// MARK: - Equatable
+
+extension Token: Equatable {
+    static func ==(lhs: Token, rhs: Token) -> Bool {
+        return lhs.length == rhs.length &&
+            lhs.line == rhs.line &&
+            lhs.offset == rhs.offset &&
+            lhs.type == rhs.type
+    }
+}
+
+extension TokenType: Equatable {
+    static func ==(lhs: TokenType, rhs: TokenType) -> Bool {
+        switch (lhs, rhs) {
+        case (.type, .type),
+             (.endOfType, .endOfType),
+             (.star, .star):
+            return true
+            
+        case (.annotation(let leftAnnotation), .annotation(let rightAnnotation)):
+            return leftAnnotation == rightAnnotation
+
+        case (.type, _),
+             (.endOfType, _),
+             (.star, _),
+             (.annotation, _):
+            return false
+        }
+    }
+}
+
+extension TokenType.AnnotationType: Equatable {
+    static func ==(lhs: TokenType.AnnotationType, rhs: TokenType.AnnotationType) -> Bool {
+        switch (lhs, rhs) {
+        case (.parentResolver(let leftName), .parentResolver(let rightName)):
+            return leftName == rightName
+
+        case (.register(let leftName, let leftType), .register(let rightName, let rightType)):
+            return leftName == rightName && leftType == rightType
+        
+        case (.resolve(let leftName), .resolve(let rightName)):
+            return leftName == rightName
+        
+        case (.scope(let leftName, let leftScope), .scope(let rightName, let rightScope)):
+            return leftName == rightName && leftScope == rightScope
+        
+        case (.parentResolver, _),
+             (.register, _),
+             (.resolve, _),
+             (.scope, _):
+            return false
+        }
+    }
+}
