@@ -25,10 +25,11 @@ enum TokenType {
         case scope(name: String, scope: ScopeType)
     }
     
-    case type
-    case endOfType
+    case injectableType
+    case endOfInjectableType
     case annotation(AnnotationType)
-    case star
+    case anyDeclaration
+    case endOfAnyDeclaration
 }
 
 struct Token {
@@ -133,18 +134,20 @@ extension Token: Equatable {
 extension TokenType: Equatable {
     static func ==(lhs: TokenType, rhs: TokenType) -> Bool {
         switch (lhs, rhs) {
-        case (.type, .type),
-             (.endOfType, .endOfType),
-             (.star, .star):
+        case (.injectableType, .injectableType),
+             (.endOfInjectableType, .endOfInjectableType),
+             (.anyDeclaration, .anyDeclaration),
+             (.endOfAnyDeclaration, .endOfAnyDeclaration):
             return true
             
         case (.annotation(let leftAnnotation), .annotation(let rightAnnotation)):
             return leftAnnotation == rightAnnotation
 
-        case (.type, _),
-             (.endOfType, _),
-             (.star, _),
-             (.annotation, _):
+        case (.injectableType, _),
+             (.endOfInjectableType, _),
+             (.anyDeclaration, _),
+             (.annotation, _),
+             (.endOfAnyDeclaration, _):
             return false
         }
     }

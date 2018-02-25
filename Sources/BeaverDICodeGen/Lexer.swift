@@ -59,17 +59,12 @@ private extension Lexer {
     func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) -> [Token] {
         var tokens = [Token]()
 
-        let typeDeclaration: SourceKitTypeDeclaration? = {
-            guard let data = try? JSONSerialization.data(withJSONObject: sourceKitAST, options: .prettyPrinted) else {
-                return nil
-            }
-            return try? JSONDecoder().decode(SourceKitTypeDeclaration.self, from: data)
-        }()
+        let typeDeclaration = SourceKitDeclaration(sourceKitAST)
         
         if let typeDeclaration = typeDeclaration {
             var startToken = typeDeclaration.toToken
 
-            if let nextLine = findNextLine(after: line, containing: startToken.offset) {
+            if let nextLine = findNextLine(after: line, containing: Int(startToken.offset)) {
                 line = nextLine
                 startToken.line = line
             } else {
@@ -79,26 +74,23 @@ private extension Lexer {
             tokens += [startToken]
         }
         
-        if let children = sourceKitAST[SwiftDocKey.substructure.stringValue] as? [[String: SourceKitRepresentable]] {
+        if let children = sourceKitAST[SwiftDocKey.substructure.rawValue] as? [[String: SourceKitRepresentable]] {
             for child in children {
                 tokens += tokenize(from: child, at: &line)
             }
         }
 
-        if let typeDeclaration = typeDeclaration {
-            var endToken = Token(type: .endOfType,
-                                 offset: typeDeclaration.offset + typeDeclaration.length - 1,
-                                 length: 1,
-                                 line: -1)
+        if let typeDeclaration = typeDeclaration, let endToken = typeDeclaration.endToken {
+            var mutableEndToken = endToken
             
             if let nextLine = findNextLine(after: line, containing: endToken.offset) {
                 line = nextLine
-                endToken.line = line
+                mutableEndToken.line = line
             } else {
                 return tokens
             }
             
-            tokens += [endToken]
+            tokens += [mutableEndToken]
         }
 
         return tokens

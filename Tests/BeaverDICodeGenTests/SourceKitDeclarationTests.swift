@@ -1,5 +1,5 @@
 //
-//  SourceKitTypeDeclarationTests.swift
+//  SourceKitDeclarationTests.swift
 //  BeaverDICodeGenTests
 //
 //  Created by Théophane Rupin on 2/22/18.
@@ -7,10 +7,11 @@
 
 import Foundation
 import XCTest
+import SourceKittenFramework
 
 @testable import BeaverDICodeGen
 
-final class SourceKitTypeDeclarationTests: XCTestCase {
+final class SourceKitDeclarationTests: XCTestCase {
     
     func testModelShouldBeValid() {
 
@@ -35,12 +36,14 @@ final class SourceKitTypeDeclarationTests: XCTestCase {
 }
 """
         let data = json.data(using: .utf8)!
-        let model = try? JSONDecoder().decode(SourceKitTypeDeclaration.self, from: data)
+        let jsonObject = (try! JSONSerialization.jsonObject(with: data)) as! [String: Any]
+        let model = SourceKitDeclaration(jsonObject)
         
         XCTAssertNotNil(model)
         XCTAssertEqual(model?.length, 725)
         XCTAssertEqual(model?.offset, 64)
         XCTAssertEqual(model?.name, "MyService")
+        XCTAssertEqual(model?.isInjectable, true)
     }
     
     func testModelShouldBeInvalidWhenKindIsNotSupported() {
@@ -55,7 +58,7 @@ final class SourceKitTypeDeclarationTests: XCTestCase {
   ],
   "key.bodylength" : 707,
   "key.bodyoffset" : 81,
-  "key.kind" : "unknown_kind",
+  "key.kind" : "source.lang.swift.decl.enum",
   "key.length" : 725,
   "key.name" : "MyService",
   "key.namelength" : 9,
@@ -67,10 +70,10 @@ final class SourceKitTypeDeclarationTests: XCTestCase {
 """
         
         let data = json.data(using: .utf8)!
-        do {
-            _ = try JSONDecoder().decode(SourceKitTypeDeclaration.self, from: data)
-        } catch {
-            XCTAssertEqual(error as? SourceKitTypeDeclaration.Error, .unsupportedKind)
-        }
+        let jsonObject = (try! JSONSerialization.jsonObject(with: data)) as! [String: Any]
+        let model = SourceKitDeclaration(jsonObject)
+
+        XCTAssertNotNil(model)
+        XCTAssertEqual(model?.isInjectable, false)
     }
 }

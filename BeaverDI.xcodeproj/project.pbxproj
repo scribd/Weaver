@@ -34,7 +34,7 @@
 		OBJ_168 /* Mocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* Mocks.swift */; };
 		OBJ_170 /* BeaverDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "BeaverDI::BeaverDI::Product" /* BeaverDI.framework */; };
 		OBJ_178 /* LexerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* LexerTests.swift */; };
-		OBJ_179 /* SourceKitTypeDeclarationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* SourceKitTypeDeclarationTests.swift */; };
+		OBJ_179 /* SourceKitDeclarationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* SourceKitDeclarationTests.swift */; };
 		OBJ_181 /* BeaverDICodeGen.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "BeaverDI::BeaverDICodeGen::Product" /* BeaverDICodeGen.framework */; };
 		OBJ_182 /* SourceKittenFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "SourceKitten::SourceKittenFramework::Product" /* SourceKittenFramework.framework */; };
 		OBJ_183 /* Yams.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Yams::Yams::Product" /* Yams.framework */; };
@@ -65,7 +65,7 @@
 		OBJ_240 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* Error.swift */; };
 		OBJ_241 /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_44 /* Group.swift */; };
 		OBJ_247 /* Lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* Lexer.swift */; };
-		OBJ_248 /* SourceKitTypeDeclaration.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* SourceKitTypeDeclaration.swift */; };
+		OBJ_248 /* SourceKitDeclaration.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* SourceKitDeclaration.swift */; };
 		OBJ_249 /* Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Token.swift */; };
 		OBJ_251 /* SourceKittenFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "SourceKitten::SourceKittenFramework::Product" /* SourceKittenFramework.framework */; };
 		OBJ_252 /* Yams.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Yams::Yams::Product" /* Yams.framework */; };
@@ -298,7 +298,7 @@
 		"BeaverDI::BeaverDICommand::Product" /* BeaverDICommand */ = {isa = PBXFileReference; lastKnownFileType = text; path = BeaverDICommand; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDITests::Product" /* BeaverDITests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = BeaverDITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		OBJ_10 /* SourceKitTypeDeclaration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceKitTypeDeclaration.swift; sourceTree = "<group>"; };
+		OBJ_10 /* SourceKitDeclaration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceKitDeclaration.swift; sourceTree = "<group>"; };
 		OBJ_100 /* Emitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Emitter.swift; sourceTree = "<group>"; };
 		OBJ_101 /* Encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoder.swift; sourceTree = "<group>"; };
 		OBJ_102 /* Mark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mark.swift; sourceTree = "<group>"; };
@@ -327,7 +327,7 @@
 		OBJ_21 /* InstanceKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceKey.swift; sourceTree = "<group>"; };
 		OBJ_22 /* Scope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scope.swift; sourceTree = "<group>"; };
 		OBJ_25 /* LexerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LexerTests.swift; sourceTree = "<group>"; };
-		OBJ_26 /* SourceKitTypeDeclarationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceKitTypeDeclarationTests.swift; sourceTree = "<group>"; };
+		OBJ_26 /* SourceKitDeclarationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceKitDeclarationTests.swift; sourceTree = "<group>"; };
 		OBJ_28 /* BuilderStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderStoreTests.swift; sourceTree = "<group>"; };
 		OBJ_29 /* DependencyContainerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyContainerTests.swift; sourceTree = "<group>"; };
 		OBJ_30 /* InstanceCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceCacheTests.swift; sourceTree = "<group>"; };
@@ -557,7 +557,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_25 /* LexerTests.swift */,
-				OBJ_26 /* SourceKitTypeDeclarationTests.swift */,
+				OBJ_26 /* SourceKitDeclarationTests.swift */,
 			);
 			name = BeaverDICodeGenTests;
 			path = Tests/BeaverDICodeGenTests;
@@ -691,7 +691,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_9 /* Lexer.swift */,
-				OBJ_10 /* SourceKitTypeDeclaration.swift */,
+				OBJ_10 /* SourceKitDeclaration.swift */,
 				OBJ_11 /* Token.swift */,
 			);
 			name = BeaverDICodeGen;
@@ -1123,7 +1123,7 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_178 /* LexerTests.swift in Sources */,
-				OBJ_179 /* SourceKitTypeDeclarationTests.swift in Sources */,
+				OBJ_179 /* SourceKitDeclarationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1171,7 +1171,7 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_247 /* Lexer.swift in Sources */,
-				OBJ_248 /* SourceKitTypeDeclaration.swift in Sources */,
+				OBJ_248 /* SourceKitDeclaration.swift in Sources */,
 				OBJ_249 /* Token.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
