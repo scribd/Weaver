@@ -42,7 +42,7 @@ final class BuilderStoreTests: XCTestCase {
         childBuilderStore.parent = parentBuilderStore
     }
     
-    // MARK: - Set / Get through hierarchie
+    // MARK: - Set / Get through hierarchy
     
     func testSetThenGetShouldRetrieveTheBuilderRegisteredInTheChildFirst() {
         
