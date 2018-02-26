@@ -53,7 +53,7 @@ extension TokenType.AnnotationType {
         let chars = CharacterSet(charactersIn: "/").union(.whitespaces)
         let annotation = stringValue.trimmingCharacters(in: chars)
         
-        let bodyRegex = try NSRegularExpression(pattern: "^beaverdi *: *(.*)")
+        let bodyRegex = try NSRegularExpression(pattern: "^beaverdi\\s*:\\s*(.*)")
         guard let body = bodyRegex.matches(in: annotation)?.first else {
             return nil
         }
