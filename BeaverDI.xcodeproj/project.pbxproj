@@ -22,6 +22,9 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		193FD6D62047157C00F841B1 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193FD6D52047157C00F841B1 /* Parser.swift */; };
+		193FD6D82047169E00F841B1 /* Expr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193FD6D72047169E00F841B1 /* Expr.swift */; };
+		193FD6EA2047C8F700F841B1 /* ParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193FD6E92047C8F700F841B1 /* ParserTests.swift */; };
 		OBJ_134 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_140 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Package.swift */; };
 		OBJ_146 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_83 /* Package.swift */; };
@@ -292,12 +295,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		"BeaverDI::BeaverDI::Product" /* BeaverDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = BeaverDI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		193FD6D52047157C00F841B1 /* Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		193FD6D72047169E00F841B1 /* Expr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expr.swift; sourceTree = "<group>"; };
+		193FD6E92047C8F700F841B1 /* ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParserTests.swift; sourceTree = "<group>"; };
+		"BeaverDI::BeaverDI::Product" /* BeaverDI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = BeaverDI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDICodeGen::Product" /* BeaverDICodeGen.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = BeaverDICodeGen.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDICodeGenTests::Product" /* BeaverDICodeGenTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = BeaverDICodeGenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDICommand::Product" /* BeaverDICommand */ = {isa = PBXFileReference; lastKnownFileType = text; path = BeaverDICommand; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDITests::Product" /* BeaverDITests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = BeaverDITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* SourceKitDeclaration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceKitDeclaration.swift; sourceTree = "<group>"; };
 		OBJ_100 /* Emitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Emitter.swift; sourceTree = "<group>"; };
 		OBJ_101 /* Encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoder.swift; sourceTree = "<group>"; };
@@ -557,6 +563,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_25 /* LexerTests.swift */,
+				193FD6E92047C8F700F841B1 /* ParserTests.swift */,
 				OBJ_26 /* SourceKitDeclarationTests.swift */,
 			);
 			name = BeaverDICodeGenTests;
@@ -665,7 +672,7 @@
 			path = ".build/checkouts/SourceKitten.git-6484296299232452758/Source/SourceKittenFramework";
 			sourceTree = SOURCE_ROOT;
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -674,7 +681,6 @@
 				OBJ_33 /* Dependencies */,
 				OBJ_118 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_7 /* Sources */ = {
@@ -693,6 +699,8 @@
 				OBJ_9 /* Lexer.swift */,
 				OBJ_10 /* SourceKitDeclaration.swift */,
 				OBJ_11 /* Token.swift */,
+				193FD6D52047157C00F841B1 /* Parser.swift */,
+				193FD6D72047169E00F841B1 /* Expr.swift */,
 			);
 			name = BeaverDICodeGen;
 			path = Sources/BeaverDICodeGen;
@@ -1040,7 +1048,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_118 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1124,6 +1132,7 @@
 			files = (
 				OBJ_178 /* LexerTests.swift in Sources */,
 				OBJ_179 /* SourceKitDeclarationTests.swift in Sources */,
+				193FD6EA2047C8F700F841B1 /* ParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1170,6 +1179,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				193FD6D62047157C00F841B1 /* Parser.swift in Sources */,
+				193FD6D82047169E00F841B1 /* Expr.swift in Sources */,
 				OBJ_247 /* Lexer.swift in Sources */,
 				OBJ_248 /* SourceKitDeclaration.swift in Sources */,
 				OBJ_249 /* Token.swift in Sources */,

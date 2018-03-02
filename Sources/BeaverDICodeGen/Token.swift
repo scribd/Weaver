@@ -8,7 +8,74 @@
 import Foundation
 import SourceKittenFramework
 
-enum TokenType {
+// MARK: - Token
+
+protocol AnyToken {
+    var offset: Int { get }
+    var length: Int { get }
+    var line: Int { get set }
+}
+
+struct Token<T: TokenType>: AnyToken {
+    let type: T
+    let offset: Int
+    let length: Int
+    var line: Int
+}
+
+protocol TokenType: Equatable, CustomStringConvertible {
+    static func create(_ string: String) throws -> Self?
+}
+
+enum TokenError: Swift.Error {
+    case invalidAnnotation(String)
+    case invalidScope(String)
+}
+
+// MARK: - Token Types
+
+struct ParentResolverAnnotation: TokenType {
+    let type: String
+    
+    static func create(_ string: String) throws -> ParentResolverAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^parent\\s*=\\s*(\\w+)").matches(in: string) else {
+            return nil
+        }
+        return ParentResolverAnnotation(type: matches[0])
+    }
+    
+    static func ==(lhs: ParentResolverAnnotation, rhs: ParentResolverAnnotation) -> Bool {
+        return lhs.type == rhs.type
+    }
+    
+    var description: String {
+        return "parent = \(type)"
+    }
+}
+
+struct RegisterAnnotation: TokenType {
+    let name: String
+    let type: String
+    
+    static func create(_ string: String) throws -> RegisterAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*->\\s*(\\w+\\??)").matches(in: string) else {
+            return nil
+        }
+        return RegisterAnnotation(name: matches[0], type: matches[1])
+    }
+    
+    static func ==(lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
+        guard lhs.name == rhs.name else { return false }
+        guard lhs.type == rhs.type else { return false }
+        return true
+    }
+    
+    var description: String {
+        return "\(name) -> \(type)"
+    }
+}
+
+struct ScopeAnnotation: TokenType {
     
     enum ScopeType: String {
         case transient = "transient"
@@ -17,92 +84,110 @@ enum TokenType {
         case container = "container"
         case parent = "parent"
     }
-
-    enum AnnotationType {
-        case parentResolver(type: String)
-        case register(name: String, type: String)
-        case resolve(String)
-        case scope(name: String, scope: ScopeType)
+    
+    let name: String
+    let scope: ScopeType
+    
+    static func create(_ string: String) throws -> ScopeAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)").matches(in: string) else {
+            return nil
+        }
+        
+        guard let scope = ScopeType(rawValue: matches[1]) else {
+            throw TokenError.invalidScope(matches[1])
+        }
+        
+        return ScopeAnnotation(name: matches[0], scope: scope)
     }
     
-    case injectableType
-    case endOfInjectableType
-    case annotation(AnnotationType)
-    case anyDeclaration
-    case endOfAnyDeclaration
-}
-
-struct Token {
-    let type: TokenType
-    let offset: Int
-    let length: Int
-    var line: Int
-}
-
-// MARK: - Annotations
-
-extension TokenType.AnnotationType {
-    
-    enum Error: Swift.Error {
-        case invalidAnnotation(String)
-        case invalidScope(String)
+    static func ==(lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
+        guard lhs.name == rhs.name else { return false }
+        guard lhs.scope == rhs.scope else { return false }
+        return true
     }
     
-    init?(stringValue: String) throws {
+    var description: String {
+        return "\(name).scope = \(scope)"
+    }
+}
+
+struct InjectableType: TokenType {
+    let description = "{"
+}
+
+struct EndOfInjectableType: TokenType {
+    let description = "}"
+}
+
+struct AnyDeclaration: TokenType {
+    let description = "{"
+}
+
+struct EndOfAnyDeclaration: TokenType {
+    let description = "}"
+}
+
+extension Token: Equatable, CustomStringConvertible {
+    static func ==(lhs: Token<T>, rhs: Token<T>) -> Bool {
+        guard lhs.type == rhs.type else { return false }
+        guard lhs.offset == rhs.offset else { return false }
+        guard lhs.length == rhs.length else { return false }
+        guard lhs.line == rhs.line else { return false }
+        return true
+    }
+    
+    var description: String {
+        return "\(type) - \(offset)[\(length)] - at line: \(line)"
+    }
+}
+
+// MARK: - Annotation Builder
+
+enum TokenBuilder {
+
+    static func makeAnnotationToken(string: String,
+                                    offset: Int,
+                                    length: Int,
+                                    line: Int) throws -> AnyToken? {
         
         let chars = CharacterSet(charactersIn: "/").union(.whitespaces)
-        let annotation = stringValue.trimmingCharacters(in: chars)
-        
+        let annotation = string.trimmingCharacters(in: chars)
+
         let bodyRegex = try NSRegularExpression(pattern: "^beaverdi\\s*:\\s*(.*)")
         guard let body = bodyRegex.matches(in: annotation)?.first else {
             return nil
         }
-        
-        if let value = try (
-            TokenType.AnnotationType.makeParentResolverAnnotation(from: body) ??
-            TokenType.AnnotationType.makeRegisterAnnotation(from: body) ??
-            TokenType.AnnotationType.makeScopeAnnotation(from: body)
-        ) {
-            self = value
-            return
+
+        func makeToken<T: TokenType>(_ type: T) -> AnyToken {
+            return Token(type: type, offset: offset, length: length, line: line)
         }
         
-        throw Error.invalidAnnotation(annotation)
+        if let type = try ParentResolverAnnotation.create(body) {
+            return makeToken(type)
+        }
+        if let type = try RegisterAnnotation.create(body) {
+            return makeToken(type)
+        }
+        if let type = try ScopeAnnotation.create(body) {
+            return makeToken(type)
+        }
+        throw TokenError.invalidAnnotation(annotation)
     }
 }
 
-// MARK: - Builders
+// MARK: - Default implementations
 
-private extension TokenType.AnnotationType {
-    
-    static func makeParentResolverAnnotation(from string: String) throws -> TokenType.AnnotationType? {
-        guard let matches = try NSRegularExpression(pattern: "^parent\\s*=\\s*(\\w+)").matches(in: string) else {
-            return nil
-        }
-        return .parentResolver(type: matches[0])
+extension TokenType {
+    static func create(_ string: String) throws -> Self? {
+        return nil
     }
     
-    static func makeRegisterAnnotation(from string: String) throws -> TokenType.AnnotationType? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*->\\s*(\\w+\\??)").matches(in: string) else {
-            return nil
-        }
-        return .register(name: matches[0], type: matches[1])
-    }
-    
-    static func makeScopeAnnotation(from string: String) throws -> TokenType.AnnotationType? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)").matches(in: string) else {
-            return nil
-        }
-
-        guard let scope = TokenType.ScopeType(rawValue: matches[1]) else {
-            throw Error.invalidScope(matches[1])
-        }
-        
-        return .scope(name: matches[0], scope: scope)
+    static func ==(lhs: Self, rhs: Self) -> Bool {
+        return true
     }
 }
 
-// MARK: Regex Util
+// MARK: - Regex Util
 
 private extension NSRegularExpression {
     
@@ -120,59 +205,4 @@ private extension NSRegularExpression {
     }
 }
 
-// MARK: - Equatable
 
-extension Token: Equatable {
-    static func ==(lhs: Token, rhs: Token) -> Bool {
-        return lhs.length == rhs.length &&
-            lhs.line == rhs.line &&
-            lhs.offset == rhs.offset &&
-            lhs.type == rhs.type
-    }
-}
-
-extension TokenType: Equatable {
-    static func ==(lhs: TokenType, rhs: TokenType) -> Bool {
-        switch (lhs, rhs) {
-        case (.injectableType, .injectableType),
-             (.endOfInjectableType, .endOfInjectableType),
-             (.anyDeclaration, .anyDeclaration),
-             (.endOfAnyDeclaration, .endOfAnyDeclaration):
-            return true
-            
-        case (.annotation(let leftAnnotation), .annotation(let rightAnnotation)):
-            return leftAnnotation == rightAnnotation
-
-        case (.injectableType, _),
-             (.endOfInjectableType, _),
-             (.anyDeclaration, _),
-             (.annotation, _),
-             (.endOfAnyDeclaration, _):
-            return false
-        }
-    }
-}
-
-extension TokenType.AnnotationType: Equatable {
-    static func ==(lhs: TokenType.AnnotationType, rhs: TokenType.AnnotationType) -> Bool {
-        switch (lhs, rhs) {
-        case (.parentResolver(let leftName), .parentResolver(let rightName)):
-            return leftName == rightName
-
-        case (.register(let leftName, let leftType), .register(let rightName, let rightType)):
-            return leftName == rightName && leftType == rightType
-        
-        case (.resolve(let leftName), .resolve(let rightName)):
-            return leftName == rightName
-        
-        case (.scope(let leftName, let leftScope), .scope(let rightName, let rightScope)):
-            return leftName == rightName && leftScope == rightScope
-        
-        case (.parentResolver, _),
-             (.register, _),
-             (.resolve, _),
-             (.scope, _):
-            return false
-        }
-    }
-}

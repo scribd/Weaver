@@ -12,7 +12,7 @@ import SourceKittenFramework
 public final class Lexer {
     
     enum Error: Swift.Error {
-        case invalidAnnotation(line: Int, underlyingError: TokenType.AnnotationType.Error)
+        case invalidAnnotation(line: Int, underlyingError: TokenError)
     }
     
     private let file: File
@@ -24,7 +24,7 @@ public final class Lexer {
     }
     
     /// Generates a sorted list of tokens
-    func tokenize() throws -> [Token] {
+    func tokenize() throws -> [AnyToken] {
         
         let sourceKitAST = try Structure(file: file).dictionary
         let sourceKitTokens = try SyntaxMap(file: file).tokens
@@ -40,7 +40,7 @@ public final class Lexer {
 
 private extension Lexer {
     
-    func tokenSortFunction(_ lhs: Token, _ rhs: Token) -> Bool {
+    func tokenSortFunction(_ lhs: AnyToken, _ rhs: AnyToken) -> Bool {
         return lhs.offset < rhs.offset
     }
     
@@ -56,8 +56,8 @@ private extension Lexer {
     }
     
     /// Tokenize declarations from the SourceKitAST
-    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) -> [Token] {
-        var tokens = [Token]()
+    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) -> [AnyToken] {
+        var tokens = [AnyToken]()
 
         let typeDeclaration = SourceKitDeclaration(sourceKitAST)
         
@@ -97,7 +97,7 @@ private extension Lexer {
     }
     
     /// Tokenize annotations from the SourceKit SyntaxTokens.
-    func tokenize(from sourceKitTokens: [SyntaxToken]) throws -> [Token] {
+    func tokenize(from sourceKitTokens: [SyntaxToken]) throws -> [AnyToken] {
 
         var currentLine = lines.startIndex
         return try sourceKitTokens.flatMap { syntaxToken in
@@ -114,14 +114,14 @@ private extension Lexer {
             let content = lines[currentLine].content
 
             do {
-                guard let annotationType = try TokenType.AnnotationType(stringValue: content) else {
+                guard let token = try TokenBuilder.makeAnnotationToken(string: content,
+                                                                       offset: syntaxToken.offset,
+                                                                       length: syntaxToken.length,
+                                                                       line: currentLine) else {
                     return nil
                 }
-                return Token(type: .annotation(annotationType),
-                             offset: syntaxToken.offset,
-                             length: syntaxToken.length,
-                             line: currentLine)
-            } catch let error as TokenType.AnnotationType.Error {
+                return token
+            } catch let error as TokenError {
                 throw Error.invalidAnnotation(line: currentLine, underlyingError: error)
             }
         }
