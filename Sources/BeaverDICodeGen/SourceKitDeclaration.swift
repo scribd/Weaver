@@ -54,24 +54,24 @@ struct SourceKitDeclaration {
 
 extension SourceKitDeclaration {
     
-    var toToken: AnyToken {
+    var toToken: AnyTokenBox {
         if isInjectable {
-            return Token(type: InjectableType(name: name), offset: offset, length: length, line: -1)
+            return TokenBox(value: InjectableType(name: name), offset: offset, length: length, line: -1)
         } else {
-            return Token(type: AnyDeclaration(), offset: offset, length: length, line: -1)
+            return TokenBox(value: AnyDeclaration(), offset: offset, length: length, line: -1)
         }
     }
     
-    var endToken: AnyToken? {
+    var endToken: AnyTokenBox? {
         guard hasBody == true else {
             return nil
         }
         
         let offset = self.offset + length - 1
         if isInjectable {
-            return Token(type: EndOfInjectableType(), offset: offset, length: 1, line: -1)
+            return TokenBox(value: EndOfInjectableType(), offset: offset, length: 1, line: -1)
         } else {
-            return Token(type: EndOfAnyDeclaration(), offset: offset, length: 1, line: -1)
+            return TokenBox(value: EndOfAnyDeclaration(), offset: offset, length: 1, line: -1)
         }
     }
 }

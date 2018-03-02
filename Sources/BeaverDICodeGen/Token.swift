@@ -10,20 +10,20 @@ import SourceKittenFramework
 
 // MARK: - Token
 
-protocol AnyToken {
+protocol AnyTokenBox {
     var offset: Int { get }
     var length: Int { get }
     var line: Int { get set }
 }
 
-struct Token<T: TokenType>: AnyToken {
-    let type: T
+struct TokenBox<T: Token>: AnyTokenBox {
+    let value: T
     let offset: Int
     let length: Int
     var line: Int
 }
 
-protocol TokenType: Equatable, CustomStringConvertible {
+protocol Token: Equatable, CustomStringConvertible {
     static func create(_ string: String) throws -> Self?
 }
 
@@ -34,7 +34,7 @@ enum TokenError: Swift.Error {
 
 // MARK: - Token Types
 
-struct ParentResolverAnnotation: TokenType {
+struct ParentResolverAnnotation: Token {
     let type: String
     
     static func create(_ string: String) throws -> ParentResolverAnnotation? {
@@ -53,7 +53,7 @@ struct ParentResolverAnnotation: TokenType {
     }
 }
 
-struct RegisterAnnotation: TokenType {
+struct RegisterAnnotation: Token {
     let name: String
     let type: String
     
@@ -75,7 +75,7 @@ struct RegisterAnnotation: TokenType {
     }
 }
 
-struct ScopeAnnotation: TokenType {
+struct ScopeAnnotation: Token {
     
     enum ScopeType: String {
         case transient = "transient"
@@ -111,7 +111,7 @@ struct ScopeAnnotation: TokenType {
     }
 }
 
-struct InjectableType: TokenType {
+struct InjectableType: Token {
     let name: String
 
     static func ==(lhs: InjectableType, rhs: InjectableType) -> Bool {
@@ -124,21 +124,21 @@ struct InjectableType: TokenType {
     }
 }
 
-struct EndOfInjectableType: TokenType {
+struct EndOfInjectableType: Token {
     let description = "}"
 }
 
-struct AnyDeclaration: TokenType {
+struct AnyDeclaration: Token {
     let description = "{"
 }
 
-struct EndOfAnyDeclaration: TokenType {
+struct EndOfAnyDeclaration: Token {
     let description = "}"
 }
 
-extension Token: Equatable, CustomStringConvertible {
-    static func ==(lhs: Token<T>, rhs: Token<T>) -> Bool {
-        guard lhs.type == rhs.type else { return false }
+extension TokenBox: Equatable, CustomStringConvertible {
+    static func ==(lhs: TokenBox<T>, rhs: TokenBox<T>) -> Bool {
+        guard lhs.value == rhs.value else { return false }
         guard lhs.offset == rhs.offset else { return false }
         guard lhs.length == rhs.length else { return false }
         guard lhs.line == rhs.line else { return false }
@@ -146,7 +146,7 @@ extension Token: Equatable, CustomStringConvertible {
     }
     
     var description: String {
-        return "\(type) - \(offset)[\(length)] - at line: \(line)"
+        return "\(value) - \(offset)[\(length)] - at line: \(line)"
     }
 }
 
@@ -157,7 +157,7 @@ enum TokenBuilder {
     static func makeAnnotationToken(string: String,
                                     offset: Int,
                                     length: Int,
-                                    line: Int) throws -> AnyToken? {
+                                    line: Int) throws -> AnyTokenBox? {
         
         let chars = CharacterSet(charactersIn: "/").union(.whitespaces)
         let annotation = string.trimmingCharacters(in: chars)
@@ -167,18 +167,18 @@ enum TokenBuilder {
             return nil
         }
 
-        func makeToken<T: TokenType>(_ type: T) -> AnyToken {
-            return Token(type: type, offset: offset, length: length, line: line)
+        func makeTokenBox<T: Token>(_ token: T) -> AnyTokenBox {
+            return TokenBox(value: token, offset: offset, length: length, line: line)
         }
         
-        if let type = try ParentResolverAnnotation.create(body) {
-            return makeToken(type)
+        if let token = try ParentResolverAnnotation.create(body) {
+            return makeTokenBox(token)
         }
-        if let type = try RegisterAnnotation.create(body) {
-            return makeToken(type)
+        if let token = try RegisterAnnotation.create(body) {
+            return makeTokenBox(token)
         }
-        if let type = try ScopeAnnotation.create(body) {
-            return makeToken(type)
+        if let token = try ScopeAnnotation.create(body) {
+            return makeTokenBox(token)
         }
         throw TokenError.invalidAnnotation(annotation)
     }
@@ -186,7 +186,7 @@ enum TokenBuilder {
 
 // MARK: - Default implementations
 
-extension TokenType {
+extension Token {
     static func create(_ string: String) throws -> Self? {
         return nil
     }

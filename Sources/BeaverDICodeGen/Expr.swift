@@ -9,9 +9,9 @@ import Foundation
 
 indirect enum Expr {
     case file(types: [Expr])
-    case typeDeclaration(Token<InjectableType>, parentResolver: Token<ParentResolverAnnotation>, children: [Expr])
-    case registerAnnotation(Token<RegisterAnnotation>)
-    case scopeAnnotation(Token<ScopeAnnotation>)
+    case typeDeclaration(TokenBox<InjectableType>, parentResolver: TokenBox<ParentResolverAnnotation>, children: [Expr])
+    case registerAnnotation(TokenBox<RegisterAnnotation>)
+    case scopeAnnotation(TokenBox<ScopeAnnotation>)
 }
 
 // MARK: - Equatable

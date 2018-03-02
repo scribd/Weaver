@@ -9,11 +9,11 @@ import Foundation
 
 final class Parser {
     
-    private let tokens: [AnyToken]
+    private let tokens: [AnyTokenBox]
 
     private var index = 0
     
-    init(_ tokens: [AnyToken]) {
+    init(_ tokens: [AnyTokenBox]) {
         self.tokens = tokens
     }
     
@@ -40,7 +40,7 @@ extension Parser {
 
 private extension Parser {
     
-    var currentToken: AnyToken? {
+    var currentToken: AnyTokenBox? {
         return index < tokens.count ? tokens[index] : nil
     }
     
@@ -56,9 +56,9 @@ private extension Parser {
     func parseAnyDeclarations() {
         while true {
             switch currentToken {
-            case is Token<EndOfAnyDeclaration>:
+            case is TokenBox<EndOfAnyDeclaration>:
                 consumeToken()
-            case is Token<AnyDeclaration>:
+            case is TokenBox<AnyDeclaration>:
                 consumeToken()
             default:
                 return
@@ -66,9 +66,9 @@ private extension Parser {
         }
     }
     
-    func parseParentResolverAnnotation() throws -> Token<ParentResolverAnnotation> {
+    func parseParentResolverAnnotation() throws -> TokenBox<ParentResolverAnnotation> {
         switch currentToken {
-        case let token as Token<ParentResolverAnnotation>:
+        case let token as TokenBox<ParentResolverAnnotation>:
             consumeToken()
             return token
         case nil:
@@ -78,9 +78,9 @@ private extension Parser {
         }
     }
 
-    func parseRegisterAnnotation() throws -> Token<RegisterAnnotation> {
+    func parseRegisterAnnotation() throws -> TokenBox<RegisterAnnotation> {
         switch currentToken {
-        case let token as Token<RegisterAnnotation>:
+        case let token as TokenBox<RegisterAnnotation>:
             consumeToken()
             return token
         case nil:
@@ -90,9 +90,9 @@ private extension Parser {
         }
     }
     
-    func parseScopeAnnotation() throws -> Token<ScopeAnnotation> {
+    func parseScopeAnnotation() throws -> TokenBox<ScopeAnnotation> {
         switch currentToken {
-        case let token as Token<ScopeAnnotation>:
+        case let token as TokenBox<ScopeAnnotation>:
             consumeToken()
             return token
         case nil:
@@ -102,9 +102,9 @@ private extension Parser {
         }
     }
     
-    func parseInjectableType() throws -> Token<InjectableType> {
+    func parseInjectableType() throws -> TokenBox<InjectableType> {
         switch currentToken {
-        case let token as Token<InjectableType>:
+        case let token as TokenBox<InjectableType>:
             consumeToken()
             return token
         case nil:
@@ -125,28 +125,28 @@ private extension Parser {
             parseAnyDeclarations()
 
             switch currentToken {
-            case is Token<RegisterAnnotation>:
+            case is TokenBox<RegisterAnnotation>:
                 let annotation = try parseRegisterAnnotation()
-                guard !dependencyNames.contains(annotation.type.name) else {
+                guard !dependencyNames.contains(annotation.value.name) else {
                     throw Error.depedencyDoubleDeclaration
                 }
-                dependencyNames.insert(annotation.type.name)
+                dependencyNames.insert(annotation.value.name)
                 children.append(.registerAnnotation(annotation))
             
-            case is Token<ScopeAnnotation>:
+            case is TokenBox<ScopeAnnotation>:
                 let annotation = try parseScopeAnnotation()
-                guard dependencyNames.contains(annotation.type.name) else {
+                guard dependencyNames.contains(annotation.value.name) else {
                     throw Error.unknownDependency
                 }
                 children.append(.scopeAnnotation(annotation))
 
-            case is Token<ParentResolverAnnotation>:
+            case is TokenBox<ParentResolverAnnotation>:
                 children.append(try parseInjectedTypeDeclaration())
             
-            case is Token<InjectableType>:
+            case is TokenBox<InjectableType>:
                 children.append(try parseInjectedTypeDeclaration())
             
-            case is Token<EndOfInjectableType>:
+            case is TokenBox<EndOfInjectableType>:
                 consumeToken()
                 guard !dependencyNames.isEmpty else {
                     throw Error.missingDependency
@@ -170,13 +170,13 @@ private extension Parser {
             parseAnyDeclarations()
 
             switch currentToken {
-            case is Token<ParentResolverAnnotation>:
+            case is TokenBox<ParentResolverAnnotation>:
                 types.append(try parseInjectedTypeDeclaration())
                 
-            case is Token<InjectableType>:
+            case is TokenBox<InjectableType>:
                 consumeToken()
                 
-            case is Token<EndOfInjectableType>:
+            case is TokenBox<EndOfInjectableType>:
                 consumeToken()
 
             case nil:

@@ -24,7 +24,7 @@ public final class Lexer {
     }
     
     /// Generates a sorted list of tokens
-    func tokenize() throws -> [AnyToken] {
+    func tokenize() throws -> [AnyTokenBox] {
         
         let sourceKitAST = try Structure(file: file).dictionary
         let sourceKitTokens = try SyntaxMap(file: file).tokens
@@ -40,7 +40,7 @@ public final class Lexer {
 
 private extension Lexer {
     
-    func tokenSortFunction(_ lhs: AnyToken, _ rhs: AnyToken) -> Bool {
+    func tokenSortFunction(_ lhs: AnyTokenBox, _ rhs: AnyTokenBox) -> Bool {
         return lhs.offset < rhs.offset
     }
     
@@ -56,8 +56,8 @@ private extension Lexer {
     }
     
     /// Tokenize declarations from the SourceKitAST
-    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) -> [AnyToken] {
-        var tokens = [AnyToken]()
+    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) -> [AnyTokenBox] {
+        var tokens = [AnyTokenBox]()
 
         let typeDeclaration = SourceKitDeclaration(sourceKitAST)
         
@@ -97,7 +97,7 @@ private extension Lexer {
     }
     
     /// Tokenize annotations from the SourceKit SyntaxTokens.
-    func tokenize(from sourceKitTokens: [SyntaxToken]) throws -> [AnyToken] {
+    func tokenize(from sourceKitTokens: [SyntaxToken]) throws -> [AnyTokenBox] {
 
         var currentLine = lines.startIndex
         return try sourceKitTokens.flatMap { syntaxToken in

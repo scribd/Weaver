@@ -49,16 +49,16 @@ class AnotherService {
 
         let syntaxTree = try? parser.parse()
         
-        let expected = Expr.file(types: [.typeDeclaration(Token(type: InjectableType(name: "MyService"), offset: 51, length: 474, line: 1),
-                                                          parentResolver: Token(type: ParentResolverAnnotation(type: "MainDependencyResolver"), offset: 0, length: 45, line: 0),
-                                                          children: [.registerAnnotation(Token(type: RegisterAnnotation(name: "api", type: "APIProtocol"), offset: 111, length: 32, line: 4)),
-                                                                     .scopeAnnotation(Token(type: ScopeAnnotation(name: "api", scope: .graph), offset: 145, length: 32, line: 5)),
-                                                                     .registerAnnotation(Token(type: RegisterAnnotation(name: "router", type: "RouterProtocol"), offset: 180, length: 38, line: 7)),
-                                                                     .scopeAnnotation(Token(type: ScopeAnnotation(name: "router", scope: .parent), offset: 220, length: 36, line: 8)),
-                                                                     .typeDeclaration(Token(type: InjectableType(name: "MyEmbeddedService"), offset: 317, length: 119, line: 11),
-                                                                                      parentResolver: Token(type: ParentResolverAnnotation(type: "MyServiceDependencyResolver"), offset: 259, length: 50, line: 10),
-                                                                                      children: [.registerAnnotation(Token(type: RegisterAnnotation(name: "session", type: "SessionProtocol?"), offset: 348, length: 41, line: 13)),
-                                                                                                 .scopeAnnotation(Token(type: ScopeAnnotation(name: "session", scope: .container), offset: 393, length: 40, line: 14))])])])
+        let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 51, length: 474, line: 1),
+                                                          parentResolver: TokenBox(value: ParentResolverAnnotation(type: "MainDependencyResolver"), offset: 0, length: 45, line: 0),
+                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: "APIProtocol"), offset: 111, length: 32, line: 4)),
+                                                                     .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 145, length: 32, line: 5)),
+                                                                     .registerAnnotation(TokenBox(value: RegisterAnnotation(name: "router", type: "RouterProtocol"), offset: 180, length: 38, line: 7)),
+                                                                     .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "router", scope: .parent), offset: 220, length: 36, line: 8)),
+                                                                     .typeDeclaration(TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 317, length: 119, line: 11),
+                                                                                      parentResolver: TokenBox(value: ParentResolverAnnotation(type: "MyServiceDependencyResolver"), offset: 259, length: 50, line: 10),
+                                                                                      children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", type: "SessionProtocol?"), offset: 348, length: 41, line: 13)),
+                                                                                                 .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "session", scope: .container), offset: 393, length: 40, line: 14))])])])
         
         XCTAssertEqual(syntaxTree, expected)
     }
