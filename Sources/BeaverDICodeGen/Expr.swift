@@ -8,7 +8,7 @@
 import Foundation
 
 indirect enum Expr {
-    case typeDeclaration(parentResolver: Token<ParentResolverAnnotation>, children: [Expr])
+    case typeDeclaration(Token<InjectableType>, parentResolver: Token<ParentResolverAnnotation>, children: [Expr])
     case registerAnnotation(Token<RegisterAnnotation>)
     case scopeAnnotation(Token<ScopeAnnotation>)
 }
@@ -18,7 +18,8 @@ indirect enum Expr {
 extension Expr: Equatable {
     static func ==(lhs: Expr, rhs: Expr) -> Bool {
         switch (lhs, rhs) {
-        case (.typeDeclaration(let lParentResolver, let lChildren), .typeDeclaration(let rParentResolver, let rChildren)):
+        case (.typeDeclaration(let lToken, let lParentResolver, let lChildren), .typeDeclaration(let rToken, let rParentResolver, let rChildren)):
+            guard lToken == rToken else { return false }
             guard lParentResolver == rParentResolver else { return false }
             guard lChildren.elementsEqual(rChildren) else { return false }
             return true
@@ -43,8 +44,8 @@ extension Expr: CustomStringConvertible {
             return "Register - \(token)"
         case .scopeAnnotation(let token):
             return "Scope - \(token)"
-        case .typeDeclaration(let token, let children):
-            return "Type - \(token)\n" + children.map { "  \($0)" }.joined(separator: "\n")
+        case .typeDeclaration(let type, let parent, let children):
+            return "\(type) <-- \(parent)\n" + children.map { "  \($0)" }.joined(separator: "\n")
         }
     }
 }

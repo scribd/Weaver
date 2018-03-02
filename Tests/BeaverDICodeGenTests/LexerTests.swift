@@ -46,14 +46,14 @@ final class MyService {
         guard tokens.count == 16 else { return }
 
         XCTAssertEqual(tokens[0] as? Token<ParentResolverAnnotation>, Token(type: ParentResolverAnnotation(type: "MainDependencyResolver"), offset: 0, length: 45, line: 0))
-        XCTAssertEqual(tokens[1] as? Token<InjectableType>, Token(type: InjectableType(), offset: 70, length: 474, line: 2))
+        XCTAssertEqual(tokens[1] as? Token<InjectableType>, Token(type: InjectableType(name: "MyService"), offset: 70, length: 474, line: 2))
         XCTAssertEqual(tokens[2] as? Token<AnyDeclaration>, Token(type: AnyDeclaration(), offset: 90, length: 36, line: 3))
         XCTAssertEqual(tokens[3] as? Token<RegisterAnnotation>, Token(type: RegisterAnnotation(name: "api", type: "APIProtocol"), offset: 130, length: 32, line: 5))
         XCTAssertEqual(tokens[4] as? Token<ScopeAnnotation>, Token(type: ScopeAnnotation(name: "api", scope: .graph), offset: 164, length: 32, line: 6))
         XCTAssertEqual(tokens[5] as? Token<RegisterAnnotation>, Token(type: RegisterAnnotation(name: "router", type: "RouterProtocol"), offset: 199, length: 38, line: 8))
         XCTAssertEqual(tokens[6] as? Token<ScopeAnnotation>, Token(type: ScopeAnnotation(name: "router", scope: .parent), offset: 239, length: 36, line: 9))
         XCTAssertEqual(tokens[7] as? Token<ParentResolverAnnotation>, Token(type: ParentResolverAnnotation(type: "MyServiceDependencyResolver"), offset: 278, length: 50, line: 11))
-        XCTAssertEqual(tokens[8] as? Token<InjectableType>, Token(type: InjectableType(), offset: 336, length: 119, line: 12))
+        XCTAssertEqual(tokens[8] as? Token<InjectableType>, Token(type: InjectableType(name: "MyEmbeddedService"), offset: 336, length: 119, line: 12))
         XCTAssertEqual(tokens[9] as? Token<RegisterAnnotation>, Token(type: RegisterAnnotation(name: "session", type: "SessionProtocol?"), offset: 367, length: 41, line: 14))
         XCTAssertEqual(tokens[10] as? Token<ScopeAnnotation>, Token(type: ScopeAnnotation(name: "session", scope: .container), offset: 412, length: 40, line: 15))
         XCTAssertEqual(tokens[11] as? Token<EndOfInjectableType>, Token(type: EndOfInjectableType(), offset: 454, length: 1, line: 16))

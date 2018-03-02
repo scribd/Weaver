@@ -101,7 +101,6 @@ private extension Parser {
         }
     }
     
-    @discardableResult
     func parseTypeDeclaration() throws -> Token<InjectableType> {
         switch currentToken {
         case let token as Token<InjectableType>:
@@ -117,7 +116,7 @@ private extension Parser {
     func parseInjectedTypeDeclaration() throws -> Expr {
         let parentResolver = try parseParentResolverAnnotation()
         
-        try parseTypeDeclaration()
+        let type = try parseTypeDeclaration()
         
         var children = [Expr]()
         while true {
@@ -138,7 +137,7 @@ private extension Parser {
             
             case is Token<EndOfInjectableType>:
                 consumeToken()
-                return .typeDeclaration(parentResolver: parentResolver, children: children)
+                return .typeDeclaration(type, parentResolver: parentResolver, children: children)
 
             case nil:
                 throw Error.unexpectedEOF

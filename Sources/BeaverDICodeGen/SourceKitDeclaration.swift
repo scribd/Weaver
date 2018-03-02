@@ -56,7 +56,7 @@ extension SourceKitDeclaration {
     
     var toToken: AnyToken {
         if isInjectable {
-            return Token(type: InjectableType(), offset: offset, length: length, line: -1)
+            return Token(type: InjectableType(name: name), offset: offset, length: length, line: -1)
         } else {
             return Token(type: AnyDeclaration(), offset: offset, length: length, line: -1)
         }

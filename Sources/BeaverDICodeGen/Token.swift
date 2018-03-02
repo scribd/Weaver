@@ -112,7 +112,16 @@ struct ScopeAnnotation: TokenType {
 }
 
 struct InjectableType: TokenType {
-    let description = "{"
+    let name: String
+
+    static func ==(lhs: InjectableType, rhs: InjectableType) -> Bool {
+        guard lhs.name == rhs.name else { return false }
+        return true
+    }
+
+    var description: String {
+        return "\(name) {"
+    }
 }
 
 struct EndOfInjectableType: TokenType {
