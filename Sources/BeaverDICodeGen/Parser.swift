@@ -31,7 +31,9 @@ extension Parser {
         case unexpectedToken
         case unexpectedEOF
         
-        case dependencyMismatch
+        case unknownDependency
+        case missingDependency
+        case depedencyDoubleDeclaration
     }
 }
 
@@ -101,7 +103,7 @@ private extension Parser {
         }
     }
     
-    func parseTypeDeclaration() throws -> Token<InjectableType> {
+    func parseInjectableType() throws -> Token<InjectableType> {
         switch currentToken {
         case let token as Token<InjectableType>:
             consumeToken()
@@ -115,19 +117,29 @@ private extension Parser {
     
     func parseInjectedTypeDeclaration() throws -> Expr {
         let parentResolver = try parseParentResolverAnnotation()
-        
-        let type = try parseTypeDeclaration()
+        let type = try parseInjectableType()
         
         var children = [Expr]()
+        var dependencyNames = Set<String>()
+        
         while true {
             parseAnyDeclarations()
 
             switch currentToken {
             case is Token<RegisterAnnotation>:
-                children.append(.registerAnnotation(try parseRegisterAnnotation()))
+                let annotation = try parseRegisterAnnotation()
+                guard !dependencyNames.contains(annotation.type.name) else {
+                    throw Error.depedencyDoubleDeclaration
+                }
+                dependencyNames.insert(annotation.type.name)
+                children.append(.registerAnnotation(annotation))
             
             case is Token<ScopeAnnotation>:
-                children.append(.scopeAnnotation(try parseScopeAnnotation()))
+                let annotation = try parseScopeAnnotation()
+                guard dependencyNames.contains(annotation.type.name) else {
+                    throw Error.unknownDependency
+                }
+                children.append(.scopeAnnotation(annotation))
 
             case is Token<ParentResolverAnnotation>:
                 children.append(try parseInjectedTypeDeclaration())
@@ -137,6 +149,9 @@ private extension Parser {
             
             case is Token<EndOfInjectableType>:
                 consumeToken()
+                guard !dependencyNames.isEmpty else {
+                    throw Error.missingDependency
+                }
                 return .typeDeclaration(type, parentResolver: parentResolver, children: children)
 
             case nil:

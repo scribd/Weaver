@@ -13,7 +13,7 @@ import SourceKittenFramework
 
 final class ParserTests: XCTestCase {
     
-    func testShouldGenerateAValidSyntaxTree() {
+    func testParserShouldGenerateAValidSyntaxTree() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -57,5 +57,150 @@ final class MyService {
                                                                                    .scopeAnnotation(Token(type: ScopeAnnotation(name: "session", scope: .container), offset: 393, length: 40, line: 14))])])
         
         XCTAssertEqual(syntaxTree, expected)
+    }
+    
+    func testParserShouldGenerateASyntaxErrorWhenAParentAnnotationIsOrfan() {
+        
+        let file = File(contents: """
+// beaverdi: parent = MainDependencyResolver
+final class MyService {
+  let dependencies: DependencyResolver
+
+  // beaverdi: api -> APIProtocol
+  // beaverdi: api.scope = .graph
+
+  // beaverdi: router -> RouterProtocol
+  // beaverdi: router.scope = .parent
+
+  // beaverdi: parent = MyServiceDependencyResolver
+
+  init(_ dependencies: DependencyResolver) {
+    self.dependencies = dependencies
+  }
+}
+""")
+        
+        let lexer = Lexer(file)
+        let tokens = try! lexer.tokenize()
+        let parser = Parser(tokens)
+        
+        do {
+            _ = try parser.parse()
+            XCTAssertTrue(false, "An error was expected.")
+        } catch {
+            XCTAssertEqual(error as? Parser.Error, .unexpectedToken)
+        }
+    }
+    
+    func testParserShouldGenerateASyntaxErrorWhenAScopeIsDeclaredWithoutAnyDependencyRegistration() {
+        
+        let file = File(contents: """
+// beaverdi: parent = MainDependencyResolver
+final class MyService {
+  let dependencies: DependencyResolver
+
+  // beaverdi: api.scope = .graph
+
+  // beaverdi: router -> RouterProtocol
+  // beaverdi: router.scope = .parent
+
+  // beaverdi: parent = MyServiceDependencyResolver
+  final class MyEmbeddedService {
+
+    // beaverdi: session -> SessionProtocol?
+    // beaverdi: session.scope = .container
+  }
+
+  init(_ dependencies: DependencyResolver) {
+    self.dependencies = dependencies
+  }
+}
+""")
+        
+        let lexer = Lexer(file)
+        let tokens = try! lexer.tokenize()
+        let parser = Parser(tokens)
+        
+        do {
+            _ = try parser.parse()
+            XCTAssertTrue(false, "An error was expected.")
+        } catch {
+            XCTAssertEqual(error as? Parser.Error, .unknownDependency)
+        }
+    }
+    
+    func testParserShouldGenerateASyntaxErrorWhenAnInjectedTypeDoesNotHaveAnyDependencies() {
+        
+        let file = File(contents: """
+// beaverdi: parent = MainDependencyResolver
+final class MyService {
+  let dependencies: DependencyResolver
+
+  // beaverdi: api -> APIProtocol
+  // beaverdi: api.scope = .graph
+
+  // beaverdi: router -> RouterProtocol
+  // beaverdi: router.scope = .parent
+
+  // beaverdi: parent = MyServiceDependencyResolver
+  final class MyEmbeddedService {
+  }
+
+  init(_ dependencies: DependencyResolver) {
+    self.dependencies = dependencies
+  }
+}
+""")
+        
+        let lexer = Lexer(file)
+        let tokens = try! lexer.tokenize()
+        let parser = Parser(tokens)
+        
+        do {
+            _ = try parser.parse()
+            XCTAssertTrue(false, "An error was expected.")
+        } catch {
+            XCTAssertEqual(error as? Parser.Error, .missingDependency)
+        }
+    }
+    
+    func testParserShouldGenerateASyntaxErrorWhenADependencyIsDeclaredTwice() {
+        
+        let file = File(contents: """
+// beaverdi: parent = MainDependencyResolver
+final class MyService {
+  let dependencies: DependencyResolver
+
+  // beaverdi: api -> APIProtocol
+  // beaverdi: api.scope = .graph
+
+  // beaverdi: api -> APIProtocol
+
+  // beaverdi: router -> RouterProtocol
+  // beaverdi: router.scope = .parent
+
+  // beaverdi: parent = MyServiceDependencyResolver
+  final class MyEmbeddedService {
+
+    // beaverdi: session -> SessionProtocol?
+    // beaverdi: session.scope = .container
+  }
+
+  init(_ dependencies: DependencyResolver) {
+    self.dependencies = dependencies
+  }
+}
+""")
+        
+        let lexer = Lexer(file)
+        let tokens = try! lexer.tokenize()
+        let parser = Parser(tokens)
+        
+        do {
+            _ = try parser.parse()
+            XCTAssertTrue(false, "An error was expected.")
+        } catch {
+            XCTAssertEqual(error as? Parser.Error, .depedencyDoubleDeclaration)
+        }
     }
 }
