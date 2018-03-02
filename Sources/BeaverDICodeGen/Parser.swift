@@ -18,8 +18,7 @@ final class Parser {
     }
     
     func parse() throws -> Expr {
-        parseAnyDeclarations()
-        return try parseInjectedTypeDeclaration()
+        return try parseFile()
     }
 }
 
@@ -157,6 +156,32 @@ private extension Parser {
             case nil:
                 throw Error.unexpectedEOF
             
+            default:
+                throw Error.unexpectedToken
+            }
+        }
+    }
+    
+    func parseFile() throws -> Expr {
+        
+        var types = [Expr]()
+        
+        while true {
+            parseAnyDeclarations()
+
+            switch currentToken {
+            case is Token<ParentResolverAnnotation>:
+                types.append(try parseInjectedTypeDeclaration())
+                
+            case is Token<InjectableType>:
+                consumeToken()
+                
+            case is Token<EndOfInjectableType>:
+                consumeToken()
+
+            case nil:
+                return .file(types: types)
+                
             default:
                 throw Error.unexpectedToken
             }
