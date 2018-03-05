@@ -1,0 +1,37 @@
+final class {{resolver.targetTypeName|capitalize}}Dependencies: DependencyResolver {
+  init(_ parent: MainDependencyResolver) {
+    super.init(parent)
+  }
+
+  override func registerDependencies(in store: DependencyStore) {
+    store.register(APIProtocol.self, scope: .graph, builder: { _ in
+      return API()
+    })
+
+    store.register(RouterProtocol.self, scope: .container, builder: { dependencies in
+      return Router(dependencies)
+    })
+
+    store.register(SessionProtocol.self, scope: .weak, builder: { dependencies in 
+      return Session(dependencies)
+    })
+  }
+}
+
+extension MyService {
+  var api: APIProtocol {
+    return dependencies.resolve(APIProtocol.self)
+  }
+
+  var router: RouterProtocol {
+    return dependencies.resolve(RouterProtocol.self)
+  }
+
+  var session: SessionProtocol? {
+    return dependencies.resolve(Optional<SessionProtocol>.self)
+  }
+
+  var otherService: MyOtherServiceProtocol {
+    return dependencies.resolve(MyOtherServiceProtocol.self)
+  }
+}
