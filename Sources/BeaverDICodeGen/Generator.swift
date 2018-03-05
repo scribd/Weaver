@@ -10,7 +10,8 @@ import Stencil
 
 struct DependencyData {
     let name: String
-    let type: String
+    let implementationTypeName: String
+    let protocolName: String
     let scope: String
 }
 
@@ -32,7 +33,7 @@ final class Generator {
     func generate<IN: DataInput>(in output: IN, resolver: ResolverData) throws {
 
         let environment = Environment(loader: FileSystemLoader(bundle: [Bundle(for: type(of: self))]))
-        let rendered = try environment.renderTemplate(name: "Resources/\(templateName).stencil", context: ["resolver": resolver])
+        let rendered = try environment.renderTemplate(name: "Resources/\(templateName).stencil", context: ["resolver": resolver, "dependencies": resolver.dependencies])
 
         output += rendered
     }

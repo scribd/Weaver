@@ -441,7 +441,7 @@
 		"BeaverDI::BeaverDICodeGenTests::Product" /* BeaverDICodeGenTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = BeaverDICodeGenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDICommand::Product" /* BeaverDICommand */ = {isa = PBXFileReference; lastKnownFileType = text; path = BeaverDICommand; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDITests::Product" /* BeaverDITests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = BeaverDITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* FileInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileInput.swift; sourceTree = "<group>"; };
 		OBJ_100 /* OffsetMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffsetMap.swift; sourceTree = "<group>"; };
 		OBJ_101 /* Parameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parameter.swift; sourceTree = "<group>"; };
@@ -926,7 +926,7 @@
 			path = ".build/checkouts/Stencil.git-7635584243355970173/Sources";
 			sourceTree = SOURCE_ROOT;
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -937,7 +937,6 @@
 				OBJ_41 /* Dependencies */,
 				OBJ_159 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_63 /* PathKit 0.8.0 */ = {
@@ -1434,7 +1433,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_159 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
