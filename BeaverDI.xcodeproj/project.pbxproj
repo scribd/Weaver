@@ -22,8 +22,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		19D8DC12204E5CF30073CC59 /* dependency_resolver.stencil in Resources */ = {isa = PBXBuildFile; fileRef = 19DD0722204DBF0100A314C6 /* dependency_resolver.stencil */; };
 		19DD0723204DBF9700A314C6 /* GeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_36 /* GeneratorTests.swift */; };
-		19DD0724204DC00B00A314C6 /* dependency_resolver.stencil in Resources */ = {isa = PBXBuildFile; fileRef = 19DD0722204DBF0100A314C6 /* dependency_resolver.stencil */; };
 		OBJ_178 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_184 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* Package.swift */; };
 		OBJ_190 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_64 /* Package.swift */; };
@@ -1469,7 +1469,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				19DD0724204DC00B00A314C6 /* dependency_resolver.stencil in Resources */,
+				19D8DC12204E5CF30073CC59 /* dependency_resolver.stencil in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
