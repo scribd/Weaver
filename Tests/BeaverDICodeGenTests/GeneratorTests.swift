@@ -70,17 +70,26 @@ final class MyServiceDependencyResolver: DependencyResolver {
   override func registerDependencies(in store: DependencyStore) {
     
     store.register(APIProtocol.self, scope: .graph, builder: { dependencies in
-      return API(dependencies)
+      return API.makeAPI(injecting: dependencies)
     })
     
     store.register(RouterProtocol.self, scope: .parent, builder: { dependencies in
-      return Router(dependencies)
+      return Router.makeRouter(injecting: dependencies)
     })
     
   }
 }
 
 extension MyService {
+
+  // MARK: - Builder
+
+  static func makeMyService(injecting parentDependencies: MainDependencyResolver) -> MyService {
+    let dependencies = MyServiceDependencyResolver(parentDependencies)
+    return MyService(injecting: dependencies)
+  }
+
+  // MARK: - Resolver utils
   
   var api: APIProtocol {
     return dependencies.resolve(APIProtocol.self)
@@ -103,13 +112,22 @@ final class MyEmbeddedServiceDependencyResolver: DependencyResolver {
   override func registerDependencies(in store: DependencyStore) {
     
     store.register(SessionProtocol?.self, scope: .container, builder: { dependencies in
-      return Session(dependencies)
+      return Session.makeSession(injecting: dependencies)
     })
     
   }
 }
 
 extension MyService.MyEmbeddedService {
+
+  // MARK: - Builder
+
+  static func makeMyEmbeddedService(injecting parentDependencies: MyServiceDependencyResolver) -> MyEmbeddedService {
+    let dependencies = MyEmbeddedServiceDependencyResolver(parentDependencies)
+    return MyEmbeddedService(injecting: dependencies)
+  }
+
+  // MARK: - Resolver utils
   
   var session: SessionProtocol? {
     return dependencies.resolve(SessionProtocol?.self)

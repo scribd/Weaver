@@ -13,13 +13,22 @@ final class {{resolver.targetTypeName}}DependencyResolver: DependencyResolver {
   override func registerDependencies(in store: DependencyStore) {
     {% for dependency in resolver.dependencies %}
     store.register({{dependency.abstractTypeName}}.self, scope: .{{dependency.scope}}, builder: { dependencies in
-      return {{dependency.implementationTypeName}}(dependencies)
+      return {{dependency.implementationTypeName}}.make{{dependency.implementationTypeName}}(injecting: dependencies)
     })
     {% endfor %}
   }
 }
 
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
+
+  // MARK: - Builder
+
+  static func make{{resolver.targetTypeName}}(injecting parentDependencies: {{resolver.parentTypeName}}) -> {{resolver.targetTypeName}} {
+    let dependencies = {{resolver.targetTypeName}}DependencyResolver(parentDependencies)
+    return {{resolver.targetTypeName}}(injecting: dependencies)
+  }
+
+  // MARK: - Resolver utils
   {% for dependency in resolver.dependencies %}
   var {{dependency.name}}: {{dependency.abstractTypeName}} {
     return dependencies.resolve({{dependency.abstractTypeName}}.self)
