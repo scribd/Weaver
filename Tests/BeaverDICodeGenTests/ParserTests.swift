@@ -20,16 +20,16 @@ final class ParserTests: XCTestCase {
 final class MyService {
   let dependencies: DependencyResolver
 
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
   // beaverdi: api.scope = .graph
 
-  // beaverdi: router -> RouterProtocol
+  // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .parent
 
   // beaverdi: parent = MyServiceDependencyResolver
   final class MyEmbeddedService {
 
-    // beaverdi: session -> SessionProtocol?
+    // beaverdi: session = Session? <- SessionProtocol?
     // beaverdi: session.scope = .container
   }
 
@@ -49,16 +49,16 @@ class AnotherService {
 
         let syntaxTree = try? parser.parse()
         
-        let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 51, length: 474, line: 1),
-                                                          parentResolver: TokenBox(value: ParentResolverAnnotation(type: "MainDependencyResolver"), offset: 0, length: 45, line: 0),
-                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: "APIProtocol"), offset: 111, length: 32, line: 4)),
-                                                                     .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 145, length: 32, line: 5)),
-                                                                     .registerAnnotation(TokenBox(value: RegisterAnnotation(name: "router", type: "RouterProtocol"), offset: 180, length: 38, line: 7)),
-                                                                     .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "router", scope: .parent), offset: 220, length: 36, line: 8)),
-                                                                     .typeDeclaration(TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 317, length: 119, line: 11),
-                                                                                      parentResolver: TokenBox(value: ParentResolverAnnotation(type: "MyServiceDependencyResolver"), offset: 259, length: 50, line: 10),
-                                                                                      children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", type: "SessionProtocol?"), offset: 348, length: 41, line: 13)),
-                                                                                                 .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "session", scope: .container), offset: 393, length: 40, line: 14))])])])
+        let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 51, length: 500, line: 1),
+                                                          parentResolver: TokenBox(value: ParentResolverAnnotation(typeName: "MainDependencyResolver"), offset: 0, length: 45, line: 0),
+                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 111, length: 38, line: 4)),
+                                                                     .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 151, length: 32, line: 5)),
+                                                                     .registerAnnotation(TokenBox(value: RegisterAnnotation(name: "router", typeName: "Router", protocolName: "RouterProtocol"), offset: 186, length: 47, line: 7)),
+                                                                     .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "router", scope: .parent), offset: 235, length: 36, line: 8)),
+                                                                     .typeDeclaration(TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 332, length: 130, line: 11),
+                                                                                      parentResolver: TokenBox(value: ParentResolverAnnotation(typeName: "MyServiceDependencyResolver"), offset: 274, length: 50, line: 10),
+                                                                                      children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session?", protocolName: "SessionProtocol?"), offset: 363, length: 52, line: 13)),
+                                                                                                 .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "session", scope: .container), offset: 419, length: 40, line: 14))])])])
         
         XCTAssertEqual(syntaxTree, expected)
     }
@@ -99,10 +99,10 @@ class Test {
 final class MyService {
   let dependencies: DependencyResolver
 
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
   // beaverdi: api.scope = .graph
 
-  // beaverdi: router -> RouterProtocol
+  // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .parent
 
   // beaverdi: parent = MyServiceDependencyResolver
@@ -134,13 +134,13 @@ final class MyService {
 
   // beaverdi: api.scope = .graph
 
-  // beaverdi: router -> RouterProtocol
+  // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .parent
 
   // beaverdi: parent = MyServiceDependencyResolver
   final class MyEmbeddedService {
 
-    // beaverdi: session -> SessionProtocol?
+    // beaverdi: session = Session <- SessionProtocol?
     // beaverdi: session.scope = .container
   }
 
@@ -169,10 +169,10 @@ final class MyService {
 final class MyService {
   let dependencies: DependencyResolver
 
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
   // beaverdi: api.scope = .graph
 
-  // beaverdi: router -> RouterProtocol
+  // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .parent
 
   // beaverdi: parent = MyServiceDependencyResolver
@@ -204,18 +204,18 @@ final class MyService {
 final class MyService {
   let dependencies: DependencyResolver
 
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
   // beaverdi: api.scope = .graph
 
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
 
-  // beaverdi: router -> RouterProtocol
+  // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .parent
 
   // beaverdi: parent = MyServiceDependencyResolver
   final class MyEmbeddedService {
 
-    // beaverdi: session -> SessionProtocol?
+    // beaverdi: session = Session? <- SessionProtocol?
     // beaverdi: session.scope = .container
   }
 
@@ -243,18 +243,18 @@ final class MyService {
 final class MyService {
   let dependencies: DependencyResolver
 
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
   // beaverdi: api.scope = .graph
 
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
 
-  // beaverdi: router -> RouterProtocol
+  // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .parent
 
   // beaverdi: parent = MyServiceDependencyResolver
   final class MyEmbeddedService {
 
-    // beaverdi: session -> SessionProtocol?
+    // beaverdi: session = Session? <- SessionProtocol?
     // beaverdi: session.scope = .container
   }
 
@@ -279,7 +279,7 @@ final class MyService {
     func testParserShouldGenerateASyntaxErrorWhenADependencyIsDeclaredOutsideOfAType() {
         
         let file = File(contents: """
-  // beaverdi: api -> APIProtocol
+  // beaverdi: api = API <- APIProtocol
 }
 """)
         

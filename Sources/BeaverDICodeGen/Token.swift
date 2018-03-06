@@ -35,43 +35,49 @@ enum TokenError: Swift.Error {
 // MARK: - Token Types
 
 struct ParentResolverAnnotation: Token {
-    let type: String
+    let typeName: String
     
     static func create(_ string: String) throws -> ParentResolverAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^parent\\s*=\\s*(\\w+)").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: "^parent\\s*=\\s*(\\w+)\\s*$").matches(in: string) else {
             return nil
         }
-        return ParentResolverAnnotation(type: matches[0])
+        return ParentResolverAnnotation(typeName: matches[0])
     }
     
     static func ==(lhs: ParentResolverAnnotation, rhs: ParentResolverAnnotation) -> Bool {
-        return lhs.type == rhs.type
+        return lhs.typeName == rhs.typeName
     }
     
     var description: String {
-        return "parent = \(type)"
+        return "parent = \(typeName)"
     }
 }
 
 struct RegisterAnnotation: Token {
     let name: String
-    let type: String
+    let typeName: String
+    let protocolName: String?
     
     static func create(_ string: String) throws -> RegisterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*->\\s*(\\w+\\??)").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*=\\s*(\\w+\\??)\\s*(<-\\s*(\\w+\\??)\\s*)?$").matches(in: string) else {
             return nil
         }
-        return RegisterAnnotation(name: matches[0], type: matches[1])
+        return RegisterAnnotation(name: matches[0], typeName: matches[1], protocolName: matches.count >= 4 ? matches[3] : nil)
     }
     
     static func ==(lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
         guard lhs.name == rhs.name else { return false }
-        guard lhs.type == rhs.type else { return false }
+        guard lhs.typeName == rhs.typeName else { return false }
+        guard lhs.protocolName == rhs.protocolName else { return false }
         return true
     }
     
     var description: String {
-        return "\(name) -> \(type)"
+        var s = "\(name) = \(typeName)"
+        if let protocolName = protocolName {
+            s += " <- \(protocolName)"
+        }
+        return s
     }
 }
 
@@ -89,7 +95,7 @@ struct ScopeAnnotation: Token {
     let scope: ScopeType
     
     static func create(_ string: String) throws -> ScopeAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)\\s*$").matches(in: string) else {
             return nil
         }
         

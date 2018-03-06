@@ -18,7 +18,10 @@ final class GeneratorTests: XCTestCase {
             let input = DataInputMock()
             let data = ResolverData(targetTypeName: "Test",
                                     parentTypeName: "ParentTest",
-                                    dependencies: [DependencyData(name: "api", implementationTypeName: "API", protocolName: "APIProtocol", scope: "graph")])
+                                    dependencies: [DependencyData(name: "api",
+                                                                  implementationTypeName: "API",
+                                                                  protocolName: "APIProtocol",
+                                                                  scope: "graph")])
 
             let generator = Generator(template: "dependency_resolver")
             try generator.generate(in: input, resolver: data)
