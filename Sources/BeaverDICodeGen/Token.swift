@@ -10,69 +10,69 @@ import SourceKittenFramework
 
 // MARK: - Token
 
-protocol AnyTokenBox {
+public protocol AnyTokenBox {
     var offset: Int { get }
     var length: Int { get }
     var line: Int { get set }
 }
 
-struct TokenBox<T: Token>: AnyTokenBox {
+public struct TokenBox<T: Token>: AnyTokenBox {
     let value: T
-    let offset: Int
-    let length: Int
-    var line: Int
+    public let offset: Int
+    public let length: Int
+    public var line: Int
 }
 
-protocol Token: Equatable, CustomStringConvertible {
+public protocol Token: Equatable, CustomStringConvertible {
     static func create(_ string: String) throws -> Self?
 }
 
-enum TokenError: Swift.Error {
+public enum TokenError: Swift.Error {
     case invalidAnnotation(String)
     case invalidScope(String)
 }
 
 // MARK: - Token Types
 
-struct ParentResolverAnnotation: Token {
+public struct ParentResolverAnnotation: Token {
     let typeName: String
     
-    static func create(_ string: String) throws -> ParentResolverAnnotation? {
+    public static func create(_ string: String) throws -> ParentResolverAnnotation? {
         guard let matches = try NSRegularExpression(pattern: "^parent\\s*=\\s*(\\w+)\\s*$").matches(in: string) else {
             return nil
         }
         return ParentResolverAnnotation(typeName: matches[0])
     }
     
-    static func ==(lhs: ParentResolverAnnotation, rhs: ParentResolverAnnotation) -> Bool {
+    public static func ==(lhs: ParentResolverAnnotation, rhs: ParentResolverAnnotation) -> Bool {
         return lhs.typeName == rhs.typeName
     }
     
-    var description: String {
+    public var description: String {
         return "parent = \(typeName)"
     }
 }
 
-struct RegisterAnnotation: Token {
+public struct RegisterAnnotation: Token {
     let name: String
     let typeName: String
     let protocolName: String?
     
-    static func create(_ string: String) throws -> RegisterAnnotation? {
+    public static func create(_ string: String) throws -> RegisterAnnotation? {
         guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*=\\s*(\\w+\\??)\\s*(<-\\s*(\\w+\\??)\\s*)?$").matches(in: string) else {
             return nil
         }
         return RegisterAnnotation(name: matches[0], typeName: matches[1], protocolName: matches.count >= 4 ? matches[3] : nil)
     }
     
-    static func ==(lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
+    public static func ==(lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
         guard lhs.name == rhs.name else { return false }
         guard lhs.typeName == rhs.typeName else { return false }
         guard lhs.protocolName == rhs.protocolName else { return false }
         return true
     }
     
-    var description: String {
+    public var description: String {
         var s = "\(name) = \(typeName)"
         if let protocolName = protocolName {
             s += " <- \(protocolName)"
@@ -81,7 +81,7 @@ struct RegisterAnnotation: Token {
     }
 }
 
-struct ScopeAnnotation: Token {
+public struct ScopeAnnotation: Token {
     
     enum ScopeType: String {
         case transient = "transient"
@@ -94,7 +94,7 @@ struct ScopeAnnotation: Token {
     let name: String
     let scope: ScopeType
     
-    static func create(_ string: String) throws -> ScopeAnnotation? {
+    public static func create(_ string: String) throws -> ScopeAnnotation? {
         guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)\\s*$").matches(in: string) else {
             return nil
         }
@@ -106,44 +106,44 @@ struct ScopeAnnotation: Token {
         return ScopeAnnotation(name: matches[0], scope: scope)
     }
     
-    static func ==(lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
+    public static func ==(lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
         guard lhs.name == rhs.name else { return false }
         guard lhs.scope == rhs.scope else { return false }
         return true
     }
     
-    var description: String {
+    public var description: String {
         return "\(name).scope = \(scope)"
     }
 }
 
-struct InjectableType: Token {
+public struct InjectableType: Token {
     let name: String
 
-    static func ==(lhs: InjectableType, rhs: InjectableType) -> Bool {
+    public static func ==(lhs: InjectableType, rhs: InjectableType) -> Bool {
         guard lhs.name == rhs.name else { return false }
         return true
     }
 
-    var description: String {
+    public var description: String {
         return "\(name) {"
     }
 }
 
-struct EndOfInjectableType: Token {
-    let description = "}"
+public struct EndOfInjectableType: Token {
+    public let description = "}"
 }
 
-struct AnyDeclaration: Token {
-    let description = "{"
+public struct AnyDeclaration: Token {
+    public let description = "{"
 }
 
-struct EndOfAnyDeclaration: Token {
-    let description = "}"
+public struct EndOfAnyDeclaration: Token {
+    public let description = "}"
 }
 
 extension TokenBox: Equatable, CustomStringConvertible {
-    static func ==(lhs: TokenBox<T>, rhs: TokenBox<T>) -> Bool {
+    public static func ==(lhs: TokenBox<T>, rhs: TokenBox<T>) -> Bool {
         guard lhs.value == rhs.value else { return false }
         guard lhs.offset == rhs.offset else { return false }
         guard lhs.length == rhs.length else { return false }
@@ -151,7 +151,7 @@ extension TokenBox: Equatable, CustomStringConvertible {
         return true
     }
     
-    var description: String {
+    public var description: String {
         return "\(value) - \(offset)[\(length)] - at line: \(line)"
     }
 }
@@ -193,11 +193,11 @@ enum TokenBuilder {
 // MARK: - Default implementations
 
 extension Token {
-    static func create(_ string: String) throws -> Self? {
+    public static func create(_ string: String) throws -> Self? {
         return nil
     }
     
-    static func ==(lhs: Self, rhs: Self) -> Bool {
+    public static func ==(lhs: Self, rhs: Self) -> Bool {
         return true
     }
 }

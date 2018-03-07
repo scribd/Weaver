@@ -24,7 +24,7 @@ public final class Lexer {
     }
     
     /// Generates a sorted list of tokens
-    func tokenize() throws -> [AnyTokenBox] {
+    public func tokenize() throws -> [AnyTokenBox] {
         
         let sourceKitAST = try Structure(file: file).dictionary
         let sourceKitTokens = try SyntaxMap(file: file).tokens

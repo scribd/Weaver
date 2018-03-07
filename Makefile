@@ -9,6 +9,7 @@ clean:
 install: build
 	install -d "$(DESTDIR)/bin"
 	install -d "$(DESTDIR)/share/beaverdi"
+	cp -r "Resources" "$(DESTDIR)/share/beaverdi"
 	install -C -m 755 ".build/release/BeaverDICommand" "$(DESTDIR)/bin/beaverdi"
 
 uninstall:

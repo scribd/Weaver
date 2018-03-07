@@ -7,17 +7,17 @@
 
 import Foundation
 
-final class Parser {
+public final class Parser {
     
     private let tokens: [AnyTokenBox]
 
     private var index = 0
     
-    init(_ tokens: [AnyTokenBox]) {
+    public init(_ tokens: [AnyTokenBox]) {
         self.tokens = tokens
     }
     
-    func parse() throws -> Expr {
+    public func parse() throws -> Expr {
         return try parseFile()
     }
 }
@@ -26,7 +26,7 @@ final class Parser {
 
 extension Parser {
     
-    enum Error: Swift.Error {
+    public enum Error: Swift.Error {
         case unexpectedToken
         case unexpectedEOF
         

@@ -7,24 +7,27 @@
 
 import Foundation
 import Stencil
+import PathKit
 
-final class Generator {
+public final class Generator {
 
     private let templateName: String
     
-    init(template name: String) {
+    public init(template name: String) {
         self.templateName = name
     }
     
-    func generate<IN: DataInput>(in output: IN, ast: Expr) throws {
+    public func generate(from ast: Expr) throws -> String {
 
         let resolversData = [ResolverData](ast: ast)
-        let bundle = Bundle(for: type(of: self))
-        
-        let environment = Environment(loader: FileSystemLoader(bundle: [bundle]))
-        let rendered = try environment.renderTemplate(name: "Resources/\(templateName).stencil", context: ["resolvers": resolversData])
 
-        output += rendered
+        let path = Path("/usr/local/share/beaverdi/Resources")
+        let fileLoader = FileSystemLoader(paths: [path])
+
+        let environment = Environment(loader: fileLoader)
+        let rendered = try environment.renderTemplate(name: "\(templateName).stencil", context: ["resolvers": resolversData])
+
+        return rendered
     }
 }
 

@@ -79,7 +79,6 @@
 		OBJ_321 /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_76 /* Group.swift */; };
 		OBJ_323 /* Spectre.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Spectre::Spectre::Product" /* Spectre.framework */; };
 		OBJ_329 /* Expr.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* Expr.swift */; };
-		OBJ_330 /* FileInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* FileInput.swift */; };
 		OBJ_331 /* Generator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Generator.swift */; };
 		OBJ_332 /* Lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* Lexer.swift */; };
 		OBJ_333 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* Parser.swift */; };
@@ -442,7 +441,6 @@
 		"BeaverDI::BeaverDICommand::Product" /* BeaverDICommand */ = {isa = PBXFileReference; lastKnownFileType = text; path = BeaverDICommand; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDITests::Product" /* BeaverDITests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = BeaverDITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		OBJ_10 /* FileInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileInput.swift; sourceTree = "<group>"; };
 		OBJ_100 /* OffsetMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffsetMap.swift; sourceTree = "<group>"; };
 		OBJ_101 /* Parameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parameter.swift; sourceTree = "<group>"; };
 		OBJ_102 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
@@ -998,7 +996,6 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_9 /* Expr.swift */,
-				OBJ_10 /* FileInput.swift */,
 				OBJ_11 /* Generator.swift */,
 				OBJ_12 /* Lexer.swift */,
 				OBJ_13 /* Parser.swift */,
@@ -1608,7 +1605,6 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_329 /* Expr.swift in Sources */,
-				OBJ_330 /* FileInput.swift in Sources */,
 				OBJ_331 /* Generator.swift in Sources */,
 				OBJ_332 /* Lexer.swift in Sources */,
 				OBJ_333 /* Parser.swift in Sources */,
