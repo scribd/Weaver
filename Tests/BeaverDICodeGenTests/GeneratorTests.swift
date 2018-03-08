@@ -49,7 +49,7 @@ class AnotherService {
             let parser = Parser(tokens)
             let syntaxTree = try parser.parse()
             
-            let generator = Generator(template: "dependency_resolver")
+            let generator = try Generator()
             let string = try generator.generate(from: syntaxTree)
             
             XCTAssertEqual(string, """

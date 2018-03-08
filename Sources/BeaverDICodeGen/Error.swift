@@ -7,22 +7,26 @@
 
 import Foundation
 
-enum TokenError: Swift.Error {
+enum TokenError: Error {
     case invalidAnnotation(String)
     case invalidScope(String)
 }
 
-enum LexerError: Swift.Error {
+enum LexerError: Error {
     case invalidAnnotation(line: Int, underlyingError: TokenError)
 }
 
-enum ParserError: Swift.Error {
+enum ParserError: Error {
     case unexpectedToken(line: Int)
     case unexpectedEOF
     
     case unknownDependency(line: Int, dependencyName: String)
     case missingDependency(line: Int, typeName: String)
     case depedencyDoubleDeclaration(line: Int, dependencyName: String)
+}
+
+enum GeneratorError: Error {
+    case invalidTemplatePath(path: String)
 }
 
 // MARK: - Description
@@ -63,6 +67,16 @@ extension ParserError: CustomStringConvertible {
             return "Unexpected token at line: \(printableLine(line))."
         case .unknownDependency(let line, let dependencyName):
             return "Unknown dependency: '\(dependencyName)': at line \(printableLine(line))."
+        }
+    }
+}
+
+extension GeneratorError: CustomStringConvertible {
+    
+    var description: String {
+        switch self {
+        case .invalidTemplatePath(let path):
+            return "Invalid template path: \(path)."
         }
     }
 }

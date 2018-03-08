@@ -15,13 +15,14 @@ import PathKit
 let main = command(
 
     Option<String>("output_path", ".", description: "Where the swift files will be generated."),
+    Option<TemplatePathArgument>("template_path", TemplatePathArgument(), description: "Custom template path."),
     Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
 
-) { outputPath, inputPaths in
-
-    let generator = Generator(template: "dependency_resolver")
+) { outputPath, templatePath, inputPaths in
 
     do {
+        let generator = try Generator(template: templatePath.value)
+
         Logger.log(.info, "Parsing...")
         
         var dataToWrite: [(path: Path, data: String)] = []

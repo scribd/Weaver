@@ -7,6 +7,7 @@
 
 import Foundation
 import Commander
+import PathKit
 
 struct InputPathsArgument: ArgumentConvertible {
     
@@ -28,5 +29,22 @@ struct InputPathsArgument: ArgumentConvertible {
     
     var description: String {
         return values.description
+    }
+}
+
+struct TemplatePathArgument: ArgumentConvertible {
+
+    let value: Path?
+    
+    init(parser: ArgumentParser) throws {
+        value = parser.shift().flatMap { Path($0) }
+    }
+    
+    init() {
+        value = nil
+    }
+    
+    var description: String {
+        return value?.description ?? ""
     }
 }

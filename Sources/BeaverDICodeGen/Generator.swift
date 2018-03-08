@@ -11,21 +11,36 @@ import PathKit
 
 public final class Generator {
 
+    private let templateDirPath: Path
     private let templateName: String
     
-    public init(template name: String) {
-        self.templateName = name
+    public init(template path: Path? = nil) throws {
+        if let path = path {
+            var components = path.components
+            guard let templateName = components.popLast() else {
+                throw GeneratorError.invalidTemplatePath(path: path.description)
+            }
+            self.templateName = templateName
+            templateDirPath = Path(components: components)
+        } else {
+            templateName = "Resources/dependency_resolver.stencil"
+            templateDirPath = Path("/usr/local/share/beaverdi")
+        }
     }
     
     public func generate(from ast: Expr) throws -> String {
 
         let resolversData = [ResolverData](ast: ast)
 
-        let path = Path("/usr/local/share/beaverdi/Resources")
-        let fileLoader = FileSystemLoader(paths: [path])
+        #if DEBUG
+            let bundle = Bundle(for: type(of: self))
+            let fileLoader = FileSystemLoader(bundle: [bundle])
+        #else
+            let fileLoader = FileSystemLoader(paths: [templateDirPath])
+        #endif
 
         let environment = Environment(loader: fileLoader)
-        let rendered = try environment.renderTemplate(name: "\(templateName).stencil", context: ["resolvers": resolversData])
+        let rendered = try environment.renderTemplate(name: templateName, context: ["resolvers": resolversData])
 
         return rendered
     }
