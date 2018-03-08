@@ -27,11 +27,6 @@ public protocol Token: Equatable, CustomStringConvertible {
     static func create(_ string: String) throws -> Self?
 }
 
-public enum TokenError: Swift.Error {
-    case invalidAnnotation(String)
-    case invalidScope(String)
-}
-
 // MARK: - Token Types
 
 public struct ParentResolverAnnotation: Token {

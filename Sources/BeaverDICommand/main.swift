@@ -12,64 +12,53 @@ import SourceKittenFramework
 import Darwin
 import PathKit
 
-struct InputPaths: ArgumentConvertible {
-    
-    let values: [String]
-
-    init(parser: ArgumentParser) throws {
-        guard !parser.isEmpty else {
-            throw ArgumentError.missingValue(argument: "input_paths")
-        }
-        
-        var values: [String] = []
-        
-        while let value = parser.shift() {
-            values += [value]
-        }
-        
-        self.values = values
-    }
-    
-    var description: String {
-        return values.description
-    }
-}
-
 let main = command(
 
     Option<String>("output_path", ".", description: "Where the swift files will be generated."),
-    Argument<InputPaths>("input_paths", description: "Swift files to parse.")
+    Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
 
 ) { outputPath, inputPaths in
 
     let generator = Generator(template: "dependency_resolver")
 
     do {
+        Logger.log(.info, "Parsing...")
+        
+        var dataToWrite: [(path: Path, data: String)] = []
+        
         for filePath in inputPaths.values {
             guard let file = File(path: filePath) else {
                 return
             }
             
             guard let fileName = filePath.split(separator: "/").last else {
-                fputs("Could not retrieve file name from path '\(filePath)'", __stderrp)
+                Logger.log(.error, "Could not retrieve file name from path '\(filePath)'")
                 return
             }
             
-            print("Parsing \(filePath)...")
+            Logger.log(.info, "<- '\(filePath)'")
             let tokens = try Lexer(file).tokenize()
             let ast = try Parser(tokens).parse()
             
             let generatedFilePath = Path(outputPath + "/beaverdi." + fileName)
             let generatedString = try generator.generate(from: ast)
  
-            print("Writing \(generatedFilePath)...")
-            try generatedFilePath.write(generatedString)
+            dataToWrite += [(generatedFilePath, generatedString)]
+        }
+        
+        Logger.log(.info, "")
+        Logger.log(.info, "Writing...")
+        
+        for (path, data) in dataToWrite {
+            try path.write(data)
+            Logger.log(.info, "-> '\(path)'")
         }
 
-        print("Done.")
+        Logger.log(.info, "")
+        Logger.log(.info, "Done.")
         
     } catch {
-        fputs(error.localizedDescription, __stderrp)
+        Logger.log(.error, "Error: \(error)")
     }
 }
 

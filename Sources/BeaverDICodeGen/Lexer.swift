@@ -11,10 +11,6 @@ import SourceKittenFramework
 /// An object responsible of generating the tokens
 public final class Lexer {
     
-    enum Error: Swift.Error {
-        case invalidAnnotation(line: Int, underlyingError: TokenError)
-    }
-    
     private let file: File
     
     private lazy var lines: [Line] = self.file.lines
@@ -122,7 +118,7 @@ private extension Lexer {
                 }
                 return token
             } catch let error as TokenError {
-                throw Error.invalidAnnotation(line: currentLine, underlyingError: error)
+                throw LexerError.invalidAnnotation(line: currentLine, underlyingError: error)
             }
         }
     }

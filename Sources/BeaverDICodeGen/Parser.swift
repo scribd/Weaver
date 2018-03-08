@@ -22,20 +22,6 @@ public final class Parser {
     }
 }
 
-// MARK: - Error
-
-extension Parser {
-    
-    public enum Error: Swift.Error {
-        case unexpectedToken
-        case unexpectedEOF
-        
-        case unknownDependency
-        case missingDependency
-        case depedencyDoubleDeclaration
-    }
-}
-
 // MARK: - Utils
 
 private extension Parser {
@@ -72,9 +58,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw Error.unexpectedEOF
-        default:
-            throw Error.unexpectedToken
+            throw ParserError.unexpectedEOF
+        case .some(let token):
+            throw ParserError.unexpectedToken(line: token.line)
         }
     }
 
@@ -84,9 +70,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw Error.unexpectedEOF
-        default:
-            throw Error.unexpectedToken
+            throw ParserError.unexpectedEOF
+        case .some(let token):
+            throw ParserError.unexpectedToken(line: token.line)
         }
     }
     
@@ -96,9 +82,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw Error.unexpectedEOF
-        default:
-            throw Error.unexpectedToken
+            throw ParserError.unexpectedEOF
+        case .some(let token):
+            throw ParserError.unexpectedToken(line: token.line)
         }
     }
     
@@ -108,9 +94,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw Error.unexpectedEOF
-        default:
-            throw Error.unexpectedToken
+            throw ParserError.unexpectedEOF
+        case .some(let token):
+            throw ParserError.unexpectedToken(line: token.line)
         }
     }
     
@@ -128,7 +114,7 @@ private extension Parser {
             case is TokenBox<RegisterAnnotation>:
                 let annotation = try parseRegisterAnnotation()
                 guard !dependencyNames.contains(annotation.value.name) else {
-                    throw Error.depedencyDoubleDeclaration
+                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, dependencyName: annotation.value.name)
                 }
                 dependencyNames.insert(annotation.value.name)
                 children.append(.registerAnnotation(annotation))
@@ -136,7 +122,7 @@ private extension Parser {
             case is TokenBox<ScopeAnnotation>:
                 let annotation = try parseScopeAnnotation()
                 guard dependencyNames.contains(annotation.value.name) else {
-                    throw Error.unknownDependency
+                    throw ParserError.unknownDependency(line: annotation.line, dependencyName: annotation.value.name)
                 }
                 children.append(.scopeAnnotation(annotation))
 
@@ -149,15 +135,15 @@ private extension Parser {
             case is TokenBox<EndOfInjectableType>:
                 consumeToken()
                 guard !dependencyNames.isEmpty else {
-                    throw Error.missingDependency
+                    throw ParserError.missingDependency(line: type.line, typeName: type.value.name)
                 }
                 return .typeDeclaration(type, parentResolver: parentResolver, children: children)
 
             case nil:
-                throw Error.unexpectedEOF
+                throw ParserError.unexpectedEOF
             
-            default:
-                throw Error.unexpectedToken
+            case .some(let token):
+                throw ParserError.unexpectedToken(line: token.line)
             }
         }
     }
@@ -182,8 +168,8 @@ private extension Parser {
             case nil:
                 return .file(types: types)
                 
-            default:
-                throw Error.unexpectedToken
+            case .some(let token):
+                throw ParserError.unexpectedToken(line: token.line)
             }
         }
     }
