@@ -121,7 +121,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch {
-            XCTAssertEqual(error as? Parser.Error, .unexpectedToken)
+            XCTAssertEqual(error as? ParserError, .unexpectedToken(line: 12))
         }
     }
     
@@ -158,7 +158,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch {
-            XCTAssertEqual(error as? Parser.Error, .unknownDependency)
+            XCTAssertEqual(error as? ParserError, .unknownDependency(line: 4, dependencyName: "api"))
         }
     }
     
@@ -193,7 +193,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch {
-            XCTAssertEqual(error as? Parser.Error, .missingDependency)
+            XCTAssertEqual(error as? ParserError, .missingDependency(line: 11, typeName: "MyEmbeddedService"))
         }
     }
     
@@ -233,7 +233,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch {
-            XCTAssertEqual(error as? Parser.Error, .depedencyDoubleDeclaration)
+            XCTAssertEqual(error as? ParserError, .depedencyDoubleDeclaration(line: 7, dependencyName: "api"))
         }
     }
     
@@ -272,7 +272,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch {
-            XCTAssertEqual(error as? Parser.Error, .unexpectedToken)
+            XCTAssertEqual(error as? ParserError, .unexpectedToken(line: 3))
         }
     }
     
@@ -291,7 +291,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch {
-            XCTAssertEqual(error as? Parser.Error, .unexpectedToken)
+            XCTAssertEqual(error as? ParserError, .unexpectedToken(line: 0))
         }
     }
 }

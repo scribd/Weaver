@@ -93,7 +93,7 @@ final class MyService {
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
-        } catch Lexer.Error.invalidAnnotation(let line, .invalidAnnotation(let content)) {
+        } catch LexerError.invalidAnnotation(let line, .invalidAnnotation(let content)) {
             XCTAssertEqual(line, 4)
             XCTAssertEqual(content, "beaverdi: api = API <-- APIProtocol")
         } catch {
@@ -131,7 +131,7 @@ final class MyService {
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
-        } catch Lexer.Error.invalidAnnotation(let line, .invalidScope(let scope)) {
+        } catch LexerError.invalidAnnotation(let line, .invalidScope(let scope)) {
             XCTAssertEqual(line, 5)
             XCTAssertEqual(scope, "thisScopeDoesNotExists")
         } catch {

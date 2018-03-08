@@ -42,7 +42,6 @@
 		OBJ_231 /* Mocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* Mocks.swift */; };
 		OBJ_233 /* BeaverDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "BeaverDI::BeaverDI::Product" /* BeaverDI.framework */; };
 		OBJ_241 /* LexerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* LexerTests.swift */; };
-		OBJ_242 /* Mocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* Mocks.swift */; };
 		OBJ_243 /* ParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* ParserTests.swift */; };
 		OBJ_244 /* SourceKitDeclarationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_32 /* SourceKitDeclarationTests.swift */; };
 		OBJ_246 /* BeaverDICodeGen.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "BeaverDI::BeaverDICodeGen::Product" /* BeaverDICodeGen.framework */; };
@@ -514,7 +513,6 @@
 		OBJ_25 /* InstanceKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceKey.swift; sourceTree = "<group>"; };
 		OBJ_26 /* Scope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scope.swift; sourceTree = "<group>"; };
 		OBJ_29 /* LexerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LexerTests.swift; sourceTree = "<group>"; };
-		OBJ_30 /* Mocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mocks.swift; sourceTree = "<group>"; };
 		OBJ_31 /* ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParserTests.swift; sourceTree = "<group>"; };
 		OBJ_32 /* SourceKitDeclarationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceKitDeclarationTests.swift; sourceTree = "<group>"; };
 		OBJ_34 /* BuilderStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderStoreTests.swift; sourceTree = "<group>"; };
@@ -869,7 +867,6 @@
 			children = (
 				OBJ_36 /* GeneratorTests.swift */,
 				OBJ_29 /* LexerTests.swift */,
-				OBJ_30 /* Mocks.swift */,
 				OBJ_31 /* ParserTests.swift */,
 				OBJ_32 /* SourceKitDeclarationTests.swift */,
 			);
@@ -1564,7 +1561,6 @@
 			files = (
 				OBJ_241 /* LexerTests.swift in Sources */,
 				19DD0723204DBF9700A314C6 /* GeneratorTests.swift in Sources */,
-				OBJ_242 /* Mocks.swift in Sources */,
 				OBJ_243 /* ParserTests.swift in Sources */,
 				OBJ_244 /* SourceKitDeclarationTests.swift in Sources */,
 			);

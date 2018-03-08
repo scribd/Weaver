@@ -72,3 +72,62 @@ extension ParserError: CustomStringConvertible {
 private func printableLine(_ line: Int) -> String {
     return "at line \(line + 1)"
 }
+
+// MARK: - Equatable
+
+extension TokenError: Equatable {
+    
+    static func ==(lhs: TokenError, rhs: TokenError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidAnnotation(let lAnnotation), .invalidAnnotation(let rAnnotation)):
+            return lAnnotation == rAnnotation
+        case (.invalidScope(let lScope), .invalidScope(let rScope)):
+            return lScope == rScope
+        case (.invalidAnnotation, _),
+             (.invalidScope, _):
+            return false
+        }
+    }
+}
+
+extension LexerError: Equatable {
+
+    static func ==(lhs: LexerError, rhs: LexerError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidAnnotation(let lAnnotation), .invalidAnnotation(let rAnnotation)):
+            return lAnnotation == rAnnotation
+        }
+    }
+}
+
+extension ParserError: Equatable {
+
+    static func ==(lhs: ParserError, rhs: ParserError) -> Bool {
+        switch (lhs, rhs) {
+        case (.depedencyDoubleDeclaration(let lLine, let lDependencyName), .depedencyDoubleDeclaration(let rLine, let rDependencyName)),
+             (.unknownDependency(let lLine, let lDependencyName), .unknownDependency(let rLine, let rDependencyName)):
+            guard lLine == rLine else { return false }
+            guard lDependencyName == rDependencyName else { return false }
+            return true
+            
+        case (.missingDependency(let lLine, let lTypeName), .missingDependency(let rLine, let rTypeName)):
+            guard lLine == rLine else { return false }
+            guard lTypeName == rTypeName else { return false }
+            return true
+            
+        case (.unexpectedEOF, .unexpectedEOF):
+            return true
+            
+        case (.unexpectedToken(let lLine), .unexpectedToken(let rLine)):
+            return lLine == rLine
+            
+        case (.depedencyDoubleDeclaration, _),
+             (.unknownDependency, _),
+             (.missingDependency, _),
+             (.unexpectedEOF, _),
+             (.unexpectedToken, _):
+            return false
+        }
+    }
+}
+
