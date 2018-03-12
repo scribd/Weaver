@@ -15,7 +15,7 @@ final class Inspector {
         return self.graph.values.flatMap { $0.dependencies.values }
     }()
 
-    private lazy var resolutionCache: [Inspector.CanResolverDependencyIndex: Bool] = [:]
+    private lazy var resolutionCache: [Inspector.ResolutionCacheIndex: Bool] = [:]
     
     public init(syntaxTrees: [Expr]) throws {
         try buildGraph(with: syntaxTrees)
@@ -64,7 +64,7 @@ private extension Inspector {
         }
     }
     
-    struct CanResolverDependencyIndex {
+    struct ResolutionCacheIndex {
         let resolver: Resolver
         let dependencyIndex: DependencyIndex
     }
@@ -149,7 +149,7 @@ private extension Inspector.Resolver {
 
 private extension Inspector.Dependency {
     
-    func isResolvable(cache: inout [Inspector.CanResolverDependencyIndex: Bool]) -> Bool {
+    func isResolvable(cache: inout [Inspector.ResolutionCacheIndex: Bool]) -> Bool {
         if scope != .parent {
             return true
         }
@@ -167,8 +167,8 @@ private extension Inspector.Dependency {
 
 private extension Inspector.Resolver {
     
-    func canResolveDependency(index: Inspector.DependencyIndex, cache: inout [Inspector.CanResolverDependencyIndex: Bool]) -> Bool {
-        let cacheIndex = Inspector.CanResolverDependencyIndex(resolver: self, dependencyIndex: index)
+    func canResolveDependency(index: Inspector.DependencyIndex, cache: inout [Inspector.ResolutionCacheIndex: Bool]) -> Bool {
+        let cacheIndex = Inspector.ResolutionCacheIndex(resolver: self, dependencyIndex: index)
         if let result = cache[cacheIndex] {
             return result
         }
@@ -248,13 +248,13 @@ extension Inspector.DependencyIndex: Hashable {
     }
 }
 
-extension Inspector.CanResolverDependencyIndex: Hashable {
+extension Inspector.ResolutionCacheIndex: Hashable {
 
     var hashValue: Int {
         return resolver.hashValue ^ dependencyIndex.hashValue
     }
     
-    static func ==(lhs: Inspector.CanResolverDependencyIndex, rhs: Inspector.CanResolverDependencyIndex) -> Bool {
+    static func ==(lhs: Inspector.ResolutionCacheIndex, rhs: Inspector.ResolutionCacheIndex) -> Bool {
         guard lhs.resolver == rhs.resolver else { return false }
         guard lhs.dependencyIndex == rhs.dependencyIndex else { return false }
         return true
