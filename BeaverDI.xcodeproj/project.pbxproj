@@ -27,6 +27,8 @@
 		19FB52B42050DFD000116AC7 /* Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FB52B22050DFBE00116AC7 /* Arguments.swift */; };
 		19FB52B72050E0BA00116AC7 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FB52B52050E03700116AC7 /* Logger.swift */; };
 		19FB52BA2050EA6900116AC7 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FB52B82050EA0C00116AC7 /* Error.swift */; };
+		19FB52BE2051084500116AC7 /* Inspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FB52BD2051084500116AC7 /* Inspector.swift */; };
+		19FB52DA2055B66400116AC7 /* InspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FB52D82055B53E00116AC7 /* InspectorTests.swift */; };
 		OBJ_178 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_184 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* Package.swift */; };
 		OBJ_190 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_64 /* Package.swift */; };
@@ -440,6 +442,8 @@
 		19FB52B22050DFBE00116AC7 /* Arguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Arguments.swift; sourceTree = "<group>"; };
 		19FB52B52050E03700116AC7 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		19FB52B82050EA0C00116AC7 /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
+		19FB52BD2051084500116AC7 /* Inspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inspector.swift; sourceTree = "<group>"; };
+		19FB52D82055B53E00116AC7 /* InspectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorTests.swift; sourceTree = "<group>"; };
 		"BeaverDI::BeaverDI::Product" /* BeaverDI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = BeaverDI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDICodeGen::Product" /* BeaverDICodeGen.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = BeaverDICodeGen.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDICodeGenTests::Product" /* BeaverDICodeGenTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = BeaverDICodeGenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -866,6 +870,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_36 /* GeneratorTests.swift */,
+				19FB52D82055B53E00116AC7 /* InspectorTests.swift */,
 				OBJ_29 /* LexerTests.swift */,
 				OBJ_31 /* ParserTests.swift */,
 				OBJ_32 /* SourceKitDeclarationTests.swift */,
@@ -1002,6 +1007,7 @@
 			children = (
 				OBJ_9 /* Expr.swift */,
 				OBJ_11 /* Generator.swift */,
+				19FB52BD2051084500116AC7 /* Inspector.swift */,
 				OBJ_12 /* Lexer.swift */,
 				OBJ_13 /* Parser.swift */,
 				OBJ_14 /* SourceKitDeclaration.swift */,
@@ -1559,6 +1565,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				19FB52DA2055B66400116AC7 /* InspectorTests.swift in Sources */,
 				OBJ_241 /* LexerTests.swift in Sources */,
 				19DD0723204DBF9700A314C6 /* GeneratorTests.swift in Sources */,
 				OBJ_243 /* ParserTests.swift in Sources */,
@@ -1612,6 +1619,7 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_329 /* Expr.swift in Sources */,
+				19FB52BE2051084500116AC7 /* Inspector.swift in Sources */,
 				OBJ_331 /* Generator.swift in Sources */,
 				OBJ_332 /* Lexer.swift in Sources */,
 				OBJ_333 /* Parser.swift in Sources */,

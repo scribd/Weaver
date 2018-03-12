@@ -11,17 +11,17 @@ import PathKit
 
 struct InputPathsArgument: ArgumentConvertible {
     
-    let values: [String]
+    let values: [Path]
     
     init(parser: ArgumentParser) throws {
         guard !parser.isEmpty else {
             throw ArgumentError.missingValue(argument: "input_paths")
         }
         
-        var values: [String] = []
+        var values: [Path] = []
         
         while let value = parser.shift() {
-            values += [value]
+            values += [Path(value)]
         }
         
         self.values = values

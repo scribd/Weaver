@@ -84,6 +84,10 @@ public struct ScopeAnnotation: Token {
         case weak = "weak"
         case container = "container"
         case parent = "parent"
+        
+        static var `default`: ScopeType {
+            return .parent
+        }
     }
     
     let name: String

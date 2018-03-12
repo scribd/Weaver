@@ -29,6 +29,10 @@ enum GeneratorError: Error {
     case invalidTemplatePath(path: String)
 }
 
+enum InspectorError: Error {
+    case invalidAST(unexpectedExpr: Expr)
+}
+
 // MARK: - Description
 
 extension TokenError: CustomStringConvertible {
@@ -77,6 +81,16 @@ extension GeneratorError: CustomStringConvertible {
         switch self {
         case .invalidTemplatePath(let path):
             return "Invalid template path: \(path)."
+        }
+    }
+}
+
+extension InspectorError: CustomStringConvertible {
+    
+    var description: String {
+        switch self {
+        case .invalidAST(let token):
+            return "Invalid AST because of token: \(token)"
         }
     }
 }
@@ -145,3 +159,12 @@ extension ParserError: Equatable {
     }
 }
 
+extension InspectorError: Equatable {
+    
+    static func ==(lhs: InspectorError, rhs: InspectorError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidAST(let lToken), .invalidAST(let rToken)):
+            return lToken == rToken
+        }
+    }
+}

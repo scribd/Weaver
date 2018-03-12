@@ -28,11 +28,11 @@ let main = command(
         var dataToWrite: [(path: Path, data: String)] = []
         
         for filePath in inputPaths.values {
-            guard let file = File(path: filePath) else {
+            guard let file = File(path: filePath.string) else {
                 return
             }
             
-            guard let fileName = filePath.split(separator: "/").last else {
+            guard let fileName = filePath.components.last else {
                 Logger.log(.error, "Could not retrieve file name from path '\(filePath)'")
                 return
             }
