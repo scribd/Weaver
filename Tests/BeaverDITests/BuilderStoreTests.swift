@@ -44,7 +44,7 @@ final class BuilderStoreTests: XCTestCase {
     
     // MARK: - Set / Get through hierarchy
     
-    func testSetThenGetShouldRetrieveTheBuilderRegisteredInTheChildFirst() {
+    func test_set_then_get_should_retrieve_the_builder_registered_in_the_child_first() {
         
         rootBuilderStore.set(builder: rootBuilder, scope: .container, for: instanceKey)
         parentBuilderStore.set(builder: parentBuilder, scope: .container, for: instanceKey)
@@ -55,7 +55,7 @@ final class BuilderStoreTests: XCTestCase {
         XCTAssertEqual(builder?(), "child_builder")
     }
     
-    func testSetThenGetShouldRetrieveTheBuilderRegisteredInTheParentWhenItsChildHasNotItSet() {
+    func test_set_then_get_should_retrieve_the_builder_registered_in_the_parent_when_its_child_has_not_it_set() {
         
         rootBuilderStore.set(builder: rootBuilder, scope: .container, for: instanceKey)
         parentBuilderStore.set(builder: parentBuilder, scope: .container, for: instanceKey)
@@ -65,7 +65,7 @@ final class BuilderStoreTests: XCTestCase {
         XCTAssertEqual(builder?(), "parent_builder")
     }
     
-    func testSetThenGetShouldNotRetrieveTheBuilderRegisteredInTheRootWhenNoChildHasItSetAndTheBuilderIsNotSharedWithChildren() {
+    func test_set_then_get_should_retrieve_the_builder_registered_in_the_root_when_no_child_has_it_set_and_the_builder_is_not_shared_with_children() {
         
         rootBuilderStore.set(builder: rootBuilder, scope: .graph, for: instanceKey)
         
@@ -74,7 +74,7 @@ final class BuilderStoreTests: XCTestCase {
         XCTAssertNil(builder)
     }
     
-    func testSetThenGetShouldRetrieveTheBuilderRegisteredInTheRootWhenTheChildHasNotItSetAndTheParentHasItSetButNotSharedWithChildren() {
+    func test_set_then_get_should_retrieve_the_builder_registered_in_the_root_when_the_child_has_not_it_set_and_the_parent_has_it_set_but_not_shared_with_children() {
         
         rootBuilderStore.set(builder: rootBuilder, scope: .container, for: instanceKey)
         parentBuilderStore.set(builder: parentBuilder, scope: .graph, for: instanceKey)

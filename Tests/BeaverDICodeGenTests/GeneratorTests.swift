@@ -13,7 +13,7 @@ import SourceKittenFramework
 
 final class GeneratorTests: XCTestCase {
     
-    func testGeneratorShouldGenerateAValidSwiftCode() {
+    func test_generator_should_generate_a_valid_swift_code() {
         
         do {
             let file = File(contents: """

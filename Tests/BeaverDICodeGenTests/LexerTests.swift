@@ -13,7 +13,7 @@ import SourceKittenFramework
 
 final class LexerTests: XCTestCase {
     
-    func testTokenizeShouldProvideAFullTokenList() {
+    func test_tokenize_should_provide_a_full_token_list() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -63,7 +63,7 @@ final class MyService {
         XCTAssertEqual(tokens[15] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 551, length: 1, line: 21))
     }
     
-    func testTokenizerShouldThrowAnErrorWithTheRightLineAndContentOnARegisterRule() {
+    func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_a_register_rule() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -101,7 +101,7 @@ final class MyService {
         }
     }
     
-    func testTokenizerShouldThrowAnErrorWithTheRightLineAndContentOnAScopeRule() {
+    func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_a_scope_rule() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver

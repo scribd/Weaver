@@ -26,7 +26,7 @@ final class DependencyContainerTests: XCTestCase {
 
     // MARK: - Register / Resolve
     
-    func testRegisterThenResolveWithNoParameterShouldBuildTheDependency() {
+    func test_register_then_resolve_with_no_parameter_should_build_the_dependency() {
         
         var builderCallCount = 0
         
@@ -50,7 +50,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertEqual(builderStoreMock.key, instanceKey)
     }
     
-    func testRegisterThenResolveWithOneParameterShouldBuildTheDependency() {
+    func test_register_then_resolve_with_one_parameter_should_build_the_dependency() {
         
         var builderCallCount = 0
         
@@ -76,7 +76,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertEqual(builderStoreMock.key, instanceKey)
     }
 
-    func testRegisterThenResolveWithTwoParametersShouldBuildTheDependency() {
+    func test_register_then_resolve_with_two_paramters_should_build_the_dependency() {
         
         var builderCallCount = 0
         
@@ -103,7 +103,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertEqual(builderStoreMock.key, instanceKey)
     }
     
-    func testRegisterThenResolveWithThreeParametersShouldBuildTheDependency() {
+    func test_register_then_resolve_with_three_paramters_should_build_the_dependency() {
         
         var builderCallCount = 0
         
@@ -131,7 +131,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertEqual(builderStoreMock.key, instanceKey)
     }
     
-    func testRegisterThenResolveWithFourParametersShouldBuildTheDependency() {
+    func test_register_then_resolve_with_four_paramters_should_build_the_dependency() {
         
         var builderCallCount = 0
         
@@ -162,7 +162,7 @@ final class DependencyContainerTests: XCTestCase {
 
     // MARK: - Retain cycle
     
-    func testContainerShouldDeallocateAfterCallingRegisterAndResoveWithNoParameter() {
+    func test_container_should_deallocate_after_calling_register_and_resolve_with_no_paramter() {
         
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
         dependencyContainer.register(DependencyStub.self, scope: .graph) { dependencies in
@@ -174,7 +174,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertNil(weakDependencyContainer)
     }
     
-    func testContainerShouldDeallocateAfterCallingRegisterAndResoveWithOneParameter() {
+    func test_container_should_deallocate_after_calling_register_and_resolve_with_one_paramter() {
         
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
         dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int) in
@@ -186,7 +186,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertNil(weakDependencyContainer)
     }
 
-    func testContainerShouldDeallocateAfterCallingRegisterAndResoveWithTwoParameters() {
+    func test_container_should_deallocate_after_calling_refister_and_resolve_with_two_parameters() {
         
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
         dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
@@ -198,7 +198,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertNil(weakDependencyContainer)
     }
 
-    func testContainerShouldDeallocateAfterCallingRegisterAndResoveWithThreeParameters() {
+    func test_container_should_deallocate_after_calling_register_and_resolve_with_three_paramter() {
         
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
         dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
@@ -210,7 +210,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertNil(weakDependencyContainer)
     }
     
-    func testContainerShouldDeallocateAfterCallingRegisterAndResoveWithFourParameters() {
+    func test_container_should_deallocate_after_calling_register_and_resolve_with_four_paramters() {
         
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
         dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in

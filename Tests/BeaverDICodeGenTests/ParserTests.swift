@@ -13,7 +13,7 @@ import SourceKittenFramework
 
 final class ParserTests: XCTestCase {
     
-    func testParserShouldGenerateAValidSyntaxTree() {
+    func test_parser_should_generate_a_valid_syntax_tree() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -63,7 +63,7 @@ class AnotherService {
         XCTAssertEqual(syntaxTree, expected)
     }
     
-    func testParserShouldReturnAnEmptyFileWhenThereIsNoDeclarationInTheFile() {
+    func test_parser_should_return_an_empty_file_when_there_is_no_declaration_in_the_file() {
         
         let file = File(contents: """
 class Test {
@@ -79,7 +79,7 @@ class Test {
         XCTAssertEqual(syntaxTree, .file(types: []))
     }
     
-    func testParserShouldReturnAnEmptyFileWhenTheFileIsEmpty() {
+    func test_parser_should_return_an_empty_file_when_the_file_is_empty() {
         
         let file = File(contents: "")
         
@@ -92,7 +92,7 @@ class Test {
         XCTAssertEqual(syntaxTree, .file(types: []))
     }
 
-    func testParserShouldGenerateASyntaxErrorWhenAParentAnnotationIsOrfan() {
+    func test_parser_should_generate_a_syntax_error_when_a_parent_annotation_is_orfan() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -125,7 +125,7 @@ final class MyService {
         }
     }
     
-    func testParserShouldGenerateASyntaxErrorWhenAScopeIsDeclaredWithoutAnyDependencyRegistration() {
+    func test_parser_should_generate_a_syntax_error_when_a_scope_is_declared_without_any_dependency_registration() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -162,7 +162,7 @@ final class MyService {
         }
     }
     
-    func testParserShouldGenerateASyntaxErrorWhenAnInjectedTypeDoesNotHaveAnyDependencies() {
+    func test_parser_should_generate_a_syntax_error_when_an_injected_type_does_not_have_any_dependencies() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -197,7 +197,7 @@ final class MyService {
         }
     }
     
-    func testParserShouldGenerateASyntaxErrorWhenADependencyIsDeclaredTwice() {
+    func test_parser_should_generate_a_syntax_error_when_a_dependency_is_declared_twice() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -237,7 +237,7 @@ final class MyService {
         }
     }
     
-    func testParserShouldGenerateASyntaxErrorWhenADependencyIsDeclaredInANonInjectableType() {
+    func test_parser_should_generate_a_syntax_error_when_a_dependency_is_declared_in_a_non_injectable_type() {
         
         let file = File(contents: """
 final class MyService {
@@ -276,7 +276,7 @@ final class MyService {
         }
     }
     
-    func testParserShouldGenerateASyntaxErrorWhenADependencyIsDeclaredOutsideOfAType() {
+    func test_parser_should_generate_a_syntax_error_when_a_dependency_is_declared_outside_of_a_type() {
         
         let file = File(contents: """
   // beaverdi: api = API <- APIProtocol

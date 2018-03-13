@@ -13,7 +13,7 @@ import SourceKittenFramework
 
 final class SourceKitDeclarationTests: XCTestCase {
     
-    func testModelShouldBeValid() {
+    func test_model_should_be_valid() {
 
         let json = """
 {
@@ -46,7 +46,7 @@ final class SourceKitDeclarationTests: XCTestCase {
         XCTAssertEqual(model?.isInjectable, true)
     }
     
-    func testModelShouldBeInvalidWhenKindIsNotSupported() {
+    func test_model_should_be_invalid_when_kind_is_not_supported() {
         
         let json = """
 {

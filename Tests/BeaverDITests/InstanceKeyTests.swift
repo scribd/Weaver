@@ -12,7 +12,7 @@ import XCTest
 
 final class InstanceKeyTests: XCTestCase {
     
-    func testInstanceKeys() {
+    func test_instance_keys() {
         
         XCTAssertEqual(InstanceKey(for: Int.self).description, "Int")
         XCTAssertEqual(InstanceKey(for: Int.self, parameterType: String.self).description, "Int(String)")

@@ -15,17 +15,16 @@ final class Inspector {
         return self.graph.values.flatMap { $0.dependencies.values }
     }()
 
-    private lazy var resolutionCache: [Inspector.ResolutionCacheIndex: Bool] = [:]
+    private lazy var resolutionCache = Set<Inspector.ResolutionCacheIndex>()
     
     public init(syntaxTrees: [Expr]) throws {
         try buildGraph(with: syntaxTrees)
     }
     
-    public var isValid: Bool {
-        for dependency in dependencies where !dependency.isResolvable(cache: &resolutionCache) {
-            return false
+    public func validate() throws {
+        for dependency in dependencies {
+            try dependency.isResolvable(cache: &resolutionCache)
         }
-        return true
     }
 }
 
@@ -50,15 +49,18 @@ private extension Inspector {
         
         let name: String
         let scope: ScopeAnnotation.ScopeType
+        let line: Int
         let associatedResolver: Resolver
         let dependentResovler: Resolver
         
         init(name: String,
              scope: ScopeAnnotation.ScopeType,
+             line: Int,
              associatedResolver: Resolver,
              dependentResovler: Resolver) {
             self.name = name
             self.scope = scope
+            self.line = line
             self.associatedResolver = associatedResolver
             self.dependentResovler = dependentResovler
         }
@@ -96,14 +98,15 @@ private extension Inspector {
 private extension Inspector.Dependency {
     
     convenience init(dependentResolver: Inspector.Resolver,
-                     registerAnnotation: RegisterAnnotation,
+                     registerAnnotation: TokenBox<RegisterAnnotation>,
                      scopeAnnotation: ScopeAnnotation?,
                      store: inout [String: Inspector.Resolver]) {
 
-        let associatedResolver = store.resolver(for: registerAnnotation.typeName)
+        let associatedResolver = store.resolver(for: registerAnnotation.value.typeName)
         
-        self.init(name: registerAnnotation.name,
+        self.init(name: registerAnnotation.value.name,
                   scope: scopeAnnotation?.scope ?? .`default`,
+                  line: registerAnnotation.line,
                   associatedResolver: associatedResolver,
                   dependentResovler: dependentResolver)
     }
@@ -113,7 +116,7 @@ private extension Inspector.Resolver {
     
     func update(with children: [Expr], store: inout [String: Inspector.Resolver]) {
 
-        var registerAnnotations: [RegisterAnnotation] = []
+        var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var scopeAnnotations: [String: ScopeAnnotation] = [:]
         
         for child in children {
@@ -123,7 +126,7 @@ private extension Inspector.Resolver {
                 resolver.update(with: children, store: &store)
                 
             case .registerAnnotation(let registerAnnotation):
-                registerAnnotations.append(registerAnnotation.value)
+                registerAnnotations.append(registerAnnotation)
                 
             case .scopeAnnotation(let scopeAnnotation):
                 scopeAnnotations[scopeAnnotation.value.name] = scopeAnnotation.value
@@ -136,7 +139,7 @@ private extension Inspector.Resolver {
         for registerAnnotation in registerAnnotations {
             let dependency = Inspector.Dependency(dependentResolver: self,
                                                   registerAnnotation: registerAnnotation,
-                                                  scopeAnnotation: scopeAnnotations[registerAnnotation.name],
+                                                  scopeAnnotation: scopeAnnotations[registerAnnotation.value.name],
                                                   store: &store)
             let index = Inspector.DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
             dependencies[index] = dependency
@@ -149,50 +152,63 @@ private extension Inspector.Resolver {
 
 private extension Inspector.Dependency {
     
-    func isResolvable(cache: inout [Inspector.ResolutionCacheIndex: Bool]) -> Bool {
+    func isResolvable(cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
         if scope != .parent {
-            return true
+            return
+        }
+        
+        guard !dependentResovler.dependents.isEmpty else {
+            throw InspectorError.invalidGraph(line: line,
+                                              dependencyName: name,
+                                              typeName: associatedResolver.typeName,
+                                              underlyingIssue: .unresolvableDependency)
         }
         
         let index = Inspector.DependencyIndex(typeName: associatedResolver.typeName, name: name)
         for dependent in dependentResovler.dependents {
-            guard dependent.canResolveDependency(index: index, cache: &cache) else {
-                return false
+            do {
+                try dependent.resolveDependency(index: index, cache: &cache)
+            } catch let error as InspectorAnalysisError {
+                throw InspectorError.invalidGraph(line: line,
+                                                  dependencyName: name,
+                                                  typeName: associatedResolver.typeName,
+                                                  underlyingIssue: error)
             }
         }
-        
-        return true
     }
 }
 
 private extension Inspector.Resolver {
     
-    func canResolveDependency(index: Inspector.DependencyIndex, cache: inout [Inspector.ResolutionCacheIndex: Bool]) -> Bool {
+    func resolveDependency(index: Inspector.DependencyIndex, cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
         let cacheIndex = Inspector.ResolutionCacheIndex(resolver: self, dependencyIndex: index)
-        if let result = cache[cacheIndex] {
-            return result
+        if cache.contains(cacheIndex) {
+            return
         }
+
         var visitedResolvers = Set<Inspector.Resolver>()
-        let result = canResolveDependency(index: index, visitedResolvers: &visitedResolvers)
-        cache[cacheIndex] = result
-        return result
+        try resolveDependency(index: index, visitedResolvers: &visitedResolvers)
+        
+        cache.insert(cacheIndex)
     }
     
-    private func canResolveDependency(index: Inspector.DependencyIndex, visitedResolvers: inout Set<Inspector.Resolver>) -> Bool {
+    private func resolveDependency(index: Inspector.DependencyIndex, visitedResolvers: inout Set<Inspector.Resolver>) throws {
         if visitedResolvers.contains(self) {
-            return false
+            throw InspectorAnalysisError.cyclicDependency
         }
         visitedResolvers.insert(self)
         
         if let dependency = dependencies[index], dependency.scope.allowsAccessFromChildren {
-            return true
+            return
         }
         
-        for dependent in dependents where dependent.canResolveDependency(index: index, visitedResolvers: &visitedResolvers) {
-            return true
+        for dependent in dependents {
+            if let _ = try? dependent.resolveDependency(index: index, visitedResolvers: &visitedResolvers) {
+                return
+            }
         }
         
-        return false
+        throw InspectorAnalysisError.unresolvableDependency
     }
 }
 

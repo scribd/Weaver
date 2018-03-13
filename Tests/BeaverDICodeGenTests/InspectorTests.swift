@@ -13,7 +13,7 @@ import SourceKittenFramework
 
 final class InspectorTests: XCTestCase {
     
-    func testInspectorShouldBuildAValidGraph() {
+    func test_inspector_should_build_a_valid_graph() {
         
         let file = File(contents: """
 // beaverdi: parent = MainDependencyResolver
@@ -24,6 +24,7 @@ final class API {
 // beaverdi: parent = MainDependencyResolver
 final class SessionManager {
   // beaverdi: api = API <- APIProtocol
+  // beaverdi: api.scope = .container
 }
 
 // beaverdi: parent = MainDependencyResolver
@@ -59,7 +60,67 @@ final class App {
             let syntaxTree = try parser.parse()
             let inspector = try Inspector(syntaxTrees: [syntaxTree])
 
-            XCTAssertTrue(inspector.isValid)
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_graph_because_of_an_unresolvable_dependency() {
+        let file = File(contents: """
+// beaverdi: parent = MainDependencyResolver
+final class API {
+  // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
+}
+
+// beaverdi: parent = MainDependencyResolver
+final class App {
+  // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
+}
+""")
+        
+        do {
+            let lexer = Lexer(file)
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens)
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, .invalidGraph(line: 7, dependencyName: "sessionManager", typeName: "SessionManager", underlyingIssue: .unresolvableDependency))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_graph_because_of_a_cyclic_dependency() {
+        let file = File(contents: """
+// beaverdi: parent = MainDependencyResolver
+final class API {
+  // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
+  // beaverdi: sessionManager.scope = .container
+}
+
+// beaverdi: parent = MainDependencyResolver
+final class SessionManager {
+  // beaverdi: api = API <- APIProtocol
+  // beaverdi: api.scope = .container
+}
+""")
+        
+        do {
+            let lexer = Lexer(file)
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens)
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, .invalidGraph(line: 7, dependencyName: "sessionManager", typeName: "SessionManager", underlyingIssue: .unresolvableDependency))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
