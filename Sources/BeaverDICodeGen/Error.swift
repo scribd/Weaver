@@ -21,7 +21,6 @@ enum ParserError: Error {
     case unexpectedEOF
     
     case unknownDependency(line: Int, dependencyName: String)
-    case missingDependency(line: Int, typeName: String)
     case depedencyDoubleDeclaration(line: Int, dependencyName: String)
 }
 
@@ -69,8 +68,6 @@ extension ParserError: CustomStringConvertible {
         switch self {
         case .depedencyDoubleDeclaration(let line, let dependencyName):
             return "Double dependency declaration: '\(dependencyName)': \(printableLine(line))."
-        case .missingDependency(let line, let typeName):
-            return "Missing dependency declaration for type: '\(typeName)': \(printableLine(line))."
         case .unexpectedEOF:
             return "Unexpected EOF (End of file)."
         case .unexpectedToken(let line):
@@ -98,7 +95,7 @@ extension InspectorError: CustomStringConvertible {
         case .invalidAST(let token):
             return "Invalid AST because of token: \(token)."
         case .invalidGraph(let line, let dependencyName, let typeName, let underlyingIssue):
-            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' at line \(line)."
+            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' at line \(printableLine(line))."
         }
     }
 }
@@ -158,11 +155,6 @@ extension ParserError: Equatable {
             guard lDependencyName == rDependencyName else { return false }
             return true
             
-        case (.missingDependency(let lLine, let lTypeName), .missingDependency(let rLine, let rTypeName)):
-            guard lLine == rLine else { return false }
-            guard lTypeName == rTypeName else { return false }
-            return true
-            
         case (.unexpectedEOF, .unexpectedEOF):
             return true
             
@@ -171,7 +163,6 @@ extension ParserError: Equatable {
             
         case (.depedencyDoubleDeclaration, _),
              (.unknownDependency, _),
-             (.missingDependency, _),
              (.unexpectedEOF, _),
              (.unexpectedToken, _):
             return false

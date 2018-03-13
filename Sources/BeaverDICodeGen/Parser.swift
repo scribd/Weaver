@@ -51,18 +51,6 @@ private extension Parser {
             }
         }
     }
-    
-    func parseParentResolverAnnotation() throws -> TokenBox<ParentResolverAnnotation> {
-        switch currentToken {
-        case let token as TokenBox<ParentResolverAnnotation>:
-            consumeToken()
-            return token
-        case nil:
-            throw ParserError.unexpectedEOF
-        case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line)
-        }
-    }
 
     func parseRegisterAnnotation() throws -> TokenBox<RegisterAnnotation> {
         switch currentToken {
@@ -100,8 +88,7 @@ private extension Parser {
         }
     }
     
-    func parseInjectedTypeDeclaration() throws -> Expr {
-        let parentResolver = try parseParentResolverAnnotation()
+    func parseInjectedTypeDeclaration() throws -> Expr? {
         let type = try parseInjectableType()
         
         var children = [Expr]()
@@ -125,19 +112,19 @@ private extension Parser {
                     throw ParserError.unknownDependency(line: annotation.line, dependencyName: annotation.value.name)
                 }
                 children.append(.scopeAnnotation(annotation))
-
-            case is TokenBox<ParentResolverAnnotation>:
-                children.append(try parseInjectedTypeDeclaration())
             
             case is TokenBox<InjectableType>:
-                children.append(try parseInjectedTypeDeclaration())
+                if let typeDeclaration = try parseInjectedTypeDeclaration() {
+                    children.append(typeDeclaration)
+                }
             
             case is TokenBox<EndOfInjectableType>:
                 consumeToken()
-                guard !dependencyNames.isEmpty else {
-                    throw ParserError.missingDependency(line: type.line, typeName: type.value.name)
+                if children.isEmpty {
+                    return nil
+                } else {
+                    return .typeDeclaration(type, children: children)
                 }
-                return .typeDeclaration(type, parentResolver: parentResolver, children: children)
 
             case nil:
                 throw ParserError.unexpectedEOF
@@ -156,11 +143,10 @@ private extension Parser {
             parseAnyDeclarations()
 
             switch currentToken {
-            case is TokenBox<ParentResolverAnnotation>:
-                types.append(try parseInjectedTypeDeclaration())
-                
             case is TokenBox<InjectableType>:
-                consumeToken()
+                if let typeDeclaration = try parseInjectedTypeDeclaration() {
+                    types.append(typeDeclaration)
+                }
                 
             case is TokenBox<EndOfInjectableType>:
                 consumeToken()

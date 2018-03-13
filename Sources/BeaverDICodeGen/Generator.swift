@@ -53,11 +53,11 @@ private struct DependencyData {
     let implementationTypeName: String
     let abstractTypeName: String
     let scope: String
+    let needsRegistration: Bool
 }
 
 private struct ResolverData {
     let targetTypeName: String
-    let parentTypeName: String
     let dependencies: [DependencyData]
     let enclosingTypeNames: [String]?
 }
@@ -70,11 +70,13 @@ extension DependencyData {
          scopeAnnotation: ScopeAnnotation?) {
        
         let optionChars = CharacterSet(charactersIn: "?")
+        let scope = scopeAnnotation?.scope ?? .`default`
 
         self.init(name: registerAnnotation.name,
                   implementationTypeName: registerAnnotation.typeName.trimmingCharacters(in: optionChars),
-                  abstractTypeName: registerAnnotation.protocolName ?? registerAnnotation.name,
-                  scope: (scopeAnnotation?.scope ?? .graph).rawValue)
+                  abstractTypeName: registerAnnotation.protocolName ?? registerAnnotation.typeName,
+                  scope: scope.rawValue,
+                  needsRegistration: scope != .parent)
     }
 }
 
@@ -83,9 +85,8 @@ extension ResolverData {
     init?(expr: Expr, enclosingTypeNames: [String]) {
         
         switch expr {
-        case .typeDeclaration(let typeToken, parentResolver: let parentToken, children: let children):
+        case .typeDeclaration(let typeToken, children: let children):
             let targetTypeName = typeToken.value.name
-            let parentTypeName = parentToken.value.typeName
             
             var scopeAnnotations = [String: ScopeAnnotation]()
             var registerAnnotations = [String: RegisterAnnotation]()
@@ -98,7 +99,8 @@ extension ResolverData {
                 case .registerAnnotation(let annotation):
                     registerAnnotations[annotation.value.name] = annotation.value
 
-                default:
+                case .file,
+                     .typeDeclaration:
                     break
                 }
             }
@@ -109,7 +111,6 @@ extension ResolverData {
             }
             
             self.init(targetTypeName: targetTypeName,
-                      parentTypeName: parentTypeName,
                       dependencies: dependencies,
                       enclosingTypeNames: enclosingTypeNames)
             
@@ -127,7 +128,7 @@ private extension Array where Element == ResolverData {
 
         self.init(exprs.flatMap { expr -> [ResolverData] in
             switch expr {
-            case .typeDeclaration(let typeToken, _, let children):
+            case .typeDeclaration(let typeToken, let children):
                 guard let resolverData = ResolverData(expr: expr, enclosingTypeNames: enclosingTypeNames) else {
                     return []
                 }

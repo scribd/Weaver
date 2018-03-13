@@ -6,16 +6,12 @@
 
 final class {{resolver.targetTypeName}}DependencyResolver: DependencyResolver {
   
-  init(_ parent: {{resolver.parentTypeName}}) {
-    super.init(parent)
-  }
-
   override func registerDependencies(in store: DependencyStore) {
-    {% for dependency in resolver.dependencies %}
+    {% for dependency in resolver.dependencies %}{% if dependency.needsRegistration %}
     store.register({{dependency.abstractTypeName}}.self, scope: .{{dependency.scope}}, builder: { dependencies in
       return {{dependency.implementationTypeName}}.make{{dependency.implementationTypeName}}(injecting: dependencies)
     })
-    {% endfor %}
+    {% endif %}{% endfor %}
   }
 }
 
@@ -23,7 +19,7 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
 
   // MARK: - Builder
 
-  static func make{{resolver.targetTypeName}}(injecting parentDependencies: {{resolver.parentTypeName}}) -> {{resolver.targetTypeName}} {
+  static func make{{resolver.targetTypeName}}(injecting parentDependencies: DependencyResolver) -> {{resolver.targetTypeName}} {
     let dependencies = {{resolver.targetTypeName}}DependencyResolver(parentDependencies)
     return {{resolver.targetTypeName}}(injecting: dependencies)
   }

@@ -29,25 +29,6 @@ public protocol Token: Equatable, CustomStringConvertible {
 
 // MARK: - Token Types
 
-public struct ParentResolverAnnotation: Token {
-    let typeName: String
-    
-    public static func create(_ string: String) throws -> ParentResolverAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^parent\\s*=\\s*(\\w+)\\s*$").matches(in: string) else {
-            return nil
-        }
-        return ParentResolverAnnotation(typeName: matches[0])
-    }
-    
-    public static func ==(lhs: ParentResolverAnnotation, rhs: ParentResolverAnnotation) -> Bool {
-        return lhs.typeName == rhs.typeName
-    }
-    
-    public var description: String {
-        return "parent = \(typeName)"
-    }
-}
-
 public struct RegisterAnnotation: Token {
     let name: String
     let typeName: String
@@ -176,9 +157,6 @@ enum TokenBuilder {
             return TokenBox(value: token, offset: offset, length: length, line: line)
         }
         
-        if let token = try ParentResolverAnnotation.create(body) {
-            return makeTokenBox(token)
-        }
         if let token = try RegisterAnnotation.create(body) {
             return makeTokenBox(token)
         }

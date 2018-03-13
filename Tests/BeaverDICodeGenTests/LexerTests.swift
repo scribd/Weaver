@@ -16,8 +16,6 @@ final class LexerTests: XCTestCase {
     func test_tokenize_should_provide_a_full_token_list() {
         
         let file = File(contents: """
-// beaverdi: parent = MainDependencyResolver
-// regular comment
 final class MyService {
   let dependencies: DependencyResolver
 
@@ -27,7 +25,6 @@ final class MyService {
   // beaverdi: router = Router
   // beaverdi: router.scope = .parent
 
-  // beaverdi: parent = MyServiceDependencyResolver
   final class MyEmbeddedService {
 
     // beaverdi: session = Session? <- SessionProtocol?
@@ -42,25 +39,23 @@ final class MyService {
         let lexer = Lexer(file)
         let tokens = try! lexer.tokenize()
         
-        XCTAssertEqual(tokens.count, 16)
-        guard tokens.count == 16 else { return }
+        XCTAssertEqual(tokens.count, 14)
+        guard tokens.count == 14 else { return }
 
-        XCTAssertEqual(tokens[0] as? TokenBox<ParentResolverAnnotation>, TokenBox(value: ParentResolverAnnotation(typeName: "MainDependencyResolver"), offset: 0, length: 45, line: 0))
-        XCTAssertEqual(tokens[1] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService"), offset: 70, length: 482, line: 2))
-        XCTAssertEqual(tokens[2] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 90, length: 36, line: 3))
-        XCTAssertEqual(tokens[3] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 130, length: 38, line: 5))
-        XCTAssertEqual(tokens[4] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 170, length: 32, line: 6))
-        XCTAssertEqual(tokens[5] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "router", typeName: "Router", protocolName: nil), offset: 205, length: 29, line: 8))
-        XCTAssertEqual(tokens[6] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "router", scope: .parent), offset: 236, length: 36, line: 9))
-        XCTAssertEqual(tokens[7] as? TokenBox<ParentResolverAnnotation>, TokenBox(value: ParentResolverAnnotation(typeName: "MyServiceDependencyResolver"), offset: 275, length: 50, line: 11))
-        XCTAssertEqual(tokens[8] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 333, length: 130, line: 12))
-        XCTAssertEqual(tokens[9] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session?", protocolName: "SessionProtocol?"), offset: 364, length: 52, line: 14))
-        XCTAssertEqual(tokens[10] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "session", scope: .container), offset: 420, length: 40, line: 15))
-        XCTAssertEqual(tokens[11] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 462, length: 1, line: 16))
-        XCTAssertEqual(tokens[12] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 467, length: 83, line: 18))
-        XCTAssertEqual(tokens[13] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 472, length: 34, line: 18))
-        XCTAssertEqual(tokens[14] as? TokenBox<EndOfAnyDeclaration>, TokenBox(value: EndOfAnyDeclaration(), offset: 549, length: 1, line: 20))
-        XCTAssertEqual(tokens[15] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 551, length: 1, line: 21))
+        XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 430, line: 0))
+        XCTAssertEqual(tokens[1] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 26, length: 36, line: 1))
+        XCTAssertEqual(tokens[2] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 66, length: 38, line: 3))
+        XCTAssertEqual(tokens[3] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 106, length: 32, line: 4))
+        XCTAssertEqual(tokens[4] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "router", typeName: "Router", protocolName: nil), offset: 141, length: 29, line: 6))
+        XCTAssertEqual(tokens[5] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "router", scope: .parent), offset: 172, length: 36, line: 7))
+        XCTAssertEqual(tokens[6] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 217, length: 130, line: 9))
+        XCTAssertEqual(tokens[7] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session?", protocolName: "SessionProtocol?"), offset: 248, length: 52, line: 11))
+        XCTAssertEqual(tokens[8] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "session", scope: .container), offset: 304, length: 40, line: 12))
+        XCTAssertEqual(tokens[9] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 346, length: 1, line: 13))
+        XCTAssertEqual(tokens[10] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 351, length: 83, line: 15))
+        XCTAssertEqual(tokens[11] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 356, length: 34, line: 15))
+        XCTAssertEqual(tokens[12] as? TokenBox<EndOfAnyDeclaration>, TokenBox(value: EndOfAnyDeclaration(), offset: 433, length: 1, line: 17))
+        XCTAssertEqual(tokens[13] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 435, length: 1, line: 18))
     }
     
     func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_a_register_rule() {

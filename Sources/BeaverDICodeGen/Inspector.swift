@@ -23,7 +23,7 @@ final class Inspector {
     
     public func validate() throws {
         for dependency in dependencies {
-            try dependency.isResolvable(cache: &resolutionCache)
+            try dependency.resolve(with: &resolutionCache)
         }
     }
 }
@@ -83,7 +83,7 @@ private extension Inspector {
             case .file(let types):
                 try buildGraph(with: types)
                 
-            case .typeDeclaration(let injectableType, _, let children):
+            case .typeDeclaration(let injectableType, let children):
                 let resolver = graph.resolver(for: injectableType.value.name)
                 resolver.update(with: children, store: &graph)
 
@@ -121,7 +121,7 @@ private extension Inspector.Resolver {
         
         for child in children {
             switch child {
-            case .typeDeclaration(let injectableType, _, let children):
+            case .typeDeclaration(let injectableType, let children):
                 let resolver = store.resolver(for: injectableType.value.name)
                 resolver.update(with: children, store: &store)
                 
@@ -152,7 +152,7 @@ private extension Inspector.Resolver {
 
 private extension Inspector.Dependency {
     
-    func isResolvable(cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
+    func resolve(with cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
         if scope != .parent {
             return
         }

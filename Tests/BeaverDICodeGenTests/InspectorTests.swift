@@ -16,28 +16,23 @@ final class InspectorTests: XCTestCase {
     func test_inspector_should_build_a_valid_graph() {
         
         let file = File(contents: """
-// beaverdi: parent = MainDependencyResolver
 final class API {
   // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
 }
 
-// beaverdi: parent = MainDependencyResolver
 final class SessionManager {
   // beaverdi: api = API <- APIProtocol
   // beaverdi: api.scope = .container
 }
 
-// beaverdi: parent = MainDependencyResolver
 final class Router {
   // beaverdi: api = API <- APIProtocol
 }
 
-// beaverdi: parent = MainDependencyResolver
 final class LoginController {
   // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
 }
 
-// beaverdi: parent = MainDependencyResolver
 final class App {
   // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .container
@@ -68,12 +63,10 @@ final class App {
     
     func test_inspector_should_build_an_invalid_graph_because_of_an_unresolvable_dependency() {
         let file = File(contents: """
-// beaverdi: parent = MainDependencyResolver
 final class API {
   // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
 }
 
-// beaverdi: parent = MainDependencyResolver
 final class App {
   // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
 }
@@ -89,21 +82,19 @@ final class App {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 7, dependencyName: "sessionManager", typeName: "SessionManager", underlyingIssue: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 5, dependencyName: "sessionManager", typeName: "SessionManager", underlyingIssue: .unresolvableDependency))
         } catch {
-            XCTFail("Unexpected error: \(error)")
+            XCTFail("Unexpected error: \(error).")
         }
     }
     
     func test_inspector_should_build_an_invalid_graph_because_of_a_cyclic_dependency() {
         let file = File(contents: """
-// beaverdi: parent = MainDependencyResolver
 final class API {
   // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
-  // beaverdi: sessionManager.scope = .container
+  // beaverdi: sessionManager.scope = .containter
 }
 
-// beaverdi: parent = MainDependencyResolver
 final class SessionManager {
   // beaverdi: api = API <- APIProtocol
   // beaverdi: api.scope = .container

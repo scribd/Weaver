@@ -17,7 +17,6 @@ final class GeneratorTests: XCTestCase {
         
         do {
             let file = File(contents: """
-// beaverdi: parent = MainDependencyResolver
 final class MyService {
   let dependencies: DependencyResolver
 
@@ -27,7 +26,8 @@ final class MyService {
   // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .parent
 
-  // beaverdi: parent = MyServiceDependencyResolver
+  // beaverdi: session = SessionProtocol
+
   final class MyEmbeddedService {
 
     // beaverdi: session = Session? <- SessionProtocol?
@@ -61,18 +61,10 @@ class AnotherService {
 
 final class MyServiceDependencyResolver: DependencyResolver {
   
-  init(_ parent: MainDependencyResolver) {
-    super.init(parent)
-  }
-
   override func registerDependencies(in store: DependencyStore) {
     
     store.register(APIProtocol.self, scope: .graph, builder: { dependencies in
       return API.makeAPI(injecting: dependencies)
-    })
-    
-    store.register(RouterProtocol.self, scope: .parent, builder: { dependencies in
-      return Router.makeRouter(injecting: dependencies)
     })
     
   }
@@ -82,7 +74,7 @@ extension MyService {
 
   // MARK: - Builder
 
-  static func makeMyService(injecting parentDependencies: MainDependencyResolver) -> MyService {
+  static func makeMyService(injecting parentDependencies: DependencyResolver) -> MyService {
     let dependencies = MyServiceDependencyResolver(parentDependencies)
     return MyService(injecting: dependencies)
   }
@@ -97,16 +89,16 @@ extension MyService {
     return dependencies.resolve(RouterProtocol.self)
   }
   
+  var session: SessionProtocol {
+    return dependencies.resolve(SessionProtocol.self)
+  }
+  
 }
 
 // MARK: - MyEmbeddedService
 
 final class MyEmbeddedServiceDependencyResolver: DependencyResolver {
   
-  init(_ parent: MyServiceDependencyResolver) {
-    super.init(parent)
-  }
-
   override func registerDependencies(in store: DependencyStore) {
     
     store.register(SessionProtocol?.self, scope: .container, builder: { dependencies in
@@ -120,7 +112,7 @@ extension MyService.MyEmbeddedService {
 
   // MARK: - Builder
 
-  static func makeMyEmbeddedService(injecting parentDependencies: MyServiceDependencyResolver) -> MyEmbeddedService {
+  static func makeMyEmbeddedService(injecting parentDependencies: DependencyResolver) -> MyEmbeddedService {
     let dependencies = MyEmbeddedServiceDependencyResolver(parentDependencies)
     return MyEmbeddedService(injecting: dependencies)
   }
