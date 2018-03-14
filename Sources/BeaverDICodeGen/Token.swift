@@ -64,10 +64,9 @@ public struct ScopeAnnotation: Token {
         case graph = "graph"
         case weak = "weak"
         case container = "container"
-        case parent = "parent"
         
         static var `default`: ScopeType {
-            return .parent
+            return .graph
         }
     }
     
@@ -94,6 +93,29 @@ public struct ScopeAnnotation: Token {
     
     public var description: String {
         return "\(name).scope = \(scope)"
+    }
+}
+
+public struct ReferenceAnnotation: Token {
+    
+    let name: String
+    let typeName: String
+    
+    public static func create(_ string: String) throws -> ReferenceAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*<-\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+            return nil
+        }
+        return ReferenceAnnotation(name: matches[0], typeName: matches[1])
+    }
+    
+    public static func ==(lhs: ReferenceAnnotation, rhs: ReferenceAnnotation) -> Bool {
+        guard lhs.name == rhs.name else { return false }
+        guard lhs.typeName == rhs.typeName else { return false }
+        return true
+    }
+    
+    public var description: String {
+        return "\(name) <- \(typeName)"
     }
 }
 
@@ -158,6 +180,9 @@ enum TokenBuilder {
         }
         
         if let token = try RegisterAnnotation.create(body) {
+            return makeTokenBox(token)
+        }
+        if let token = try ReferenceAnnotation.create(body) {
             return makeTokenBox(token)
         }
         if let token = try ScopeAnnotation.create(body) {

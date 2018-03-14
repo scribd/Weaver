@@ -13,55 +13,154 @@ import SourceKittenFramework
 
 final class LexerTests: XCTestCase {
     
-    func test_tokenize_should_provide_a_full_token_list() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_type_declaration() {
+
+        let file = File(contents: """
+final class MyService {
+}
+""")
+        do {
+            let lexer = Lexer(file)
+            let tokens = try lexer.tokenize()
+
+            if tokens.count == 2 {
+                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 19, line: 0))
+                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 24, length: 1, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_an_embedded_type_declaration() {
         
         let file = File(contents: """
 final class MyService {
-  let dependencies: DependencyResolver
-
-  // beaverdi: api = API <- APIProtocol
-  // beaverdi: api.scope = .graph
-
-  // beaverdi: router = Router
-  // beaverdi: router.scope = .parent
-
   final class MyEmbeddedService {
-
-    // beaverdi: session = Session? <- SessionProtocol?
-    // beaverdi: session.scope = .container
-  }
-
-  init(_ dependencies: DependencyResolver) {
-    self.dependencies = dependencies
   }
 }
 """)
-        let lexer = Lexer(file)
-        let tokens = try! lexer.tokenize()
-        
-        XCTAssertEqual(tokens.count, 14)
-        guard tokens.count == 14 else { return }
-
-        XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 430, line: 0))
-        XCTAssertEqual(tokens[1] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 26, length: 36, line: 1))
-        XCTAssertEqual(tokens[2] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 66, length: 38, line: 3))
-        XCTAssertEqual(tokens[3] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 106, length: 32, line: 4))
-        XCTAssertEqual(tokens[4] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "router", typeName: "Router", protocolName: nil), offset: 141, length: 29, line: 6))
-        XCTAssertEqual(tokens[5] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "router", scope: .parent), offset: 172, length: 36, line: 7))
-        XCTAssertEqual(tokens[6] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 217, length: 130, line: 9))
-        XCTAssertEqual(tokens[7] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session?", protocolName: "SessionProtocol?"), offset: 248, length: 52, line: 11))
-        XCTAssertEqual(tokens[8] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "session", scope: .container), offset: 304, length: 40, line: 12))
-        XCTAssertEqual(tokens[9] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 346, length: 1, line: 13))
-        XCTAssertEqual(tokens[10] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 351, length: 83, line: 15))
-        XCTAssertEqual(tokens[11] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 356, length: 34, line: 15))
-        XCTAssertEqual(tokens[12] as? TokenBox<EndOfAnyDeclaration>, TokenBox(value: EndOfAnyDeclaration(), offset: 433, length: 1, line: 17))
-        XCTAssertEqual(tokens[13] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 435, length: 1, line: 18))
+        do {
+            let lexer = Lexer(file)
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 4 {
+                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 57, line: 0))
+                XCTAssertEqual(tokens[1] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 32, length: 29, line: 1))
+                XCTAssertEqual(tokens[2] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 60, length: 1, line: 2))
+                XCTAssertEqual(tokens[3] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 62, length: 1, line: 3))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
-    func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_a_register_rule() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation() {
         
         let file = File(contents: """
-// beaverdi: parent = MainDependencyResolver
+// beaverdi: api = API <- APIProtocol
+""")
+        do {
+            let lexer = Lexer(file)
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 0, length: 37, line: 0))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_and_no_protocol() {
+        
+        let file = File(contents: """
+// beaverdi: api = API
+""")
+        do {
+            let lexer = Lexer(file)
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: nil), offset: 0, length: 22, line: 0))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_and_optional_types() {
+        
+        let file = File(contents: """
+// beaverdi: api = API? <- APIProtocol?
+""")
+        do {
+            let lexer = Lexer(file)
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "api", typeName: "API?", protocolName: "APIProtocol?"), offset: 0, length: 39, line: 0))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_scope_annotation() {
+        
+        let file = File(contents: """
+// beaverdi: api.scope = .graph
+""")
+        let lexer = Lexer(file)
+
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ScopeAnnotation>, TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 0, length: 31, line: 0))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_any_ignored_declaration() {
+        
+        let file = File(contents: """
+func ignoredFunc() {
+}
+""")
+        let lexer = Lexer(file)
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 2 {
+                XCTAssertEqual(tokens[0] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 0, length: 22, line: 0))
+                XCTAssertEqual(tokens[1] as? TokenBox<EndOfAnyDeclaration>, TokenBox(value: EndOfAnyDeclaration(), offset: 21, length: 1, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_annotation() {
+        
+        let file = File(contents: """
 final class MyService {
   let dependencies: DependencyResolver
 
@@ -88,9 +187,8 @@ final class MyService {
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
-        } catch LexerError.invalidAnnotation(let line, .invalidAnnotation(let content)) {
-            XCTAssertEqual(line, 4)
-            XCTAssertEqual(content, "beaverdi: api = API <-- APIProtocol")
+        } catch let error as LexerError {
+            XCTAssertEqual(error, .invalidAnnotation(line: 3, underlyingError: .invalidAnnotation("beaverdi: api = API <-- APIProtocol")))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -99,7 +197,6 @@ final class MyService {
     func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_a_scope_rule() {
         
         let file = File(contents: """
-// beaverdi: parent = MainDependencyResolver
 final class MyService {
   let dependencies: DependencyResolver
 
@@ -126,9 +223,8 @@ final class MyService {
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
-        } catch LexerError.invalidAnnotation(let line, .invalidScope(let scope)) {
-            XCTAssertEqual(line, 5)
-            XCTAssertEqual(scope, "thisScopeDoesNotExists")
+        } catch let error as LexerError {
+            XCTAssertEqual(error, .invalidAnnotation(line: 4, underlyingError: .invalidScope("thisScopeDoesNotExists")))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }

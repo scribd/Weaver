@@ -64,11 +64,11 @@ final class App {
     func test_inspector_should_build_an_invalid_graph_because_of_an_unresolvable_dependency() {
         let file = File(contents: """
 final class API {
-  // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
+  // beaverdi: sessionManager <- SessionManagerProtocol
 }
 
 final class App {
-  // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
+  // beaverdi: sessionManager <- SessionManagerProtocol
 }
 """)
         
@@ -82,7 +82,7 @@ final class App {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 5, dependencyName: "sessionManager", typeName: "SessionManager", underlyingIssue: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 5, dependencyName: "sessionManager", typeName: "SessionManagerProtocol", underlyingIssue: .unresolvableDependency))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -92,7 +92,7 @@ final class App {
         let file = File(contents: """
 final class API {
   // beaverdi: sessionManager = SessionManager <- SessionManagerProtocol
-  // beaverdi: sessionManager.scope = .containter
+  // beaverdi: sessionManager.scope = .container
 }
 
 final class SessionManager {

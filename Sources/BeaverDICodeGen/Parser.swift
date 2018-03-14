@@ -64,6 +64,18 @@ private extension Parser {
         }
     }
     
+    func parseReferenceAnnotation() throws -> TokenBox<ReferenceAnnotation> {
+        switch currentToken {
+        case let token as TokenBox<ReferenceAnnotation>:
+            consumeToken()
+            return token
+        case nil:
+            throw ParserError.unexpectedEOF
+        case .some(let token):
+            throw ParserError.unexpectedToken(line: token.line)
+        }
+    }
+    
     func parseScopeAnnotation() throws -> TokenBox<ScopeAnnotation> {
         switch currentToken {
         case let token as TokenBox<ScopeAnnotation>:
@@ -92,7 +104,8 @@ private extension Parser {
         let type = try parseInjectableType()
         
         var children = [Expr]()
-        var dependencyNames = Set<String>()
+        var registrationNames = Set<String>()
+        var referenceNames = Set<String>()
         
         while true {
             parseAnyDeclarations()
@@ -100,15 +113,25 @@ private extension Parser {
             switch currentToken {
             case is TokenBox<RegisterAnnotation>:
                 let annotation = try parseRegisterAnnotation()
-                guard !dependencyNames.contains(annotation.value.name) else {
-                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, dependencyName: annotation.value.name)
+                let name = annotation.value.name
+                guard !registrationNames.contains(name) && !referenceNames.contains(name) else {
+                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, dependencyName: name)
                 }
-                dependencyNames.insert(annotation.value.name)
+                registrationNames.insert(name)
                 children.append(.registerAnnotation(annotation))
             
+            case is TokenBox<ReferenceAnnotation>:
+                let annotation = try parseReferenceAnnotation()
+                let name = annotation.value.name
+                guard !registrationNames.contains(name) && !referenceNames.contains(name) else {
+                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, dependencyName: name)
+                }
+                referenceNames.insert(name)
+                children.append(.referenceAnnotation(annotation))
+
             case is TokenBox<ScopeAnnotation>:
                 let annotation = try parseScopeAnnotation()
-                guard dependencyNames.contains(annotation.value.name) else {
+                guard registrationNames.contains(annotation.value.name) else {
                     throw ParserError.unknownDependency(line: annotation.line, dependencyName: annotation.value.name)
                 }
                 children.append(.scopeAnnotation(annotation))

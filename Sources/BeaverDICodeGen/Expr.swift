@@ -12,6 +12,7 @@ public indirect enum Expr {
     case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
+    case referenceAnnotation(TokenBox<ReferenceAnnotation>)
 }
 
 // MARK: - Equatable
@@ -29,10 +30,13 @@ extension Expr: Equatable {
             return lhs == rhs
         case (.scopeAnnotation(let lhs), .scopeAnnotation(let rhs)):
             return lhs == rhs
+        case (.referenceAnnotation(let lhs), .referenceAnnotation(let rhs)):
+            return lhs == rhs
         case (.file, _),
              (.typeDeclaration, _),
              (.registerAnnotation, _),
-             (.scopeAnnotation, _):
+             (.scopeAnnotation, _),
+             (.referenceAnnotation, _):
             return false
         }
     }
@@ -51,6 +55,8 @@ extension Expr: CustomStringConvertible {
             return "Scope - \(token)"
         case .typeDeclaration(let type, let children):
             return "\(type)\n" + children.map { "  \($0)" }.joined(separator: "\n")
+        case .referenceAnnotation(let token):
+            return "Reference - \(token)"
         }
     }
 }

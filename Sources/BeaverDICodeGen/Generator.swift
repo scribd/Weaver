@@ -48,23 +48,28 @@ public final class Generator {
 
 // MARK: - Template Data
 
-private struct DependencyData {
+private struct RegisterData {
     let name: String
-    let implementationTypeName: String
-    let abstractTypeName: String
+    let typeName: String
+    let protocolName: String?
     let scope: String
-    let needsRegistration: Bool
+}
+
+private struct ReferenceData {
+    let name: String
+    let typeName: String
 }
 
 private struct ResolverData {
     let targetTypeName: String
-    let dependencies: [DependencyData]
+    let registrations: [RegisterData]
+    let references: [ReferenceData]
     let enclosingTypeNames: [String]?
 }
 
 // MARK: - Conversion
 
-extension DependencyData {
+extension RegisterData {
 
     init(registerAnnotation: RegisterAnnotation,
          scopeAnnotation: ScopeAnnotation?) {
@@ -73,10 +78,18 @@ extension DependencyData {
         let scope = scopeAnnotation?.scope ?? .`default`
 
         self.init(name: registerAnnotation.name,
-                  implementationTypeName: registerAnnotation.typeName.trimmingCharacters(in: optionChars),
-                  abstractTypeName: registerAnnotation.protocolName ?? registerAnnotation.typeName,
-                  scope: scope.rawValue,
-                  needsRegistration: scope != .parent)
+                  typeName: registerAnnotation.typeName.trimmingCharacters(in: optionChars),
+                  protocolName: registerAnnotation.protocolName,
+                  scope: scope.rawValue)
+    }
+}
+
+extension ReferenceData {
+    
+    init(referenceAnnotation: ReferenceAnnotation) {
+        
+        self.init(name: referenceAnnotation.name,
+                  typeName: referenceAnnotation.typeName)
     }
 }
 
@@ -90,6 +103,7 @@ extension ResolverData {
             
             var scopeAnnotations = [String: ScopeAnnotation]()
             var registerAnnotations = [String: RegisterAnnotation]()
+            var referenceAnnotations = [String: ReferenceAnnotation]()
             
             for child in children {
                 switch child {
@@ -99,23 +113,31 @@ extension ResolverData {
                 case .registerAnnotation(let annotation):
                     registerAnnotations[annotation.value.name] = annotation.value
 
+                case .referenceAnnotation(let annotation):
+                    referenceAnnotations[annotation.value.name] = annotation.value
+                    
                 case .file,
                      .typeDeclaration:
                     break
                 }
             }
             
-            let dependencies = registerAnnotations.map {
-                DependencyData(registerAnnotation: $0.value,
-                               scopeAnnotation: scopeAnnotations[$0.key])
+            let registrations = registerAnnotations.map {
+                RegisterData(registerAnnotation: $0.value, scopeAnnotation: scopeAnnotations[$0.key])
             }
-            
+
+            let references = referenceAnnotations.map {
+                ReferenceData(referenceAnnotation: $0.value)
+            }
+
             self.init(targetTypeName: targetTypeName,
-                      dependencies: dependencies,
+                      registrations: registrations,
+                      references: references,
                       enclosingTypeNames: enclosingTypeNames)
             
         case .registerAnnotation,
              .scopeAnnotation,
+             .referenceAnnotation,
              .file:
             return nil
         }
@@ -137,6 +159,7 @@ private extension Array where Element == ResolverData {
 
             case .file,
                  .registerAnnotation,
+                 .referenceAnnotation,
                  .scopeAnnotation:
                 return []
             }
@@ -152,7 +175,8 @@ private extension Array where Element == ResolverData {
             self.init(exprs: [ast])
             
         case .registerAnnotation,
-             .scopeAnnotation:
+             .scopeAnnotation,
+             .referenceAnnotation:
             self.init()
         }
     }

@@ -29,8 +29,8 @@ final class Inspector {
 }
 
 private extension Inspector {
+
     final class Resolver {
-        
         let typeName: String
         var dependencies: [DependencyIndex: Dependency] = [:]
         var dependents: [Resolver] = []
@@ -46,15 +46,14 @@ private extension Inspector {
     }
     
     final class Dependency {
-        
         let name: String
-        let scope: ScopeAnnotation.ScopeType
+        let scope: ScopeAnnotation.ScopeType?
         let line: Int
         let associatedResolver: Resolver
         let dependentResovler: Resolver
         
         init(name: String,
-             scope: ScopeAnnotation.ScopeType,
+             scope: ScopeAnnotation.ScopeType? = nil,
              line: Int,
              associatedResolver: Resolver,
              dependentResovler: Resolver) {
@@ -86,9 +85,10 @@ private extension Inspector {
             case .typeDeclaration(let injectableType, let children):
                 let resolver = graph.resolver(for: injectableType.value.name)
                 resolver.update(with: children, store: &graph)
-
+                
             case .scopeAnnotation,
-                 .registerAnnotation:
+                 .registerAnnotation,
+                 .referenceAnnotation:
                 throw InspectorError.invalidAST(unexpectedExpr: ast)
             }
         }
@@ -99,7 +99,7 @@ private extension Inspector.Dependency {
     
     convenience init(dependentResolver: Inspector.Resolver,
                      registerAnnotation: TokenBox<RegisterAnnotation>,
-                     scopeAnnotation: ScopeAnnotation?,
+                     scopeAnnotation: ScopeAnnotation? = nil,
                      store: inout [String: Inspector.Resolver]) {
 
         let associatedResolver = store.resolver(for: registerAnnotation.value.typeName)
@@ -110,6 +110,18 @@ private extension Inspector.Dependency {
                   associatedResolver: associatedResolver,
                   dependentResovler: dependentResolver)
     }
+    
+    convenience init(dependentResolver: Inspector.Resolver,
+                     referenceAnnotation: TokenBox<ReferenceAnnotation>,
+                     store: inout [String: Inspector.Resolver]) {
+
+        let associatedResolver = store.resolver(for: referenceAnnotation.value.typeName)
+        
+        self.init(name: referenceAnnotation.value.name,
+                  line: referenceAnnotation.line,
+                  associatedResolver: associatedResolver,
+                  dependentResovler: dependentResolver)
+    }
 }
 
 private extension Inspector.Resolver {
@@ -117,6 +129,7 @@ private extension Inspector.Resolver {
     func update(with children: [Expr], store: inout [String: Inspector.Resolver]) {
 
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
+        var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
         var scopeAnnotations: [String: ScopeAnnotation] = [:]
         
         for child in children {
@@ -128,6 +141,9 @@ private extension Inspector.Resolver {
             case .registerAnnotation(let registerAnnotation):
                 registerAnnotations.append(registerAnnotation)
                 
+            case .referenceAnnotation(let referenceAnnotation):
+                referenceAnnotations.append(referenceAnnotation)
+
             case .scopeAnnotation(let scopeAnnotation):
                 scopeAnnotations[scopeAnnotation.value.name] = scopeAnnotation.value
                 
@@ -145,6 +161,15 @@ private extension Inspector.Resolver {
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
         }
+        
+        for referenceAnnotation in referenceAnnotations {
+            let dependency = Inspector.Dependency(dependentResolver: self,
+                                                  referenceAnnotation: referenceAnnotation,
+                                                  store: &store)
+            let index = Inspector.DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
+            dependencies[index] = dependency
+            dependency.associatedResolver.dependents.append(self)
+        }
     }
 }
 
@@ -153,7 +178,7 @@ private extension Inspector.Resolver {
 private extension Inspector.Dependency {
     
     func resolve(with cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
-        if scope != .parent {
+        if scope != nil {
             return
         }
         
@@ -198,7 +223,7 @@ private extension Inspector.Resolver {
         }
         visitedResolvers.insert(self)
         
-        if let dependency = dependencies[index], dependency.scope.allowsAccessFromChildren {
+        if let dependency = dependencies[index], let scope = dependency.scope, scope.allowsAccessFromChildren {
             return
         }
         
@@ -220,8 +245,7 @@ private extension ScopeAnnotation.ScopeType {
              .container:
             return true
         case .transient,
-             .graph,
-             .parent:
+             .graph:
             return false
         }
     }
