@@ -14,20 +14,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "BeaverDI::BeaverDI"
-               BuildableName = "BeaverDI.framework"
-               BlueprintName = "BeaverDI"
-               ReferencedContainer = "container:BeaverDI.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "BeaverDI::BeaverDICommand"
                BuildableName = "BeaverDICommand"
                BlueprintName = "BeaverDICommand"
@@ -160,6 +146,20 @@
                ReferencedContainer = "container:BeaverDI.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BeaverDI::BeaverDI"
+               BuildableName = "BeaverDI.framework"
+               BlueprintName = "BeaverDI"
+               ReferencedContainer = "container:BeaverDI.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -207,9 +207,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "BeaverDI::BeaverDI"
-            BuildableName = "BeaverDI.framework"
-            BlueprintName = "BeaverDI"
+            BlueprintIdentifier = "BeaverDI::BeaverDICommand"
+            BuildableName = "BeaverDICommand"
+            BlueprintName = "BeaverDICommand"
             ReferencedContainer = "container:BeaverDI.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

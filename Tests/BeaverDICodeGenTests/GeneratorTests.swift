@@ -24,7 +24,7 @@ final class MyService {
   // beaverdi: api.scope = .graph
 
   // beaverdi: router = Router <- RouterProtocol
-  // beaverdi: router.scope = .parent
+  // beaverdi: router.scope = .container
 
   // beaverdi: session = SessionProtocol
 

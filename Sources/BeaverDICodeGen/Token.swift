@@ -7,6 +7,7 @@
 
 import Foundation
 import SourceKittenFramework
+import BeaverDI
 
 // MARK: - Token
 
@@ -58,27 +59,16 @@ public struct RegisterAnnotation: Token {
 }
 
 public struct ScopeAnnotation: Token {
-    
-    enum ScopeType: String {
-        case transient = "transient"
-        case graph = "graph"
-        case weak = "weak"
-        case container = "container"
-        
-        static var `default`: ScopeType {
-            return .graph
-        }
-    }
-    
+
     let name: String
-    let scope: ScopeType
+    let scope: Scope
     
     public static func create(_ string: String) throws -> ScopeAnnotation? {
         guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)\\s*$").matches(in: string) else {
             return nil
         }
         
-        guard let scope = ScopeType(rawValue: matches[1]) else {
+        guard let scope = Scope(matches[1]) else {
             throw TokenError.invalidScope(matches[1])
         }
         
@@ -221,5 +211,3 @@ private extension NSRegularExpression {
         return result
     }
 }
-
-

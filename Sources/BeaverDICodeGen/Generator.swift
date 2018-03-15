@@ -8,6 +8,7 @@
 import Foundation
 import Stencil
 import PathKit
+import BeaverDI
 
 public final class Generator {
 
@@ -80,7 +81,7 @@ extension RegisterData {
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.typeName.trimmingCharacters(in: optionChars),
                   protocolName: registerAnnotation.protocolName,
-                  scope: scope.rawValue)
+                  scope: scope.stringValue)
     }
 }
 

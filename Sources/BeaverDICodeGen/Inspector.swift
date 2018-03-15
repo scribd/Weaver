@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BeaverDI
 
 final class Inspector {
     
@@ -47,13 +48,13 @@ private extension Inspector {
     
     final class Dependency {
         let name: String
-        let scope: ScopeAnnotation.ScopeType?
+        let scope: Scope?
         let line: Int
         let associatedResolver: Resolver
         let dependentResovler: Resolver
         
         init(name: String,
-             scope: ScopeAnnotation.ScopeType? = nil,
+             scope: Scope? = nil,
              line: Int,
              associatedResolver: Resolver,
              dependentResovler: Resolver) {
@@ -234,20 +235,6 @@ private extension Inspector.Resolver {
         }
         
         throw InspectorAnalysisError.unresolvableDependency
-    }
-}
-
-private extension ScopeAnnotation.ScopeType {
-
-    var allowsAccessFromChildren: Bool {
-        switch self {
-        case .weak,
-             .container:
-            return true
-        case .transient,
-             .graph:
-            return false
-        }
     }
 }
 

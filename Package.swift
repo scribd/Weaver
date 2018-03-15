@@ -14,7 +14,7 @@ let package = Package(
     targets: [
         .target(name: "BeaverDI"),
         .testTarget(name: "BeaverDITests", dependencies: ["BeaverDI"]),
-        .target(name: "BeaverDICodeGen", dependencies: ["SourceKittenFramework", "Stencil"]),
+        .target(name: "BeaverDICodeGen", dependencies: ["SourceKittenFramework", "Stencil", "BeaverDI"]),
         .testTarget(name: "BeaverDICodeGenTests", dependencies: ["BeaverDICodeGen"]),
         .target(name: "BeaverDICommand", dependencies: ["Commander", "BeaverDICodeGen"])
     ]

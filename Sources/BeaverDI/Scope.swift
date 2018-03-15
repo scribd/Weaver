@@ -19,6 +19,10 @@ public enum Scope {
     case graph
     case weak
     case container
+    
+    public static var `default`: Scope {
+        return .graph
+    }
 }
 
 // MARK: Rules
@@ -47,7 +51,7 @@ extension Scope {
         }
     }
     
-    var allowsAccessFromChildren: Bool {
+    public var allowsAccessFromChildren: Bool {
         switch self {
         case .weak,
              .container:
