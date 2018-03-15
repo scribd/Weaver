@@ -22,7 +22,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		19FBA8A1205A176600DF5071 /* dependency_resolver.stencil in CopyFiles */ = {isa = PBXBuildFile; fileRef = 19FBA8A0205A175A00DF5071 /* dependency_resolver.stencil */; };
 		19FBA8A3205A19F900DF5071 /* Scope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FBA8A2205A19F900DF5071 /* Scope.swift */; };
 		OBJ_181 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_187 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* Package.swift */; };
@@ -469,14 +468,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 7;
 			files = (
-				19FBA8A1205A176600DF5071 /* dependency_resolver.stencil in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		19FBA8A0205A175A00DF5071 /* dependency_resolver.stencil */ = {isa = PBXFileReference; lastKnownFileType = text; path = dependency_resolver.stencil; sourceTree = "<group>"; };
 		19FBA8A2205A19F900DF5071 /* Scope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scope.swift; sourceTree = "<group>"; };
 		"BeaverDI::BeaverDI::Product" /* BeaverDI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = BeaverDI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"BeaverDI::BeaverDICodeGen::Product" /* BeaverDICodeGen.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = BeaverDICodeGen.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -758,14 +755,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		19FBA89F205A175A00DF5071 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				19FBA8A0205A175A00DF5071 /* dependency_resolver.stencil */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		OBJ_126 /* sourcekitten */ = {
 			isa = PBXGroup;
 			children = (
@@ -980,7 +969,6 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
-				19FBA89F205A175A00DF5071 /* Resources */,
 				OBJ_7 /* Sources */,
 				OBJ_30 /* Tests */,
 				OBJ_44 /* Dependencies */,

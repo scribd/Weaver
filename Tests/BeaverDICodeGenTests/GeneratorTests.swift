@@ -8,6 +8,7 @@
 import Foundation
 import XCTest
 import SourceKittenFramework
+import PathKit
 
 @testable import BeaverDICodeGen
 
@@ -32,6 +33,8 @@ final class MyService {
 
     // beaverdi: session = Session? <- SessionProtocol?
     // beaverdi: session.scope = .container
+
+    // beaverdi: api <- APIProtocol
   }
 
   init(_ dependencies: DependencyResolver) {
@@ -49,7 +52,8 @@ class AnotherService {
             let parser = Parser(tokens)
             let syntaxTree = try parser.parse()
             
-            let generator = try Generator()
+            let templatePath = Path(#file).parent() + Path("../../Resources/dependency_resolver.stencil")
+            let generator = try Generator(template: templatePath)
             let string = try generator.generate(from: syntaxTree)
             
             XCTAssertEqual(string, """
@@ -65,6 +69,14 @@ final class MyServiceDependencyResolver: DependencyResolver {
     
     store.register(APIProtocol.self, scope: .graph, builder: { dependencies in
       return API.makeAPI(injecting: dependencies)
+    })
+    
+    store.register(RouterProtocol.self, scope: .container, builder: { dependencies in
+      return Router.makeRouter(injecting: dependencies)
+    })
+    
+    store.register(SessionProtocol.self, scope: .graph, builder: { dependencies in
+      return SessionProtocol.makeSessionProtocol(injecting: dependencies)
     })
     
   }
@@ -121,6 +133,10 @@ extension MyService.MyEmbeddedService {
   
   var session: SessionProtocol? {
     return dependencies.resolve(SessionProtocol?.self)
+  }
+  
+  var api: APIProtocol {
+    return dependencies.resolve(APIProtocol.self)
   }
   
 }

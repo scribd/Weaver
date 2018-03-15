@@ -32,14 +32,8 @@ public final class Generator {
     public func generate(from ast: Expr) throws -> String {
 
         let resolversData = [ResolverData](ast: ast)
-
-        #if DEBUG
-            let bundle = Bundle(for: type(of: self))
-            let fileLoader = FileSystemLoader(bundle: [bundle])
-        #else
-            let fileLoader = FileSystemLoader(paths: [templateDirPath])
-        #endif
-
+        
+        let fileLoader = FileSystemLoader(paths: [templateDirPath])
         let environment = Environment(loader: fileLoader)
         let rendered = try environment.renderTemplate(name: templateName, context: ["resolvers": resolversData])
 
@@ -52,7 +46,7 @@ public final class Generator {
 private struct RegisterData {
     let name: String
     let typeName: String
-    let protocolName: String?
+    let abstractTypeName: String
     let scope: String
 }
 
@@ -71,7 +65,7 @@ private struct ResolverData {
 // MARK: - Conversion
 
 extension RegisterData {
-
+    
     init(registerAnnotation: RegisterAnnotation,
          scopeAnnotation: ScopeAnnotation?) {
        
@@ -80,7 +74,7 @@ extension RegisterData {
 
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.typeName.trimmingCharacters(in: optionChars),
-                  protocolName: registerAnnotation.protocolName,
+                  abstractTypeName: registerAnnotation.protocolName ?? registerAnnotation.typeName,
                   scope: scope.stringValue)
     }
 }
@@ -91,6 +85,12 @@ extension ReferenceData {
         
         self.init(name: referenceAnnotation.name,
                   typeName: referenceAnnotation.typeName)
+    }
+    
+    init(registerAnnotation: RegisterAnnotation) {
+        
+        self.init(name: registerAnnotation.name,
+                  typeName: registerAnnotation.protocolName ?? registerAnnotation.typeName)
     }
 }
 
@@ -127,7 +127,9 @@ extension ResolverData {
                 RegisterData(registerAnnotation: $0.value, scopeAnnotation: scopeAnnotations[$0.key])
             }
 
-            let references = referenceAnnotations.map {
+            let references = registerAnnotations.map {
+                ReferenceData(registerAnnotation: $0.value)
+            } + referenceAnnotations.map {
                 ReferenceData(referenceAnnotation: $0.value)
             }
 
