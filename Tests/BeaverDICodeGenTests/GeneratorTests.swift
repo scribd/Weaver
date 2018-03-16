@@ -14,6 +14,8 @@ import PathKit
 
 final class GeneratorTests: XCTestCase {
     
+    let templatePath = Path(#file).parent() + Path("../../Resources/dependency_resolver.stencil")
+    
     func test_generator_should_generate_a_valid_swift_code() {
         
         do {
@@ -52,7 +54,6 @@ class AnotherService {
             let parser = Parser(tokens)
             let syntaxTree = try parser.parse()
             
-            let templatePath = Path(#file).parent() + Path("../../Resources/dependency_resolver.stencil")
             let generator = try Generator(template: templatePath)
             let string = try generator.generate(from: syntaxTree)
             
