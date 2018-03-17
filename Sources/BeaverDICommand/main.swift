@@ -16,9 +16,10 @@ let main = command(
 
     Option<String>("output_path", ".", description: "Where the swift files will be generated."),
     Option<TemplatePathArgument>("template_path", TemplatePathArgument(), description: "Custom template path."),
+    Flag("safe", default: true),
     Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
 
-) { outputPath, templatePath, inputPaths in
+) { outputPath, templatePath, safeFlag, inputPaths in
 
     do {
         let generator = try Generator(template: templatePath.value)
@@ -26,6 +27,7 @@ let main = command(
         Logger.log(.info, "Parsing...")
         
         var dataToWrite: [(path: Path, data: String)] = []
+        var syntaxTrees: [Expr] = []
         
         for filePath in inputPaths.values {
             guard let file = File(path: filePath.string) else {
@@ -40,11 +42,23 @@ let main = command(
             Logger.log(.info, "<- '\(filePath)'")
             let tokens = try Lexer(file).tokenize()
             let ast = try Parser(tokens).parse()
+
+            if safeFlag {
+                syntaxTrees.append(ast)
+            }
             
             let generatedFilePath = Path(outputPath + "/beaverdi." + fileName)
             let generatedString = try generator.generate(from: ast)
  
-            dataToWrite += [(generatedFilePath, generatedString)]
+            dataToWrite.append((generatedFilePath, generatedString))
+        }
+
+        if safeFlag {
+            Logger.log(.info, "")
+            Logger.log(.info, "Checking dependency graph...")
+            
+            let inspector = try Inspector(syntaxTrees: syntaxTrees)
+            try inspector.validate()
         }
         
         Logger.log(.info, "")

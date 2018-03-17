@@ -8,7 +8,7 @@
 import Foundation
 import BeaverDI
 
-final class Inspector {
+public final class Inspector {
     
     private var graph = [String: Resolver]()
 
