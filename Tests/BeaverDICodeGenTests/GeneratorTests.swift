@@ -29,7 +29,7 @@ final class MyService {
   // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .container
 
-  // beaverdi: session = SessionProtocol
+  // beaverdi: session = Session
 
   final class MyEmbeddedService {
 
@@ -76,23 +76,16 @@ final class MyServiceDependencyResolver: DependencyResolver {
       return Router.makeRouter(injecting: dependencies)
     })
     
-    store.register(SessionProtocol.self, scope: .graph, builder: { dependencies in
-      return SessionProtocol.makeSessionProtocol(injecting: dependencies)
+    store.register(Session.self, scope: .graph, builder: { dependencies in
+      return Session.makeSession(injecting: dependencies)
     })
     
   }
 }
 
-extension MyService {
+// MARK: - Getters
 
-  // MARK: - Builder
-
-  static func makeMyService(injecting parentDependencies: DependencyResolver) -> MyService {
-    let dependencies = MyServiceDependencyResolver(parentDependencies)
-    return MyService(injecting: dependencies)
-  }
-
-  // MARK: - Resolver utils
+extension MyServiceDependencyResolver {
   
   var api: APIProtocol {
     return dependencies.resolve(APIProtocol.self)
@@ -102,10 +95,20 @@ extension MyService {
     return dependencies.resolve(RouterProtocol.self)
   }
   
-  var session: SessionProtocol {
-    return dependencies.resolve(SessionProtocol.self)
+  var session: Session {
+    return dependencies.resolve(Session.self)
   }
   
+}
+
+// MARK: - Builder
+
+extension MyService {
+
+  static func makeMyService(injecting parentDependencies: DependencyResolver) -> MyService {
+    let dependencies = MyServiceDependencyResolver(parentDependencies)
+    return MyService(injecting: dependencies)
+  }
 }
 
 // MARK: - MyEmbeddedService
@@ -121,16 +124,9 @@ final class MyEmbeddedServiceDependencyResolver: DependencyResolver {
   }
 }
 
-extension MyService.MyEmbeddedService {
+// MARK: - Getters
 
-  // MARK: - Builder
-
-  static func makeMyEmbeddedService(injecting parentDependencies: DependencyResolver) -> MyEmbeddedService {
-    let dependencies = MyEmbeddedServiceDependencyResolver(parentDependencies)
-    return MyEmbeddedService(injecting: dependencies)
-  }
-
-  // MARK: - Resolver utils
+extension MyEmbeddedServiceDependencyResolver {
   
   var session: SessionProtocol? {
     return dependencies.resolve(SessionProtocol?.self)
@@ -140,6 +136,16 @@ extension MyService.MyEmbeddedService {
     return dependencies.resolve(APIProtocol.self)
   }
   
+}
+
+// MARK: - Builder
+
+extension MyService.MyEmbeddedService {
+
+  static func makeMyEmbeddedService(injecting parentDependencies: DependencyResolver) -> MyEmbeddedService {
+    let dependencies = MyEmbeddedServiceDependencyResolver(parentDependencies)
+    return MyEmbeddedService(injecting: dependencies)
+  }
 }
 
 """)

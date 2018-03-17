@@ -15,20 +15,23 @@ final class {{resolver.targetTypeName}}DependencyResolver: DependencyResolver {
   }
 }
 
-extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
+// MARK: - Getters
 
-  // MARK: - Builder
-
-  static func make{{resolver.targetTypeName}}(injecting parentDependencies: DependencyResolver) -> {{resolver.targetTypeName}} {
-    let dependencies = {{resolver.targetTypeName}}DependencyResolver(parentDependencies)
-    return {{resolver.targetTypeName}}(injecting: dependencies)
-  }
-
-  // MARK: - Resolver utils
+extension {{resolver.targetTypeName}}DependencyResolver {
   {% for reference in resolver.references %}
   var {{reference.name}}: {{reference.typeName}} {
     return dependencies.resolve({{reference.typeName}}.self)
   }
   {% endfor %}
+}
+
+// MARK: - Builder
+
+extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
+
+  static func make{{resolver.targetTypeName}}(injecting parentDependencies: DependencyResolver) -> {{resolver.targetTypeName}} {
+    let dependencies = {{resolver.targetTypeName}}DependencyResolver(parentDependencies)
+    return {{resolver.targetTypeName}}(injecting: dependencies)
+  }
 }
 {% endfor %}
