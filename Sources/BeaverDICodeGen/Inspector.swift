@@ -17,6 +17,7 @@ final class Inspector {
     }()
 
     private lazy var resolutionCache = Set<Inspector.ResolutionCacheIndex>()
+    private lazy var buildCache = Set<Inspector.BuildCacheIndex>()
     
     public init(syntaxTrees: [Expr]) throws {
         try buildGraph(with: syntaxTrees)
@@ -25,6 +26,7 @@ final class Inspector {
     public func validate() throws {
         for dependency in dependencies {
             try dependency.resolve(with: &resolutionCache)
+            try dependency.build(with: &buildCache)
         }
     }
 }
@@ -69,6 +71,11 @@ private extension Inspector {
     struct ResolutionCacheIndex {
         let resolver: Resolver
         let dependencyIndex: DependencyIndex
+    }
+    
+    struct BuildCacheIndex {
+        let resolver: Resolver
+        let scope: Scope?
     }
 }
 
@@ -174,12 +181,12 @@ private extension Inspector.Resolver {
     }
 }
 
-// MARK: - Resolver Checks
+// MARK: - Resolution Check
 
 private extension Inspector.Dependency {
     
     func resolve(with cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
-        if scope != nil {
+        guard isReference else {
             return
         }
         
@@ -208,7 +215,7 @@ private extension Inspector.Resolver {
     
     func resolveDependency(index: Inspector.DependencyIndex, cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
         let cacheIndex = Inspector.ResolutionCacheIndex(resolver: self, dependencyIndex: index)
-        if cache.contains(cacheIndex) {
+        guard !cache.contains(cacheIndex) else {
             return
         }
 
@@ -235,6 +242,57 @@ private extension Inspector.Resolver {
         }
         
         throw InspectorAnalysisError.unresolvableDependency
+    }
+}
+
+// MARK: - Build Check
+
+private extension Inspector.Dependency {
+    
+    func build(with buildCache: inout Set<Inspector.BuildCacheIndex>) throws {
+        let buildCacheIndex = Inspector.BuildCacheIndex(resolver: associatedResolver, scope: scope)
+        guard !buildCache.contains(buildCacheIndex) else {
+            return
+        }
+        buildCache.insert(buildCacheIndex)
+        
+        guard !isReference else {
+            return
+        }
+        
+        guard let scope = scope, !scope.allowsAccessFromChildren else {
+            return
+        }
+        
+        var visitedResolvers = Set<Inspector.Resolver>()
+        try associatedResolver.buildDependencies(from: self, visitedResolvers: &visitedResolvers)
+    }
+}
+
+private extension Inspector.Resolver {
+    
+    func buildDependencies(from sourceDependency: Inspector.Dependency, visitedResolvers: inout Set<Inspector.Resolver>) throws {
+
+        if visitedResolvers.contains(self) {
+            throw InspectorError.invalidGraph(line: sourceDependency.line,
+                                              dependencyName: sourceDependency.name,
+                                              typeName: typeName,
+                                              underlyingIssue: .cyclicDependency)
+        }
+        visitedResolvers.insert(self)
+        
+        for dependency in dependencies.values {
+            try dependency.associatedResolver.buildDependencies(from: sourceDependency, visitedResolvers: &visitedResolvers)
+        }
+    }
+}
+
+// MARK: - Utils
+
+private extension Inspector.Dependency {
+    
+    var isReference: Bool {
+        return scope == nil
     }
 }
 
@@ -284,6 +342,18 @@ extension Inspector.ResolutionCacheIndex: Hashable {
     static func ==(lhs: Inspector.ResolutionCacheIndex, rhs: Inspector.ResolutionCacheIndex) -> Bool {
         guard lhs.resolver == rhs.resolver else { return false }
         guard lhs.dependencyIndex == rhs.dependencyIndex else { return false }
+        return true
+    }
+}
+
+extension Inspector.BuildCacheIndex: Hashable {
+    var hashValue: Int {
+        return resolver.hashValue ^ (scope?.hashValue ?? 0)
+    }
+    
+    static func ==(lhs: Inspector.BuildCacheIndex, rhs: Inspector.BuildCacheIndex) -> Bool {
+        guard lhs.resolver == rhs.resolver else { return false }
+        guard lhs.scope == rhs.scope else { return false }
         return true
     }
 }
