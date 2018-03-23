@@ -29,8 +29,8 @@ enum GeneratorError: Error {
 }
 
 enum InspectorError: Error {
-    case invalidAST(unexpectedExpr: Expr)
-    case invalidGraph(line: Int, dependencyName: String, typeName: String, underlyingIssue: InspectorAnalysisError)
+    case invalidAST(unexpectedExpr: Expr, file: String?)
+    case invalidGraph(line: Int, file: String, dependencyName: String, typeName: String, underlyingIssue: InspectorAnalysisError)
 }
 
 enum InspectorAnalysisError: Error {
@@ -92,10 +92,10 @@ extension InspectorError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .invalidAST(let token):
-            return "Invalid AST because of token: \(token)."
-        case .invalidGraph(let line, let dependencyName, let typeName, let underlyingIssue):
-            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' at line \(printableLine(line))."
+        case .invalidAST(let token, let file):
+            return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
+        case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
+            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' at line \(printableLine(line)) in file \(file)."
         }
     }
 }
@@ -174,15 +174,20 @@ extension InspectorError: Equatable {
     
     static func ==(lhs: InspectorError, rhs: InspectorError) -> Bool {
         switch (lhs, rhs) {
-        case (.invalidAST(let lToken), .invalidAST(let rToken)):
-            return lToken == rToken
-        case (.invalidGraph(let lLine, let lDependencyName, let lTypeName, let lUnderlyingIssue),
-              .invalidGraph(let rLine, let rDependencyName, let rTypeName, let rUnderlyingIssue)):
+        case (.invalidAST(let lToken, let lFile), .invalidAST(let rToken, let rFile)):
+            guard lToken == rToken else { return false }
+            guard lFile == rFile else { return false }
+            return true
+
+        case (.invalidGraph(let lLine, let lFile, let lDependencyName, let lTypeName, let lUnderlyingIssue),
+              .invalidGraph(let rLine, let rFile, let rDependencyName, let rTypeName, let rUnderlyingIssue)):
             guard lLine == rLine else { return false }
+            guard lFile == rFile else { return false }
             guard lDependencyName == rDependencyName else { return false }
             guard lTypeName == rTypeName else { return false }
             guard lUnderlyingIssue == rUnderlyingIssue else { return false }
             return true
+        
         case (.invalidAST, _),
              (.invalidGraph, _):
             return false
@@ -197,6 +202,7 @@ extension InspectorAnalysisError: Equatable {
         case (.cyclicDependency, .cyclicDependency),
              (.unresolvableDependency, .unresolvableDependency):
             return true
+        
         case (.cyclicDependency, _),
              (.unresolvableDependency, _):
             return false

@@ -25,12 +25,13 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 111, line: 0),
                                                               children: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 32, length: 83, line: 1),
-                                                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session", protocolName: "SessionProtocol"), offset: 62, length: 50, line: 2))])])])
+                                                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session", protocolName: "SessionProtocol"), offset: 62, length: 50, line: 2))])])],
+                                     name: "test.swift")
 
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -49,12 +50,13 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
 
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 93, line: 0),
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 38, line: 1)),
-                                                                         .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 66, length: 32, line: 2))])])
+                                                                         .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 66, length: 32, line: 2))])],
+                                     name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -72,11 +74,12 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 60, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol?"), offset: 26, length: 39, line: 1))])])
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol?"), offset: 26, length: 39, line: 1))])],
+                                     name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -94,11 +97,12 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 59, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 38, line: 1))])])
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 38, line: 1))])],
+                                     name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -116,11 +120,12 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 44, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: nil), offset: 26, length: 23, line: 1))])])
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: nil), offset: 26, length: 23, line: 1))])],
+                                     name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -138,11 +143,12 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 53, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 32, line: 1))])])
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 32, line: 1))])],
+                                     name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -161,7 +167,7 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
@@ -182,8 +188,8 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
-            
+            let parser = Parser(tokens, fileName: "test.swift")
+
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
@@ -203,11 +209,11 @@ class Test {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
-            
+            let parser = Parser(tokens, fileName: "test.swift")
+
             let syntaxTree = try parser.parse()
             
-            XCTAssertEqual(syntaxTree, .file(types: []))
+            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift"))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -227,12 +233,13 @@ class Test {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
-            
+            let parser = Parser(tokens, fileName: "test.swift")
+
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 53, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 32, line: 1))])])
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 32, line: 1))])],
+                                     name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -247,10 +254,10 @@ class Test {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
-        
+            let parser = Parser(tokens, fileName: "test.swift")
+
             let syntaxTree = try parser.parse()
-            XCTAssertEqual(syntaxTree, .file(types: []))
+            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift"))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -266,7 +273,7 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
 
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
@@ -289,7 +296,7 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
 
             _ = try parser.parse()
             XCTFail("An error was expected.")
@@ -309,7 +316,7 @@ final class MyService {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
 
             _ = try parser.parse()
             XCTFail("An error was expected.")

@@ -41,7 +41,7 @@ let main = command(
             
             Logger.log(.info, "<- '\(filePath)'")
             let tokens = try Lexer(file).tokenize()
-            let ast = try Parser(tokens).parse()
+            let ast = try Parser(tokens, fileName: fileName).parse()
 
             if safeFlag {
                 syntaxTrees.append(ast)
@@ -74,6 +74,7 @@ let main = command(
         
     } catch {
         Logger.log(.error, "Error: \(error)")
+        exit(1)
     }
 }
 

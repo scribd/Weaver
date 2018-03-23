@@ -51,7 +51,7 @@ class AnotherService {
             
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
             let generator = try Generator(template: templatePath)

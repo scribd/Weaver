@@ -49,7 +49,7 @@ final class App {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let inspector = try Inspector(syntaxTrees: [syntaxTree])
 
@@ -73,14 +73,14 @@ final class App {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let inspector = try Inspector(syntaxTrees: [syntaxTree])
             
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 5, dependencyName: "sessionManager", typeName: "SessionManagerProtocol", underlyingIssue: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 5, file: "test.swift", dependencyName: "sessionManager", typeName: "SessionManagerProtocol", underlyingIssue: .unresolvableDependency))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -110,14 +110,14 @@ final class SessionManager {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let inspector = try Inspector(syntaxTrees: [syntaxTree])
             
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 9, dependencyName: "sessionManager1", typeName: "SessionManager", underlyingIssue: .cyclicDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 9, file: "test.swift", dependencyName: "sessionManager1", typeName: "SessionManager", underlyingIssue: .cyclicDependency))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -147,7 +147,7 @@ final class SessionManager {
         do {
             let lexer = Lexer(file)
             let tokens = try lexer.tokenize()
-            let parser = Parser(tokens)
+            let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let inspector = try Inspector(syntaxTrees: [syntaxTree])
             

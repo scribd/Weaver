@@ -149,7 +149,7 @@ extension ResolverData {
 
 private extension Array where Element == ResolverData {
     
-    init(exprs: [Expr], enclosingTypeNames: [String] = []) {
+    init(exprs: [Expr], fileName: String, enclosingTypeNames: [String] = []) {
 
         self.init(exprs.flatMap { expr -> [ResolverData] in
             switch expr {
@@ -158,7 +158,7 @@ private extension Array where Element == ResolverData {
                     return []
                 }
                 let enclosingTypeNames = enclosingTypeNames + [typeToken.value.name]
-                return [resolverData] + [ResolverData](exprs: children, enclosingTypeNames: enclosingTypeNames)
+                return [resolverData] + [ResolverData](exprs: children, fileName: fileName, enclosingTypeNames: enclosingTypeNames)
 
             case .file,
                  .registerAnnotation,
@@ -171,13 +171,11 @@ private extension Array where Element == ResolverData {
     
     init(ast: Expr) {
         switch ast {
-        case .file(let types):
-            self.init(exprs: types)
+        case .file(let types, let name):
+            self.init(exprs: types, fileName: name)
         
-        case .typeDeclaration:
-            self.init(exprs: [ast])
-            
-        case .registerAnnotation,
+        case .typeDeclaration,
+             .registerAnnotation,
              .scopeAnnotation,
              .referenceAnnotation:
             self.init()

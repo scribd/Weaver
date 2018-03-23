@@ -8,7 +8,7 @@
 import Foundation
 
 public indirect enum Expr {
-    case file(types: [Expr])
+    case file(types: [Expr], name: String)
     case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
@@ -20,8 +20,10 @@ public indirect enum Expr {
 extension Expr: Equatable {
     public static func ==(lhs: Expr, rhs: Expr) -> Bool {
         switch (lhs, rhs) {
-        case (.file(let lhs), .file(let rhs)):
-            return lhs.elementsEqual(rhs)
+        case (.file(let lTypes, let lName), .file(let rTypes, let rName)):
+            guard lTypes.elementsEqual(rTypes) else { return false }
+            guard lName == rName else { return false }
+            return true
         case (.typeDeclaration(let lToken, let lChildren), .typeDeclaration(let rToken, let rChildren)):
             guard lToken == rToken else { return false }
             guard lChildren.elementsEqual(rChildren) else { return false }
@@ -47,8 +49,8 @@ extension Expr: Equatable {
 extension Expr: CustomStringConvertible {
     public var description: String {
         switch self {
-        case .file(let types):
-            return "File\n\n" + types.map { "\($0)" }.joined(separator: "\n")
+        case .file(let types, let name):
+            return "File[\(name)]\n\n" + types.map { "\($0)" }.joined(separator: "\n")
         case .registerAnnotation(let token):
             return "Register - \(token)"
         case .scopeAnnotation(let token):

@@ -10,11 +10,13 @@ import Foundation
 public final class Parser {
     
     private let tokens: [AnyTokenBox]
+    private let fileName: String
 
     private var index = 0
     
-    public init(_ tokens: [AnyTokenBox]) {
+    public init(_ tokens: [AnyTokenBox], fileName: String) {
         self.tokens = tokens
+        self.fileName = fileName
     }
     
     public func parse() throws -> Expr {
@@ -175,7 +177,7 @@ private extension Parser {
                 consumeToken()
 
             case nil:
-                return .file(types: types)
+                return .file(types: types, name: fileName)
                 
             case .some(let token):
                 throw ParserError.unexpectedToken(line: token.line)
