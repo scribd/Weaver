@@ -40,7 +40,7 @@ let main = command(
             }
             
             Logger.log(.info, "<- '\(filePath)'")
-            let tokens = try Lexer(file).tokenize()
+            let tokens = try Lexer(file, fileName: fileName).tokenize()
             let ast = try Parser(tokens, fileName: fileName).parse()
 
             if safeFlag {

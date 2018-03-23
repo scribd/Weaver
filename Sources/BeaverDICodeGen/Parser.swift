@@ -60,9 +60,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw ParserError.unexpectedEOF
+            throw ParserError.unexpectedEOF(file: fileName)
         case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line)
+            throw ParserError.unexpectedToken(line: token.line, file: fileName)
         }
     }
     
@@ -72,9 +72,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw ParserError.unexpectedEOF
+            throw ParserError.unexpectedEOF(file: fileName)
         case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line)
+            throw ParserError.unexpectedToken(line: token.line, file: fileName)
         }
     }
     
@@ -84,9 +84,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw ParserError.unexpectedEOF
+            throw ParserError.unexpectedEOF(file: fileName)
         case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line)
+            throw ParserError.unexpectedToken(line: token.line, file: fileName)
         }
     }
     
@@ -96,9 +96,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw ParserError.unexpectedEOF
+            throw ParserError.unexpectedEOF(file: fileName)
         case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line)
+            throw ParserError.unexpectedToken(line: token.line, file: fileName)
         }
     }
     
@@ -117,7 +117,7 @@ private extension Parser {
                 let annotation = try parseRegisterAnnotation()
                 let name = annotation.value.name
                 guard !registrationNames.contains(name) && !referenceNames.contains(name) else {
-                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, dependencyName: name)
+                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, file: fileName, dependencyName: name)
                 }
                 registrationNames.insert(name)
                 children.append(.registerAnnotation(annotation))
@@ -126,7 +126,7 @@ private extension Parser {
                 let annotation = try parseReferenceAnnotation()
                 let name = annotation.value.name
                 guard !registrationNames.contains(name) && !referenceNames.contains(name) else {
-                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, dependencyName: name)
+                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, file: fileName, dependencyName: name)
                 }
                 referenceNames.insert(name)
                 children.append(.referenceAnnotation(annotation))
@@ -134,7 +134,7 @@ private extension Parser {
             case is TokenBox<ScopeAnnotation>:
                 let annotation = try parseScopeAnnotation()
                 guard registrationNames.contains(annotation.value.name) else {
-                    throw ParserError.unknownDependency(line: annotation.line, dependencyName: annotation.value.name)
+                    throw ParserError.unknownDependency(line: annotation.line, file: fileName, dependencyName: annotation.value.name)
                 }
                 children.append(.scopeAnnotation(annotation))
             
@@ -152,10 +152,10 @@ private extension Parser {
                 }
 
             case nil:
-                throw ParserError.unexpectedEOF
+                throw ParserError.unexpectedEOF(file: fileName)
             
             case .some(let token):
-                throw ParserError.unexpectedToken(line: token.line)
+                throw ParserError.unexpectedToken(line: token.line, file: fileName)
             }
         }
     }
@@ -180,7 +180,7 @@ private extension Parser {
                 return .file(types: types, name: fileName)
                 
             case .some(let token):
-                throw ParserError.unexpectedToken(line: token.line)
+                throw ParserError.unexpectedToken(line: token.line, file: fileName)
             }
         }
     }

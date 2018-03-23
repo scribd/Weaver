@@ -49,7 +49,7 @@ class AnotherService {
 }
 """)
             
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()

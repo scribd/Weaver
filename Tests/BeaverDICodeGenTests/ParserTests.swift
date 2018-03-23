@@ -23,7 +23,7 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
@@ -48,7 +48,7 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
@@ -72,7 +72,7 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
@@ -95,7 +95,7 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
@@ -118,7 +118,7 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
@@ -141,7 +141,7 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
@@ -165,13 +165,13 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(line: 2, dependencyName: "api"))
+            XCTAssertEqual(error, .unknownDependency(line: 2, file: "test.swift", dependencyName: "api"))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -186,14 +186,14 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
 
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, dependencyName: "api"))
+            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "api"))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -207,7 +207,7 @@ class Test {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
 
@@ -231,7 +231,7 @@ class Test {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
 
@@ -252,7 +252,7 @@ class Test {
         let file = File(contents: "")
 
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
 
@@ -271,14 +271,14 @@ final class MyService {
 }
 """)
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
 
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(line: 1, dependencyName: "api"))
+            XCTAssertEqual(error, .unknownDependency(line: 1, file: "test.swift", dependencyName: "api"))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -294,14 +294,14 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
 
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, dependencyName: "api"))
+            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "api"))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -314,14 +314,14 @@ final class MyService {
 """)
         
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
 
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unexpectedToken(line: 0))
+            XCTAssertEqual(error, .unexpectedToken(line: 0, file: "test.swift"))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

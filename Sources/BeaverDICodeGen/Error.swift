@@ -13,15 +13,15 @@ enum TokenError: Error {
 }
 
 enum LexerError: Error {
-    case invalidAnnotation(line: Int, underlyingError: TokenError)
+    case invalidAnnotation(line: Int, file: String, underlyingError: TokenError)
 }
 
 enum ParserError: Error {
-    case unexpectedToken(line: Int)
-    case unexpectedEOF
+    case unexpectedToken(line: Int, file: String)
+    case unexpectedEOF(file: String)
     
-    case unknownDependency(line: Int, dependencyName: String)
-    case depedencyDoubleDeclaration(line: Int, dependencyName: String)
+    case unknownDependency(line: Int, file: String, dependencyName: String)
+    case depedencyDoubleDeclaration(line: Int, file: String, dependencyName: String)
 }
 
 enum GeneratorError: Error {
@@ -56,8 +56,8 @@ extension LexerError: CustomStringConvertible {
 
     var description: String {
         switch self {
-        case .invalidAnnotation(let line, let underlyingError):
-            return "\(underlyingError): \(printableLine(line))."
+        case .invalidAnnotation(let line, let file, let underlyingError):
+            return "\(underlyingError): \(printableLine(line, file))."
         }
     }
 }
@@ -66,14 +66,14 @@ extension ParserError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .depedencyDoubleDeclaration(let line, let dependencyName):
-            return "Double dependency declaration: '\(dependencyName)': \(printableLine(line))."
-        case .unexpectedEOF:
-            return "Unexpected EOF (End of file)."
-        case .unexpectedToken(let line):
-            return "Unexpected token at line: \(printableLine(line))."
-        case .unknownDependency(let line, let dependencyName):
-            return "Unknown dependency: '\(dependencyName)': at line \(printableLine(line))."
+        case .depedencyDoubleDeclaration(let line, let file, let dependencyName):
+            return "Double dependency declaration: '\(dependencyName)': \(printableLine(line, file))."
+        case .unexpectedEOF(let file):
+            return "Unexpected EOF (End of file) in file \(file)."
+        case .unexpectedToken(let line, let file):
+            return "Unexpected token at line: \(printableLine(line, file))."
+        case .unknownDependency(let line, let file, let dependencyName):
+            return "Unknown dependency: '\(dependencyName)': at line \(printableLine(line, file))."
         }
     }
 }
@@ -95,7 +95,7 @@ extension InspectorError: CustomStringConvertible {
         case .invalidAST(let token, let file):
             return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
         case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
-            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' at line \(printableLine(line)) in file \(file)."
+            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' at line \(printableLine(line, file))."
         }
     }
 }
@@ -114,8 +114,8 @@ extension InspectorAnalysisError: CustomStringConvertible {
 
 // MARK: - Utils
 
-private func printableLine(_ line: Int) -> String {
-    return "at line \(line + 1)"
+private func printableLine(_ line: Int, _ file: String) -> String {
+    return "at line \(line + 1) in file \(file)"
 }
 
 // MARK: - Equatable
@@ -149,9 +149,10 @@ extension ParserError: Equatable {
 
     static func ==(lhs: ParserError, rhs: ParserError) -> Bool {
         switch (lhs, rhs) {
-        case (.depedencyDoubleDeclaration(let lLine, let lDependencyName), .depedencyDoubleDeclaration(let rLine, let rDependencyName)),
-             (.unknownDependency(let lLine, let lDependencyName), .unknownDependency(let rLine, let rDependencyName)):
+        case (.depedencyDoubleDeclaration(let lLine, let lFile, let lDependencyName), .depedencyDoubleDeclaration(let rLine, let rFile, let rDependencyName)),
+             (.unknownDependency(let lLine, let lFile, let lDependencyName), .unknownDependency(let rLine, let rFile, let rDependencyName)):
             guard lLine == rLine else { return false }
+            guard lFile == rFile else { return false }
             guard lDependencyName == rDependencyName else { return false }
             return true
             

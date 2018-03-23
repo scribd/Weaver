@@ -20,7 +20,7 @@ final class MyService {
 }
 """)
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
 
             if tokens.count == 2 {
@@ -43,7 +43,7 @@ final class MyService {
 }
 """)
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             
             if tokens.count == 4 {
@@ -65,7 +65,7 @@ final class MyService {
 // beaverdi: api = API <- APIProtocol
 """)
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
@@ -84,7 +84,7 @@ final class MyService {
 // beaverdi: api = API
 """)
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
@@ -103,7 +103,7 @@ final class MyService {
 // beaverdi: api = API? <- APIProtocol?
 """)
         do {
-            let lexer = Lexer(file)
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
@@ -121,7 +121,7 @@ final class MyService {
         let file = File(contents: """
 // beaverdi: api.scope = .graph
 """)
-        let lexer = Lexer(file)
+        let lexer = Lexer(file, fileName: "test.swift")
 
         do {
             let tokens = try lexer.tokenize()
@@ -142,8 +142,8 @@ final class MyService {
 func ignoredFunc() {
 }
 """)
-        let lexer = Lexer(file)
-        
+        let lexer = Lexer(file, fileName: "test.swift")
+
         do {
             let tokens = try lexer.tokenize()
             
@@ -182,13 +182,13 @@ final class MyService {
   }
 }
 """)
-        let lexer = Lexer(file)
+        let lexer = Lexer(file, fileName: "test.swift")
 
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, .invalidAnnotation(line: 3, underlyingError: .invalidAnnotation("beaverdi: api = API <-- APIProtocol")))
+            XCTAssertEqual(error, .invalidAnnotation(line: 3, file: "test.swift", underlyingError: .invalidAnnotation("beaverdi: api = API <-- APIProtocol")))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -218,13 +218,13 @@ final class MyService {
   }
 }
 """)
-        let lexer = Lexer(file)
-        
+        let lexer = Lexer(file, fileName: "test.swift")
+
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, .invalidAnnotation(line: 4, underlyingError: .invalidScope("thisScopeDoesNotExists")))
+            XCTAssertEqual(error, .invalidAnnotation(line: 4,  file: "test.swift", underlyingError: .invalidScope("thisScopeDoesNotExists")))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }

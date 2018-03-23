@@ -7,16 +7,19 @@
 
 import Foundation
 import SourceKittenFramework
+import PathKit
 
 /// An object responsible of generating the tokens
 public final class Lexer {
     
     private let file: File
+    private let fileName: String
     
     private lazy var lines: [Line] = self.file.lines
     
-    public init(_ file: File) {
+    public init(_ file: File, fileName: String) {
         self.file = file
+        self.fileName = fileName
     }
     
     /// Generates a sorted list of tokens
@@ -118,7 +121,7 @@ private extension Lexer {
                 }
                 return token
             } catch let error as TokenError {
-                throw LexerError.invalidAnnotation(line: currentLine, underlyingError: error)
+                throw LexerError.invalidAnnotation(line: currentLine, file: fileName, underlyingError: error)
             }
         }
     }
