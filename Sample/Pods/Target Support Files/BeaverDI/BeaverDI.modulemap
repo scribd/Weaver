@@ -1,0 +1,6 @@
+framework module BeaverDI {
+  umbrella header "BeaverDI-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -95,7 +95,7 @@ extension InspectorError: CustomStringConvertible {
         case .invalidAST(let token, let file):
             return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
         case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
-            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' at line \(printableLine(line, file))."
+            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' \(printableLine(line, file))."
         }
     }
 }

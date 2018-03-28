@@ -60,6 +60,7 @@ private struct ResolverData {
     let registrations: [RegisterData]
     let references: [ReferenceData]
     let enclosingTypeNames: [String]?
+    let isRoot: Bool
 }
 
 // MARK: - Conversion
@@ -132,11 +133,14 @@ extension ResolverData {
             } + referenceAnnotations.map {
                 ReferenceData(referenceAnnotation: $0.value)
             }
+            
+            let isRoot = referenceAnnotations.count == 0
 
             self.init(targetTypeName: targetTypeName,
                       registrations: registrations,
                       references: references,
-                      enclosingTypeNames: enclosingTypeNames)
+                      enclosingTypeNames: enclosingTypeNames,
+                      isRoot: isRoot)
             
         case .registerAnnotation,
              .scopeAnnotation,

@@ -1,0 +1,16 @@
+PODS:
+  - BeaverDI (0.1.0)
+
+DEPENDENCIES:
+  - BeaverDI (from `../`)
+
+EXTERNAL SOURCES:
+  BeaverDI:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  BeaverDI: 471b0a5dd81ee6752ae158ab2c002ccfbb61fc47
+
+PODFILE CHECKSUM: 169b3560573cbb24f2bd54abaf4f369e0a122367
+
+COCOAPODS: 1.5.0.beta.1
