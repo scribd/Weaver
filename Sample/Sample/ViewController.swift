@@ -12,6 +12,8 @@ class ViewController: UIViewController {
 
     let dependencies: ViewControllerDependencyResolver
     
+    // beaverdi: appDelegate <- UIApplicationDelegate
+
     init(injecting dependencies: ViewControllerDependencyResolver) {
         self.dependencies = dependencies
         super.init(nibName: nil, bundle: nil)
@@ -21,19 +23,10 @@ class ViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // beaverdi: appDelegate = AppDelegate <- UIApplicationDelegate
-
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .white
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-
 }
 

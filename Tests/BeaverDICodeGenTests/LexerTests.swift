@@ -136,6 +136,45 @@ final class MyService {
         }
     }
     
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_custom_ref_annotation() {
+        
+        let file = File(contents: """
+// beaverdi: api.customRef = true
+// beaverdi: api.customRef = false
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 2 {
+                XCTAssertEqual(tokens[0] as? TokenBox<CustomRefAnnotation>, TokenBox(value: CustomRefAnnotation(name: "api", value: true), offset: 0, length: 34, line: 0))
+                XCTAssertEqual(tokens[1] as? TokenBox<CustomRefAnnotation>, TokenBox(value: CustomRefAnnotation(name: "api", value: false), offset: 34, length: 34, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_throw_an_error_with_an_invalid_custom_ref_annotation() {
+        
+        let file = File(contents: """
+// beaverdi: api.customRef = ok
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            _ = try lexer.tokenize()
+            XCTAssertTrue(false, "Haven't thrown any error.")
+        } catch let error as LexerError {
+            XCTAssertEqual(error, .invalidAnnotation(line: 0, file: "test.swift", underlyingError: .invalidCustomRefValue("ok")))
+        } catch {
+            XCTAssertTrue(false, "Unexpected error: \(error).")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_any_ignored_declaration() {
         
         let file = File(contents: """

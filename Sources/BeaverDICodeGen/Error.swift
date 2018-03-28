@@ -10,6 +10,7 @@ import Foundation
 enum TokenError: Error {
     case invalidAnnotation(String)
     case invalidScope(String)
+    case invalidCustomRefValue(String)
 }
 
 enum LexerError: Error {
@@ -48,6 +49,8 @@ extension TokenError: CustomStringConvertible {
             return "Invalid annotation: '\(annotation)'"
         case .invalidScope(let scope):
             return "Invalid scope: '\(scope)'"
+        case .invalidCustomRefValue(let value):
+            return "Invalid customRef value: \(value). Expected true|false."
         }
     }
 }
@@ -128,8 +131,11 @@ extension TokenError: Equatable {
             return lAnnotation == rAnnotation
         case (.invalidScope(let lScope), .invalidScope(let rScope)):
             return lScope == rScope
+        case (.invalidCustomRefValue(let lValue), .invalidCustomRefValue(let rValue)):
+            return lValue == rValue
         case (.invalidAnnotation, _),
-             (.invalidScope, _):
+             (.invalidScope, _),
+             (.invalidCustomRefValue, _):
             return false
         }
     }

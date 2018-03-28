@@ -14,6 +14,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    // beaverdi: appDelegate <- UIApplicationDelegate
+    // beaverdi: appDelegate.custom = true
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         window = UIWindow()
@@ -25,9 +28,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-extension AppDelegate {
+extension AppDelegateDependencyContainer {
     
-    static func makeAppDelegate(injecting _: DependencyResolver) -> UIApplicationDelegate {
+    var appDelegate: UIApplicationDelegate {
         return UIApplication.shared.delegate!
     }
 }
+

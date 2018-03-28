@@ -109,6 +109,40 @@ public struct ReferenceAnnotation: Token {
     }
 }
 
+public struct CustomRefAnnotation: Token {
+
+    let name: String
+    let value: Bool
+    
+    public static func create(_ string: String) throws -> CustomRefAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.customRef\\s*=\\s*(\\w+)\\s*$").matches(in: string) else {
+            return nil
+        }
+        
+        let value: Bool
+        switch matches[1] {
+        case "true":
+            value = true
+        case "false":
+            value = false
+        default:
+            throw TokenError.invalidCustomRefValue(matches[1])
+        }
+        
+        return CustomRefAnnotation(name: matches[0], value: value)
+    }
+    
+    public static func ==(lhs: CustomRefAnnotation, rhs: CustomRefAnnotation) -> Bool {
+        guard lhs.name == rhs.name else { return false }
+        guard lhs.value == rhs.value else { return false }
+        return true
+    }
+
+    public var description: String {
+        return "\(name).customRef = \(value ? "true" : "false")"
+    }
+}
+
 public struct InjectableType: Token {
     let name: String
 
@@ -173,6 +207,9 @@ enum TokenBuilder {
             return makeTokenBox(token)
         }
         if let token = try ReferenceAnnotation.create(body) {
+            return makeTokenBox(token)
+        }
+        if let token = try CustomRefAnnotation.create(body) {
             return makeTokenBox(token)
         }
         if let token = try ScopeAnnotation.create(body) {
