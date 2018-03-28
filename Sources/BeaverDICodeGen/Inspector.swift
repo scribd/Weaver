@@ -219,7 +219,7 @@ private extension Inspector.Dependency {
                                               file: file,
                                               dependencyName: name,
                                               typeName: associatedResolver.typeName,
-                                              underlyingIssue: .unresolvableDependency)
+                                              underlyingError: .unresolvableDependency)
         }
         
         let index = Inspector.DependencyIndex(typeName: associatedResolver.typeName, name: name)
@@ -231,7 +231,7 @@ private extension Inspector.Dependency {
                                                   file: file,
                                                   dependencyName: name,
                                                   typeName: associatedResolver.typeName,
-                                                  underlyingIssue: error)
+                                                  underlyingError: error)
             }
         }
     }
@@ -304,7 +304,7 @@ private extension Inspector.Resolver {
                                               file: sourceDependency.file,
                                               dependencyName: sourceDependency.name,
                                               typeName: typeName,
-                                              underlyingIssue: .cyclicDependency)
+                                              underlyingError: .cyclicDependency)
         }
         visitedResolvers.insert(self)
         

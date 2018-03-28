@@ -80,7 +80,7 @@ final class App {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 5, file: "test.swift", dependencyName: "sessionManager", typeName: "SessionManagerProtocol", underlyingIssue: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 5, file: "test.swift", dependencyName: "sessionManager", typeName: "SessionManagerProtocol", underlyingError: .unresolvableDependency))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -117,7 +117,7 @@ final class SessionManager {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 9, file: "test.swift", dependencyName: "sessionManager1", typeName: "SessionManager", underlyingIssue: .cyclicDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 9, file: "test.swift", dependencyName: "sessionManager1", typeName: "SessionManager", underlyingError: .cyclicDependency))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

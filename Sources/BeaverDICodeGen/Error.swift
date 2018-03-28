@@ -30,7 +30,7 @@ enum GeneratorError: Error {
 
 enum InspectorError: Error {
     case invalidAST(unexpectedExpr: Expr, file: String?)
-    case invalidGraph(line: Int, file: String, dependencyName: String, typeName: String, underlyingIssue: InspectorAnalysisError)
+    case invalidGraph(line: Int, file: String, dependencyName: String, typeName: String, underlyingError: InspectorAnalysisError)
 }
 
 enum InspectorAnalysisError: Error {
