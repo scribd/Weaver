@@ -159,4 +159,32 @@ extension MyService.MyEmbeddedService {
             XCTFail("Unexpected error \(error)")
         }
     }
+    
+    func test_generator_should_return_nil_when_no_annotation_is_detected() {
+        
+        do {
+            let file = File(contents: """
+final class MyService {
+  let dependencies: DependencyResolver
+
+  init(_ dependencies: DependencyResolver) {
+    self.dependencies = dependencies
+  }
+}
+""")
+            
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            
+            let generator = try Generator(template: templatePath)
+            let string = try generator.generate(from: syntaxTree)
+            
+            XCTAssertNil(string)
+            
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
 }

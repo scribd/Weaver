@@ -13,8 +13,7 @@
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
 		19956E0A206B4F0A00751B70 /* SampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956E09206B4F0A00751B70 /* SampleTests.swift */; };
-		19956E1B206B520000751B70 /* beaverdi.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956E19206B51FF00751B70 /* beaverdi.AppDelegate.swift */; };
-		19956E1C206B520000751B70 /* beaverdi.ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956E1A206B51FF00751B70 /* beaverdi.ViewController.swift */; };
+		19956E21206BFD2B00751B70 /* BeaverDI.ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956E20206BFD2B00751B70 /* BeaverDI.ViewController.swift */; };
 		E63DEAFF2905ADE99164D0B6 /* Pods_SampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C3B22DACCEE24A465932D904 /* Pods_SampleTests.framework */; };
 		FE763E2C6332FFDD3306EE53 /* Pods_Sample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69F58A342BE7250A4AD988D7 /* Pods_Sample.framework */; };
 /* End PBXBuildFile section */
@@ -40,8 +39,7 @@
 		19956E05206B4F0A00751B70 /* SampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956E09206B4F0A00751B70 /* SampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleTests.swift; sourceTree = "<group>"; };
 		19956E0B206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		19956E19206B51FF00751B70 /* beaverdi.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = beaverdi.AppDelegate.swift; sourceTree = "<group>"; };
-		19956E1A206B51FF00751B70 /* beaverdi.ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = beaverdi.ViewController.swift; sourceTree = "<group>"; };
+		19956E20206BFD2B00751B70 /* BeaverDI.ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.ViewController.swift; sourceTree = "<group>"; };
 		1DB489099BF76BF80AAE12C3 /* Pods-Sample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Sample/Pods-Sample.debug.xcconfig"; sourceTree = "<group>"; };
 		24FCD488C9B0AAA6774C8E07 /* Pods-SampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SampleTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SampleTests/Pods-SampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		69F58A342BE7250A4AD988D7 /* Pods_Sample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Sample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -125,8 +123,7 @@
 		19956E18206B51FF00751B70 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
-				19956E19206B51FF00751B70 /* beaverdi.AppDelegate.swift */,
-				19956E1A206B51FF00751B70 /* beaverdi.ViewController.swift */,
+				19956E20206BFD2B00751B70 /* BeaverDI.ViewController.swift */,
 			);
 			path = Generated;
 			sourceTree = "<group>";
@@ -150,6 +147,7 @@
 			buildConfigurationList = 19956E0E206B4F0A00751B70 /* Build configuration list for PBXNativeTarget "Sample" */;
 			buildPhases = (
 				2D4062DD05F0929CF777D5C6 /* [CP] Check Pods Manifest.lock */,
+				19956E1F206BFAFD00751B70 /* BeaverDI */,
 				19956DED206B4F0A00751B70 /* Sources */,
 				19956DEE206B4F0A00751B70 /* Frameworks */,
 				19956DEF206B4F0A00751B70 /* Resources */,
@@ -262,6 +260,20 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		19956E1F206BFAFD00751B70 /* BeaverDI */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = BeaverDI;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "beaverdi --output_path ${SOURCE_ROOT}/Sample/Generated/ ${SOURCE_ROOT}/Sample/*.swift";
+		};
 		2D4062DD05F0929CF777D5C6 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -307,8 +319,7 @@
 			files = (
 				19956DF7206B4F0A00751B70 /* ViewController.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
-				19956E1B206B520000751B70 /* beaverdi.AppDelegate.swift in Sources */,
-				19956E1C206B520000751B70 /* beaverdi.ViewController.swift in Sources */,
+				19956E21206BFD2B00751B70 /* BeaverDI.ViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -29,9 +29,13 @@ public final class Generator {
         }
     }
     
-    public func generate(from ast: Expr) throws -> String {
+    public func generate(from ast: Expr) throws -> String? {
 
         let resolversData = [ResolverData](ast: ast)
+        
+        guard !resolversData.isEmpty else {
+            return nil
+        }
         
         let fileLoader = FileSystemLoader(paths: [templateDirPath])
         let environment = Environment(loader: fileLoader)
@@ -134,7 +138,7 @@ extension ResolverData {
                 ReferenceData(referenceAnnotation: $0.value)
             }
             
-            let isRoot = referenceAnnotations.count == 0
+            let isRoot = referenceAnnotations.isEmpty
 
             self.init(targetTypeName: targetTypeName,
                       registrations: registrations,

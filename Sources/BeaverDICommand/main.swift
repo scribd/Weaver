@@ -47,9 +47,13 @@ let main = command(
                 syntaxTrees.append(ast)
             }
             
-            let generatedFilePath = Path(outputPath + "/beaverdi." + fileName)
-            let generatedString = try generator.generate(from: ast)
+            let generatedFilePath = Path(outputPath) + "BeaverDI.\(fileName)"
  
+            guard let generatedString = try generator.generate(from: ast) else {
+                Logger.log(.info, "-- No BeaverDI annotation found in file '\(filePath)'.")
+                continue
+            }
+            
             dataToWrite.append((generatedFilePath, generatedString))
         }
 
