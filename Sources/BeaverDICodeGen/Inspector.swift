@@ -297,7 +297,7 @@ private extension Inspector.Dependency {
         }
         buildCache.insert(buildCacheIndex)
         
-        guard !isReference else {
+        guard !isReference && !isCustom else {
             return
         }
         

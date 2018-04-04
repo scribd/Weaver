@@ -177,4 +177,25 @@ final class API {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_inspector_should_build_a_valid_graph_with_an_unbuildable_dependency_with_custom_ref_set_to_true() {
+        let file = File(contents: """
+final class API {
+    // beaverdi: api = API <- APIProtocol
+    // beaverdi: api.customRef = true
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
