@@ -24,7 +24,7 @@ final class SessionManager {
 }
 
 final class Router {
-  // beaverdi: api = API <- APIProtocol
+  // beaverdi: api <- APIProtocol
 }
 
 final class LoginController {
@@ -80,7 +80,7 @@ final class App {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 5, file: "test.swift", dependencyName: "sessionManager", typeName: "SessionManagerProtocol", underlyingError: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 1, file: "test.swift", dependencyName: "sessionManager", typeName: "SessionManagerProtocol", underlyingError: .unresolvableDependency))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

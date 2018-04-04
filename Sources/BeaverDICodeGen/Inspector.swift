@@ -10,21 +10,17 @@ import BeaverDI
 
 public final class Inspector {
 
-    private var graph = [String: Resolver]()
-
-    private lazy var dependencies: [Dependency] = {
-        return self.graph.values.flatMap { $0.dependencies.values }
-    }()
+    private let graph = Graph()
 
     private lazy var resolutionCache = Set<Inspector.ResolutionCacheIndex>()
     private lazy var buildCache = Set<Inspector.BuildCacheIndex>()
     
     public init(syntaxTrees: [Expr]) throws {
-        try buildGraph(with: syntaxTrees)
+        try buildGraph(from: syntaxTrees)
     }
     
     public func validate() throws {
-        for dependency in dependencies {
+        for dependency in graph.dependencies {
             try dependency.resolve(with: &resolutionCache)
             try dependency.build(with: &buildCache)
         }
@@ -32,6 +28,15 @@ public final class Inspector {
 }
 
 private extension Inspector {
+    
+    final class Graph {
+        private var resolversByName = [String: Resolver]()
+        private var resolversByType = [String: Resolver]()
+        
+        lazy var dependencies: [Dependency] = {
+            return resolversByName.values.flatMap { $0.dependencies.values }
+        }()
+    }
 
     final class Resolver {
         let typeName: String
@@ -86,17 +91,46 @@ private extension Inspector {
     }
 }
 
+// MARK: - Graph
+
+extension Inspector.Graph {
+    
+    func insertResolver(name: String, typeName: String) {
+        let resolver = Inspector.Resolver(typeName: typeName)
+        resolversByName[name] = resolver
+        resolversByType[typeName] = resolver
+    }
+
+    func resolver(named name: String) -> Inspector.Resolver? {
+        return resolversByName[name]
+    }
+    
+    func resolver(typed type: String) -> Inspector.Resolver {
+        if let resolver = resolversByType[type] {
+            return resolver
+        }
+        let resolver = Inspector.Resolver(typeName: type)
+        resolversByType[type] = resolver
+        return resolver
+    }
+}
+
 // MARK: - Builders
 
 private extension Inspector {
     
-    func buildGraph(with syntaxTrees: [Expr]) throws {
-        
+    func buildGraph(from syntaxTrees: [Expr]) throws {
+        try collectResolvers(from: syntaxTrees)
+        try linkResolvers(from: syntaxTrees)
+    }
+
+    private func collectResolvers(from syntaxTrees: [Expr]) throws {
+
         for ast in syntaxTrees {
             switch ast {
             case .file(let types, let name):
-                try buildGraph(with: types, fileName: name)
-
+                try collectResolvers(from: types, fileName: name)
+                
             case .typeDeclaration,
                  .scopeAnnotation,
                  .registerAnnotation,
@@ -107,20 +141,58 @@ private extension Inspector {
         }
     }
     
-    func buildGraph(with syntaxTrees: [Expr], fileName: String) throws {
+    private func collectResolvers(from exprs: [Expr], fileName: String) throws {
+
+        for expr in exprs {
+            switch expr {
+            case .typeDeclaration(_, let children):
+                try collectResolvers(from: children, fileName: fileName)
+                
+            case .registerAnnotation(let token):
+                graph.insertResolver(name: token.value.name, typeName: token.value.typeName)
+                
+            case .scopeAnnotation,
+                 .referenceAnnotation,
+                 .customRefAnnotation:
+                break
+                
+            case .file:
+                throw InspectorError.invalidAST(unexpectedExpr: expr, file: fileName)
+            }
+        }
+    }
+    
+    private func linkResolvers(from syntaxTrees: [Expr]) throws {
         
         for ast in syntaxTrees {
             switch ast {
+            case .file(let types, let name):
+                try linkResolvers(from: types, fileName: name)
+                
+            case .typeDeclaration,
+                 .scopeAnnotation,
+                 .registerAnnotation,
+                 .referenceAnnotation,
+                 .customRefAnnotation:
+                throw InspectorError.invalidAST(unexpectedExpr: ast, file: nil)
+            }
+        }
+    }
+    
+    private func linkResolvers(from exprs: [Expr], fileName: String) throws {
+        
+        for expr in exprs {
+            switch expr {
             case .typeDeclaration(let injectableType, let children):
-                let resolver = graph.resolver(for: injectableType.value.name)
-                resolver.update(with: children, fileName: fileName, store: &graph)
+                let resolver = graph.resolver(typed: injectableType.value.name)
+                try resolver.update(with: children, fileName: fileName, graph: graph)
                 
             case .file,
                  .scopeAnnotation,
                  .registerAnnotation,
                  .referenceAnnotation,
                  .customRefAnnotation:
-                throw InspectorError.invalidAST(unexpectedExpr: ast, file: fileName)
+                throw InspectorError.invalidAST(unexpectedExpr: expr, file: fileName)
             }
         }
     }
@@ -133,9 +205,15 @@ private extension Inspector.Dependency {
                      scopeAnnotation: ScopeAnnotation? = nil,
                      customRefAnnotation: CustomRefAnnotation?,
                      fileName: String,
-                     store: inout [String: Inspector.Resolver]) {
+                     graph: Inspector.Graph) throws {
 
-        let associatedResolver = store.resolver(for: registerAnnotation.value.typeName)
+        guard let associatedResolver = graph.resolver(named: registerAnnotation.value.name) else {
+            throw InspectorError.invalidGraph(line: registerAnnotation.line,
+                                              file: fileName,
+                                              dependencyName: registerAnnotation.value.name,
+                                              typeName: registerAnnotation.value.typeName,
+                                              underlyingError: .unresolvableDependency)
+        }
         
         self.init(name: registerAnnotation.value.name,
                   scope: scopeAnnotation?.scope ?? .`default`,
@@ -150,9 +228,15 @@ private extension Inspector.Dependency {
                      referenceAnnotation: TokenBox<ReferenceAnnotation>,
                      customRefAnnotation: CustomRefAnnotation?,
                      fileName: String,
-                     store: inout [String: Inspector.Resolver]) {
+                     graph: Inspector.Graph) throws {
 
-        let associatedResolver = store.resolver(for: referenceAnnotation.value.typeName)
+        guard let associatedResolver = graph.resolver(named: referenceAnnotation.value.name) else {
+            throw InspectorError.invalidGraph(line: referenceAnnotation.line,
+                                              file: fileName,
+                                              dependencyName: referenceAnnotation.value.name,
+                                              typeName: referenceAnnotation.value.typeName,
+                                              underlyingError: .unresolvableDependency)
+        }
         
         self.init(name: referenceAnnotation.value.name,
                   isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue,
@@ -165,7 +249,7 @@ private extension Inspector.Dependency {
 
 private extension Inspector.Resolver {
     
-    func update(with children: [Expr], fileName: String, store: inout [String: Inspector.Resolver]) {
+    func update(with children: [Expr], fileName: String, graph: Inspector.Graph) throws {
 
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
@@ -175,8 +259,8 @@ private extension Inspector.Resolver {
         for child in children {
             switch child {
             case .typeDeclaration(let injectableType, let children):
-                let resolver = store.resolver(for: injectableType.value.name)
-                resolver.update(with: children, fileName: fileName, store: &store)
+                let resolver = graph.resolver(typed: injectableType.value.name)
+                try resolver.update(with: children, fileName: fileName, graph: graph)
                 
             case .registerAnnotation(let registerAnnotation):
                 registerAnnotations.append(registerAnnotation)
@@ -196,23 +280,23 @@ private extension Inspector.Resolver {
         }
         
         for registerAnnotation in registerAnnotations {
-            let dependency = Inspector.Dependency(dependentResolver: self,
-                                                  registerAnnotation: registerAnnotation,
-                                                  scopeAnnotation: scopeAnnotations[registerAnnotation.value.name],
-                                                  customRefAnnotation: customRefAnnotations[registerAnnotation.value.name],
-                                                  fileName: fileName,
-                                                  store: &store)
+            let dependency = try Inspector.Dependency(dependentResolver: self,
+                                                      registerAnnotation: registerAnnotation,
+                                                      scopeAnnotation: scopeAnnotations[registerAnnotation.value.name],
+                                                      customRefAnnotation: customRefAnnotations[registerAnnotation.value.name],
+                                                      fileName: fileName,
+                                                      graph: graph)
             let index = Inspector.DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
         }
         
         for referenceAnnotation in referenceAnnotations {
-            let dependency = Inspector.Dependency(dependentResolver: self,
-                                                  referenceAnnotation: referenceAnnotation,
-                                                  customRefAnnotation: customRefAnnotations[referenceAnnotation.value.name],
-                                                  fileName: fileName,
-                                                  store: &store)
+            let dependency = try Inspector.Dependency(dependentResolver: self,
+                                                      referenceAnnotation: referenceAnnotation,
+                                                      customRefAnnotation: customRefAnnotations[referenceAnnotation.value.name],
+                                                      fileName: fileName,
+                                                      graph: graph)
             let index = Inspector.DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
@@ -400,16 +484,3 @@ extension Inspector.BuildCacheIndex: Hashable {
     }
 }
 
-// MARK: - Collection Builder
-
-private extension Dictionary where Key == String, Value == Inspector.Resolver {
-    
-    mutating func resolver(for typeName: String) -> Inspector.Resolver {
-        if let resolver = self[typeName] {
-            return resolver
-        }
-        let resolver = Inspector.Resolver(typeName: typeName)
-        self[typeName] = resolver
-        return resolver
-    }
-}

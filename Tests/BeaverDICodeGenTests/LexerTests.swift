@@ -116,6 +116,25 @@ final class MyService {
         }
     }
     
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation() {
+        
+        let file = File(contents: """
+// beaverdi: api <- APIProtocol
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 0, length: 31, line: 0))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_a_scope_annotation() {
         
         let file = File(contents: """
