@@ -14,7 +14,7 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
     override func registerDependencies(in store: DependencyStore) {
         {% for registration in resolver.registrations %}
         store.register({{registration.abstractTypeName}}.self, scope: .{{registration.scope}}, builder: { dependencies in
-            return {{registration.typeName}}.make{{registration.typeName}}(injecting: dependencies)
+            {% if not registration.isCustom %}return {{registration.typeName}}.make{{registration.typeName}}(injecting: dependencies){% else %}return self.{{registration.name}}CustomRef(dependencies){% endif %}
         }){% endfor %}
     }
 }
@@ -31,11 +31,11 @@ extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeN
     }{% endfor %}
 }
 
-extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
+{% if not resolver.isRoot %}extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
 
-    static func make{{resolver.targetTypeName}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer{% endif %}) -> {{resolver.targetTypeName}} {
-        let dependencies = {{resolver.targetTypeName}}DependencyContainer({% if not resolver.isRoot %}parentDependencies{% endif %})
+    static func make{{resolver.targetTypeName}}(injecting parentDependencies: DependencyContainer) -> {{resolver.targetTypeName}} {
+        let dependencies = {{resolver.targetTypeName}}DependencyContainer(parentDependencies)
         return {{resolver.targetTypeName}}(injecting: dependencies)
     }
-}
+}{% endif %}
 {% endfor %}

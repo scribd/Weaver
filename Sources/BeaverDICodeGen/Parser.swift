@@ -78,6 +78,18 @@ private extension Parser {
         }
     }
     
+    func parseCustomRefAnnotation() throws -> TokenBox<CustomRefAnnotation> {
+        switch currentToken {
+        case let token as TokenBox<CustomRefAnnotation>:
+            consumeToken()
+            return token
+        case nil:
+            throw ParserError.unexpectedEOF(file: fileName)
+        case .some(let token):
+            throw ParserError.unexpectedToken(line: token.line, file: fileName)
+        }
+    }
+    
     func parseScopeAnnotation() throws -> TokenBox<ScopeAnnotation> {
         switch currentToken {
         case let token as TokenBox<ScopeAnnotation>:
@@ -130,6 +142,13 @@ private extension Parser {
                 }
                 referenceNames.insert(name)
                 children.append(.referenceAnnotation(annotation))
+                
+            case is TokenBox<CustomRefAnnotation>:
+                let annotation = try parseCustomRefAnnotation()
+                guard registrationNames.contains(annotation.value.name) || referenceNames.contains(annotation.value.name) else {
+                    throw ParserError.unknownDependency(line: annotation.line, file: fileName, dependencyName: annotation.value.name)
+                }
+                children.append(.customRefAnnotation(annotation))
 
             case is TokenBox<ScopeAnnotation>:
                 let annotation = try parseScopeAnnotation()

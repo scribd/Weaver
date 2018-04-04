@@ -97,7 +97,8 @@ private extension Inspector {
             case .typeDeclaration,
                  .scopeAnnotation,
                  .registerAnnotation,
-                 .referenceAnnotation:
+                 .referenceAnnotation,
+                 .customRefAnnotation:
                 throw InspectorError.invalidAST(unexpectedExpr: ast, file: nil)
             }
         }
@@ -114,7 +115,8 @@ private extension Inspector {
             case .file,
                  .scopeAnnotation,
                  .registerAnnotation,
-                 .referenceAnnotation:
+                 .referenceAnnotation,
+                 .customRefAnnotation:
                 throw InspectorError.invalidAST(unexpectedExpr: ast, file: fileName)
             }
         }
@@ -161,6 +163,7 @@ private extension Inspector.Resolver {
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
         var scopeAnnotations: [String: ScopeAnnotation] = [:]
+        var customRefAnnotations: [String: CustomRefAnnotation] = [:]
         
         for child in children {
             switch child {
@@ -176,6 +179,9 @@ private extension Inspector.Resolver {
 
             case .scopeAnnotation(let scopeAnnotation):
                 scopeAnnotations[scopeAnnotation.value.name] = scopeAnnotation.value
+                
+            case .customRefAnnotation(let customRefAnnotation):
+                customRefAnnotations[customRefAnnotation.value.name] = customRefAnnotation.value
                 
             case .file:
                 break

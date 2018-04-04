@@ -52,6 +52,7 @@ private struct RegisterData {
     let typeName: String
     let abstractTypeName: String
     let scope: String
+    let isCustom: Bool
 }
 
 private struct ReferenceData {
@@ -72,7 +73,8 @@ private struct ResolverData {
 extension RegisterData {
     
     init(registerAnnotation: RegisterAnnotation,
-         scopeAnnotation: ScopeAnnotation?) {
+         scopeAnnotation: ScopeAnnotation?,
+         customRefAnnotation: CustomRefAnnotation?) {
        
         let optionChars = CharacterSet(charactersIn: "?")
         let scope = scopeAnnotation?.scope ?? .`default`
@@ -80,7 +82,8 @@ extension RegisterData {
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.typeName.trimmingCharacters(in: optionChars),
                   abstractTypeName: registerAnnotation.protocolName ?? registerAnnotation.typeName,
-                  scope: scope.stringValue)
+                  scope: scope.stringValue,
+                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue)
     }
 }
 
@@ -110,6 +113,7 @@ extension ResolverData {
             var scopeAnnotations = [String: ScopeAnnotation]()
             var registerAnnotations = [String: RegisterAnnotation]()
             var referenceAnnotations = [String: ReferenceAnnotation]()
+            var customRefAnnotations = [String: CustomRefAnnotation]()
             
             for child in children {
                 switch child {
@@ -122,6 +126,9 @@ extension ResolverData {
                 case .referenceAnnotation(let annotation):
                     referenceAnnotations[annotation.value.name] = annotation.value
                     
+                case .customRefAnnotation(let annotation):
+                    customRefAnnotations[annotation.value.name] = annotation.value
+                    
                 case .file,
                      .typeDeclaration:
                     break
@@ -129,7 +136,9 @@ extension ResolverData {
             }
             
             let registrations = registerAnnotations.map {
-                RegisterData(registerAnnotation: $0.value, scopeAnnotation: scopeAnnotations[$0.key])
+                RegisterData(registerAnnotation: $0.value,
+                             scopeAnnotation: scopeAnnotations[$0.key],
+                             customRefAnnotation: customRefAnnotations[$0.key])
             }
 
             let references = registerAnnotations.map {
@@ -146,10 +155,11 @@ extension ResolverData {
                       enclosingTypeNames: enclosingTypeNames,
                       isRoot: isRoot)
             
-        case .registerAnnotation,
+        case .file,
+             .registerAnnotation,
              .scopeAnnotation,
              .referenceAnnotation,
-             .file:
+             .customRefAnnotation:
             return nil
         }
     }
@@ -171,7 +181,8 @@ private extension Array where Element == ResolverData {
             case .file,
                  .registerAnnotation,
                  .referenceAnnotation,
-                 .scopeAnnotation:
+                 .scopeAnnotation,
+                 .customRefAnnotation:
                 return []
             }
         })
@@ -185,7 +196,8 @@ private extension Array where Element == ResolverData {
         case .typeDeclaration,
              .registerAnnotation,
              .scopeAnnotation,
-             .referenceAnnotation:
+             .referenceAnnotation,
+             .customRefAnnotation:
             self.init()
         }
     }

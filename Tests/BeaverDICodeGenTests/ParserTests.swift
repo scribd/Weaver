@@ -177,6 +177,76 @@ final class MyService {
         }
     }
     
+    func test_parser_should_generate_a_syntax_error_when_trying_to_set_custom_ref_on_an_unknown_reference() {
+        let file = File(contents: """
+final class MyService {
+  // beaverdi: api.customRef = true
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            _ = try parser.parse()
+            XCTFail("An error was expected.")
+        } catch let error as ParserError {
+            XCTAssertEqual(error, .unknownDependency(line: 1, file: "test.swift", dependencyName: "api"))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
+    
+    func test_parser_should_generate_a_valid_syntax_tree_with_a_dependency_reference_with_custom_ref_set_to_true() {
+        let file = File(contents: """
+final class MyService {
+  // beaverdi: api <- APIProtocol
+  // beaverdi: api.customRef = true
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 89, line: 0),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 32, line: 1)),
+                                                                         .customRefAnnotation(TokenBox(value: CustomRefAnnotation(name: "api", value: true), offset: 60, length: 34, line: 2))])],
+                                     name: "test.swift")
+            
+            XCTAssertEqual(syntaxTree, expected)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_parser_should_generate_a_valid_syntax_tree_with_a_dependency_registration_with_custom_ref_set_to_true() {
+        let file = File(contents: """
+final class MyService {
+  // beaverdi: api = API <- APIProtocol
+  // beaverdi: api.customRef = true
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 95, line: 0),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 38, line: 1)),
+                                                                         .customRefAnnotation(TokenBox(value: CustomRefAnnotation(name: "api", value: true), offset: 66, length: 34, line: 2))])],
+                                     name: "test.swift")
+            
+            XCTAssertEqual(syntaxTree, expected)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
     func test_parser_should_generate_a_syntax_error_when_trying_to_declare_a_reference_and_a_registration_with_the_same_name() {
         let file = File(contents: """
 final class MyService {

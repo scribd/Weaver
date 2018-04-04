@@ -114,6 +114,8 @@ public struct CustomRefAnnotation: Token {
     let name: String
     let value: Bool
     
+    static let defaultValue = false
+    
     public static func create(_ string: String) throws -> CustomRefAnnotation? {
         guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.customRef\\s*=\\s*(\\w+)\\s*$").matches(in: string) else {
             return nil

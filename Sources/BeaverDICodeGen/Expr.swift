@@ -13,6 +13,7 @@ public indirect enum Expr {
     case registerAnnotation(TokenBox<RegisterAnnotation>)
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
     case referenceAnnotation(TokenBox<ReferenceAnnotation>)
+    case customRefAnnotation(TokenBox<CustomRefAnnotation>)
 }
 
 // MARK: - Equatable
@@ -34,11 +35,14 @@ extension Expr: Equatable {
             return lhs == rhs
         case (.referenceAnnotation(let lhs), .referenceAnnotation(let rhs)):
             return lhs == rhs
+        case (.customRefAnnotation(let lhs), .customRefAnnotation(let rhs)):
+            return lhs == rhs
         case (.file, _),
              (.typeDeclaration, _),
              (.registerAnnotation, _),
              (.scopeAnnotation, _),
-             (.referenceAnnotation, _):
+             (.referenceAnnotation, _),
+             (.customRefAnnotation, _):
             return false
         }
     }
@@ -59,6 +63,8 @@ extension Expr: CustomStringConvertible {
             return "\(type)\n" + children.map { "  \($0)" }.joined(separator: "\n")
         case .referenceAnnotation(let token):
             return "Reference - \(token)"
+        case .customRefAnnotation(let token):
+            return "CustomRef - \(token)"
         }
     }
 }
