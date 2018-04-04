@@ -33,23 +33,25 @@ private extension Inspector {
         private var resolversByName = [String: Resolver]()
         private var resolversByType = [String: Resolver]()
         
-        lazy var dependencies: [Dependency] = {
-            return resolversByName.values.flatMap { $0.dependencies.values }
+        lazy var dependencies: Set<Dependency> = {
+            var allDependencies = resolversByName.values.flatMap { $0.dependencies.values }
+            allDependencies.append(contentsOf: resolversByType.values.flatMap { $0.dependencies.values })
+            return Set(allDependencies)
         }()
     }
 
     final class Resolver {
-        let typeName: String
+        let typeName: String?
         var dependencies: [DependencyIndex: Dependency] = [:]
         var dependents: [Resolver] = []
         
-        init(typeName: String) {
+        init(typeName: String? = nil) {
             self.typeName = typeName
         }
     }
     
     struct DependencyIndex {
-        let typeName: String
+        let typeName: String?
         let name: String
     }
     
@@ -95,10 +97,17 @@ private extension Inspector {
 
 extension Inspector.Graph {
     
-    func insertResolver(name: String, typeName: String) {
-        let resolver = Inspector.Resolver(typeName: typeName)
-        resolversByName[name] = resolver
-        resolversByType[typeName] = resolver
+    func insertResolver(with registerAnnotation: RegisterAnnotation) {
+        let resolver = Inspector.Resolver(typeName: registerAnnotation.typeName)
+        resolversByName[registerAnnotation.name] = resolver
+        resolversByType[registerAnnotation.typeName] = resolver
+    }
+    
+    func insertResolver(with referenceAnnotation: ReferenceAnnotation) {
+        if resolversByName[referenceAnnotation.name] != nil {
+            return
+        }
+        resolversByName[referenceAnnotation.name] = Inspector.Resolver()
     }
 
     func resolver(named name: String) -> Inspector.Resolver? {
@@ -120,44 +129,39 @@ extension Inspector.Graph {
 private extension Inspector {
     
     func buildGraph(from syntaxTrees: [Expr]) throws {
-        try collectResolvers(from: syntaxTrees)
+        collectResolvers(from: syntaxTrees)
         try linkResolvers(from: syntaxTrees)
     }
 
-    private func collectResolvers(from syntaxTrees: [Expr]) throws {
+    private func collectResolvers(from syntaxTrees: [Expr]) {
 
-        for ast in syntaxTrees {
-            switch ast {
-            case .file(let types, let name):
-                try collectResolvers(from: types, fileName: name)
-                
-            case .typeDeclaration,
-                 .scopeAnnotation,
-                 .registerAnnotation,
-                 .referenceAnnotation,
-                 .customRefAnnotation:
-                throw InspectorError.invalidAST(unexpectedExpr: ast, file: nil)
-            }
-        }
-    }
-    
-    private func collectResolvers(from exprs: [Expr], fileName: String) throws {
-
-        for expr in exprs {
+        // Insert the resolvers for which we know the type.
+        for expr in ExprSequence(exprs: syntaxTrees) {
             switch expr {
-            case .typeDeclaration(_, let children):
-                try collectResolvers(from: children, fileName: fileName)
-                
             case .registerAnnotation(let token):
-                graph.insertResolver(name: token.value.name, typeName: token.value.typeName)
+                graph.insertResolver(with: token.value)
                 
-            case .scopeAnnotation,
+            case .file,
+                 .typeDeclaration,
+                 .scopeAnnotation,
                  .referenceAnnotation,
                  .customRefAnnotation:
                 break
+            }
+        }
+
+        // Insert the resolvers for which we don't know the type.
+        for expr in ExprSequence(exprs: syntaxTrees) {
+            switch expr {
+            case .referenceAnnotation(let token):
+                graph.insertResolver(with: token.value)
                 
-            case .file:
-                throw InspectorError.invalidAST(unexpectedExpr: expr, file: fileName)
+            case .file,
+                 .registerAnnotation,
+                 .typeDeclaration,
+                 .scopeAnnotation,
+                 .customRefAnnotation:
+                break
             }
         }
     }
@@ -449,7 +453,7 @@ extension Inspector.Dependency: Hashable {
 extension Inspector.DependencyIndex: Hashable {
     
     var hashValue: Int {
-        return typeName.hashValue ^ name.hashValue
+        return (typeName ?? "").hashValue ^ name.hashValue
     }
     
     static func ==(lhs: Inspector.DependencyIndex, rhs: Inspector.DependencyIndex) -> Bool {

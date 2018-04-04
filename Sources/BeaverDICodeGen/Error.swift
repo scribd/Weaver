@@ -31,7 +31,7 @@ enum GeneratorError: Error {
 
 enum InspectorError: Error {
     case invalidAST(unexpectedExpr: Expr, file: String?)
-    case invalidGraph(line: Int, file: String, dependencyName: String, typeName: String, underlyingError: InspectorAnalysisError)
+    case invalidGraph(line: Int, file: String, dependencyName: String, typeName: String?, underlyingError: InspectorAnalysisError)
 }
 
 enum InspectorAnalysisError: Error {
@@ -98,7 +98,7 @@ extension InspectorError: CustomStringConvertible {
         case .invalidAST(let token, let file):
             return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
         case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
-            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(typeName)' \(printableLine(line, file))."
+            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(String(describing: typeName))' \(printableLine(line, file))."
         }
     }
 }
