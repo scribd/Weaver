@@ -51,6 +51,7 @@ private extension Inspector {
     final class Dependency {
         let name: String
         let scope: Scope?
+        let isCustom: Bool
         let associatedResolver: Resolver
         let dependentResovler: Resolver
 
@@ -59,12 +60,14 @@ private extension Inspector {
 
         init(name: String,
              scope: Scope? = nil,
+             isCustom: Bool,
              line: Int,
              file: String,
              associatedResolver: Resolver,
              dependentResovler: Resolver) {
             self.name = name
             self.scope = scope
+            self.isCustom = isCustom
             self.line = line
             self.file = file
             self.associatedResolver = associatedResolver
@@ -128,6 +131,7 @@ private extension Inspector.Dependency {
     convenience init(dependentResolver: Inspector.Resolver,
                      registerAnnotation: TokenBox<RegisterAnnotation>,
                      scopeAnnotation: ScopeAnnotation? = nil,
+                     customRefAnnotation: CustomRefAnnotation?,
                      fileName: String,
                      store: inout [String: Inspector.Resolver]) {
 
@@ -135,6 +139,7 @@ private extension Inspector.Dependency {
         
         self.init(name: registerAnnotation.value.name,
                   scope: scopeAnnotation?.scope ?? .`default`,
+                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue,
                   line: registerAnnotation.line,
                   file: fileName,
                   associatedResolver: associatedResolver,
@@ -143,12 +148,14 @@ private extension Inspector.Dependency {
     
     convenience init(dependentResolver: Inspector.Resolver,
                      referenceAnnotation: TokenBox<ReferenceAnnotation>,
+                     customRefAnnotation: CustomRefAnnotation?,
                      fileName: String,
                      store: inout [String: Inspector.Resolver]) {
 
         let associatedResolver = store.resolver(for: referenceAnnotation.value.typeName)
         
         self.init(name: referenceAnnotation.value.name,
+                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue,
                   line: referenceAnnotation.line,
                   file: fileName,
                   associatedResolver: associatedResolver,
@@ -192,6 +199,7 @@ private extension Inspector.Resolver {
             let dependency = Inspector.Dependency(dependentResolver: self,
                                                   registerAnnotation: registerAnnotation,
                                                   scopeAnnotation: scopeAnnotations[registerAnnotation.value.name],
+                                                  customRefAnnotation: customRefAnnotations[registerAnnotation.value.name],
                                                   fileName: fileName,
                                                   store: &store)
             let index = Inspector.DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
@@ -202,6 +210,7 @@ private extension Inspector.Resolver {
         for referenceAnnotation in referenceAnnotations {
             let dependency = Inspector.Dependency(dependentResolver: self,
                                                   referenceAnnotation: referenceAnnotation,
+                                                  customRefAnnotation: customRefAnnotations[referenceAnnotation.value.name],
                                                   fileName: fileName,
                                                   store: &store)
             let index = Inspector.DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
@@ -216,7 +225,7 @@ private extension Inspector.Resolver {
 private extension Inspector.Dependency {
     
     func resolve(with cache: inout Set<Inspector.ResolutionCacheIndex>) throws {
-        guard isReference else {
+        guard isReference && !isCustom else {
             return
         }
         

@@ -156,4 +156,25 @@ final class SessionManager {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_inspector_should_build_a_valid_graph_with_an_unresolvable_ref_with_custom_ref_set_to_true() {
+        let file = File(contents: """
+final class API {
+    // beaverdi: api <- APIProtocol
+    // beaverdi: api.customRef = true
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
