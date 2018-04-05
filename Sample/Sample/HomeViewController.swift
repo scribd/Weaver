@@ -51,6 +51,7 @@ final class HomeViewController: UIViewController {
             switch result {
             case .success(let page):
                 self.movies = page.results
+                self.tableView.reloadData()
                 
             case .failure(let error):
                 print(error)

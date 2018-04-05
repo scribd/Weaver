@@ -54,6 +54,12 @@ final class MovieAPI: APIProtocol {
 
     func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) {
         
+        let completionOnMainThread = { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
+        
         guard let url = URL(string: Constants.host + request.path + "?api_key=" + Constants.apiKey) else {
             completion(.failure(.url(request.path)))
             return
@@ -62,31 +68,31 @@ final class MovieAPI: APIProtocol {
         let task = dependencies.urlSession.dataTask(with: url) { (data, response, error) in
             
             if let error = error {
-                completion(.failure(.network(error)))
+                completionOnMainThread(.failure(.network(error)))
                 return
             }
             
             guard let response = response as? HTTPURLResponse else {
-                completion(.failure(.networkingProtocolIsNotHTTP))
+                completionOnMainThread(.failure(.networkingProtocolIsNotHTTP))
                 return
             }
             
             guard response.statusCode == 200 || response.statusCode == 304 else {
-                completion(.failure(.api(statusCode: response.statusCode, message: nil)))
+                completionOnMainThread(.failure(.api(statusCode: response.statusCode, message: nil)))
                 return
             }
             
             if let data = data {
                 if let errorModel = try? JSONDecoder().decode(APIErrorModel.self, from: data) {
-                    completion(.failure(.api(statusCode: errorModel.status_code, message: errorModel.status_message)))
+                    completionOnMainThread(.failure(.api(statusCode: errorModel.status_code, message: errorModel.status_message)))
                     return
                 }
                 
                 do {
                     let model = try JSONDecoder().decode(Model.self, from: data)
-                    completion(.success(model))
+                    completionOnMainThread(.success(model))
                 } catch {
-                    completion(.failure(.deserialization(error)))
+                    completionOnMainThread(.failure(.deserialization(error)))
                 }
             }
         }
