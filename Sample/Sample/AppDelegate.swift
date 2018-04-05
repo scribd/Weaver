@@ -14,13 +14,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    // beaverdi: appDelegate <- UIApplicationDelegate
-    // beaverdi: appDelegate.custom = true
+    let dependencies = AppDelegateDependencyContainer()
     
+    // beaverdi: appDelegate <- AppDelegate
+    // beaverdi: appDelegate.customRef = true
+    
+    // beaverdi: viewController = ViewController
+    // beaverdi: viewController.scope = .container
+        
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         window = UIWindow()
-        window?.rootViewController = ViewController.makeViewController()
+        window?.rootViewController = UINavigationController(rootViewController: dependencies.viewController)
         
         window?.makeKeyAndVisible()
         
@@ -30,8 +35,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 extension AppDelegateDependencyContainer {
     
-    var appDelegate: UIApplicationDelegate {
-        return UIApplication.shared.delegate!
+    func appDelegateCustomRef(_: DependencyResolver) -> AppDelegate {
+        return UIApplication.shared.delegate! as! AppDelegate
     }
 }
 

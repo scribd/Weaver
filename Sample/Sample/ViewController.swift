@@ -12,7 +12,9 @@ class ViewController: UIViewController {
 
     let dependencies: ViewControllerDependencyResolver
     
-    // beaverdi: appDelegate <- UIApplicationDelegate
+    // beaverdi: appDelegate <- AppDelegate
+    
+    // beaverdi: viewControllerBis = ViewControllerBis
 
     init(injecting dependencies: ViewControllerDependencyResolver) {
         self.dependencies = dependencies
@@ -26,7 +28,11 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .white
+        view.backgroundColor = .red
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.navigationController?.pushViewController(self.dependencies.viewControllerBis, animated: true)
+        }
     }
 }
 

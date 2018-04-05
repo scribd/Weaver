@@ -33,8 +33,8 @@ extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeN
 
 {% if not resolver.isRoot %}extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
 
-    static func make{{resolver.targetTypeName}}(injecting parentDependencies: DependencyContainer) -> {{resolver.targetTypeName}} {
-        let dependencies = {{resolver.targetTypeName}}DependencyContainer(parentDependencies)
+    static func make{{resolver.targetTypeName}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer{% endif %}) -> {{resolver.targetTypeName}} {
+        let dependencies = {{resolver.targetTypeName}}DependencyContainer({% if not resolver.isRoot %}parentDependencies{% endif %})
         return {{resolver.targetTypeName}}(injecting: dependencies)
     }
 }{% endif %}

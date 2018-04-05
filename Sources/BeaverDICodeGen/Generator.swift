@@ -85,6 +85,20 @@ extension RegisterData {
                   scope: scope.stringValue,
                   isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue)
     }
+    
+    init(referenceAnnotation: ReferenceAnnotation,
+         scopeAnnotation: ScopeAnnotation?,
+         customRefAnnotation: CustomRefAnnotation?) {
+        
+        let optionChars = CharacterSet(charactersIn: "?")
+        let scope = scopeAnnotation?.scope ?? .`default`
+        
+        self.init(name: referenceAnnotation.name,
+                  typeName: referenceAnnotation.typeName.trimmingCharacters(in: optionChars),
+                  abstractTypeName: referenceAnnotation.typeName,
+                  scope: scope.stringValue,
+                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue)
+    }
 }
 
 extension ReferenceData {
@@ -139,6 +153,14 @@ extension ResolverData {
                 RegisterData(registerAnnotation: $0.value,
                              scopeAnnotation: scopeAnnotations[$0.key],
                              customRefAnnotation: customRefAnnotations[$0.key])
+            } + referenceAnnotations.flatMap {
+                if let customRefAnnotation = customRefAnnotations[$0.key] {
+                    return RegisterData(referenceAnnotation: $0.value,
+                                        scopeAnnotation: scopeAnnotations[$0.key],
+                                        customRefAnnotation: customRefAnnotation)
+                } else {
+                    return nil
+                }
             }
 
             let references = registerAnnotations.map {
@@ -147,7 +169,10 @@ extension ResolverData {
                 ReferenceData(referenceAnnotation: $0.value)
             }
             
-            let isRoot = referenceAnnotations.isEmpty
+            let isRoot = referenceAnnotations.filter {
+                let isCustom = customRefAnnotations[$0.key]?.value ?? CustomRefAnnotation.defaultValue
+                return !isCustom
+            }.isEmpty
 
             self.init(targetTypeName: targetTypeName,
                       registrations: registrations,

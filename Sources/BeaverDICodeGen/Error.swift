@@ -43,6 +43,8 @@ enum InspectorAnalysisError: Error {
 
 extension TokenError: CustomStringConvertible {
 
+    // <filename>:<linenumber>: error | warn | note : <message>\n
+    
     var description: String {
         switch self {
         case .invalidAnnotation(let annotation):
@@ -60,7 +62,7 @@ extension LexerError: CustomStringConvertible {
     var description: String {
         switch self {
         case .invalidAnnotation(let line, let file, let underlyingError):
-            return "\(underlyingError): \(printableLine(line, file))."
+            return printableError(line, file, "\(underlyingError)")
         }
     }
 }
@@ -70,13 +72,13 @@ extension ParserError: CustomStringConvertible {
     var description: String {
         switch self {
         case .depedencyDoubleDeclaration(let line, let file, let dependencyName):
-            return "Double dependency declaration: '\(dependencyName)': \(printableLine(line, file))."
+            return printableError(line, file, "Double dependency declaration: '\(dependencyName)'")
         case .unexpectedEOF(let file):
-            return "Unexpected EOF (End of file) in file \(file)."
+            return printableError(0, file, "Unexpected EOF (End of file)")
         case .unexpectedToken(let line, let file):
-            return "Unexpected token at line: \(printableLine(line, file))."
+            return printableError(line, file, "Unexpected token at line")
         case .unknownDependency(let line, let file, let dependencyName):
-            return "Unknown dependency: '\(dependencyName)': at line \(printableLine(line, file))."
+            return printableError(line, file, "Unknown dependency: '\(dependencyName)'")
         }
     }
 }
@@ -98,7 +100,7 @@ extension InspectorError: CustomStringConvertible {
         case .invalidAST(let token, let file):
             return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
         case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
-            return "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(String(describing: typeName))' \(printableLine(line, file))."
+            return printableError(line, file, "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(String(describing: typeName))'")
         }
     }
 }
@@ -117,8 +119,8 @@ extension InspectorAnalysisError: CustomStringConvertible {
 
 // MARK: - Utils
 
-private func printableLine(_ line: Int, _ file: String) -> String {
-    return "at line \(line + 1) in file \(file)"
+private func printableError(_ line: Int, _ file: String, _ message: String) -> String {
+    return "\(file):\(line + 1): error: \(message)."
 }
 
 // MARK: - Equatable

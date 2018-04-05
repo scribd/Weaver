@@ -99,7 +99,7 @@ extension DependencyContainer: DependencyResolver {
 
 extension DependencyContainer: DependencyStore {
     
-    public func register<S>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyResolver) -> S) {
+    public func register<S>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyContainer) -> S) {
         let key = InstanceKey(for: serviceType)
 
         let builderWrapper: (DependencyContainer) -> S = { strongSelf in
@@ -109,7 +109,7 @@ extension DependencyContainer: DependencyStore {
         builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
-    public func register<S, P1>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyResolver, P1) -> S) {
+    public func register<S, P1>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyContainer, P1) -> S) {
         let key = InstanceKey(for: serviceType, parameterType: P1.self)
 
         let builderWrapper: (DependencyContainer, P1) -> S = { strongSelf, parameter in
@@ -119,7 +119,7 @@ extension DependencyContainer: DependencyStore {
         builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
-    public func register<S, P1, P2>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyResolver, P1, P2) -> S) {
+    public func register<S, P1, P2>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyContainer, P1, P2) -> S) {
         let key = InstanceKey(for: serviceType, parameterTypes: P1.self, P2.self)
 
         let builderWrapper: (DependencyContainer, P1, P2) -> S = { strongSelf, p1, p2 in
@@ -129,7 +129,7 @@ extension DependencyContainer: DependencyStore {
         builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
-    public func register<S, P1, P2, P3>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyResolver, P1, P2, P3) -> S) {
+    public func register<S, P1, P2, P3>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyContainer, P1, P2, P3) -> S) {
         let key = InstanceKey(for: serviceType, parameterTypes: P1.self, P2.self, P3.self)
 
         let builderWrapper: (DependencyContainer, P1, P2, P3) -> S = { strongSelf, p1, p2, p3 in
@@ -139,7 +139,7 @@ extension DependencyContainer: DependencyStore {
         builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
-    public func register<S, P1, P2, P3, P4>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyResolver, P1, P2, P3, P4) -> S) {
+    public func register<S, P1, P2, P3, P4>(_ serviceType: S.Type, scope: Scope, builder: @escaping (DependencyContainer, P1, P2, P3, P4) -> S) {
         let key = InstanceKey(for: serviceType, parameterTypes: P1.self, P2.self, P3.self, P4.self)
 
         let builderWrapper: (DependencyContainer, P1, P2, P3, P4) -> S = { strongSelf, p1, p2, p3, p4 in

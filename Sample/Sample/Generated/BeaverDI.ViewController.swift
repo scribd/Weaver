@@ -7,34 +7,38 @@ import BeaverDI
 
 final class ViewControllerDependencyContainer: DependencyContainer {
 
-    init() {
-        super.init()
+    init(_ parent: DependencyContainer) {
+        super.init(parent)
     }
 
     override func registerDependencies(in store: DependencyStore) {
         
-        store.register(UIApplicationDelegate.self, scope: .graph, builder: { dependencies in
-            return AppDelegate.makeAppDelegate(injecting: dependencies)
+        store.register(ViewControllerBis.self, scope: .graph, builder: { dependencies in
+            return ViewControllerBis.makeViewControllerBis(injecting: dependencies)
         })
     }
 }
 
 protocol ViewControllerDependencyResolver {
     
-    var appDelegate: UIApplicationDelegate { get }
+    var viewControllerBis: ViewControllerBis { get }
+    var appDelegate: AppDelegate { get }
 }
 
 extension ViewControllerDependencyContainer: ViewControllerDependencyResolver {
     
-    var appDelegate: UIApplicationDelegate {
-        return resolve(UIApplicationDelegate.self)
+    var viewControllerBis: ViewControllerBis {
+        return resolve(ViewControllerBis.self)
+    }
+    var appDelegate: AppDelegate {
+        return resolve(AppDelegate.self)
     }
 }
 
 extension ViewController {
 
-    static func makeViewController() -> ViewController {
-        let dependencies = ViewControllerDependencyContainer()
+    static func makeViewController(injecting parentDependencies: DependencyContainer) -> ViewController {
+        let dependencies = ViewControllerDependencyContainer(parentDependencies)
         return ViewController(injecting: dependencies)
     }
 }

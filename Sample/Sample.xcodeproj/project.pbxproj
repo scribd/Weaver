@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		193EEF7D2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */; };
+		193EEF7F2075E2AA00BFE706 /* ViewControllerBis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF7E2075E2AA00BFE706 /* ViewControllerBis.swift */; };
+		193EEF812075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF802075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift */; };
 		19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF4206B4F0A00751B70 /* AppDelegate.swift */; };
 		19956DF7206B4F0A00751B70 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF6206B4F0A00751B70 /* ViewController.swift */; };
 		19956DFA206B4F0A00751B70 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DF8206B4F0A00751B70 /* Main.storyboard */; };
@@ -29,6 +32,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.AppDelegate.swift; sourceTree = "<group>"; };
+		193EEF7E2075E2AA00BFE706 /* ViewControllerBis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewControllerBis.swift; sourceTree = "<group>"; };
+		193EEF802075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.ViewControllerBis.swift; sourceTree = "<group>"; };
 		19956DF1206B4F0A00751B70 /* Sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956DF4206B4F0A00751B70 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		19956DF6206B4F0A00751B70 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -103,6 +109,7 @@
 				19956E18206B51FF00751B70 /* Generated */,
 				19956DF4206B4F0A00751B70 /* AppDelegate.swift */,
 				19956DF6206B4F0A00751B70 /* ViewController.swift */,
+				193EEF7E2075E2AA00BFE706 /* ViewControllerBis.swift */,
 				19956DF8206B4F0A00751B70 /* Main.storyboard */,
 				19956DFB206B4F0A00751B70 /* Assets.xcassets */,
 				19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */,
@@ -123,6 +130,8 @@
 		19956E18206B51FF00751B70 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
+				193EEF802075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift */,
+				193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */,
 				19956E20206BFD2B00751B70 /* BeaverDI.ViewController.swift */,
 			);
 			path = Generated;
@@ -317,7 +326,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				193EEF7F2075E2AA00BFE706 /* ViewControllerBis.swift in Sources */,
 				19956DF7206B4F0A00751B70 /* ViewController.swift in Sources */,
+				193EEF812075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift in Sources */,
+				193EEF7D2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
 				19956E21206BFD2B00751B70 /* BeaverDI.ViewController.swift in Sources */,
 			);

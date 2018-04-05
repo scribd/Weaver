@@ -34,19 +34,18 @@ let main = command(
                 return
             }
             
-            guard let fileName = filePath.components.last else {
-                Logger.log(.error, "Could not retrieve file name from path '\(filePath)'")
-                return
-            }
-            
             Logger.log(.info, "<- '\(filePath)'")
-            let tokens = try Lexer(file, fileName: fileName).tokenize()
-            let ast = try Parser(tokens, fileName: fileName).parse()
+            let tokens = try Lexer(file, fileName: filePath.string).tokenize()
+            let ast = try Parser(tokens, fileName: filePath.string).parse()
 
             if safeFlag {
                 syntaxTrees.append(ast)
             }
             
+            guard let fileName = filePath.components.last else {
+                Logger.log(.error, "Could not retrieve file name from path '\(filePath)'")
+                return
+            }
             let generatedFilePath = Path(outputPath) + "BeaverDI.\(fileName)"
  
             guard let generatedString = try generator.generate(from: ast) else {
@@ -77,7 +76,7 @@ let main = command(
         Logger.log(.info, "Done.")
         
     } catch {
-        Logger.log(.error, "Error: \(error)")
+        Logger.log(.error, "\(error)")
         exit(1)
     }
 }

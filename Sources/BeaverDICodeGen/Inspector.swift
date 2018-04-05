@@ -33,10 +33,19 @@ private extension Inspector {
         private var resolversByName = [String: Resolver]()
         private var resolversByType = [String: Resolver]()
         
-        lazy var dependencies: Set<Dependency> = {
-            var allDependencies = resolversByName.values.flatMap { $0.dependencies.values }
+        lazy var dependencies: [Dependency] = {
+            var allDependencies = [Dependency]()
+            allDependencies.append(contentsOf: resolversByName.values.flatMap { $0.dependencies.values })
             allDependencies.append(contentsOf: resolversByType.values.flatMap { $0.dependencies.values })
-            return Set(allDependencies)
+ 
+            var filteredDependencies = Set<Dependency>()
+            return allDependencies.filter {
+                if filteredDependencies.contains($0) {
+                    return false
+                }
+                filteredDependencies.insert($0)
+                return true
+            }
         }()
     }
 
@@ -360,8 +369,13 @@ private extension Inspector.Resolver {
         }
         visitedResolvers.insert(self)
         
-        if let dependency = dependencies[index], let scope = dependency.scope, scope.allowsAccessFromChildren {
-            return
+        if let dependency = dependencies[index] {
+            if let scope = dependency.scope, scope.allowsAccessFromChildren {
+                return
+            }
+            if dependency.isCustom {
+                return
+            }
         }
         
         for dependent in dependents {
