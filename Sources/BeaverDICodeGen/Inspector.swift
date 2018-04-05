@@ -369,11 +369,8 @@ private extension Inspector.Resolver {
         }
         visitedResolvers.insert(self)
         
-        if let dependency = dependencies[index] {
-            if let scope = dependency.scope, scope.allowsAccessFromChildren {
-                return
-            }
-            if dependency.isCustom {
+        if let dependency = dependencies[index], let scope = dependency.scope {
+            if (dependency.isCustom && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
                 return
             }
         }

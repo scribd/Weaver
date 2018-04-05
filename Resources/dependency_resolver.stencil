@@ -22,6 +22,8 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
 protocol {{resolver.targetTypeName}}DependencyResolver {
     {% for reference in resolver.references %}
     var {{reference.name}}: {{reference.typeName}} { get }{% endfor %}
+    {% for registration in resolver.registrations %}{% if registration.isCustom %}func {{registration.name}}CustomRef(_ dependencies: DependencyContainer) -> {{registration.abstractTypeName}}
+    {% endif %}{% endfor %}
 }
 
 extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeName}}DependencyResolver {
@@ -29,21 +31,19 @@ extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeN
     var {{reference.name}}: {{reference.typeName}} {
         return resolve({{reference.typeName}}.self)
     }{% endfor %}
-}
+}{% if not resolver.isRoot %}
 
-{% if not resolver.isRoot %}extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
+extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
 
     static func make{{resolver.targetTypeName}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer{% endif %}) -> {{resolver.targetTypeName}} {
         let dependencies = {{resolver.targetTypeName}}DependencyContainer({% if not resolver.isRoot %}parentDependencies{% endif %})
         return {{resolver.targetTypeName}}(injecting: dependencies)
     }
-}{% endif %}
+}{% endif %}{% if not resolver.isRoot %}
 
-{% if not resolver.isRoot %}
 protocol {{resolver.targetTypeName}}DependencyInjectable {
     init(injecting dependencies: {{resolver.targetTypeName}}DependencyResolver)
 }
 
-extension {{resolver.targetTypeName}}: {{resolver.targetTypeName}}DependencyInjectable {}
-{% endif %}
+extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}}: {{resolver.targetTypeName}}DependencyInjectable {}{% endif %}
 {% endfor %}

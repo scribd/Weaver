@@ -14,19 +14,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    let dependencies = AppDelegateDependencyContainer()
+    private let dependencies = AppDelegateDependencyContainer()
     
-    // beaverdi: appDelegate <- AppDelegate
-    // beaverdi: appDelegate.customRef = true
+    // beaverdi: urlSession = URLSession
+    // beaverdi: urlSession.scope = .container
+    // beaverdi: urlSession.customRef = true
     
-    // beaverdi: viewController = ViewController
-    // beaverdi: viewController.scope = .container
-        
+    // beaverdi: movieAPI = MovieAPI <- APIProtocol
+    // beaverdi: movieAPI.scope = .container
+    
+    // beaverdi: movieManager = MovieManager <- MovieManaging
+    // beaverdi: movieManager.scope = .container
+    
+    // beaverdi: homeViewController = HomeViewController
+    // beaverdi: homeViewController.scope = .container
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         window = UIWindow()
-        window?.rootViewController = UINavigationController(rootViewController: dependencies.viewController)
-        
+
+        window?.rootViewController = UINavigationController(rootViewController: dependencies.homeViewController)
         window?.makeKeyAndVisible()
         
         return true
@@ -34,9 +41,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension AppDelegateDependencyContainer {
-    
-    func appDelegateCustomRef(_: DependencyResolver) -> AppDelegate {
-        return UIApplication.shared.delegate! as! AppDelegate
+
+    func urlSessionCustomRef(_: DependencyContainer) -> URLSession {
+        return .shared
     }
 }
 

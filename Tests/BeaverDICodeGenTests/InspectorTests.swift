@@ -202,7 +202,8 @@ final class API {
     func test_inspector_should_build_a_valid_graph_with_a_more_complex_custom_ref_resolution() {
         let file = File(contents: """
 final class AppDelegate {
-    // beaverdi: appDelegate <- AppDelegateProtocol
+    // beaverdi: appDelegate = AppDelegateProtocol
+    // beaverdi: appDelegate.scope = .container
     // beaverdi: appDelegate.customRef = true
     
     // beaverdi: viewController = ViewController
@@ -225,6 +226,38 @@ final class ViewController {
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_graph_because_of_a_custom_ref_not_shared_with_children() {
+        let file = File(contents: """
+final class AppDelegate {
+    // beaverdi: appDelegate <- AppDelegateProtocol
+    // beaverdi: appDelegate.customRef = true
+    
+    // beaverdi: viewController = ViewController
+    // beaverdi: viewController.scope = .container
+    // beaverdi: viewController.customRef = true
+}
+
+final class ViewController {
+    // beaverdi: appDelegate <- AppDelegateProtocol
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, .invalidGraph(line: 10, file: "test.swift", dependencyName: "appDelegate", typeName: nil, underlyingError: .unresolvableDependency))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
         }
     }
 }

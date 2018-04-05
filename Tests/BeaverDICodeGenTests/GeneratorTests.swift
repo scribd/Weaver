@@ -91,6 +91,8 @@ protocol MyServiceDependencyResolver {
     var api: APIProtocol { get }
     var router: RouterProtocol { get }
     var session: Session { get }
+    func apiCustomRef(_ dependencies: DependencyContainer) -> APIProtocol
+    
 }
 
 extension MyServiceDependencyContainer: MyServiceDependencyResolver {
@@ -105,8 +107,6 @@ extension MyServiceDependencyContainer: MyServiceDependencyResolver {
         return resolve(Session.self)
     }
 }
-
-
 
 // MARK: - MyEmbeddedService
 
@@ -128,6 +128,7 @@ protocol MyEmbeddedServiceDependencyResolver {
     
     var session: SessionProtocol? { get }
     var api: APIProtocol { get }
+    
 }
 
 extension MyEmbeddedServiceDependencyContainer: MyEmbeddedServiceDependencyResolver {
@@ -147,6 +148,12 @@ extension MyService.MyEmbeddedService {
         return MyEmbeddedService(injecting: dependencies)
     }
 }
+
+protocol MyEmbeddedServiceDependencyInjectable {
+    init(injecting dependencies: MyEmbeddedServiceDependencyResolver)
+}
+
+extension MyService.MyEmbeddedService: MyEmbeddedServiceDependencyInjectable {}
 
 """)
             

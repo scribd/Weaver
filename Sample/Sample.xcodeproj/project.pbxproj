@@ -8,15 +8,20 @@
 
 /* Begin PBXBuildFile section */
 		193EEF7D2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */; };
-		193EEF7F2075E2AA00BFE706 /* ViewControllerBis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF7E2075E2AA00BFE706 /* ViewControllerBis.swift */; };
-		193EEF812075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF802075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift */; };
+		193EEF832075E97B00BFE706 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF822075E97B00BFE706 /* API.swift */; };
+		193EEF85207683B200BFE706 /* Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF84207683B200BFE706 /* Result.swift */; };
+		193EEF8720768E6B00BFE706 /* BeaverDI.API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF8620768E6B00BFE706 /* BeaverDI.API.swift */; };
+		193EEF89207690C300BFE706 /* MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF88207690C300BFE706 /* MovieManager.swift */; };
+		193EEF8B2076911D00BFE706 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF8A2076911D00BFE706 /* Models.swift */; };
 		19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF4206B4F0A00751B70 /* AppDelegate.swift */; };
-		19956DF7206B4F0A00751B70 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF6206B4F0A00751B70 /* ViewController.swift */; };
 		19956DFA206B4F0A00751B70 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DF8206B4F0A00751B70 /* Main.storyboard */; };
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
 		19956E0A206B4F0A00751B70 /* SampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956E09206B4F0A00751B70 /* SampleTests.swift */; };
-		19956E21206BFD2B00751B70 /* BeaverDI.ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956E20206BFD2B00751B70 /* BeaverDI.ViewController.swift */; };
+		19E5551D207694A1004C44FC /* BeaverDI.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */; };
+		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
+		19E55521207695FE004C44FC /* BeaverDI.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */; };
+		19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E555222076A156004C44FC /* MovieTableViewCell.swift */; };
 		E63DEAFF2905ADE99164D0B6 /* Pods_SampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C3B22DACCEE24A465932D904 /* Pods_SampleTests.framework */; };
 		FE763E2C6332FFDD3306EE53 /* Pods_Sample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69F58A342BE7250A4AD988D7 /* Pods_Sample.framework */; };
 /* End PBXBuildFile section */
@@ -33,11 +38,13 @@
 
 /* Begin PBXFileReference section */
 		193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.AppDelegate.swift; sourceTree = "<group>"; };
-		193EEF7E2075E2AA00BFE706 /* ViewControllerBis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewControllerBis.swift; sourceTree = "<group>"; };
-		193EEF802075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.ViewControllerBis.swift; sourceTree = "<group>"; };
+		193EEF822075E97B00BFE706 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+		193EEF84207683B200BFE706 /* Result.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
+		193EEF8620768E6B00BFE706 /* BeaverDI.API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.API.swift; sourceTree = "<group>"; };
+		193EEF88207690C300BFE706 /* MovieManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieManager.swift; sourceTree = "<group>"; };
+		193EEF8A2076911D00BFE706 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		19956DF1206B4F0A00751B70 /* Sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956DF4206B4F0A00751B70 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		19956DF6206B4F0A00751B70 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		19956DF9206B4F0A00751B70 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		19956DFB206B4F0A00751B70 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		19956DFE206B4F0A00751B70 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -45,7 +52,10 @@
 		19956E05206B4F0A00751B70 /* SampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956E09206B4F0A00751B70 /* SampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleTests.swift; sourceTree = "<group>"; };
 		19956E0B206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		19956E20206BFD2B00751B70 /* BeaverDI.ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.ViewController.swift; sourceTree = "<group>"; };
+		19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.MovieManager.swift; sourceTree = "<group>"; };
+		19E5551E20769572004C44FC /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
+		19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.HomeViewController.swift; sourceTree = "<group>"; };
+		19E555222076A156004C44FC /* MovieTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieTableViewCell.swift; sourceTree = "<group>"; };
 		1DB489099BF76BF80AAE12C3 /* Pods-Sample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Sample/Pods-Sample.debug.xcconfig"; sourceTree = "<group>"; };
 		24FCD488C9B0AAA6774C8E07 /* Pods-SampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SampleTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SampleTests/Pods-SampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		69F58A342BE7250A4AD988D7 /* Pods_Sample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Sample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -107,9 +117,13 @@
 			isa = PBXGroup;
 			children = (
 				19956E18206B51FF00751B70 /* Generated */,
+				193EEF822075E97B00BFE706 /* API.swift */,
 				19956DF4206B4F0A00751B70 /* AppDelegate.swift */,
-				19956DF6206B4F0A00751B70 /* ViewController.swift */,
-				193EEF7E2075E2AA00BFE706 /* ViewControllerBis.swift */,
+				19E5551E20769572004C44FC /* HomeViewController.swift */,
+				193EEF88207690C300BFE706 /* MovieManager.swift */,
+				193EEF8A2076911D00BFE706 /* Models.swift */,
+				19E555222076A156004C44FC /* MovieTableViewCell.swift */,
+				193EEF84207683B200BFE706 /* Result.swift */,
 				19956DF8206B4F0A00751B70 /* Main.storyboard */,
 				19956DFB206B4F0A00751B70 /* Assets.xcassets */,
 				19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */,
@@ -130,9 +144,10 @@
 		19956E18206B51FF00751B70 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
-				193EEF802075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift */,
+				19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */,
+				19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */,
+				193EEF8620768E6B00BFE706 /* BeaverDI.API.swift */,
 				193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */,
-				19956E20206BFD2B00751B70 /* BeaverDI.ViewController.swift */,
 			);
 			path = Generated;
 			sourceTree = "<group>";
@@ -326,12 +341,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				193EEF7F2075E2AA00BFE706 /* ViewControllerBis.swift in Sources */,
-				19956DF7206B4F0A00751B70 /* ViewController.swift in Sources */,
-				193EEF812075E2F200BFE706 /* BeaverDI.ViewControllerBis.swift in Sources */,
+				193EEF8B2076911D00BFE706 /* Models.swift in Sources */,
+				19E5551D207694A1004C44FC /* BeaverDI.MovieManager.swift in Sources */,
+				193EEF832075E97B00BFE706 /* API.swift in Sources */,
 				193EEF7D2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
-				19956E21206BFD2B00751B70 /* BeaverDI.ViewController.swift in Sources */,
+				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
+				19E55521207695FE004C44FC /* BeaverDI.HomeViewController.swift in Sources */,
+				193EEF85207683B200BFE706 /* Result.swift in Sources */,
+				193EEF89207690C300BFE706 /* MovieManager.swift in Sources */,
+				19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */,
+				193EEF8720768E6B00BFE706 /* BeaverDI.API.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

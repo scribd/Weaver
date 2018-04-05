@@ -13,29 +13,43 @@ final class AppDelegateDependencyContainer: DependencyContainer {
 
     override func registerDependencies(in store: DependencyStore) {
         
-        store.register(ViewController.self, scope: .container, builder: { dependencies in
-            return ViewController.makeViewController(injecting: dependencies)
+        store.register(MovieManaging.self, scope: .container, builder: { dependencies in
+            return MovieManager.makeMovieManager(injecting: dependencies)
         })
-        store.register(AppDelegate.self, scope: .graph, builder: { dependencies in
-            return self.appDelegateCustomRef(dependencies)
+        store.register(URLSession.self, scope: .container, builder: { dependencies in
+            return self.urlSessionCustomRef(dependencies)
+        })
+        store.register(APIProtocol.self, scope: .container, builder: { dependencies in
+            return MovieAPI.makeMovieAPI(injecting: dependencies)
+        })
+        store.register(HomeViewController.self, scope: .container, builder: { dependencies in
+            return HomeViewController.makeHomeViewController(injecting: dependencies)
         })
     }
 }
 
 protocol AppDelegateDependencyResolver {
     
-    var viewController: ViewController { get }
-    var appDelegate: AppDelegate { get }
+    var movieManager: MovieManaging { get }
+    var urlSession: URLSession { get }
+    var movieAPI: APIProtocol { get }
+    var homeViewController: HomeViewController { get }
+    func urlSessionCustomRef(_ dependencies: DependencyContainer) -> URLSession
+    
 }
 
 extension AppDelegateDependencyContainer: AppDelegateDependencyResolver {
     
-    var viewController: ViewController {
-        return resolve(ViewController.self)
+    var movieManager: MovieManaging {
+        return resolve(MovieManaging.self)
     }
-    var appDelegate: AppDelegate {
-        return resolve(AppDelegate.self)
+    var urlSession: URLSession {
+        return resolve(URLSession.self)
+    }
+    var movieAPI: APIProtocol {
+        return resolve(APIProtocol.self)
+    }
+    var homeViewController: HomeViewController {
+        return resolve(HomeViewController.self)
     }
 }
-
-
