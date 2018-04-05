@@ -38,4 +38,12 @@ extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeN
         return {{resolver.targetTypeName}}(injecting: dependencies)
     }
 }{% endif %}
+
+{% if not resolver.isRoot %}
+protocol {{resolver.targetTypeName}}DependencyInjectable {
+    init(injecting dependencies: {{resolver.targetTypeName}}DependencyResolver)
+}
+
+extension {{resolver.targetTypeName}}: {{resolver.targetTypeName}}DependencyInjectable {}
+{% endif %}
 {% endfor %}
