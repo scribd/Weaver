@@ -7,8 +7,11 @@ import BeaverDI
 
 final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer {
 
-    init({% if not resolver.isRoot %}_ parent: DependencyContainer{% endif %}) {
-        super.init({% if not resolver.isRoot %}parent{% endif %})
+    {% for parameter in resolver.parameters %}let {{parameter.name}}: {{parameter.typeName}}
+    {% endfor %}
+    init({% if not resolver.isRoot %}parent: DependencyContainer{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.typeName}}{% if not forloop.last %}, {% endif %}{% endfor %}) {
+        {% for parameter in resolver.parameters %}self.{{parameter.name}} = {{parameter.name}}
+        {% endfor %}super.init({% if not resolver.isRoot %}parent{% endif %})
     }
 
     override func registerDependencies(in store: DependencyStore) {
@@ -20,6 +23,8 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
 }
 
 protocol {{resolver.targetTypeName}}DependencyResolver {
+    {% for parameter in resolver.parameters %}var {{parameter.name}}: {{parameter.typeName}} { get }
+    {% endfor %}
     {% for reference in resolver.references %}
     var {{reference.name}}: {{reference.typeName}} { get }{% endfor %}
     {% for registration in resolver.registrations %}{% if registration.isCustom %}func {{registration.name}}CustomRef(_ dependencies: DependencyContainer) -> {{registration.abstractTypeName}}
@@ -35,8 +40,8 @@ extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeN
 
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
 
-    static func make{{resolver.targetTypeName}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer{% endif %}) -> {{resolver.targetTypeName}} {
-        let dependencies = {{resolver.targetTypeName}}DependencyContainer({% if not resolver.isRoot %}parentDependencies{% endif %})
+    static func make{{resolver.targetTypeName}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.typeName}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{resolver.targetTypeName}} {
+        let dependencies = {{resolver.targetTypeName}}DependencyContainer({% if not resolver.isRoot %}parent: parentDependencies{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
         return {{resolver.targetTypeName}}(injecting: dependencies)
     }
 }{% endif %}{% if not resolver.isRoot %}

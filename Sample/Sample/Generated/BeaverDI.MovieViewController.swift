@@ -7,7 +7,8 @@ import BeaverDI
 
 final class MovieViewControllerDependencyContainer: DependencyContainer {
 
-    init(_ parent: DependencyContainer) {
+    
+    init(parent: DependencyContainer) {
         super.init(parent)
     }
 
@@ -17,6 +18,7 @@ final class MovieViewControllerDependencyContainer: DependencyContainer {
 }
 
 protocol MovieViewControllerDependencyResolver {
+    
     
     var movieManager: MovieManaging { get }
     
@@ -32,7 +34,7 @@ extension MovieViewControllerDependencyContainer: MovieViewControllerDependencyR
 extension MovieViewController {
 
     static func makeMovieViewController(injecting parentDependencies: DependencyContainer) -> MovieViewController {
-        let dependencies = MovieViewControllerDependencyContainer(parentDependencies)
+        let dependencies = MovieViewControllerDependencyContainer(parent: parentDependencies)
         return MovieViewController(injecting: dependencies)
     }
 }

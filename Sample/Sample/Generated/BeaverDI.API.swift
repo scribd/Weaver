@@ -7,7 +7,8 @@ import BeaverDI
 
 final class MovieAPIDependencyContainer: DependencyContainer {
 
-    init(_ parent: DependencyContainer) {
+    
+    init(parent: DependencyContainer) {
         super.init(parent)
     }
 
@@ -17,6 +18,7 @@ final class MovieAPIDependencyContainer: DependencyContainer {
 }
 
 protocol MovieAPIDependencyResolver {
+    
     
     var urlSession: URLSession { get }
     
@@ -32,7 +34,7 @@ extension MovieAPIDependencyContainer: MovieAPIDependencyResolver {
 extension MovieAPI {
 
     static func makeMovieAPI(injecting parentDependencies: DependencyContainer) -> MovieAPI {
-        let dependencies = MovieAPIDependencyContainer(parentDependencies)
+        let dependencies = MovieAPIDependencyContainer(parent: parentDependencies)
         return MovieAPI(injecting: dependencies)
     }
 }

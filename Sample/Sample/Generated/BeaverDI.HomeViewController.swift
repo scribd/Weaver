@@ -7,7 +7,8 @@ import BeaverDI
 
 final class HomeViewControllerDependencyContainer: DependencyContainer {
 
-    init(_ parent: DependencyContainer) {
+    
+    init(parent: DependencyContainer) {
         super.init(parent)
     }
 
@@ -20,6 +21,7 @@ final class HomeViewControllerDependencyContainer: DependencyContainer {
 }
 
 protocol HomeViewControllerDependencyResolver {
+    
     
     var movieController: MovieViewController { get }
     var movieManager: MovieManaging { get }
@@ -39,7 +41,7 @@ extension HomeViewControllerDependencyContainer: HomeViewControllerDependencyRes
 extension HomeViewController {
 
     static func makeHomeViewController(injecting parentDependencies: DependencyContainer) -> HomeViewController {
-        let dependencies = HomeViewControllerDependencyContainer(parentDependencies)
+        let dependencies = HomeViewControllerDependencyContainer(parent: parentDependencies)
         return HomeViewController(injecting: dependencies)
     }
 }

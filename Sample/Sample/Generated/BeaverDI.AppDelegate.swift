@@ -7,6 +7,7 @@ import BeaverDI
 
 final class AppDelegateDependencyContainer: DependencyContainer {
 
+    
     init() {
         super.init()
     }
@@ -29,6 +30,7 @@ final class AppDelegateDependencyContainer: DependencyContainer {
 }
 
 protocol AppDelegateDependencyResolver {
+    
     
     var movieManager: MovieManaging { get }
     var urlSession: URLSession { get }
