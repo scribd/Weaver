@@ -19,6 +19,8 @@ enum MovieManagerError: Error {
 protocol MovieManaging {
     
     func getDiscoverMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void)
+    
+    func getMovie(id: UInt, completion: @escaping (Result<Movie, MovieManagerError>) -> Void)
 }
 
 final class MovieManager: MovieManaging {

@@ -7,10 +7,7 @@ import BeaverDI
 
 final class MovieViewControllerDependencyContainer: DependencyContainer {
 
-    let movieId: UInt
-    
-    init(_ parent: DependencyContainer, movieId: UInt) {
-        self.movieId = movieId
+    init(_ parent: DependencyContainer) {
         super.init(parent)
     }
 
@@ -22,7 +19,6 @@ final class MovieViewControllerDependencyContainer: DependencyContainer {
 protocol MovieViewControllerDependencyResolver {
     
     var movieManager: MovieManaging { get }
-    var movieId: UInt { get }
     
 }
 

@@ -135,6 +135,25 @@ final class MyService {
         }
     }
     
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation() {
+        
+        let file = File(contents: """
+// beaverdi: movieID <= UInt
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(value: ParameterAnnotation(name: "movieID", typeName: "UInt"), offset: 0, length: 28, line: 0))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_a_scope_annotation() {
         
         let file = File(contents: """

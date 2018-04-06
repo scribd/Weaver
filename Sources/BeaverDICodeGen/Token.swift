@@ -145,6 +145,29 @@ public struct CustomRefAnnotation: Token {
     }
 }
 
+public struct ParameterAnnotation: Token {
+    
+    let name: String
+    let typeName: String
+    
+    public static func create(_ string: String) throws -> ParameterAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*<=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+            return nil
+        }
+        return ParameterAnnotation(name: matches[0], typeName: matches[1])
+    }
+    
+    public static func ==(lhs: ParameterAnnotation, rhs: ParameterAnnotation) -> Bool {
+        guard lhs.name == rhs.name else { return false }
+        guard lhs.typeName == rhs.typeName else { return false }
+        return true
+    }
+    
+    public var description: String {
+        return "\(name) <= \(typeName)"
+    }
+}
+
 public struct InjectableType: Token {
     let name: String
 
@@ -215,6 +238,9 @@ enum TokenBuilder {
             return makeTokenBox(token)
         }
         if let token = try ScopeAnnotation.create(body) {
+            return makeTokenBox(token)
+        }
+        if let token = try ParameterAnnotation.create(body) {
             return makeTokenBox(token)
         }
         throw TokenError.invalidAnnotation(annotation)
