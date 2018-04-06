@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BeaverDI
 
 enum TokenError: Error {
     case invalidAnnotation(String)
@@ -100,7 +101,7 @@ extension InspectorError: CustomStringConvertible {
         case .invalidAST(let token, let file):
             return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
         case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
-            return printableError(line, file, "Invalid graph because of issue: \(underlyingIssue): with the dependency '\(dependencyName): \(String(describing: typeName))'")
+            return printableError(line, file, "Invalid graph because of issue: \(underlyingIssue): with '\(dependencyName): \(typeName ?? "_")'")
         }
     }
 }

@@ -45,4 +45,19 @@ final class MovieManager: MovieManaging {
             }
         }
     }
+    
+    func getMovie(id: UInt, completion: @escaping (Result<Movie, MovieManagerError>) -> Void) {
+        
+        let request = APIRequest<Movie>(path: "/movie/\(id)")
+        
+        dependencies.movieAPI.send(request: request) { result in
+            switch result {
+            case .success(let movie):
+                completion(.success(movie))
+            case .failure(let error):
+                print(error)
+                completion(.failure(.oops))
+            }
+        }
+    }
 }

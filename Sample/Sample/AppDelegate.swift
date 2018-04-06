@@ -22,7 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     // beaverdi: movieAPI = MovieAPI <- APIProtocol
     // beaverdi: movieAPI.scope = .container
-    
+        
     // beaverdi: movieManager = MovieManager <- MovieManaging
     // beaverdi: movieManager.scope = .container
     

@@ -13,19 +13,26 @@ final class HomeViewControllerDependencyContainer: DependencyContainer {
 
     override func registerDependencies(in store: DependencyStore) {
         
+        store.register(MovieViewController.self, scope: .transient, name: "movieController", builder: { dependencies in
+            return MovieViewController.makeMovieViewController(injecting: dependencies)
+        })
     }
 }
 
 protocol HomeViewControllerDependencyResolver {
     
+    var movieController: MovieViewController { get }
     var movieManager: MovieManaging { get }
     
 }
 
 extension HomeViewControllerDependencyContainer: HomeViewControllerDependencyResolver {
     
+    var movieController: MovieViewController {
+        return resolve(MovieViewController.self, name: "movieController")
+    }
     var movieManager: MovieManaging {
-        return resolve(MovieManaging.self)
+        return resolve(MovieManaging.self, name: "movieManager")
     }
 }
 

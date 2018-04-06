@@ -274,9 +274,13 @@ final class AppDelegate {
     // beaverdi: coordinator.scope = .container
 }
 
-final class Coordinator {
-    // beaverdi: viewController1 <- UIViewController
+final class ViewController1: UIViewController {
     // beaverdi: viewController2 <- UIViewController
+}
+
+final class Coordinator {
+    // beaverdi: viewController2 <- UIViewController
+    // beaverdi: viewController1 <- UIViewController
 }
 """)
         

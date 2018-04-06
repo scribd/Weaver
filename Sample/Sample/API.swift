@@ -29,8 +29,21 @@ enum APIHTTPMethod {
 
 struct APIRequest<Model: Decodable> {
     
-    let method: APIHTTPMethod = .get
+    let method: APIHTTPMethod
     let path: String
+    var query: [String: Any]
+    
+    init(method: APIHTTPMethod = .get,
+         path: String,
+         query: [String: Any] = [:]) {
+        self.method = method
+        self.path = path
+        self.query = query
+    }
+    
+    fileprivate var queryString: String {
+        return query.map { "\($0)=\($1)" }.joined(separator: "&")
+    }
 }
 
 // MARK: - API
@@ -60,7 +73,10 @@ final class MovieAPI: APIProtocol {
             }
         }
         
-        guard let url = URL(string: Constants.host + request.path + "?api_key=" + Constants.apiKey) else {
+        var mutableRequest = request
+        mutableRequest.query["api_key"] = Constants.apiKey
+        
+        guard let url = URL(string: Constants.host + request.path + "?" + mutableRequest.queryString) else {
             completion(.failure(.url(request.path)))
             return
         }

@@ -17,6 +17,9 @@ final class HomeViewController: UIViewController {
     
     // beaverdi: movieManager <- MovieManaging
     
+    // beaverdi: movieController = MovieViewController
+    // beaverdi: movieController.scope = .transient
+    
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .white
@@ -62,6 +65,10 @@ final class HomeViewController: UIViewController {
 
 extension HomeViewController: UITableViewDelegate {
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        navigationController?.pushViewController(dependencies.movieController, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
 }
 
 extension HomeViewController: UITableViewDataSource {

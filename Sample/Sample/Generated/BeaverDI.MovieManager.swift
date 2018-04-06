@@ -25,7 +25,7 @@ protocol MovieManagerDependencyResolver {
 extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     
     var movieAPI: APIProtocol {
-        return resolve(APIProtocol.self)
+        return resolve(APIProtocol.self, name: "movieAPI")
     }
 }
 

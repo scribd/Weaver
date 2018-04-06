@@ -25,7 +25,7 @@ protocol MovieAPIDependencyResolver {
 extension MovieAPIDependencyContainer: MovieAPIDependencyResolver {
     
     var urlSession: URLSession {
-        return resolve(URLSession.self)
+        return resolve(URLSession.self, name: "urlSession")
     }
 }
 
