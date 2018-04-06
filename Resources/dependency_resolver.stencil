@@ -13,7 +13,7 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
 
     override func registerDependencies(in store: DependencyStore) {
         {% for registration in resolver.registrations %}
-        store.register({{registration.abstractTypeName}}.self, scope: .{{registration.scope}}, builder: { dependencies in
+        store.register({{registration.abstractTypeName}}.self, scope: .{{registration.scope}}, name: "{{registration.name}}", builder: { dependencies in
             {% if not registration.isCustom %}return {{registration.typeName}}.make{{registration.typeName}}(injecting: dependencies){% else %}return self.{{registration.name}}CustomRef(dependencies){% endif %}
         }){% endfor %}
     }
@@ -29,7 +29,7 @@ protocol {{resolver.targetTypeName}}DependencyResolver {
 extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeName}}DependencyResolver {
     {% for reference in resolver.references %}
     var {{reference.name}}: {{reference.typeName}} {
-        return resolve({{reference.typeName}}.self)
+        return resolve({{reference.typeName}}.self, name: "{{reference.name}}")
     }{% endfor %}
 }{% if not resolver.isRoot %}
 

@@ -30,14 +30,14 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { dependencies in
+        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { dependencies in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies)
         }
         
-        _ = dependencyContainer.resolve(DependencyStub.self)
+        _ = dependencyContainer.resolve(DependencyStub.self, name: "test")
         
-        let instanceKey = InstanceKey(for: DependencyStub.self)
+        let instanceKey = InstanceKey(for: DependencyStub.self, name: "test")
 
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
@@ -54,14 +54,14 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int) in
+        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1)
         }
         
-        let dependency = dependencyContainer.resolve(DependencyStub.self, parameter: 42)
+        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameter: 42)
         
-        let instanceKey = InstanceKey(for: DependencyStub.self, parameterType: Int.self)
+        let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterType: Int.self)
         
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
@@ -80,14 +80,14 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
+        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2)
         }
         
-        let dependency = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43")
+        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43")
         
-        let instanceKey = InstanceKey(for: DependencyStub.self, parameterTypes: Int.self, String.self)
+        let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self)
 
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
@@ -107,14 +107,14 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
+        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3)
         }
         
-        let dependency = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43", 44.0)
+        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43", 44.0)
         
-        let instanceKey = InstanceKey(for: DependencyStub.self, parameterTypes: Int.self, String.self, Double.self)
+        let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self)
         
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
@@ -135,14 +135,14 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
+        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3, parameter4: parameter4)
         }
         
-        let dependency = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43", 44.0, 45 as Float)
+        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43", 44.0, 45 as Float)
         
-        let instanceKey = InstanceKey(for: DependencyStub.self, parameterTypes: Int.self, String.self, Double.self, Float.self)
+        let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self, Float.self)
         
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)

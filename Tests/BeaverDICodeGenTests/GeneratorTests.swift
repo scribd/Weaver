@@ -27,6 +27,9 @@ final class MyService {
   // beaverdi: api.scope = .graph
   // beaverdi: api.customRef = true
 
+  // beaverdi: apiBis = API <- APIProtocol
+  // beaverdi: apiBis.scope = .container
+
   // beaverdi: router = Router <- RouterProtocol
   // beaverdi: router.scope = .container
 
@@ -38,6 +41,8 @@ final class MyService {
     // beaverdi: session.scope = .container
 
     // beaverdi: api <- APIProtocol
+
+    // beaverdi: apiBis <- APIProtocol
   }
 
   init(_ dependencies: DependencyResolver) {
@@ -74,14 +79,17 @@ final class MyServiceDependencyContainer: DependencyContainer {
 
     override func registerDependencies(in store: DependencyStore) {
         
-        store.register(APIProtocol.self, scope: .graph, builder: { dependencies in
+        store.register(APIProtocol.self, scope: .graph, name: "api", builder: { dependencies in
             return self.apiCustomRef(dependencies)
         })
-        store.register(RouterProtocol.self, scope: .container, builder: { dependencies in
+        store.register(RouterProtocol.self, scope: .container, name: "router", builder: { dependencies in
             return Router.makeRouter(injecting: dependencies)
         })
-        store.register(Session.self, scope: .graph, builder: { dependencies in
+        store.register(Session.self, scope: .graph, name: "session", builder: { dependencies in
             return Session.makeSession(injecting: dependencies)
+        })
+        store.register(APIProtocol.self, scope: .container, name: "apiBis", builder: { dependencies in
+            return API.makeAPI(injecting: dependencies)
         })
     }
 }
@@ -91,6 +99,7 @@ protocol MyServiceDependencyResolver {
     var api: APIProtocol { get }
     var router: RouterProtocol { get }
     var session: Session { get }
+    var apiBis: APIProtocol { get }
     func apiCustomRef(_ dependencies: DependencyContainer) -> APIProtocol
     
 }
@@ -98,13 +107,16 @@ protocol MyServiceDependencyResolver {
 extension MyServiceDependencyContainer: MyServiceDependencyResolver {
     
     var api: APIProtocol {
-        return resolve(APIProtocol.self)
+        return resolve(APIProtocol.self, name: "api")
     }
     var router: RouterProtocol {
-        return resolve(RouterProtocol.self)
+        return resolve(RouterProtocol.self, name: "router")
     }
     var session: Session {
-        return resolve(Session.self)
+        return resolve(Session.self, name: "session")
+    }
+    var apiBis: APIProtocol {
+        return resolve(APIProtocol.self, name: "apiBis")
     }
 }
 
@@ -118,7 +130,7 @@ final class MyEmbeddedServiceDependencyContainer: DependencyContainer {
 
     override func registerDependencies(in store: DependencyStore) {
         
-        store.register(SessionProtocol?.self, scope: .container, builder: { dependencies in
+        store.register(SessionProtocol?.self, scope: .container, name: "session", builder: { dependencies in
             return Session.makeSession(injecting: dependencies)
         })
     }
@@ -128,16 +140,20 @@ protocol MyEmbeddedServiceDependencyResolver {
     
     var session: SessionProtocol? { get }
     var api: APIProtocol { get }
+    var apiBis: APIProtocol { get }
     
 }
 
 extension MyEmbeddedServiceDependencyContainer: MyEmbeddedServiceDependencyResolver {
     
     var session: SessionProtocol? {
-        return resolve(SessionProtocol?.self)
+        return resolve(SessionProtocol?.self, name: "session")
     }
     var api: APIProtocol {
-        return resolve(APIProtocol.self)
+        return resolve(APIProtocol.self, name: "api")
+    }
+    var apiBis: APIProtocol {
+        return resolve(APIProtocol.self, name: "apiBis")
     }
 }
 

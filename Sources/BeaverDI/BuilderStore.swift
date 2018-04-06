@@ -8,7 +8,7 @@
 import Foundation
 
 /// Object responsible of storing and fetching the dependency builders
-protocol BuilderStoring: class {
+protocol BuilderStoring: AnyObject {
     
     /// Gets a builder for a key.
     /// Will attempt to get a valid builder from the parent if none is found at its own level.
@@ -17,7 +17,7 @@ protocol BuilderStoring: class {
     /// Sets a builder for a key.
     func set<B>(builder: B, scope: Scope, for key: InstanceKey)
 
-    weak var parent: BuilderStoring? { get set }
+    var parent: BuilderStoring? { get set }
 }
 
 // MARK: - Convenience

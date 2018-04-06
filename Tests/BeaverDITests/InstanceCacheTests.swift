@@ -13,7 +13,7 @@ import XCTest
 final class InstanceCacheSpecs: XCTestCase {
     
     var instances: InstanceCache!
-    let instanceKey = InstanceKey(for: InstanceStub.self)
+    let instanceKey = InstanceKey(for: InstanceStub.self, name: "test")
     
     override func setUp() {
         super.setUp()

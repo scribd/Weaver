@@ -16,7 +16,7 @@ final class BuilderStoreTests: XCTestCase {
     var parentBuilderStore: BuilderStore!
     var childBuilderStore: BuilderStore!
     
-    let instanceKey = InstanceKey(for: String.self)
+    let instanceKey = InstanceKey(for: String.self, name: "test")
     
     func rootBuilder() -> String {
         return "root_builder"
