@@ -15,7 +15,10 @@ public final class Generator {
     private let templateDirPath: Path
     private let templateName: String
     
-    public init(template path: Path? = nil) throws {
+    private let graph = Graph()
+    
+    public init(asts: [Expr], template path: Path? = nil) throws {
+
         if let path = path {
             var components = path.components
             guard let templateName = components.popLast() else {
@@ -27,55 +30,108 @@ public final class Generator {
             templateName = "Resources/dependency_resolver.stencil"
             templateDirPath = Path("/usr/local/share/beaverdi")
         }
+        
+        buildResolvers(asts: asts)
+        
+        linkResolvers()
     }
     
-    public func generate(from ast: Expr) throws -> String? {
+    public func generate() throws -> [(file: String, data: String?)] {
 
-        let resolversData = [ResolverData](ast: ast)
-        
-        guard !resolversData.isEmpty else {
-            return nil
+        return try graph.resolversByFile.map { file, resolvers in
+
+            guard !resolvers.isEmpty else {
+                return (file: file, data: nil)
+            }
+            
+            let fileLoader = FileSystemLoader(paths: [templateDirPath])
+            let environment = Environment(loader: fileLoader)
+            let context = ["resolvers": resolvers]
+            
+            let rendered = try environment.renderTemplate(name: templateName, context: context)
+            
+            return (file: file, data: rendered)
         }
-        
-        let fileLoader = FileSystemLoader(paths: [templateDirPath])
-        let environment = Environment(loader: fileLoader)
-        let rendered = try environment.renderTemplate(name: templateName, context: ["resolvers": resolversData])
+    }
+}
 
-        return rendered
+// MAKR: - Graph
+
+private final class Graph {
+
+    private(set) var resolversByType = [String: ResolverData]()
+
+    var resolversByFile = [String: [ResolverData]]()
+    
+    func insert(_ resolver: ResolverData) {
+        resolversByType[resolver.targetTypeName] = resolver
     }
 }
 
 // MARK: - Template Data
 
-private struct RegisterData {
+private final class RegisterData {
     let name: String
     let typeName: String
     let abstractTypeName: String
     let scope: String
     let isCustom: Bool
+    var associatedResolver: ResolverData?
+    
+    init(name: String,
+         typeName: String,
+         abstractTypeName: String,
+         scope: String,
+         isCustom: Bool) {
+        self.name = name
+        self.typeName = typeName
+        self.abstractTypeName = abstractTypeName
+        self.scope = scope
+        self.isCustom = isCustom
+    }
 }
 
-private struct VariableData {
+private final class VariableData {
     let name: String
     let typeName: String
+    
+    init(name: String,
+         typeName: String) {
+        self.name = name
+        self.typeName = typeName
+    }
 }
 
-private struct ResolverData {
+private final class ResolverData {
     let targetTypeName: String
     let registrations: [RegisterData]
     let references: [VariableData]
     let parameters: [VariableData]
     let enclosingTypeNames: [String]?
     let isRoot: Bool
+    
+    init(targetTypeName: String,
+         registrations: [RegisterData],
+         references: [VariableData],
+         parameters: [VariableData],
+         enclosingTypeNames: [String]?,
+         isRoot: Bool) {
+        self.targetTypeName = targetTypeName
+        self.registrations = registrations
+        self.references = references
+        self.parameters = parameters
+        self.enclosingTypeNames = enclosingTypeNames
+        self.isRoot = isRoot
+    }
 }
 
 // MARK: - Conversion
 
 extension RegisterData {
     
-    init(registerAnnotation: RegisterAnnotation,
-         scopeAnnotation: ScopeAnnotation?,
-         customRefAnnotation: CustomRefAnnotation?) {
+    convenience init(registerAnnotation: RegisterAnnotation,
+                     scopeAnnotation: ScopeAnnotation?,
+                     customRefAnnotation: CustomRefAnnotation?) {
        
         let optionChars = CharacterSet(charactersIn: "?")
         let scope = scopeAnnotation?.scope ?? .`default`
@@ -87,9 +143,9 @@ extension RegisterData {
                   isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue)
     }
     
-    init(referenceAnnotation: ReferenceAnnotation,
-         scopeAnnotation: ScopeAnnotation?,
-         customRefAnnotation: CustomRefAnnotation?) {
+    convenience init(referenceAnnotation: ReferenceAnnotation,
+                     scopeAnnotation: ScopeAnnotation?,
+                     customRefAnnotation: CustomRefAnnotation?) {
         
         let optionChars = CharacterSet(charactersIn: "?")
         let scope = scopeAnnotation?.scope ?? .`default`
@@ -104,28 +160,30 @@ extension RegisterData {
 
 extension VariableData {
     
-    init(referenceAnnotation: ReferenceAnnotation) {
+    convenience init(referenceAnnotation: ReferenceAnnotation) {
         
         self.init(name: referenceAnnotation.name,
                   typeName: referenceAnnotation.typeName)
     }
     
-    init(registerAnnotation: RegisterAnnotation) {
+    convenience init(registerAnnotation: RegisterAnnotation) {
         
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.protocolName ?? registerAnnotation.typeName)
     }
     
-    init(parameterAnnotation: ParameterAnnotation) {
+    convenience init(parameterAnnotation: ParameterAnnotation) {
         
         self.init(name: parameterAnnotation.name,
                   typeName: parameterAnnotation.typeName)
     }
 }
 
+// MARK: - Building
+
 extension ResolverData {
 
-    init?(expr: Expr, enclosingTypeNames: [String]) {
+    convenience init?(expr: Expr, enclosingTypeNames: [String]) {
         
         switch expr {
         case .typeDeclaration(let typeToken, children: let children):
@@ -203,19 +261,44 @@ extension ResolverData {
     }
 }
 
-private extension Array where Element == ResolverData {
+private extension Generator {
     
-    init(exprs: [Expr], fileName: String, enclosingTypeNames: [String] = []) {
+    func buildResolvers(asts: [Expr]) {
+        for ast in asts {
+            if let (file, resolvers) = buildResolvers(ast: ast) {
+                graph.resolversByFile[file] = resolvers
+            }
+        }
+    }
+    
+    private func buildResolvers(ast: Expr) -> (file: String, resolvers: [ResolverData])? {
+        switch ast {
+        case .file(let types, let name):
+            let resolvers = buildResolvers(exprs: types)
+            return (name, resolvers)
+            
+        case .typeDeclaration,
+             .registerAnnotation,
+             .scopeAnnotation,
+             .referenceAnnotation,
+             .customRefAnnotation,
+             .parameterAnnotation:
+            return nil
+        }
+    }
+    
+    private func buildResolvers(exprs: [Expr], enclosingTypeNames: [String] = []) -> [ResolverData] {
 
-        self.init(exprs.flatMap { expr -> [ResolverData] in
+        return exprs.flatMap { expr -> [ResolverData] in
             switch expr {
             case .typeDeclaration(let typeToken, let children):
                 guard let resolverData = ResolverData(expr: expr, enclosingTypeNames: enclosingTypeNames) else {
                     return []
                 }
+                graph.insert(resolverData)
                 let enclosingTypeNames = enclosingTypeNames + [typeToken.value.name]
-                return [resolverData] + [ResolverData](exprs: children, fileName: fileName, enclosingTypeNames: enclosingTypeNames)
-
+                return [resolverData] + buildResolvers(exprs: children, enclosingTypeNames: enclosingTypeNames)
+                
             case .file,
                  .registerAnnotation,
                  .referenceAnnotation,
@@ -224,22 +307,22 @@ private extension Array where Element == ResolverData {
                  .parameterAnnotation:
                 return []
             }
-        })
-    }
-    
-    init(ast: Expr) {
-        switch ast {
-        case .file(let types, let name):
-            self.init(exprs: types, fileName: name)
-        
-        case .typeDeclaration,
-             .registerAnnotation,
-             .scopeAnnotation,
-             .referenceAnnotation,
-             .customRefAnnotation,
-             .parameterAnnotation:
-            self.init()
         }
     }
 }
 
+// MARK: - Linking
+
+private extension Generator {
+    
+    func linkResolvers() {
+        let registrations = graph.resolversByFile
+            .values
+            .flatMap { $0 }
+            .flatMap { $0.registrations }
+
+        for registration in registrations {
+            registration.associatedResolver = graph.resolversByType[registration.typeName]
+        }
+    }
+}

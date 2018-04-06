@@ -22,54 +22,68 @@ let main = command(
 ) { outputPath, templatePath, safeFlag, inputPaths in
 
     do {
-        let generator = try Generator(template: templatePath.value)
-
+        
+        // ---- Parse ----
+        
         Logger.log(.info, "Parsing...")
-        
-        var dataToWrite: [(path: Path, data: String)] = []
-        var syntaxTrees: [Expr] = []
-        
-        for filePath in inputPaths.values {
+        let asts: [Expr] = try inputPaths.values.flatMap { filePath in
             guard let file = File(path: filePath.string) else {
-                return
+                return nil
             }
             
             Logger.log(.info, "<- '\(filePath)'")
             let tokens = try Lexer(file, fileName: filePath.string).tokenize()
-            let ast = try Parser(tokens, fileName: filePath.string).parse()
+            return try Parser(tokens, fileName: filePath.string).parse()
+        }
 
-            if safeFlag {
-                syntaxTrees.append(ast)
-            }
-            
+        // ---- Generate ----
+
+        let generator = try Generator(asts: asts, template: templatePath.value)
+        let generatedData = try generator.generate()
+        
+        // ---- Collect ----
+        
+        let dataToWrite: [(path: Path, data: String?)] = generatedData.flatMap { (file, data) in
+
+            let filePath = Path(file)
+
             guard let fileName = filePath.components.last else {
                 Logger.log(.error, "Could not retrieve file name from path '\(filePath)'")
-                return
+                return nil
             }
             let generatedFilePath = Path(outputPath) + "BeaverDI.\(fileName)"
- 
-            guard let generatedString = try generator.generate(from: ast) else {
-                Logger.log(.info, "-- No BeaverDI annotation found in file '\(filePath)'.")
-                continue
-            }
             
-            dataToWrite.append((generatedFilePath, generatedString))
+            guard let data = data else {
+                Logger.log(.info, "-- No BeaverDI annotation found in file '\(filePath)'.")
+                return (path: generatedFilePath, data: nil)
+            }
+
+            return (path: generatedFilePath, data: data)
         }
+        
+        // ---- Inspect ----
 
         if safeFlag {
             Logger.log(.info, "")
             Logger.log(.info, "Checking dependency graph...")
             
-            let inspector = try Inspector(syntaxTrees: syntaxTrees)
+            let inspector = try Inspector(syntaxTrees: asts)
             try inspector.validate()
         }
+        
+        // ---- Write ----
         
         Logger.log(.info, "")
         Logger.log(.info, "Writing...")
         
         for (path, data) in dataToWrite {
-            try path.write(data)
-            Logger.log(.info, "-> '\(path)'")
+            if let data = data {
+                try path.write(data)
+                Logger.log(.info, "-> '\(path)'")
+            } else if path.isFile && path.isDeletable {
+                try path.delete()
+                Logger.log(.info, " X '\(path)'")
+            }
         }
 
         Logger.log(.info, "")

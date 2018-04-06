@@ -13,6 +13,8 @@ final class MovieViewController: UIViewController {
     
     private let dependencies: MovieViewControllerDependencyResolver
 
+    /// beaverdi: movieID <= UInt
+
     // beaverdi: movieManager <- MovieManaging
 
     required init(injecting dependencies: MovieViewControllerDependencyResolver) {
