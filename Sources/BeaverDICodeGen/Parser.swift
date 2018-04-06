@@ -53,105 +53,67 @@ private extension Parser {
             }
         }
     }
+    
+    func parseSimpleExpr<TokenType: Token>(_: TokenType.Type) throws -> TokenBox<TokenType> {
+        switch currentToken {
+        case let token as TokenBox<TokenType>:
+            consumeToken()
+            return token
+        case nil:
+            throw ParserError.unexpectedEOF(file: fileName)
+        case .some(let token):
+            throw ParserError.unexpectedToken(line: token.line, file: fileName)
+        }
+    }
 
-    func parseRegisterAnnotation() throws -> TokenBox<RegisterAnnotation> {
-        switch currentToken {
-        case let token as TokenBox<RegisterAnnotation>:
-            consumeToken()
-            return token
-        case nil:
-            throw ParserError.unexpectedEOF(file: fileName)
-        case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line, file: fileName)
-        }
-    }
-    
-    func parseReferenceAnnotation() throws -> TokenBox<ReferenceAnnotation> {
-        switch currentToken {
-        case let token as TokenBox<ReferenceAnnotation>:
-            consumeToken()
-            return token
-        case nil:
-            throw ParserError.unexpectedEOF(file: fileName)
-        case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line, file: fileName)
-        }
-    }
-    
-    func parseCustomRefAnnotation() throws -> TokenBox<CustomRefAnnotation> {
-        switch currentToken {
-        case let token as TokenBox<CustomRefAnnotation>:
-            consumeToken()
-            return token
-        case nil:
-            throw ParserError.unexpectedEOF(file: fileName)
-        case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line, file: fileName)
-        }
-    }
-    
-    func parseScopeAnnotation() throws -> TokenBox<ScopeAnnotation> {
-        switch currentToken {
-        case let token as TokenBox<ScopeAnnotation>:
-            consumeToken()
-            return token
-        case nil:
-            throw ParserError.unexpectedEOF(file: fileName)
-        case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line, file: fileName)
-        }
-    }
-    
-    func parseInjectableType() throws -> TokenBox<InjectableType> {
-        switch currentToken {
-        case let token as TokenBox<InjectableType>:
-            consumeToken()
-            return token
-        case nil:
-            throw ParserError.unexpectedEOF(file: fileName)
-        case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line, file: fileName)
-        }
-    }
-    
     func parseInjectedTypeDeclaration() throws -> Expr? {
-        let type = try parseInjectableType()
+        let type = try parseSimpleExpr(InjectableType.self)
         
         var children = [Expr]()
         var registrationNames = Set<String>()
         var referenceNames = Set<String>()
+        var parameterNames = Set<String>()
+        
+        let checkDoubleDeclaration = { (name: String, line: Int, file: String) throws in
+            guard !registrationNames.contains(name) && !referenceNames.contains(name) && !parameterNames.contains(name) else {
+                throw ParserError.depedencyDoubleDeclaration(line: line, file: file, dependencyName: name)
+            }
+        }
         
         while true {
             parseAnyDeclarations()
 
             switch currentToken {
             case is TokenBox<RegisterAnnotation>:
-                let annotation = try parseRegisterAnnotation()
+                let annotation = try parseSimpleExpr(RegisterAnnotation.self)
                 let name = annotation.value.name
-                guard !registrationNames.contains(name) && !referenceNames.contains(name) else {
-                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, file: fileName, dependencyName: name)
-                }
+                try checkDoubleDeclaration(name, annotation.line, fileName)
                 registrationNames.insert(name)
                 children.append(.registerAnnotation(annotation))
             
             case is TokenBox<ReferenceAnnotation>:
-                let annotation = try parseReferenceAnnotation()
+                let annotation = try parseSimpleExpr(ReferenceAnnotation.self)
                 let name = annotation.value.name
-                guard !registrationNames.contains(name) && !referenceNames.contains(name) else {
-                    throw ParserError.depedencyDoubleDeclaration(line: annotation.line, file: fileName, dependencyName: name)
-                }
+                try checkDoubleDeclaration(name, annotation.line, fileName)
                 referenceNames.insert(name)
                 children.append(.referenceAnnotation(annotation))
                 
             case is TokenBox<CustomRefAnnotation>:
-                let annotation = try parseCustomRefAnnotation()
+                let annotation = try parseSimpleExpr(CustomRefAnnotation.self)
                 guard registrationNames.contains(annotation.value.name) || referenceNames.contains(annotation.value.name) else {
                     throw ParserError.unknownDependency(line: annotation.line, file: fileName, dependencyName: annotation.value.name)
                 }
                 children.append(.customRefAnnotation(annotation))
 
+            case is TokenBox<ParameterAnnotation>:
+                let annotation = try parseSimpleExpr(ParameterAnnotation.self)
+                let name = annotation.value.name
+                try checkDoubleDeclaration(name, annotation.line, fileName)
+                parameterNames.insert(name)
+                children.append(.parameterAnnotation(annotation))
+                
             case is TokenBox<ScopeAnnotation>:
-                let annotation = try parseScopeAnnotation()
+                let annotation = try parseSimpleExpr(ScopeAnnotation.self)
                 guard registrationNames.contains(annotation.value.name) else {
                     throw ParserError.unknownDependency(line: annotation.line, file: fileName, dependencyName: annotation.value.name)
                 }

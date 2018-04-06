@@ -55,7 +55,7 @@ private struct RegisterData {
     let isCustom: Bool
 }
 
-private struct ReferenceData {
+private struct VariableData {
     let name: String
     let typeName: String
 }
@@ -63,7 +63,8 @@ private struct ReferenceData {
 private struct ResolverData {
     let targetTypeName: String
     let registrations: [RegisterData]
-    let references: [ReferenceData]
+    let references: [VariableData]
+    let parameters: [VariableData]
     let enclosingTypeNames: [String]?
     let isRoot: Bool
 }
@@ -101,7 +102,7 @@ extension RegisterData {
     }
 }
 
-extension ReferenceData {
+extension VariableData {
     
     init(referenceAnnotation: ReferenceAnnotation) {
         
@@ -113,6 +114,12 @@ extension ReferenceData {
         
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.protocolName ?? registerAnnotation.typeName)
+    }
+    
+    init(parameterAnnotation: ParameterAnnotation) {
+        
+        self.init(name: parameterAnnotation.name,
+                  typeName: parameterAnnotation.typeName)
     }
 }
 
@@ -128,6 +135,7 @@ extension ResolverData {
             var registerAnnotations = [String: RegisterAnnotation]()
             var referenceAnnotations = [String: ReferenceAnnotation]()
             var customRefAnnotations = [String: CustomRefAnnotation]()
+            var parameters = [VariableData]()
             
             for child in children {
                 switch child {
@@ -142,6 +150,9 @@ extension ResolverData {
                     
                 case .customRefAnnotation(let annotation):
                     customRefAnnotations[annotation.value.name] = annotation.value
+                    
+                case .parameterAnnotation(let annotation):
+                    parameters.append(VariableData(parameterAnnotation: annotation.value))
                     
                 case .file,
                      .typeDeclaration:
@@ -164,9 +175,9 @@ extension ResolverData {
             }
 
             let references = registerAnnotations.map {
-                ReferenceData(registerAnnotation: $0.value)
+                VariableData(registerAnnotation: $0.value)
             } + referenceAnnotations.map {
-                ReferenceData(referenceAnnotation: $0.value)
+                VariableData(referenceAnnotation: $0.value)
             }
             
             let isRoot = referenceAnnotations.filter {
@@ -177,6 +188,7 @@ extension ResolverData {
             self.init(targetTypeName: targetTypeName,
                       registrations: registrations,
                       references: references,
+                      parameters: parameters,
                       enclosingTypeNames: enclosingTypeNames,
                       isRoot: isRoot)
             
@@ -184,7 +196,8 @@ extension ResolverData {
              .registerAnnotation,
              .scopeAnnotation,
              .referenceAnnotation,
-             .customRefAnnotation:
+             .customRefAnnotation,
+             .parameterAnnotation:
             return nil
         }
     }
@@ -207,7 +220,8 @@ private extension Array where Element == ResolverData {
                  .registerAnnotation,
                  .referenceAnnotation,
                  .scopeAnnotation,
-                 .customRefAnnotation:
+                 .customRefAnnotation,
+                 .parameterAnnotation:
                 return []
             }
         })
@@ -222,7 +236,8 @@ private extension Array where Element == ResolverData {
              .registerAnnotation,
              .scopeAnnotation,
              .referenceAnnotation,
-             .customRefAnnotation:
+             .customRefAnnotation,
+             .parameterAnnotation:
             self.init()
         }
     }

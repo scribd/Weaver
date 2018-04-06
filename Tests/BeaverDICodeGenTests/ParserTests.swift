@@ -396,4 +396,96 @@ final class MyService {
             XCTFail("Unexpected error: \(error).")
         }
     }
+    
+    func test_parser_should_generate_a_valid_syntax_tree_with_a_parameter_declaration() {
+        let file = File(contents: """
+final class MovieManager {
+  // beaverdi: movieID <= UInt?
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MovieManager"), offset: 6, length: 54, line: 0),
+                                                              children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(name: "movieID", typeName: "UInt?"), offset: 29, length: 30, line: 1))])],
+                                     name: "test.swift")
+            
+            XCTAssertEqual(syntaxTree, expected)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_parser_should_generate_a_syntax_error_when_a_parameter_is_declared_twice() {
+        
+        let file = File(contents: """
+final class MovieManager {
+  // beaverdi: movieID <= UInt
+  // beaverdi: movieID <= UInt
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            
+            _ = try parser.parse()
+            XCTFail("An error was expected.")
+        } catch let error as ParserError {
+            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "movieID"))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
+    
+    func test_parser_should_generate_a_syntax_error_when_a_parameter_as_the_same_name_than_a_reference() {
+        
+        let file = File(contents: """
+final class MovieManager {
+  // beaverdi: movieID <= UInt
+  // beaverdi: movieID <- UInt
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            
+            _ = try parser.parse()
+            XCTFail("An error was expected.")
+        } catch let error as ParserError {
+            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "movieID"))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
+    
+    func test_parser_should_generate_a_syntax_error_when_a_parameter_as_the_same_name_than_a_registration() {
+        
+        let file = File(contents: """
+final class MovieManager {
+  // beaverdi: movieID <= UInt
+  // beaverdi: movieID = UInt
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            
+            _ = try parser.parse()
+            XCTFail("An error was expected.")
+        } catch let error as ParserError {
+            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "movieID"))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
 }

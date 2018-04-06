@@ -154,7 +154,8 @@ private extension Inspector {
                  .typeDeclaration,
                  .scopeAnnotation,
                  .referenceAnnotation,
-                 .customRefAnnotation:
+                 .customRefAnnotation,
+                 .parameterAnnotation:
                 break
             }
         }
@@ -169,7 +170,8 @@ private extension Inspector {
                  .registerAnnotation,
                  .typeDeclaration,
                  .scopeAnnotation,
-                 .customRefAnnotation:
+                 .customRefAnnotation,
+                 .parameterAnnotation:
                 break
             }
         }
@@ -186,7 +188,8 @@ private extension Inspector {
                  .scopeAnnotation,
                  .registerAnnotation,
                  .referenceAnnotation,
-                 .customRefAnnotation:
+                 .customRefAnnotation,
+                 .parameterAnnotation:
                 throw InspectorError.invalidAST(unexpectedExpr: ast, file: nil)
             }
         }
@@ -204,7 +207,8 @@ private extension Inspector {
                  .scopeAnnotation,
                  .registerAnnotation,
                  .referenceAnnotation,
-                 .customRefAnnotation:
+                 .customRefAnnotation,
+                 .parameterAnnotation:
                 throw InspectorError.invalidAST(unexpectedExpr: expr, file: fileName)
             }
         }
@@ -287,7 +291,8 @@ private extension Inspector.Resolver {
             case .customRefAnnotation(let customRefAnnotation):
                 customRefAnnotations[customRefAnnotation.value.name] = customRefAnnotation.value
                 
-            case .file:
+            case .file,
+                 .parameterAnnotation:
                 break
             }
         }

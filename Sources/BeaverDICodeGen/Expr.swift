@@ -14,6 +14,7 @@ public indirect enum Expr {
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
     case referenceAnnotation(TokenBox<ReferenceAnnotation>)
     case customRefAnnotation(TokenBox<CustomRefAnnotation>)
+    case parameterAnnotation(TokenBox<ParameterAnnotation>)
 }
 
 // MARK: - Equatable
@@ -37,12 +38,15 @@ extension Expr: Equatable {
             return lhs == rhs
         case (.customRefAnnotation(let lhs), .customRefAnnotation(let rhs)):
             return lhs == rhs
+        case (.parameterAnnotation(let lhs), .parameterAnnotation(let rhs)):
+            return lhs == rhs
         case (.file, _),
              (.typeDeclaration, _),
              (.registerAnnotation, _),
              (.scopeAnnotation, _),
              (.referenceAnnotation, _),
-             (.customRefAnnotation, _):
+             (.customRefAnnotation, _),
+             (.parameterAnnotation, _):
             return false
         }
     }
@@ -65,6 +69,8 @@ extension Expr: CustomStringConvertible {
             return "Reference - \(token)"
         case .customRefAnnotation(let token):
             return "CustomRef - \(token)"
+        case .parameterAnnotation(let token):
+            return "Parameter - \(token)"
         }
     }
 }
@@ -100,7 +106,8 @@ struct ExprSequence: Sequence, IteratorProtocol {
         case .referenceAnnotation,
              .registerAnnotation,
              .scopeAnnotation,
-             .customRefAnnotation:
+             .customRefAnnotation,
+             .parameterAnnotation:
             break
         }
         
