@@ -260,4 +260,72 @@ final class ViewController {
             XCTFail("Unexpected error: \(error).")
         }
     }
+    
+    func test_inspector_should_build_a_valid_graph_with_two_references_of_the_same_type() {
+        let file = File(contents: """
+final class AppDelegate {
+    // beaverdi: viewController1 = ViewController1 <- UIViewController
+    // beaverdi: viewController1.scope = .container
+
+    // beaverdi: viewController2 = ViewController2 <- UIViewController
+    // beaverdi: viewController2.scope = .container
+
+    // beaverdi: coordinator = Coordinator
+    // beaverdi: coordinator.scope = .container
+}
+
+final class Coordinator {
+    // beaverdi: viewController1 <- UIViewController
+    // beaverdi: viewController2 <- UIViewController
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_graph_because_of_an_incorrectly_named_reference() {
+        let file = File(contents: """
+final class AppDelegate {
+    // beaverdi: viewController1 = ViewController1 <- UIViewController
+    // beaverdi: viewController1.scope = .container
+
+    // beaverdi: viewController2 = ViewController2 <- UIViewController
+    // beaverdi: viewController2.scope = .container
+
+    // beaverdi: coordinator = Coordinator
+    // beaverdi: coordinator.scope = .container
+}
+
+final class Coordinator {
+    // beaverdi: viewController1 <- UIViewController
+    // beaverdi: viewController2 <- UIViewController
+    // beaverdi: viewController3 <- UIViewController
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, .invalidGraph(line: 14, file: "test.swift", dependencyName: "viewController3", typeName: nil, underlyingError: .unresolvableDependency))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
 }
