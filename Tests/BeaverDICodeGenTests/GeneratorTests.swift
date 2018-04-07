@@ -50,6 +50,10 @@ final class MyService {
   }
 }
 
+final class API: APIProtocol {
+    // beaverdi: parameter <= UInt
+}
+
 class AnotherService {
     // This class is ignored
 }
@@ -73,34 +77,36 @@ import BeaverDI
 
 final class MyServiceDependencyContainer: DependencyContainer {
 
+    
     init() {
         super.init()
     }
 
     override func registerDependencies(in store: DependencyStore) {
         
-        store.register(APIProtocol.self, scope: .graph, name: "api", builder: { dependencies in
-            return self.apiCustomRef(dependencies)
+        store.register(APIProtocol.self, scope: .graph, name: "api", builder: { (dependencies, parameter: UInt) in
+            return self.apiCustomRef(dependencies, parameter: parameter)
         })
-        store.register(RouterProtocol.self, scope: .container, name: "router", builder: { dependencies in
+        store.register(RouterProtocol.self, scope: .container, name: "router", builder: { (dependencies) in
             return Router.makeRouter(injecting: dependencies)
         })
-        store.register(Session.self, scope: .graph, name: "session", builder: { dependencies in
+        store.register(Session.self, scope: .graph, name: "session", builder: { (dependencies) in
             return Session.makeSession(injecting: dependencies)
         })
-        store.register(APIProtocol.self, scope: .container, name: "apiBis", builder: { dependencies in
-            return API.makeAPI(injecting: dependencies)
+        store.register(APIProtocol.self, scope: .container, name: "apiBis", builder: { (dependencies, parameter: UInt) in
+            return API.makeAPI(injecting: dependencies, parameter: parameter)
         })
     }
 }
 
 protocol MyServiceDependencyResolver {
     
+    
     var api: APIProtocol { get }
     var router: RouterProtocol { get }
     var session: Session { get }
     var apiBis: APIProtocol { get }
-    func apiCustomRef(_ dependencies: DependencyContainer) -> APIProtocol
+    func apiCustomRef(_ dependencies: DependencyContainer, parameter: UInt) -> APIProtocol
     
 }
 
@@ -124,19 +130,21 @@ extension MyServiceDependencyContainer: MyServiceDependencyResolver {
 
 final class MyEmbeddedServiceDependencyContainer: DependencyContainer {
 
-    init(_ parent: DependencyContainer) {
+    
+    init(parent: DependencyContainer) {
         super.init(parent)
     }
 
     override func registerDependencies(in store: DependencyStore) {
         
-        store.register(SessionProtocol?.self, scope: .container, name: "session", builder: { dependencies in
+        store.register(SessionProtocol?.self, scope: .container, name: "session", builder: { (dependencies) in
             return Session.makeSession(injecting: dependencies)
         })
     }
 }
 
 protocol MyEmbeddedServiceDependencyResolver {
+    
     
     var session: SessionProtocol? { get }
     var api: APIProtocol { get }
@@ -160,7 +168,7 @@ extension MyEmbeddedServiceDependencyContainer: MyEmbeddedServiceDependencyResol
 extension MyService.MyEmbeddedService {
 
     static func makeMyEmbeddedService(injecting parentDependencies: DependencyContainer) -> MyEmbeddedService {
-        let dependencies = MyEmbeddedServiceDependencyContainer(parentDependencies)
+        let dependencies = MyEmbeddedServiceDependencyContainer(parent: parentDependencies)
         return MyEmbeddedService(injecting: dependencies)
     }
 }
@@ -170,6 +178,33 @@ protocol MyEmbeddedServiceDependencyInjectable {
 }
 
 extension MyService.MyEmbeddedService: MyEmbeddedServiceDependencyInjectable {}
+
+// MARK: - API
+
+final class APIDependencyContainer: DependencyContainer {
+
+    let parameter: UInt
+    
+    init(parameter: UInt) {
+        self.parameter = parameter
+        super.init()
+    }
+
+    override func registerDependencies(in store: DependencyStore) {
+        
+    }
+}
+
+protocol APIDependencyResolver {
+    var parameter: UInt { get }
+    
+    
+    
+}
+
+extension APIDependencyContainer: APIDependencyResolver {
+    
+}
 
 """)
             

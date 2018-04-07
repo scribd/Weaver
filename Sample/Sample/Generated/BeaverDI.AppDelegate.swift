@@ -14,16 +14,16 @@ final class AppDelegateDependencyContainer: DependencyContainer {
 
     override func registerDependencies(in store: DependencyStore) {
         
-        store.register(MovieManaging.self, scope: .container, name: "movieManager", builder: { dependencies in
+        store.register(MovieManaging.self, scope: .container, name: "movieManager", builder: { (dependencies) in
             return MovieManager.makeMovieManager(injecting: dependencies)
         })
-        store.register(URLSession.self, scope: .container, name: "urlSession", builder: { dependencies in
+        store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
             return self.urlSessionCustomRef(dependencies)
         })
-        store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { dependencies in
+        store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { (dependencies) in
             return MovieAPI.makeMovieAPI(injecting: dependencies)
         })
-        store.register(HomeViewController.self, scope: .container, name: "homeViewController", builder: { dependencies in
+        store.register(HomeViewController.self, scope: .container, name: "homeViewController", builder: { (dependencies) in
             return HomeViewController.makeHomeViewController(injecting: dependencies)
         })
     }

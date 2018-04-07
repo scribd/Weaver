@@ -16,8 +16,8 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
 
     override func registerDependencies(in store: DependencyStore) {
         {% for registration in resolver.registrations %}
-        store.register({{registration.abstractTypeName}}.self, scope: .{{registration.scope}}, name: "{{registration.name}}", builder: { dependencies in
-            {% if not registration.isCustom %}return {{registration.typeName}}.make{{registration.typeName}}(injecting: dependencies){% else %}return self.{{registration.name}}CustomRef(dependencies){% endif %}
+        store.register({{registration.abstractTypeName}}.self, scope: .{{registration.scope}}, name: "{{registration.name}}", builder: { (dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) in
+            {% if not registration.isCustom %}return {{registration.typeName}}.make{{registration.typeName}}(injecting: dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}return self.{{registration.name}}CustomRef(dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% endif %}
         }){% endfor %}
     }
 }
@@ -25,17 +25,23 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
 protocol {{resolver.targetTypeName}}DependencyResolver {
     {% for parameter in resolver.parameters %}var {{parameter.name}}: {{parameter.typeName}} { get }
     {% endfor %}
-    {% for reference in resolver.references %}
-    var {{reference.name}}: {{reference.typeName}} { get }{% endfor %}
-    {% for registration in resolver.registrations %}{% if registration.isCustom %}func {{registration.name}}CustomRef(_ dependencies: DependencyContainer) -> {{registration.abstractTypeName}}
+    {% for reference in resolver.references %}{% if reference.parameters %}
+    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.typeName}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.typeName}}
+    {% else %}
+    var {{reference.name}}: {{reference.typeName}} { get }{% endif %}{% endfor %}
+    {% for registration in resolver.registrations %}{% if registration.isCustom %}func {{registration.name}}CustomRef(_ dependencies: DependencyContainer{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) -> {{registration.abstractTypeName}}
     {% endif %}{% endfor %}
 }
 
 extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeName}}DependencyResolver {
-    {% for reference in resolver.references %}
+    {% for reference in resolver.references %}{% if reference.parameters %}
+    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.typeName}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.typeName}} {
+        return resolve({{reference.typeName}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
+    }
+    {% else %}
     var {{reference.name}}: {{reference.typeName}} {
         return resolve({{reference.typeName}}.self, name: "{{reference.name}}")
-    }{% endfor %}
+    }{% endif %}{% endfor %}
 }{% if not resolver.isRoot %}
 
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {

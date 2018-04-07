@@ -7,8 +7,10 @@ import BeaverDI
 
 final class MovieViewControllerDependencyContainer: DependencyContainer {
 
+    let movieID: UInt
     
-    init(parent: DependencyContainer) {
+    init(parent: DependencyContainer, movieID: UInt) {
+        self.movieID = movieID
         super.init(parent)
     }
 
@@ -18,6 +20,7 @@ final class MovieViewControllerDependencyContainer: DependencyContainer {
 }
 
 protocol MovieViewControllerDependencyResolver {
+    var movieID: UInt { get }
     
     
     var movieManager: MovieManaging { get }
@@ -33,8 +36,8 @@ extension MovieViewControllerDependencyContainer: MovieViewControllerDependencyR
 
 extension MovieViewController {
 
-    static func makeMovieViewController(injecting parentDependencies: DependencyContainer) -> MovieViewController {
-        let dependencies = MovieViewControllerDependencyContainer(parent: parentDependencies)
+    static func makeMovieViewController(injecting parentDependencies: DependencyContainer, movieID: UInt) -> MovieViewController {
+        let dependencies = MovieViewControllerDependencyContainer(parent: parentDependencies, movieID: movieID)
         return MovieViewController(injecting: dependencies)
     }
 }

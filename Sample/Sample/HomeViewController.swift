@@ -66,7 +66,8 @@ final class HomeViewController: UIViewController {
 extension HomeViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        navigationController?.pushViewController(dependencies.movieController, animated: true)
+        let movie = movies[indexPath.row]
+        navigationController?.pushViewController(dependencies.movieController(movieID: movie.id), animated: true)
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }

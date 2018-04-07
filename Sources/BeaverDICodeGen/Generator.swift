@@ -76,7 +76,7 @@ private final class RegisterData {
     let abstractTypeName: String
     let scope: String
     let isCustom: Bool
-    var associatedResolver: ResolverData?
+    var parameters: [VariableData] = []
     
     init(name: String,
          typeName: String,
@@ -94,6 +94,7 @@ private final class RegisterData {
 private final class VariableData {
     let name: String
     let typeName: String
+    var parameters: [VariableData] = []
     
     init(name: String,
          typeName: String) {
@@ -316,13 +317,16 @@ private extension Generator {
 private extension Generator {
     
     func linkResolvers() {
-        let registrations = graph.resolversByFile
-            .values
-            .flatMap { $0 }
-            .flatMap { $0.registrations }
+        let resolvers = graph.resolversByFile.values.flatMap { $0 }
+        let registrations = resolvers.flatMap { $0.registrations }
+        let references = resolvers.flatMap { $0.references }
 
         for registration in registrations {
-            registration.associatedResolver = graph.resolversByType[registration.typeName]
+            registration.parameters = graph.resolversByType[registration.typeName]?.parameters ?? []
+        }
+        
+        for reference in references {
+            reference.parameters = graph.resolversByType[reference.typeName]?.parameters ?? []
         }
     }
 }

@@ -13,7 +13,7 @@ final class MovieViewController: UIViewController {
     
     private let dependencies: MovieViewControllerDependencyResolver
 
-    /// beaverdi: movieID <= UInt
+    // beaverdi: movieID <= UInt
 
     // beaverdi: movieManager <- MovieManaging
 
@@ -30,5 +30,9 @@ final class MovieViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .red
+        
+        dependencies.movieManager.getMovie(id: dependencies.movieID) { result in
+            print(result)
+        }
     }
 }
