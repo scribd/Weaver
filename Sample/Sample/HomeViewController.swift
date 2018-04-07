@@ -17,7 +17,7 @@ final class HomeViewController: UIViewController {
     
     // beaverdi: movieManager <- MovieManaging
     
-    // beaverdi: movieController = MovieViewController
+    // beaverdi: movieController = MovieViewController <- UIViewController
     // beaverdi: movieController.scope = .transient
     
     private lazy var tableView: UITableView = {

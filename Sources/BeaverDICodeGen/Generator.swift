@@ -33,7 +33,7 @@ public final class Generator {
         
         buildResolvers(asts: asts)
         
-        linkResolvers()
+        linkParameters()
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
@@ -47,10 +47,9 @@ public final class Generator {
             let fileLoader = FileSystemLoader(paths: [templateDirPath])
             let environment = Environment(loader: fileLoader)
             let context = ["resolvers": resolvers]
+            let string = try environment.renderTemplate(name: templateName, context: context)
             
-            let rendered = try environment.renderTemplate(name: templateName, context: context)
-            
-            return (file: file, data: rendered)
+            return (file: file, data: string.compacted())
         }
     }
 }
@@ -60,11 +59,19 @@ public final class Generator {
 private final class Graph {
 
     private(set) var resolversByType = [String: ResolverData]()
+    private(set) var typesByName = [String: [String]]()
 
     var resolversByFile = [String: [ResolverData]]()
     
-    func insert(_ resolver: ResolverData) {
+    func insertResolver(_ resolver: ResolverData) {
         resolversByType[resolver.targetTypeName] = resolver
+    }
+    
+    func insertVariable(_ variable: VariableData) {
+        var types = typesByName[variable.name] ?? []
+        types.append(variable.typeName)
+        variable.abstractTypeName.flatMap { types.append($0) }
+        typesByName[variable.name] = types
     }
 }
 
@@ -94,12 +101,18 @@ private final class RegisterData {
 private final class VariableData {
     let name: String
     let typeName: String
+    let abstractTypeName: String?
+
     var parameters: [VariableData] = []
+    let resolvedTypeName: String
     
     init(name: String,
-         typeName: String) {
+         typeName: String,
+         abstractTypeName: String?) {
         self.name = name
         self.typeName = typeName
+        self.abstractTypeName = abstractTypeName
+        resolvedTypeName = abstractTypeName ?? typeName
     }
 }
 
@@ -164,19 +177,22 @@ extension VariableData {
     convenience init(referenceAnnotation: ReferenceAnnotation) {
         
         self.init(name: referenceAnnotation.name,
-                  typeName: referenceAnnotation.typeName)
+                  typeName: referenceAnnotation.typeName,
+                  abstractTypeName: nil)
     }
     
     convenience init(registerAnnotation: RegisterAnnotation) {
         
         self.init(name: registerAnnotation.name,
-                  typeName: registerAnnotation.protocolName ?? registerAnnotation.typeName)
+                  typeName: registerAnnotation.typeName,
+                  abstractTypeName: registerAnnotation.protocolName)
     }
     
     convenience init(parameterAnnotation: ParameterAnnotation) {
         
         self.init(name: parameterAnnotation.name,
-                  typeName: parameterAnnotation.typeName)
+                  typeName: parameterAnnotation.typeName,
+                  abstractTypeName: nil)
     }
 }
 
@@ -184,7 +200,7 @@ extension VariableData {
 
 extension ResolverData {
 
-    convenience init?(expr: Expr, enclosingTypeNames: [String]) {
+    convenience init?(expr: Expr, enclosingTypeNames: [String], graph: Graph) {
         
         switch expr {
         case .typeDeclaration(let typeToken, children: let children):
@@ -233,10 +249,14 @@ extension ResolverData {
                 }
             }
 
-            let references = registerAnnotations.map {
-                VariableData(registerAnnotation: $0.value)
-            } + referenceAnnotations.map {
-                VariableData(referenceAnnotation: $0.value)
+            let references = registerAnnotations.map { _, register -> VariableData in
+                let variable = VariableData(registerAnnotation: register)
+                graph.insertVariable(variable)
+                return variable
+            } + referenceAnnotations.map { _, reference -> VariableData in
+                let variable = VariableData(referenceAnnotation: reference)
+                graph.insertVariable(variable)
+                return variable
             }
             
             let isRoot = referenceAnnotations.filter {
@@ -293,10 +313,10 @@ private extension Generator {
         return exprs.flatMap { expr -> [ResolverData] in
             switch expr {
             case .typeDeclaration(let typeToken, let children):
-                guard let resolverData = ResolverData(expr: expr, enclosingTypeNames: enclosingTypeNames) else {
+                guard let resolverData = ResolverData(expr: expr, enclosingTypeNames: enclosingTypeNames, graph: graph) else {
                     return []
                 }
-                graph.insert(resolverData)
+                graph.insertResolver(resolverData)
                 let enclosingTypeNames = enclosingTypeNames + [typeToken.value.name]
                 return [resolverData] + buildResolvers(exprs: children, enclosingTypeNames: enclosingTypeNames)
                 
@@ -316,17 +336,39 @@ private extension Generator {
 
 private extension Generator {
     
-    func linkResolvers() {
+    func linkParameters() {
         let resolvers = graph.resolversByFile.values.flatMap { $0 }
         let registrations = resolvers.flatMap { $0.registrations }
         let references = resolvers.flatMap { $0.references }
 
+        // link parameters to registrations
         for registration in registrations {
             registration.parameters = graph.resolversByType[registration.typeName]?.parameters ?? []
         }
-        
+
+        // link parameters to references
         for reference in references {
             reference.parameters = graph.resolversByType[reference.typeName]?.parameters ?? []
+            
+            if reference.parameters.isEmpty, let types = graph.typesByName[reference.name] {
+                for type in types {
+                    if let parameters = graph.resolversByType[type]?.parameters {
+                        reference.parameters = parameters
+                        break
+                    }
+                }
+            }
         }
+    }
+}
+
+// MARK: - Utils
+
+private extension String {
+    
+    func compacted() -> String {
+        return split(separator: "\n")
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            .joined(separator: "\n")
     }
 }

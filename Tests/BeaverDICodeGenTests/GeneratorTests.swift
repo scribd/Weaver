@@ -101,29 +101,32 @@ final class MyServiceDependencyContainer: DependencyContainer {
 
 protocol MyServiceDependencyResolver {
     
+    func api(parameter: UInt) -> APIProtocol
     
-    var api: APIProtocol { get }
     var router: RouterProtocol { get }
     var session: Session { get }
-    var apiBis: APIProtocol { get }
+    func apiBis(parameter: UInt) -> APIProtocol
+    
     func apiCustomRef(_ dependencies: DependencyContainer, parameter: UInt) -> APIProtocol
     
 }
 
 extension MyServiceDependencyContainer: MyServiceDependencyResolver {
     
-    var api: APIProtocol {
-        return resolve(APIProtocol.self, name: "api")
+    func api(parameter: UInt) -> APIProtocol {
+        return resolve(APIProtocol.self, name: "api", parameter: parameter)
     }
+    
     var router: RouterProtocol {
         return resolve(RouterProtocol.self, name: "router")
     }
     var session: Session {
         return resolve(Session.self, name: "session")
     }
-    var apiBis: APIProtocol {
-        return resolve(APIProtocol.self, name: "apiBis")
+    func apiBis(parameter: UInt) -> APIProtocol {
+        return resolve(APIProtocol.self, name: "apiBis", parameter: parameter)
     }
+    
 }
 
 // MARK: - MyEmbeddedService
@@ -145,10 +148,11 @@ final class MyEmbeddedServiceDependencyContainer: DependencyContainer {
 
 protocol MyEmbeddedServiceDependencyResolver {
     
-    
     var session: SessionProtocol? { get }
-    var api: APIProtocol { get }
-    var apiBis: APIProtocol { get }
+    func api(parameter: UInt) -> APIProtocol
+    
+    func apiBis(parameter: UInt) -> APIProtocol
+    
     
 }
 
@@ -157,12 +161,14 @@ extension MyEmbeddedServiceDependencyContainer: MyEmbeddedServiceDependencyResol
     var session: SessionProtocol? {
         return resolve(SessionProtocol?.self, name: "session")
     }
-    var api: APIProtocol {
-        return resolve(APIProtocol.self, name: "api")
+    func api(parameter: UInt) -> APIProtocol {
+        return resolve(APIProtocol.self, name: "api", parameter: parameter)
     }
-    var apiBis: APIProtocol {
-        return resolve(APIProtocol.self, name: "apiBis")
+    
+    func apiBis(parameter: UInt) -> APIProtocol {
+        return resolve(APIProtocol.self, name: "apiBis", parameter: parameter)
     }
+    
 }
 
 extension MyService.MyEmbeddedService {
@@ -197,7 +203,6 @@ final class APIDependencyContainer: DependencyContainer {
 
 protocol APIDependencyResolver {
     var parameter: UInt { get }
-    
     
     
 }

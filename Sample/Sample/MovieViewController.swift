@@ -31,6 +31,7 @@ final class MovieViewController: UIViewController {
         
         view.backgroundColor = .red
         
+        print(dependencies.movieID)
         dependencies.movieManager.getMovie(id: dependencies.movieID) { result in
             print(result)
         }
