@@ -42,6 +42,7 @@ final class HomeViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = .white
+        edgesForExtendedLayout = []
         
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -67,7 +68,8 @@ extension HomeViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let movie = movies[indexPath.row]
-        navigationController?.pushViewController(dependencies.movieController(movieID: movie.id), animated: true)
+        let controller = dependencies.movieController(movieID: movie.id, title: movie.title)
+        navigationController?.pushViewController(controller, animated: true)
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }

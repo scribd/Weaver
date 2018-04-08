@@ -18,6 +18,8 @@
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
 		19956E0A206B4F0A00751B70 /* SampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956E09206B4F0A00751B70 /* SampleTests.swift */; };
+		19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A4207AADD30011DF93 /* ImageManager.swift */; };
+		19DE26A7207AAED30011DF93 /* BeaverDI.ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A6207AAED30011DF93 /* BeaverDI.ImageManager.swift */; };
 		19E5551D207694A1004C44FC /* BeaverDI.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */; };
 		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19E55521207695FE004C44FC /* BeaverDI.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */; };
@@ -54,6 +56,8 @@
 		19956E05206B4F0A00751B70 /* SampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956E09206B4F0A00751B70 /* SampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleTests.swift; sourceTree = "<group>"; };
 		19956E0B206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		19DE26A4207AADD30011DF93 /* ImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManager.swift; sourceTree = "<group>"; };
+		19DE26A6207AAED30011DF93 /* BeaverDI.ImageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.ImageManager.swift; sourceTree = "<group>"; };
 		19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.MovieManager.swift; sourceTree = "<group>"; };
 		19E5551E20769572004C44FC /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.HomeViewController.swift; sourceTree = "<group>"; };
@@ -124,6 +128,7 @@
 				193EEF822075E97B00BFE706 /* API.swift */,
 				19956DF4206B4F0A00751B70 /* AppDelegate.swift */,
 				19E5551E20769572004C44FC /* HomeViewController.swift */,
+				19DE26A4207AADD30011DF93 /* ImageManager.swift */,
 				193EEF88207690C300BFE706 /* MovieManager.swift */,
 				193EEF8A2076911D00BFE706 /* Models.swift */,
 				19E555222076A156004C44FC /* MovieTableViewCell.swift */,
@@ -149,6 +154,7 @@
 		19956E18206B51FF00751B70 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
+				19DE26A6207AAED30011DF93 /* BeaverDI.ImageManager.swift */,
 				19E5552F207722E9004C44FC /* BeaverDI.MovieViewController.swift */,
 				19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */,
 				19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */,
@@ -348,6 +354,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				193EEF8B2076911D00BFE706 /* Models.swift in Sources */,
+				19DE26A7207AAED30011DF93 /* BeaverDI.ImageManager.swift in Sources */,
 				19E5551D207694A1004C44FC /* BeaverDI.MovieManager.swift in Sources */,
 				193EEF832075E97B00BFE706 /* API.swift in Sources */,
 				193EEF7D2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift in Sources */,
@@ -356,6 +363,7 @@
 				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
 				19E55521207695FE004C44FC /* BeaverDI.HomeViewController.swift in Sources */,
 				193EEF85207683B200BFE706 /* Result.swift in Sources */,
+				19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */,
 				193EEF89207690C300BFE706 /* MovieManager.swift in Sources */,
 				19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */,
 				193EEF8720768E6B00BFE706 /* BeaverDI.API.swift in Sources */,

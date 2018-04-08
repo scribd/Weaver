@@ -7,18 +7,18 @@ final class HomeViewControllerDependencyContainer: DependencyContainer {
         super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
-        store.register(UIViewController.self, scope: .transient, name: "movieController", builder: { (dependencies, movieID: UInt) in
-            return MovieViewController.makeMovieViewController(injecting: dependencies, movieID: movieID)
+        store.register(UIViewController.self, scope: .transient, name: "movieController", builder: { (dependencies, movieID: UInt, title: String) in
+            return MovieViewController.makeMovieViewController(injecting: dependencies, movieID: movieID, title: title)
         })
     }
 }
 protocol HomeViewControllerDependencyResolver {
-    func movieController(movieID: UInt) -> UIViewController
+    func movieController(movieID: UInt, title: String) -> UIViewController
     var movieManager: MovieManaging { get }
 }
 extension HomeViewControllerDependencyContainer: HomeViewControllerDependencyResolver {
-    func movieController(movieID: UInt) -> UIViewController {
-        return resolve(UIViewController.self, name: "movieController", parameter: movieID)
+    func movieController(movieID: UInt, title: String) -> UIViewController {
+        return resolve(UIViewController.self, name: "movieController", parameters: movieID, title)
     }
     var movieManager: MovieManaging {
         return resolve(MovieManaging.self, name: "movieManager")

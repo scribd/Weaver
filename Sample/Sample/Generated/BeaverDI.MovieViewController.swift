@@ -4,8 +4,10 @@ import BeaverDI
 // MARK: - MovieViewController
 final class MovieViewControllerDependencyContainer: DependencyContainer {
     let movieID: UInt
-    init(parent: DependencyContainer, movieID: UInt) {
+    let title: String
+    init(parent: DependencyContainer, movieID: UInt, title: String) {
         self.movieID = movieID
+        self.title = title
         super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
@@ -13,16 +15,21 @@ final class MovieViewControllerDependencyContainer: DependencyContainer {
 }
 protocol MovieViewControllerDependencyResolver {
     var movieID: UInt { get }
+    var title: String { get }
     var movieManager: MovieManaging { get }
+    var imageManager: ImageManaging { get }
 }
 extension MovieViewControllerDependencyContainer: MovieViewControllerDependencyResolver {
     var movieManager: MovieManaging {
         return resolve(MovieManaging.self, name: "movieManager")
     }
+    var imageManager: ImageManaging {
+        return resolve(ImageManaging.self, name: "imageManager")
+    }
 }
 extension MovieViewController {
-    static func makeMovieViewController(injecting parentDependencies: DependencyContainer, movieID: UInt) -> MovieViewController {
-        let dependencies = MovieViewControllerDependencyContainer(parent: parentDependencies, movieID: movieID)
+    static func makeMovieViewController(injecting parentDependencies: DependencyContainer, movieID: UInt, title: String) -> MovieViewController {
+        let dependencies = MovieViewControllerDependencyContainer(parent: parentDependencies, movieID: movieID, title: title)
         return MovieViewController(injecting: dependencies)
     }
 }

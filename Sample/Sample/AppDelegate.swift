@@ -22,11 +22,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     // beaverdi: movieAPI = MovieAPI <- APIProtocol
     // beaverdi: movieAPI.scope = .container
-        
+
+    // beaverdi: imageManager = ImageManager <- ImageManaging
+    // beaverdi: imageManager.scope = .container
+    
     // beaverdi: movieManager = MovieManager <- MovieManaging
     // beaverdi: movieManager.scope = .container
     
-    // beaverdi: homeViewController = HomeViewController
+    // beaverdi: homeViewController = HomeViewController <- UIViewController
     // beaverdi: homeViewController.scope = .container
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {

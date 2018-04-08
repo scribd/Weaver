@@ -16,6 +16,7 @@ enum APIError: Error {
     case network(Error)
     case url(String)
     case deserialization(Error)
+    case emptyBodyResponse
     case api(statusCode: Int, message: String?)
 }
 
@@ -27,22 +28,31 @@ enum APIHTTPMethod {
 
 // MARK: - Request
 
-struct APIRequest<Model: Decodable> {
-    
+struct APIRequestConfig {
     let method: APIHTTPMethod
+    let host: String?
     let path: String
     var query: [String: Any]
+}
+
+struct APIRequest<Model> {
     
-    init(method: APIHTTPMethod = .get,
-         path: String,
-         query: [String: Any] = [:]) {
-        self.method = method
-        self.path = path
-        self.query = query
+    let config: APIRequestConfig
+    
+    init(_ config: APIRequestConfig) {
+        self.config = config
     }
     
-    fileprivate var queryString: String {
-        return query.map { "\($0)=\($1)" }.joined(separator: "&")
+    init(method: APIHTTPMethod = .get,
+         host: String? = nil,
+         path: String,
+         query: [String: Any] = [:]) {
+        
+        let config = APIRequestConfig(method: method,
+                                      host: host,
+                                      path: path,
+                                      query: query)
+        self.init(config)
     }
 }
 
@@ -50,7 +60,9 @@ struct APIRequest<Model: Decodable> {
 
 protocol APIProtocol {
     
-    func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void)
+    func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void)
+    
+    func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) where Model: Decodable
 }
 
 // MARK: - Movie API
@@ -64,8 +76,8 @@ final class MovieAPI: APIProtocol {
     init(injecting dependencies: MovieAPIDependencyResolver) {
         self.dependencies = dependencies
     }
-
-    func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) {
+    
+    func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void) {
         
         let completionOnMainThread = { result in
             DispatchQueue.main.async {
@@ -73,11 +85,11 @@ final class MovieAPI: APIProtocol {
             }
         }
         
-        var mutableRequest = request
-        mutableRequest.query["api_key"] = Constants.apiKey
+        var config = request.config
+        config.query["api_key"] = Constants.apiKey
         
-        guard let url = URL(string: Constants.host + request.path + "?" + mutableRequest.queryString) else {
-            completion(.failure(.url(request.path)))
+        guard let url = URL(string: (config.host ?? Constants.apiHost) + config.path + "?" + config.queryString) else {
+            completion(.failure(.url(request.config.path)))
             return
         }
         
@@ -98,29 +110,58 @@ final class MovieAPI: APIProtocol {
                 return
             }
             
-            if let data = data {
+            guard let data = data else {
+                completionOnMainThread(.failure(.emptyBodyResponse))
+                return
+            }
+            
+            completionOnMainThread(.success(data))
+        }
+        
+        task.resume()
+    }
+
+    func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) where Model: Decodable {
+
+        let dataRequest = APIRequest<Data>(request.config)
+        
+        send(request: dataRequest) { result in
+            switch result {
+            case .success(let data):
                 if let errorModel = try? JSONDecoder().decode(APIErrorModel.self, from: data) {
-                    completionOnMainThread(.failure(.api(statusCode: errorModel.status_code, message: errorModel.status_message)))
+                    completion(.failure(.api(statusCode: errorModel.status_code, message: errorModel.status_message)))
                     return
                 }
                 
                 do {
                     let model = try JSONDecoder().decode(Model.self, from: data)
-                    completionOnMainThread(.success(model))
+                    completion(.success(model))
                 } catch {
-                    completionOnMainThread(.failure(.deserialization(error)))
+                    completion(.failure(.deserialization(error)))
                 }
+
+            case .failure(let error):
+                completion(.failure(error))
             }
         }
-        
-        task.resume()
     }
 }
 
-private extension MovieAPI {
+extension MovieAPI {
     
     enum Constants {
-        static let host = "https://api.themoviedb.org/3"
+        static let apiHost = "https://api.themoviedb.org/3"
         static let apiKey = "1a6eb1225335bbb37278527537d28a5d"
+        
+        static let imageAPIHost = "https://image.tmdb.org/t/p/w1280"
     }
 }
+
+// MARK: - Utils
+
+private extension APIRequestConfig {
+    var queryString: String {
+        return query.map { "\($0)=\($1)" }.joined(separator: "&")
+    }
+}
+

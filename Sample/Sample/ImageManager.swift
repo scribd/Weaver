@@ -1,0 +1,68 @@
+//
+//  ImageManager.swift
+//  Sample
+//
+//  Created by Théophane Rupin on 4/8/18.
+//  Copyright © 2018 Scribd. All rights reserved.
+//
+
+import Foundation
+import UIKit
+import BeaverDI
+
+enum ImageManagerError: Error {
+    case oops
+}
+
+protocol ImageManaging {
+    
+    func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void)
+}
+
+final class ImageManager: ImageManaging {
+    
+    private let dependencies: ImageManagerDependencyResolver
+    
+    // beaverdi: urlSession = URLSession
+    // beaverdi: urlSession.scope = .container
+    // beaverdi: urlSession.customRef = true
+    
+    // beaverdi: movieAPI <- APIProtocol
+    
+    var imagesByUrl = [String: UIImage]()
+    
+    init(injecting dependencies: ImageManagerDependencyResolver) {
+        self.dependencies = dependencies
+    }
+    
+    func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void) {
+        
+        let request = APIRequest<Data>(method: .get, host: MovieAPI.Constants.imageAPIHost, path: path)
+        
+        dependencies.movieAPI.send(request: request) { result in
+            switch result {
+            case .success(let data):
+                guard let image = UIImage(data: data) else {
+                    completion(.failure(.oops))
+                    return
+                }
+                completion(.success(image))
+                
+            case .failure(let error):
+                print(error)
+                completion(.failure(.oops))
+            }
+        }
+    }
+}
+
+extension ImageManagerDependencyResolver {
+    
+    func urlSessionCustomRef(_: DependencyContainer) -> URLSession {
+        let configuration = URLSessionConfiguration.default
+        assert(configuration.urlCache != nil, "\(ImageManagerDependencyResolver.self): urlCache should not be nil.")
+        configuration.urlCache?.diskCapacity = 1024 * 1024 * 50
+        configuration.urlCache?.memoryCapacity = 1024 * 1024 * 5
+        return URLSession(configuration: configuration)
+    }
+}

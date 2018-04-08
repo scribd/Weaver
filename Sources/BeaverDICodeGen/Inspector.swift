@@ -428,7 +428,8 @@ private extension Inspector.Resolver {
         visitedResolvers.insert(self)
         
         for dependency in dependencies.values {
-            try dependency.associatedResolver.buildDependencies(from: sourceDependency, visitedResolvers: &visitedResolvers)
+            var visitedResolversCopy = visitedResolvers
+            try dependency.associatedResolver.buildDependencies(from: sourceDependency, visitedResolvers: &visitedResolversCopy)
         }
     }
 }

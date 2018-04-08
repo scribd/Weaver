@@ -332,4 +332,59 @@ final class Coordinator {
             XCTFail("Unexpected error: \(error).")
         }
     }
+    
+    func test_inspector_should_build_a_valid_graph_with_references_on_several_levels() {
+        let file = File(contents: """
+final class AppDelegate {
+    // beaverdi: urlSession = URLSession
+    // beaverdi: urlSession.scope = .container
+    // beaverdi: urlSession.customRef = true
+    
+    // beaverdi: movieAPI = MovieAPI <- APIProtocol
+    // beaverdi: movieAPI.scope = .container
+        
+    // beaverdi: movieManager = MovieManager <- MovieManaging
+    // beaverdi: movieManager.scope = .container
+    
+    // beaverdi: homeViewController = HomeViewController <- UIViewController
+    // beaverdi: homeViewController.scope = .container
+}
+
+final class HomeViewController: UIViewController {
+    // beaverdi: movieManager <- MovieManaging
+    
+    // beaverdi: movieController = MovieViewController <- UIViewController
+    // beaverdi: movieController.scope = .transient
+}
+
+final class MovieViewController: UIViewController {
+    // beaverdi: movieID <= UInt
+    // beaverdi: title <= String
+
+    // beaverdi: movieManager <- MovieManaging
+    
+    // beaverdi: urlSession <- URLSession
+}
+
+final class MovieManager: MovieManaging {
+    // beaverdi: movieAPI <- APIProtocol
+}
+
+final class MovieAPI: APIProtocol {
+    // beaverdi: urlSession <- URLSession
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }

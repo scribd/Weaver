@@ -16,7 +16,10 @@ final class AppDelegateDependencyContainer: DependencyContainer {
         store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { (dependencies) in
             return MovieAPI.makeMovieAPI(injecting: dependencies)
         })
-        store.register(HomeViewController.self, scope: .container, name: "homeViewController", builder: { (dependencies) in
+        store.register(ImageManaging.self, scope: .container, name: "imageManager", builder: { (dependencies) in
+            return ImageManager.makeImageManager(injecting: dependencies)
+        })
+        store.register(UIViewController.self, scope: .container, name: "homeViewController", builder: { (dependencies) in
             return HomeViewController.makeHomeViewController(injecting: dependencies)
         })
     }
@@ -25,7 +28,8 @@ protocol AppDelegateDependencyResolver {
     var movieManager: MovieManaging { get }
     var urlSession: URLSession { get }
     var movieAPI: APIProtocol { get }
-    var homeViewController: HomeViewController { get }
+    var imageManager: ImageManaging { get }
+    var homeViewController: UIViewController { get }
     func urlSessionCustomRef(_ dependencies: DependencyContainer) -> URLSession
 }
 extension AppDelegateDependencyContainer: AppDelegateDependencyResolver {
@@ -38,7 +42,10 @@ extension AppDelegateDependencyContainer: AppDelegateDependencyResolver {
     var movieAPI: APIProtocol {
         return resolve(APIProtocol.self, name: "movieAPI")
     }
-    var homeViewController: HomeViewController {
-        return resolve(HomeViewController.self, name: "homeViewController")
+    var imageManager: ImageManaging {
+        return resolve(ImageManaging.self, name: "imageManager")
+    }
+    var homeViewController: UIViewController {
+        return resolve(UIViewController.self, name: "homeViewController")
     }
 }

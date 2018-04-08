@@ -23,7 +23,6 @@ struct Movie: Decodable {
     let poster_path: String
     let original_language: String
     let original_title: String
-    let genre_ids: [UInt]
     let backdrop_path: String
     let adult: Bool
     let overview: String
