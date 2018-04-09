@@ -381,7 +381,8 @@ private extension Inspector.Resolver {
         }
         
         for dependent in dependents {
-            if let _ = try? dependent.resolveDependency(index: index, visitedResolvers: &visitedResolvers) {
+            var visitedResolversCopy = visitedResolvers
+            if let _ = try? dependent.resolveDependency(index: index, visitedResolvers: &visitedResolversCopy) {
                 return
             }
         }
