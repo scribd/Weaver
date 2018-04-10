@@ -217,7 +217,7 @@ final class MoviesViewController: UIViewController {
 
 #### - Dependency Registration Annotation
 
-- Adds a the dependency builder to the container.
+- Adds the dependency builder to the container.
 - Adds an accessor for the dependency to the container's resolver protocol.
 
 Example:
@@ -263,7 +263,7 @@ Example:
 
 #### - Custom Reference Annotation
 
-Adds a the method `dependencyNameCustomRef(_ dependencyContainer:)` to the container's resolver `protocol`. The default value being `false`. This method is left unimplemented by `beaverdi`, meaning you'll need to implement it yourself and resolve/build the dependency manually.
+Adds the method `dependencyNameCustomRef(_ dependencyContainer:)` to the container's resolver `protocol`. The default value being `false`. This method is left unimplemented by `beaverdi`, meaning you'll need to implement it yourself and resolve/build the dependency manually.
 
 Works along with registration and reference annotations.
 
