@@ -34,7 +34,7 @@ swift files --> scan() --> [Token] --> parse() --> AST -|
 
 ```
 
-The `beaverdi` command line tool scans the Swift sources of the project, looking for annotations and generates an AST (abstract syntax tree). 
+The `beaverdi` command line tool scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's SourceKit, making this step pretty reliable.
 
 This AST is then used to generate the dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, meaning the project will fail to compile.
 
@@ -111,12 +111,78 @@ beaverdi --output_path ${SOURCE_ROOT}/generated/files/directory/path ${SOURCE_RO
 
 **Warning - Using `--safe false` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents your project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
 
+## API
 
+### Code Annotations
 
-#### Scope
+`beaverdi` allows you to declare dependencies by annotating your Swift code in comments like so `// beaverdi: ...`. It currently supports the following annotations:
+
+#### - Dependency Registration Annotation
+
+- Adds a the dependency builder to the container.
+- Adds an accessor for the dependency to the container's resolver protocol.
+
+Example:
+```swift
+// beaverdi: dependencyName = DependencyConcreteType <- DependencyProtocol
+```
+or 
+```swift
+// beaverdi: dependencyName = DependencyConcreteType
+```
+
+- `dependencyName`: Dependency's name. Used to make reference to the dependency in other objects and/or annotations.
+- `DependencyConcreteType`: Dependency's implementation type. Can be a `struct` or a `class`.
+- `DependencyProtocol`: Dependency's `protocol` if any. Optional, you can register a dependency with its concrete type only.
+
+#### - Scope Annotation
+
+Sets the scope of a dependency. The default scope being `graph`. Only works along with a registration annotation.
 
 The `scope` defines a dependency's access level and caching strategy. Four scopes are available:
 - `transient`: Always creates a new instance when resolved. Can't be accessed from children.
 - `graph`: A new instance is created when resolved the first time and then lives for the time the container lives. Can't be accessed from children.
 - `weak`: A new instance is created when resolved the first time and then lives for the time its strong references are living. Accessible from children.
 - `container`: Like graph, but accessible from children.
+
+Example:
+```swift
+// beaverdi: dependencyName.scope = .scopeValue
+```
+
+`scopeValue`: Value of the scope. It can be one of the values described above.
+
+#### - Dependency Reference Annotation
+
+Adds an accessor for the dependency to the container's protocol.
+
+Example:
+```swift
+// beaverdi: dependencyName <- DependencyType
+```
+
+`DependencyType`: Either the concrete or abstract type of the dependency. This also defines the type the dependency's accessor returns.
+
+#### - Custom Reference Annotation
+
+Adds a the method `dependencyNameCustomRef(_ dependencyContainer:)` to the container's resolver `protocol`. The default value being `false`. This method is left unimplemented by `beaverdi`, meaning you'll need to implement it yourself and resolve/build the dependency manually.
+
+Works along with registration and reference annotations.
+
+**Warning - Make sure you don't do anything unsafe with the `dependencyContainer` parameter passed down in this method since it won't be caught by the dependency graph validator.**
+
+Example:
+```swift
+// beaverdi: dependencyName.customRef = aBoolean
+```
+
+`aBoolean`: Boolean definining if the dependency should have a custom reference or not. Can take the value `true` or `false`.
+
+#### - Parameter Annotation
+
+Adds a parameter to the container's resolver protocol. This means that the generated container needs to take these parameter at initialisation. It also means that all the concerned dependency accessors need to take this parameter.
+
+Example:
+```swift
+// beaverdi: parameterName <= ParameterType
+```
