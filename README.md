@@ -15,7 +15,7 @@
 
 ## Dependency Injection?
 
-In software engineering, dependency injection is a technique whereby one object supplies the dependencies of another object. A dependency is an object that can be used (a service). An injection is the passing of a dependency to a dependent object (a client) that would use it.
+In software engineering, dependency injection is a technique whereby one object supplies the dependencies of another object. A dependency is an object that can be used (a service). An injection is the passing of a dependency to a dependent object (a client) that would use it. ([wikipedia](https://en.wikipedia.org/wiki/Dependency_injection))
 
 This pattern is essential to keep a light coupling between objects. It makes unit testing a lot easier since a mock or a stub of a dependency can be very easily injected into the object being tested. The inversion of control also help making your code more modular and scalable.
 
@@ -34,7 +34,7 @@ swift files --> scan() --> [Token] --> parse() --> AST -|
 
 ```
 
-The `beaverdi` command line tool scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's SourceKit, making this step pretty reliable.
+The `beaverdi` command line tool scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's [SourceKit](https://github.com/apple/swift/tree/master/tools/SourceKit), making this step pretty reliable.
 
 This AST is then used to generate the dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, meaning the project will fail to compile.
 
@@ -110,6 +110,100 @@ beaverdi --output_path ${SOURCE_ROOT}/generated/files/directory/path ${SOURCE_RO
 **Important - move your build phase above the `Compile Source` phase since `beaverdi` needs to check the dependency graph and generate the boilerplate code before compilation happens.**
 
 **Warning - Using `--safe false` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents your project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
+
+## Basic Usage
+
+*For a more complete usage example, please check out the [sample project](./Sample).*
+
+Let's implement a very basic app displaying a list of movies. Our app will be composed of three noticeable objects: 
+- `AppDelegate` where our dependencies are registered.
+- `MovieManager` providing the movies.
+- `MoviesViewController` showing a list of movies at the screen.
+
+Let's get into the code.
+
+`AppDelegate`:
+```swift
+import UIKit
+import BeaverDI
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    var window: UIWindow?
+
+    private let dependencies = AppDelegateDependencyContainer()
+    
+    // beaverdi: movieManager = MovieManager <- MovieManaging
+    // beaverdi: movieManager.scope = .container
+    
+    // beaverdi: moviesViewController = MoviesViewController <- UIViewController
+    // beaverdi: moviesViewController.scope = .container
+    
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        
+        window = UIWindow()
+
+        window?.rootViewController = UINavigationController(rootViewController: dependencies.moviesViewController)
+        window?.makeKeyAndVisible()
+        
+        return true
+    }
+}
+```
+
+`MovieManager`:
+```swift
+protocol MovieManaging {
+    
+    func getMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void)
+}
+
+final class MovieManager: MovieManaging {
+
+    func getMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void) {
+        // fetches movies from the server...
+        completion(.success(movies))        
+    }
+}
+```
+
+`MoviesViewController`:
+```swift
+final class MoviesViewController: UIViewController {
+    
+    private let dependencies: MoviesViewControllerDependencyResolver
+    
+    private var movies = [Movie]()
+    
+    // beaverdi: movieManager <- MovieManaging
+    
+    required init(injecting dependencies: MoviesViewControllerDependencyResolver) {
+        self.dependencies = dependencies
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // Setups the tableview... 
+        
+        // Fetches the movies
+        dependencies.movieManager.getMovies { result in
+            switch result {
+            case .success(let page):
+                self.movies = page.results
+                self.tableView.reloadData()
+                
+            case .failure(let error):
+                self.showError(error)
+            }
+        }
+    }
+
+    // ... 
+}
+```
 
 ## API
 
