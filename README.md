@@ -27,9 +27,16 @@ Even though `beaverdi` generates the boiler plate code for you, it is important 
 
 ### At compile time
 
+```
+                                                        |--> buildDependencyGraph() --> dependency graph --> validate() --> valid/invalid 
+swift files --> scan() --> [Token] --> parse() --> AST -| 
+                                                        |--> generateCode() --> source code 
+
+```
+
 The `beaverdi` command line tool scans the Swift sources of the project, looking for annotations and generates an AST (abstract syntax tree). 
 
-This AST is then used to generate the dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies.
+This AST is then used to generate the dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, meaning the project will fail to compile.
 
 The same AST is also used to generate the boilerplate code. It generates one dependency container per class/struct with injectable dependencies. It also generates a bunch of extensions and protocols in order to make the dependency injection almost transparent for the developer.
 
