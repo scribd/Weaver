@@ -281,6 +281,10 @@ Example:
 // beaverdi: parameterName <= ParameterType
 ```
 
+## Credits
+
+The DI container features of `beaverdi` are inspired by [Swinject](https://github.com/Swinject/Swinject).
+
 ## License
 
 MIT license. See the [LICENSE file](./LICENSE) for details.
