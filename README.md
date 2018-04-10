@@ -21,7 +21,7 @@ This pattern is essential to keep a light coupling between objects. It makes uni
 
 ## What does it do?
 
-`beaverdi` implements the dependency container pattern and generates the boiler plate code for you, which makes objects' initialisation easier and standardized over the codebase. It is also able to check at compile time if the dependency graph is valid, preventing any runtime crash to happen.
+`beaverdi` implements the dependency container pattern and generates the boiler plate code for you, which makes objects' initialisation easier and standardized over the codebase. It is also able to check at compile time if the dependency graph is valid, preventing any dependency resolution runtime crash to happen.
 
 ## How does it work?
 
