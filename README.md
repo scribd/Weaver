@@ -51,7 +51,7 @@ When an object registers a dependency, its associated dependency container store
 `beaverdi` comes in 3 parts:
 1. A Swift framework to include into your project
 2. A command line tool to install on your machine
-3. A build phase to your project
+3. A build phase to add to your project
 
 ### (1) - BeaverDI framework installation
 
