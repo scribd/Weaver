@@ -44,6 +44,8 @@ The same AST is also used to generate the boilerplate code. It generates one dep
 
 The `beaverdi` framework implements a lightweight dependency container class which allows you to register and resolve dependencies based on their scope, protocol or concrete type, name and parameters. Each container can have a parent, allowing to resolve dependencies throughout a containers hierarchy.
 
+When an object registers a dependency, its associated dependency container stores a builder (and sometimes an instance). When another object declares a reference to this same dependency, its associated container declares an accessor, which tries to resolve the dependency. Resolving a dependency basically means ; looking for a builder/instance while backtracking the containers' hierachy. If no dependency is found or if this process gets trapped into an infinite recursion, it will crash, which is why checking the dependency graph at compile time is extremely important.
+
 ## Installation
 
 `beaverdi` comes in 3 parts:
