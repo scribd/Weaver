@@ -19,6 +19,8 @@ In software engineering, dependency injection is a technique whereby one object 
 
 This pattern is essential to keep a light coupling between objects. It makes unit testing a lot easier since a mock or a stub of a dependency can be very easily injected into the object being tested. The inversion of control also help making your code more modular and scalable.
 
+## What does it do?
+
 `beaverdi` implements the dependency container pattern and generates the boiler plate code for you, which makes objects' initialisation easier and standardized over the codebase. It is also able to check at compile time if the dependency graph is valid, preventing any runtime crash to happen.
 
 ## How does it work?
