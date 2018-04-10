@@ -28,9 +28,9 @@ Even though `beaverdi` generates the boiler plate code for you, it is important 
 ### At compile time
 
 ```
-                                                        |--> buildDependencyGraph() --> dependency graph --> validate() --> valid/invalid 
+                                                        |--> link() --> dependency graph --> validate() --> valid/invalid 
 swift files --> scan() --> [Token] --> parse() --> AST -| 
-                                                        |--> generateCode() --> source code 
+                                                        |--> generate() --> source code 
 
 ```
 
