@@ -30,15 +30,13 @@ final class MovieAPIDependencyResolverMock: MovieAPIDependencyResolver {
 }
 
 final class MovieManagerDependencyResolverMock: MovieManagerDependencyResolver {
-
-    // MARK: - Stubs
-    
-    var movieAPIStub = APIMock()
     
     // MARK: - Mocks
+
+    var movieAPIMock = APIMock()
     
     var movieAPI: APIProtocol {
-        return movieAPIStub
+        return movieAPIMock
     }
 }
 
@@ -52,12 +50,10 @@ final class ImageManagerDependencyResolverMock: ImageManagerDependencyResolver {
         URLProtocolMock.clearSpies()
     }
     
-    // MARK: - Stubs
-    
-    var movieAPIStub = APIMock()
-    
     // MARK: - Mocks
     
+    var movieAPIMock = APIMock()
+
     lazy var urlSession: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [URLProtocolMock.self]
@@ -65,6 +61,6 @@ final class ImageManagerDependencyResolverMock: ImageManagerDependencyResolver {
     }()
     
     var movieAPI: APIProtocol {
-        return movieAPIStub
+        return movieAPIMock
     }
 }

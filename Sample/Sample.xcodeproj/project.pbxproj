@@ -23,6 +23,8 @@
 		19DE26AB207BC21E0011DF93 /* ResolverMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */; };
 		19DE26AD207BC7BC0011DF93 /* MovieAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AC207BC7BC0011DF93 /* MovieAPITests.swift */; };
 		19DE26AF207BCFF30011DF93 /* URLProtocolMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */; };
+		19DE26BB207C78670011DF93 /* MovieManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BA207C78670011DF93 /* MovieManagerTests.swift */; };
+		19DE26BD207C7C8C0011DF93 /* ImageManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BC207C7C8C0011DF93 /* ImageManagerTests.swift */; };
 		19E5551D207694A1004C44FC /* BeaverDI.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */; };
 		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19E55521207695FE004C44FC /* BeaverDI.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */; };
@@ -64,6 +66,8 @@
 		19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverMocks.swift; sourceTree = "<group>"; };
 		19DE26AC207BC7BC0011DF93 /* MovieAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieAPITests.swift; sourceTree = "<group>"; };
 		19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLProtocolMock.swift; sourceTree = "<group>"; };
+		19DE26BA207C78670011DF93 /* MovieManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieManagerTests.swift; sourceTree = "<group>"; };
+		19DE26BC207C7C8C0011DF93 /* ImageManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManagerTests.swift; sourceTree = "<group>"; };
 		19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.MovieManager.swift; sourceTree = "<group>"; };
 		19E5551E20769572004C44FC /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.HomeViewController.swift; sourceTree = "<group>"; };
@@ -151,8 +155,10 @@
 		19956E08206B4F0A00751B70 /* SampleTests */ = {
 			isa = PBXGroup;
 			children = (
+				19DE26BC207C7C8C0011DF93 /* ImageManagerTests.swift */,
 				19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */,
 				19DE26AC207BC7BC0011DF93 /* MovieAPITests.swift */,
+				19DE26BA207C78670011DF93 /* MovieManagerTests.swift */,
 				19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */,
 				19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */,
 				19956E0B206B4F0A00751B70 /* Info.plist */,
@@ -387,6 +393,8 @@
 				19DE26AB207BC21E0011DF93 /* ResolverMocks.swift in Sources */,
 				19DE26A9207BBD9D0011DF93 /* ManagerMocks.swift in Sources */,
 				19DE26AD207BC7BC0011DF93 /* MovieAPITests.swift in Sources */,
+				19DE26BD207C7C8C0011DF93 /* ImageManagerTests.swift in Sources */,
+				19DE26BB207C78670011DF93 /* MovieManagerTests.swift in Sources */,
 				19DE26AF207BCFF30011DF93 /* URLProtocolMock.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

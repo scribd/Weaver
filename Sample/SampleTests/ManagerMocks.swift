@@ -16,13 +16,9 @@ final class APIMock: APIProtocol {
     
     // MARK: - Spies
     
-    private(set) var sendDataRequestCallCountSpy = 0
+    private(set) var dataRequestConfigSpy = [APIRequestConfig]()
 
-    private(set) var sendModelRequestCallCountSpy = 0
-
-    private(set) var dataRequestConfigSpy: APIRequestConfig?
-
-    private(set) var modelRequestConfigSpy: APIRequestConfig?
+    private(set) var modelRequestConfigSpy = [APIRequestConfig]()
     
     // MARK: - Stubs
     
@@ -33,14 +29,13 @@ final class APIMock: APIProtocol {
     // MARK: - Mocks
     
     func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void) {
-        sendDataRequestCallCountSpy += 1
-        dataRequestConfigSpy = request.config
+        dataRequestConfigSpy.append(request.config)
         completion(sendDataRequestResultStub)
     }
     
     func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) where Model: Decodable {
-        sendModelRequestCallCountSpy += 1
-        modelRequestConfigSpy = request.config
+        modelRequestConfigSpy.append(request.config)
+
         switch sendModelRequestResultStub {
         case .success(let model):
             completion(.success(model as! Model))
@@ -56,9 +51,7 @@ final class MovieManagerMock: MovieManaging {
     
     private(set) var getDiscoverMoviesCallCountSpy = 0
     
-    private(set) var getMovieCallCountSpy = 0
-    
-    private(set) var movieIdSpy: UInt?
+    private(set) var movieIdSpy = [UInt]()
     
     // MARK: - Stubs
     
@@ -74,8 +67,7 @@ final class MovieManagerMock: MovieManaging {
     }
     
     func getMovie(id: UInt, completion: @escaping (Result<Movie, MovieManagerError>) -> Void) {
-        getMovieCallCountSpy += 1
-        movieIdSpy = id
+        movieIdSpy.append(id)
         completion(getMovieResultStub)
     }
 }
@@ -84,9 +76,7 @@ final class ImageManagerMock: ImageManaging {
     
     // MARK: - Spies
     
-    private(set) var getImageCallCountSpy = 0
-    
-    private(set) var pathSpy: String?
+    private(set) var pathSpy = [String]()
     
     // MARK: - Stubs
     
@@ -95,8 +85,7 @@ final class ImageManagerMock: ImageManaging {
     // MARK: - Mocks
     
     func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void) {
-        getImageCallCountSpy += 1
-        pathSpy = path
+        pathSpy.append(path)
         completion(getImageResultStub)
     }
 }

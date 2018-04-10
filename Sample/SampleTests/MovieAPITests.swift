@@ -39,7 +39,7 @@ final class MovieAPITests: XCTestCase {
 
         let responseData = "{}".data(using: .utf8)!
         let responseURL = URL(dataRepresentation: responseData, relativeTo: nil)!
-        let responseStub = HTTPURLResponse(url: responseURL, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        let responseStub = HTTPURLResponse(url: responseURL, statusCode: 200, httpVersion: nil, headerFields: ["Content-Length": responseData.count.description])!
         let selectResponse = { (request: URLRequest) -> Bool in
             return request.url?.host == "test" && request.url?.path == "/test"
         }
