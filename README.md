@@ -23,7 +23,21 @@ This pattern is essential to keep a light coupling between objects. It makes uni
 
 ## How does it work?
 
-## Installation 
+Even though `beaverdi` generates the boiler plate code for you, it is important that you know what it does under the hood. There are two phases to be aware of ; compile time and run time.
+
+### At compile time
+
+The `beaverdi` command line tool scans the Swift sources of the project, looking for annotations and generates an AST (abstract syntax tree). 
+
+This AST is then used to generate the dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies.
+
+The same AST is also used to generate the boilerplate code. It generates one dependency container per class/struct with injectable dependencies. It also generates a bunch of extensions and protocols in order to make the dependency injection almost transparent for the developer.
+
+### At run time
+
+The `beaverdi` framework implements a lightweight dependency container class which allows you to register and resolve dependencies based on their scope, protocol or concrete type, name and parameters. Each container can have a parent, allowing to resolve dependencies throughout a containers hierarchy.
+
+## Installation
 
 `beaverdi` comes in 3 parts:
 1. A Swift framework to include into your project
@@ -86,4 +100,16 @@ In Xcode, add the following command to a command line build phase:
 beaverdi --output_path ${SOURCE_ROOT}/generated/files/directory/path ${SOURCE_ROOT}/**/*.swift
 ```
 
-**Very important ; move your build phase above the `Compile Source` phase since `beaverdi` needs to check the dependency graph and generate the boilerplate code before compilation happens.**
+**Important - move your build phase above the `Compile Source` phase since `beaverdi` needs to check the dependency graph and generate the boilerplate code before compilation happens.**
+
+**Warning - Using `--safe false` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents your project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
+
+
+
+#### Scope
+
+The `scope` defines a dependency's access level and caching strategy. Four scopes are available:
+- `transient`: Always creates a new instance when resolved. Can't be accessed from children.
+- `graph`: A new instance is created when resolved the first time and then lives for the time the container lives. Can't be accessed from children.
+- `weak`: A new instance is created when resolved the first time and then lives for the time its strong references are living. Accessible from children.
+- `container`: Like graph, but accessible from children.
