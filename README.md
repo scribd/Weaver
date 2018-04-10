@@ -280,3 +280,7 @@ Example:
 ```swift
 // beaverdi: parameterName <= ParameterType
 ```
+
+## License
+
+MIT license. See the [LICENSE file](./LICENSE) for details.
