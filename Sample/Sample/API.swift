@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import BeaverDI
+import Weaver
 
 // MARK: - Error
 
@@ -71,7 +71,7 @@ final class MovieAPI: APIProtocol {
 
     private let dependencies: MovieAPIDependencyResolver
     
-    // beaverdi: urlSession <- URLSession
+    // weaver: urlSession <- URLSession
     
     init(injecting dependencies: MovieAPIDependencyResolver) {
         self.dependencies = dependencies

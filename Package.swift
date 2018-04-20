@@ -2,9 +2,9 @@
 import PackageDescription
 
 let package = Package(
-    name: "BeaverDI",
+    name: "Weaver",
     products: [
-        .library(name: "BeaverDI", targets: ["BeaverDI"])
+        .library(name: "Weaver", targets: ["Weaver"])
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/SourceKitten.git", from: "0.19.1"),
@@ -12,10 +12,10 @@ let package = Package(
         .package(url: "https://github.com/kylef/Stencil.git", from: "0.10.1")
     ],
     targets: [
-        .target(name: "BeaverDI"),
-        .testTarget(name: "BeaverDITests", dependencies: ["BeaverDI"]),
-        .target(name: "BeaverDICodeGen", dependencies: ["SourceKittenFramework", "Stencil", "BeaverDI"]),
-        .testTarget(name: "BeaverDICodeGenTests", dependencies: ["BeaverDICodeGen"]),
-        .target(name: "BeaverDICommand", dependencies: ["Commander", "BeaverDICodeGen"])
+        .target(name: "Weaver"),
+        .testTarget(name: "WeaverTests", dependencies: ["Weaver"]),
+        .target(name: "WeaverCodeGen", dependencies: ["SourceKittenFramework", "Stencil", "Weaver"]),
+        .testTarget(name: "WeaverCodeGenTests", dependencies: ["WeaverCodeGen"]),
+        .target(name: "WeaverCommand", dependencies: ["Commander", "WeaverCodeGen"])
     ]
 )

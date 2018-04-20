@@ -8,10 +8,10 @@ clean:
 
 install: build
 	install -d "$(DESTDIR)/bin"
-	install -d "$(DESTDIR)/share/beaverdi"
-	cp -r "Resources" "$(DESTDIR)/share/beaverdi"
-	install -C -m 755 ".build/release/BeaverDICommand" "$(DESTDIR)/bin/beaverdi"
+	install -d "$(DESTDIR)/share/weaver/Resources"
+	install -C "Resources/dependency_resolver.stencil" "$(DESTDIR)/share/weaver/Resources"
+	install -C -m 755 ".build/release/WeaverCommand" "$(DESTDIR)/bin/weaver"
 
 uninstall:
-	rm "$(DESTDIR)/bin/beaverdi"
-	rm -rf "$(DESTDIR)/share/beaverdi"
+	rm "$(DESTDIR)/bin/weaver"
+	rm -rf "$(DESTDIR)/share/weaver"

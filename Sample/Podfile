@@ -6,7 +6,7 @@ target 'Sample' do
   use_frameworks!
 
   # Pods for Sample
-  pod 'BeaverDI', :path => '../'
+  pod 'Weaver', :path => '../'
 
   target 'SampleTests' do
     inherit! :search_paths

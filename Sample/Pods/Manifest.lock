@@ -1,16 +1,16 @@
 PODS:
-  - BeaverDI (0.1.0)
+  - Weaver (0.9.0)
 
 DEPENDENCIES:
-  - BeaverDI (from `../`)
+  - Weaver (from `../`)
 
 EXTERNAL SOURCES:
-  BeaverDI:
+  Weaver:
     :path: "../"
 
 SPEC CHECKSUMS:
-  BeaverDI: 471b0a5dd81ee6752ae158ab2c002ccfbb61fc47
+  Weaver: 4be4cf1a2feb598accb949bf2c326ece2b796410
 
-PODFILE CHECKSUM: 169b3560573cbb24f2bd54abaf4f369e0a122367
+PODFILE CHECKSUM: 009a06c6a01fbe164664d49a9bffbcae4920f8fd
 
 COCOAPODS: 1.5.0.beta.1

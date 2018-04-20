@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import BeaverDI
+import Weaver
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,21 +16,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private let dependencies = AppDelegateDependencyContainer()
     
-    // beaverdi: urlSession = URLSession
-    // beaverdi: urlSession.scope = .container
-    // beaverdi: urlSession.customRef = true
+    // weaver: urlSession = URLSession
+    // weaver: urlSession.scope = .container
+    // weaver: urlSession.customRef = true
     
-    // beaverdi: movieAPI = MovieAPI <- APIProtocol
-    // beaverdi: movieAPI.scope = .container
+    // weaver: movieAPI = MovieAPI <- APIProtocol
+    // weaver: movieAPI.scope = .container
 
-    // beaverdi: imageManager = ImageManager <- ImageManaging
-    // beaverdi: imageManager.scope = .container
+    // weaver: imageManager = ImageManager <- ImageManaging
+    // weaver: imageManager.scope = .container
     
-    // beaverdi: movieManager = MovieManager <- MovieManaging
-    // beaverdi: movieManager.scope = .container
+    // weaver: movieManager = MovieManager <- MovieManaging
+    // weaver: movieManager.scope = .container
     
-    // beaverdi: homeViewController = HomeViewController <- UIViewController
-    // beaverdi: homeViewController.scope = .container
+    // weaver: homeViewController = HomeViewController <- UIViewController
+    // weaver: homeViewController.scope = .container
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         

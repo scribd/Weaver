@@ -27,7 +27,7 @@ final class MovieManager: MovieManaging {
 
     private let dependencies: MovieManagerDependencyResolver
     
-    // beaverdi: movieAPI <- APIProtocol
+    // weaver: movieAPI <- APIProtocol
     
     required init(injecting dependencies: MovieManagerDependencyResolver) {
         self.dependencies = dependencies

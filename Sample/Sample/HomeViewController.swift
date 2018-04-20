@@ -15,10 +15,10 @@ final class HomeViewController: UIViewController {
     
     private var movies = [Movie]()
     
-    // beaverdi: movieManager <- MovieManaging
+    // weaver: movieManager <- MovieManaging
     
-    // beaverdi: movieController = MovieViewController <- UIViewController
-    // beaverdi: movieController.scope = .transient
+    // weaver: movieController = MovieViewController <- UIViewController
+    // weaver: movieController.scope = .transient
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()

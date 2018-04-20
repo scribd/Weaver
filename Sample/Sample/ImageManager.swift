@@ -8,7 +8,7 @@
 
 import Foundation
 import UIKit
-import BeaverDI
+import Weaver
 
 enum ImageManagerError: Error {
     case oops
@@ -23,11 +23,11 @@ final class ImageManager: ImageManaging {
     
     private let dependencies: ImageManagerDependencyResolver
     
-    // beaverdi: urlSession = URLSession
-    // beaverdi: urlSession.scope = .container
-    // beaverdi: urlSession.customRef = true
+    // weaver: urlSession = URLSession
+    // weaver: urlSession.scope = .container
+    // weaver: urlSession.customRef = true
     
-    // beaverdi: movieAPI <- APIProtocol
+    // weaver: movieAPI <- APIProtocol
     
     var imagesByUrl = [String: UIImage]()
     

@@ -1,0 +1,6 @@
+framework module Weaver {
+  umbrella header "Weaver-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -18,12 +18,12 @@ final class MovieViewController: UIViewController {
     
     private let dependencies: MovieViewControllerDependencyResolver
 
-    // beaverdi: movieID <= UInt
-    // beaverdi: title <= String
+    // weaver: movieID <= UInt
+    // weaver: title <= String
 
-    // beaverdi: movieManager <- MovieManaging
+    // weaver: movieManager <- MovieManaging
     
-    // beaverdi: imageManager <- ImageManaging
+    // weaver: imageManager <- ImageManaging
     
     private var originalBarStyle: UIBarStyle?
     
