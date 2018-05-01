@@ -7,10 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		193EEF7D2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */; };
+		193A559F2097E38600319C18 /* Weaver.ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A55992097E38600319C18 /* Weaver.ImageManager.swift */; };
+		193A55A02097E38600319C18 /* Weaver.MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559A2097E38600319C18 /* Weaver.MovieViewController.swift */; };
+		193A55A12097E38600319C18 /* Weaver.API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559B2097E38600319C18 /* Weaver.API.swift */; };
+		193A55A22097E38600319C18 /* Weaver.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */; };
+		193A55A32097E38600319C18 /* Weaver.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559D2097E38600319C18 /* Weaver.HomeViewController.swift */; };
+		193A55A42097E38600319C18 /* Weaver.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559E2097E38600319C18 /* Weaver.MovieManager.swift */; };
 		193EEF832075E97B00BFE706 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF822075E97B00BFE706 /* API.swift */; };
 		193EEF85207683B200BFE706 /* Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF84207683B200BFE706 /* Result.swift */; };
-		193EEF8720768E6B00BFE706 /* BeaverDI.API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF8620768E6B00BFE706 /* BeaverDI.API.swift */; };
 		193EEF89207690C300BFE706 /* MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF88207690C300BFE706 /* MovieManager.swift */; };
 		193EEF8B2076911D00BFE706 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF8A2076911D00BFE706 /* Models.swift */; };
 		19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF4206B4F0A00751B70 /* AppDelegate.swift */; };
@@ -18,19 +22,15 @@
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
 		19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A4207AADD30011DF93 /* ImageManager.swift */; };
-		19DE26A7207AAED30011DF93 /* BeaverDI.ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A6207AAED30011DF93 /* BeaverDI.ImageManager.swift */; };
 		19DE26A9207BBD9D0011DF93 /* ManagerMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */; };
 		19DE26AB207BC21E0011DF93 /* ResolverMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */; };
 		19DE26AD207BC7BC0011DF93 /* MovieAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AC207BC7BC0011DF93 /* MovieAPITests.swift */; };
 		19DE26AF207BCFF30011DF93 /* URLProtocolMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */; };
 		19DE26BB207C78670011DF93 /* MovieManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BA207C78670011DF93 /* MovieManagerTests.swift */; };
 		19DE26BD207C7C8C0011DF93 /* ImageManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BC207C7C8C0011DF93 /* ImageManagerTests.swift */; };
-		19E5551D207694A1004C44FC /* BeaverDI.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */; };
 		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
-		19E55521207695FE004C44FC /* BeaverDI.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */; };
 		19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E555222076A156004C44FC /* MovieTableViewCell.swift */; };
 		19E5552E2077219E004C44FC /* MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5552D2077219E004C44FC /* MovieViewController.swift */; };
-		19E55530207722E9004C44FC /* BeaverDI.MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5552F207722E9004C44FC /* BeaverDI.MovieViewController.swift */; };
 		CF16CC6FE3D65932450A226C /* Pods_Sample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB1C4A49ED713AB8470BEF25 /* Pods_Sample.framework */; };
 		D639ABC650B03A062195CEAC /* Pods_SampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29E7113B4FD783C8F1A45F1C /* Pods_SampleTests.framework */; };
 /* End PBXBuildFile section */
@@ -46,10 +46,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.AppDelegate.swift; sourceTree = "<group>"; };
+		193A55992097E38600319C18 /* Weaver.ImageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.ImageManager.swift; sourceTree = "<group>"; };
+		193A559A2097E38600319C18 /* Weaver.MovieViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.MovieViewController.swift; sourceTree = "<group>"; };
+		193A559B2097E38600319C18 /* Weaver.API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.API.swift; sourceTree = "<group>"; };
+		193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.AppDelegate.swift; sourceTree = "<group>"; };
+		193A559D2097E38600319C18 /* Weaver.HomeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.HomeViewController.swift; sourceTree = "<group>"; };
+		193A559E2097E38600319C18 /* Weaver.MovieManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.MovieManager.swift; sourceTree = "<group>"; };
 		193EEF822075E97B00BFE706 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		193EEF84207683B200BFE706 /* Result.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
-		193EEF8620768E6B00BFE706 /* BeaverDI.API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.API.swift; sourceTree = "<group>"; };
 		193EEF88207690C300BFE706 /* MovieManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieManager.swift; sourceTree = "<group>"; };
 		193EEF8A2076911D00BFE706 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		19956DF1206B4F0A00751B70 /* Sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -61,19 +65,15 @@
 		19956E05206B4F0A00751B70 /* SampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956E0B206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		19DE26A4207AADD30011DF93 /* ImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManager.swift; sourceTree = "<group>"; };
-		19DE26A6207AAED30011DF93 /* BeaverDI.ImageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.ImageManager.swift; sourceTree = "<group>"; };
 		19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerMocks.swift; sourceTree = "<group>"; };
 		19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverMocks.swift; sourceTree = "<group>"; };
 		19DE26AC207BC7BC0011DF93 /* MovieAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieAPITests.swift; sourceTree = "<group>"; };
 		19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLProtocolMock.swift; sourceTree = "<group>"; };
 		19DE26BA207C78670011DF93 /* MovieManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieManagerTests.swift; sourceTree = "<group>"; };
 		19DE26BC207C7C8C0011DF93 /* ImageManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManagerTests.swift; sourceTree = "<group>"; };
-		19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.MovieManager.swift; sourceTree = "<group>"; };
 		19E5551E20769572004C44FC /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
-		19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.HomeViewController.swift; sourceTree = "<group>"; };
 		19E555222076A156004C44FC /* MovieTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieTableViewCell.swift; sourceTree = "<group>"; };
 		19E5552D2077219E004C44FC /* MovieViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieViewController.swift; sourceTree = "<group>"; };
-		19E5552F207722E9004C44FC /* BeaverDI.MovieViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BeaverDI.MovieViewController.swift; sourceTree = "<group>"; };
 		1F2FBD6BA7BDA2FBECE76BA9 /* Pods-Sample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sample.release.xcconfig"; path = "Pods/Target Support Files/Pods-Sample/Pods-Sample.release.xcconfig"; sourceTree = "<group>"; };
 		29E7113B4FD783C8F1A45F1C /* Pods_SampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		759298E397606E473AF93313 /* Pods-SampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SampleTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SampleTests/Pods-SampleTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -160,12 +160,12 @@
 		19956E18206B51FF00751B70 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
-				19DE26A6207AAED30011DF93 /* BeaverDI.ImageManager.swift */,
-				19E5552F207722E9004C44FC /* BeaverDI.MovieViewController.swift */,
-				19E55520207695FE004C44FC /* BeaverDI.HomeViewController.swift */,
-				19E5551C207694A1004C44FC /* BeaverDI.MovieManager.swift */,
-				193EEF8620768E6B00BFE706 /* BeaverDI.API.swift */,
-				193EEF7C2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift */,
+				193A559B2097E38600319C18 /* Weaver.API.swift */,
+				193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */,
+				193A559D2097E38600319C18 /* Weaver.HomeViewController.swift */,
+				193A55992097E38600319C18 /* Weaver.ImageManager.swift */,
+				193A559E2097E38600319C18 /* Weaver.MovieManager.swift */,
+				193A559A2097E38600319C18 /* Weaver.MovieViewController.swift */,
 			);
 			path = Generated;
 			sourceTree = "<group>";
@@ -369,19 +369,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				193EEF8B2076911D00BFE706 /* Models.swift in Sources */,
-				19DE26A7207AAED30011DF93 /* BeaverDI.ImageManager.swift in Sources */,
-				19E5551D207694A1004C44FC /* BeaverDI.MovieManager.swift in Sources */,
+				193A55A12097E38600319C18 /* Weaver.API.swift in Sources */,
+				193A55A32097E38600319C18 /* Weaver.HomeViewController.swift in Sources */,
+				193A55A02097E38600319C18 /* Weaver.MovieViewController.swift in Sources */,
+				193A55A42097E38600319C18 /* Weaver.MovieManager.swift in Sources */,
 				193EEF832075E97B00BFE706 /* API.swift in Sources */,
-				193EEF7D2075CFAD00BFE706 /* BeaverDI.AppDelegate.swift in Sources */,
-				19E55530207722E9004C44FC /* BeaverDI.MovieViewController.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
 				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
-				19E55521207695FE004C44FC /* BeaverDI.HomeViewController.swift in Sources */,
 				193EEF85207683B200BFE706 /* Result.swift in Sources */,
 				19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */,
+				193A559F2097E38600319C18 /* Weaver.ImageManager.swift in Sources */,
+				193A55A22097E38600319C18 /* Weaver.AppDelegate.swift in Sources */,
 				193EEF89207690C300BFE706 /* MovieManager.swift in Sources */,
 				19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */,
-				193EEF8720768E6B00BFE706 /* BeaverDI.API.swift in Sources */,
 				19E5552E2077219E004C44FC /* MovieViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
