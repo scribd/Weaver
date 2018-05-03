@@ -1,19 +1,19 @@
 <p align="center">
-  <img src="./weaver.png">
+  <img src="./weaver.png" width=520>
 </p>
 
-<p align="center">A fully typesafe dependency injection framework for Swift based on annotated code.</p>
+<p align="center">A painless dependency injection framework for Swift (iOS/macOS/Linux).</p>
 
 ## Features
 
 - [x] Pure Swift support
-- [ ] ObjC support
-- [x] Dependency Container autogeneration
-- [x] **Compile time type & graph safety, which means non optional resolution**!
+- [x] Container generation
+- [x] Dependency Graph compile time check
+- [x] Non-optional dependency resolution
+- [x] Type safety
 - [x] Injection with arguments
 - [x] Registration Scopes
 - [x] Container hierarchy
-- [ ] Thread safety
 
 ## Dependency Injection?
 
