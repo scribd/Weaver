@@ -1,6 +1,8 @@
-# Weaver
+<p align="center">
+  <img src="./weaver.png">
+</p>
 
-`weaver` is a fully typesafe dependency injection framework for Swift based on annotated code.
+<p align="center">A fully typesafe dependency injection framework for Swift based on annotated code.</p>
 
 ## Features
 
