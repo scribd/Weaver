@@ -7,75 +7,75 @@
 ## Features
 
 - [x] Pure Swift support
-- [x] Container generation
-- [x] Dependency Graph compile time check
+- [x] DI Container generation
+- [x] Dependency Graph compile time validation
 - [x] Non-optional dependency resolution
 - [x] Type safety
 - [x] Injection with arguments
 - [x] Registration Scopes
-- [x] Container hierarchy
+- [x] DI Container hierarchy
 
 ## Dependency Injection?
 
 In software engineering, dependency injection is a technique whereby one object supplies the dependencies of another object. A dependency is an object that can be used (a service). An injection is the passing of a dependency to a dependent object (a client) that would use it. ([wikipedia](https://en.wikipedia.org/wiki/Dependency_injection))
 
-This pattern is essential to keep a light coupling between objects. It makes unit testing a lot easier since a mock or a stub of a dependency can be very easily injected into the object being tested. The inversion of control also help making your code more modular and scalable.
+This pattern is essential to keep a light coupling between objects. It makes unit testing a lot easier since a mock or a stub of a dependency can be very easily injected into the object being tested. The inversion of control also helps making the code more modular and scalable.
 
 ## What does it do?
 
-`weaver` implements the dependency container pattern and generates the boiler plate code for you, which makes objects' initialisation easier and standardized over the codebase. It is also able to check at compile time if the dependency graph is valid, preventing any dependency resolution runtime crash to happen.
+Weaver is a lightweight Dependency Injection framework that is able to generate the necessary boilerplate code to inject dependencies into Swift types, based on annotations. Its command line tool also analyzes the dependency graph of a project and outputs a nice XCode error saying what’s wrong at compile time.
 
 ## How does it work?
 
-Even though `weaver` generates the boiler plate code for you, it is important that you know what it does under the hood. There are two phases to be aware of ; compile time and run time.
+Even though Weaver makes dependency injection work out of the box, it's important to know what it does under the hood. There are two phases to be aware of; compile time and run time.
 
 ### At compile time
 
 ```
-                                                        |--> link() --> dependency graph --> validate() --> valid/invalid 
-swift files --> scan() --> [Token] --> parse() --> AST -| 
-                                                        |--> generate() --> source code 
+                                                    |-> link() -> dependency graph -> validate() -> valid/invalid 
+swift files -> scan() -> [Token] -> parse() -> AST -| 
+                                                    |-> generate() -> source code 
 
 ```
 
-The `weaver` command line tool scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's [SourceKit](https://github.com/apple/swift/tree/master/tools/SourceKit), making this step pretty reliable.
+Weaver's command line tool scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's [SourceKit](https://github.com/apple/swift/tree/master/tools/SourceKit), making this step pretty reliable.
 
-This AST is then used to generate the dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, meaning the project will fail to compile.
+This AST is then used to generate a dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, which means that the project will fail to compile.
 
 The same AST is also used to generate the boilerplate code. It generates one dependency container per class/struct with injectable dependencies. It also generates a bunch of extensions and protocols in order to make the dependency injection almost transparent for the developer.
 
 ### At run time
 
-The `weaver` framework implements a lightweight dependency container class which allows you to register and resolve dependencies based on their scope, protocol or concrete type, name and parameters. Each container can have a parent, allowing to resolve dependencies throughout a containers hierarchy.
+Weaver implements a lightweight DI Container object which able to register and resolve dependencies based on their scope, protocol or concrete type, name and parameters. Each container can have a parent, allowing to resolve dependencies throughout a hierarchy of containers.
 
-When an object registers a dependency, its associated dependency container stores a builder (and sometimes an instance). When another object declares a reference to this same dependency, its associated container declares an accessor, which tries to resolve the dependency. Resolving a dependency basically means ; looking for a builder/instance while backtracking the containers' hierachy. If no dependency is found or if this process gets trapped into an infinite recursion, it will crash, which is why checking the dependency graph at compile time is extremely important.
+When an object registers a dependency, its associated DI Container stores a builder (and sometimes an instance). When another object declares a reference to this same dependency, its associated DI Container declares an accessor, which tries to resolve the dependency. Resolving a dependency basically means to look for a builder/instance while backtracking the hierarchy of containers. If no dependency is found or if this process gets trapped into an infinite recursion, it will crash at runtime, which is why checking the dependency graph at compile time is extremely important.
 
 ## Installation
 
-`weaver` comes in 3 parts:
+Weaver comes in 3 parts:
 1. A Swift framework to include into your project
 2. A command line tool to install on your machine
 3. A build phase to add to your project
 
 ### (1) - Weaver framework installation
 
-The `weaver` Swift framework is available with `CocoaPods`, `Carthage` and `Swift Package Manager`.
+Weaver's Swift framework is available with `CocoaPods`, `Carthage` and `Swift Package Manager`.
 
 #### CocoaPods
 
-Add `pod 'Weaver', '~> 0.9.0'` to your `Podfile`.
+Add `pod 'Weaver', '~> 0.9.0'` to the `Podfile`.
 
 #### Carthage
 
-Add `github "scribd/Weaver" ~> 0.9.0` to your `Cartfile`.
+Add `github "scribd/Weaver" ~> 0.9.0` to the `Cartfile`.
 
 #### SwiftPM
 
-Add `.package(url: "https://github.com/scribd/Weaver.git", from: "0.9.0")` to the dependencies section of your `Package.swift` file.
+Add `.package(url: "https://github.com/scribd/Weaver.git", from: "0.9.0")` to the dependencies section of the `Package.swift` file.
 
 ### (2) - Weaver command line tool installation
 
-The `weaver` command line tool can be installed using `Homebrew` or manually.
+The Weaver command line tool can be installed using `Homebrew` or manually.
 
 #### Homebrew (coming soon)
 
@@ -103,7 +103,7 @@ Options:
     --safe [default: true]
 ```
 
-It will build and install the `weaver` command line tool in `/usr/local/bin`.
+It will build and install the Weaver command line tool in `/usr/local/bin`.
 
 ### (3) - Weaver build phase
 
@@ -113,22 +113,23 @@ In Xcode, add the following command to a command line build phase:
 weaver --output_path ${SOURCE_ROOT}/generated/files/directory/path ${SOURCE_ROOT}/**/*.swift
 ```
 
-**Important - move your build phase above the `Compile Source` phase since `weaver` needs to check the dependency graph and generate the boilerplate code before compilation happens.**
+**Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
 
-**Warning - Using `--safe false` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents your project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
+**Warning - Using `--safe false` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents the project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
 
 ## Basic Usage
 
 *For a more complete usage example, please check out the [sample project](./Sample).*
 
-Let's implement a very basic app displaying a list of movies. Our app will be composed of three noticeable objects: 
-- `AppDelegate` where our dependencies are registered.
+Let's implement a very basic app displaying a list of movies. It will be composed of three noticeable objects: 
+- `AppDelegate` where the dependencies are registered.
 - `MovieManager` providing the movies.
 - `MoviesViewController` showing a list of movies at the screen.
 
 Let's get into the code.
 
-`AppDelegate`:
+**`AppDelegate`**:
+
 ```swift
 import UIKit
 import Weaver
@@ -150,7 +151,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         window = UIWindow()
 
-        window?.rootViewController = UINavigationController(rootViewController: dependencies.moviesViewController)
+        let rootViewController = dependencies.moviesViewController
+        window?.rootViewController = UINavigationController(rootViewController: rootViewController)
         window?.makeKeyAndVisible()
         
         return true
@@ -158,7 +160,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 ```
 
-`MovieManager`:
+`AppDelegate` registers two dependencies:
+- `// weaver: movieManager = MovieManager <- MovieManaging`
+- `// weaver: moviesViewController = MoviesViewController <- UIViewController`
+
+These dependencies are made accessible to any object built from `AppDelegate` because their scope is set to `container`:
+- `// weaver: movieManager.scope = .container`
+- `// weaver: moviesViewController.scope = .container`
+
+A dependency registration automatically generates the registration code and one accessor in `AppDelegateDependencyContainer`, which is why the `rootViewController` can be built:
+- `let rootViewController = dependencies.moviesViewController`.
+
+**`MovieManager`**:
+
 ```swift
 protocol MovieManaging {
     
@@ -174,7 +188,7 @@ final class MovieManager: MovieManaging {
 }
 ```
 
-`MoviesViewController`:
+**`MoviesViewController`**:
 ```swift
 final class MoviesViewController: UIViewController {
     
@@ -211,11 +225,23 @@ final class MoviesViewController: UIViewController {
 }
 ```
 
+`MoviesViewController` declares a dependency reference:
+- `// weaver: movieManager <- MovieManaging`
+
+This annotation generates an accessor in `MoviesViewControllerDependencyResolver`, but not the registration, which means `movieManager` is not being stored in `MoviesViewControllerDependencyContainer`, but in the container from which it was built. In this case, `AppDelegateDependencyContainer`.
+
+`MoviesViewController` also needs to declare a specific initializer:
+- `required init(injecting dependencies: MoviesViewControllerDependencyResolver)`
+
+This initializer is used to inject the DI Container. Note that `MoviesViewControllerDependencyResolver` is a protocol, which means a fake version of the DI Container can be injected when testing.
+
 ## API
 
 ### Code Annotations
 
-`weaver` allows you to declare dependencies by annotating your Swift code in comments like so `// weaver: ...`. It currently supports the following annotations:
+Weaver allows you to declare dependencies by annotating the code with comments like so `// weaver: ...`. 
+
+It currently supports the following annotations:
 
 #### - Dependency Registration Annotation
 
@@ -265,7 +291,7 @@ Example:
 
 #### - Custom Reference Annotation
 
-Adds the method `dependencyNameCustomRef(_ dependencyContainer:)` to the container's resolver `protocol`. The default value being `false`. This method is left unimplemented by `weaver`, meaning you'll need to implement it yourself and resolve/build the dependency manually.
+Adds the method `dependencyNameCustomRef(_ dependencyContainer:)` to the container's resolver `protocol`. The default value being `false`. This method is left unimplemented by Weaver, meaning you'll need to implement it yourself and resolve/build the dependency manually.
 
 Works along with registration and reference annotations.
 
@@ -287,9 +313,13 @@ Example:
 // weaver: parameterName <= ParameterType
 ```
 
+## More reading...
+
+- [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
+
 ## Credits
 
-The DI container features of `weaver` are inspired by [Swinject](https://github.com/Swinject/Swinject).
+The DI container features of Weaver are inspired by [Swinject](https://github.com/Swinject/Swinject).
 
 ## License
 
