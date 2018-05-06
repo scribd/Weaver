@@ -228,7 +228,7 @@ final class MoviesViewController: UIViewController {
 `MoviesViewController` declares a dependency reference:
 - `// weaver: movieManager <- MovieManaging`
 
-This annotation generates an accessor in `MoviesViewControllerDependencyResolver`, but not the registration, which means `movieManager` is not being stored in `MoviesViewControllerDependencyContainer`, but in the container from which it was built. In this case, `AppDelegateDependencyContainer`.
+This annotation generates an accessor in `MoviesViewControllerDependencyResolver`, but no registration, which means `MovieManager` is not stored in `MoviesViewControllerDependencyContainer`, but in its parent (the container from which it was built). In this case, `AppDelegateDependencyContainer`.
 
 `MoviesViewController` also needs to declare a specific initializer:
 - `required init(injecting dependencies: MoviesViewControllerDependencyResolver)`
