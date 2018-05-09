@@ -952,7 +952,7 @@
 			path = ".build/checkouts/Stencil.git-7635584243355970173/Sources";
 			sourceTree = SOURCE_ROOT;
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -963,7 +963,6 @@
 				OBJ_47 /* Dependencies */,
 				OBJ_172 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_69 /* PathKit 0.9.1 */ = {
@@ -1480,7 +1479,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_172 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
