@@ -321,6 +321,14 @@ Example:
 
 The DI container features of Weaver are inspired by [Swinject](https://github.com/Swinject/Swinject).
 
+## Contributing
+
+1. [Fork it](https://github.com/Scribd/weaver/fork)
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
+
 ## License
 
 MIT license. See the [LICENSE file](./LICENSE) for details.
