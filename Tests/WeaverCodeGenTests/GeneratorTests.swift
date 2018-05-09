@@ -20,7 +20,7 @@ final class GeneratorTests: XCTestCase {
         
         do {
             let file = File(contents: """
-final class MyService {
+public final class MyService {
   let dependencies: DependencyResolver
 
   // weaver: api = API <- APIProtocol
@@ -72,11 +72,11 @@ class AnotherService {
 /// DO NOT EDIT!
 import Weaver
 // MARK: - MyService
-final class MyServiceDependencyContainer: DependencyContainer {
-    init() {
+public final class MyServiceDependencyContainer: DependencyContainer {
+    public init() {
         super.init()
     }
-    override func registerDependencies(in store: DependencyStore) {
+    override public func registerDependencies(in store: DependencyStore) {
         store.register(APIProtocol.self, scope: .graph, name: "api", builder: { (dependencies, parameter: UInt) in
             return self.apiCustomRef(dependencies, parameter: parameter)
         })
@@ -91,7 +91,7 @@ final class MyServiceDependencyContainer: DependencyContainer {
         })
     }
 }
-protocol MyServiceDependencyResolver {
+public protocol MyServiceDependencyResolver {
     func api(parameter: UInt) -> APIProtocol
     var router: RouterProtocol { get }
     var session: Session { get }
@@ -99,16 +99,16 @@ protocol MyServiceDependencyResolver {
     func apiCustomRef(_ dependencies: DependencyContainer, parameter: UInt) -> APIProtocol
 }
 extension MyServiceDependencyContainer: MyServiceDependencyResolver {
-    func api(parameter: UInt) -> APIProtocol {
+    public func api(parameter: UInt) -> APIProtocol {
         return resolve(APIProtocol.self, name: "api", parameter: parameter)
     }
-    var router: RouterProtocol {
+    public var router: RouterProtocol {
         return resolve(RouterProtocol.self, name: "router")
     }
-    var session: Session {
+    public var session: Session {
         return resolve(Session.self, name: "session")
     }
-    func apiBis(parameter: UInt) -> APIProtocol {
+    public func apiBis(parameter: UInt) -> APIProtocol {
         return resolve(APIProtocol.self, name: "apiBis", parameter: parameter)
     }
 }
