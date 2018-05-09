@@ -123,19 +123,28 @@ private final class ResolverData {
     let parameters: [VariableData]
     let enclosingTypeNames: [String]?
     let isRoot: Bool
+    let isPublic: Bool
     
     init(targetTypeName: String,
          registrations: [RegisterData],
          references: [VariableData],
          parameters: [VariableData],
          enclosingTypeNames: [String]?,
-         isRoot: Bool) {
+         isRoot: Bool,
+         accessLevel: AccessLevel) {
         self.targetTypeName = targetTypeName
         self.registrations = registrations
         self.references = references
         self.parameters = parameters
         self.enclosingTypeNames = enclosingTypeNames
         self.isRoot = isRoot
+        
+        switch accessLevel {
+        case .`public`:
+            isPublic = true
+        case .`internal`:
+            isPublic = false
+        }
     }
 }
 
@@ -205,6 +214,7 @@ extension ResolverData {
         switch expr {
         case .typeDeclaration(let typeToken, children: let children):
             let targetTypeName = typeToken.value.name
+            let accessLevel = typeToken.value.accessLevel
             
             var scopeAnnotations = [String: ScopeAnnotation]()
             var registerAnnotations = [String: RegisterAnnotation]()
@@ -269,7 +279,8 @@ extension ResolverData {
                       references: references,
                       parameters: parameters,
                       enclosingTypeNames: enclosingTypeNames,
-                      isRoot: isRoot)
+                      isRoot: isRoot,
+                      accessLevel: accessLevel)
             
         case .file,
              .registerAnnotation,

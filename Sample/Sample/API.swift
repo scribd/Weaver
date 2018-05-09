@@ -67,13 +67,13 @@ protocol APIProtocol {
 
 // MARK: - Movie API
 
-final class MovieAPI: APIProtocol {
+public final class MovieAPI: APIProtocol {
 
     private let dependencies: MovieAPIDependencyResolver
     
     // weaver: urlSession <- URLSession
     
-    init(injecting dependencies: MovieAPIDependencyResolver) {
+    public init(injecting dependencies: MovieAPIDependencyResolver) {
         self.dependencies = dependencies
     }
     

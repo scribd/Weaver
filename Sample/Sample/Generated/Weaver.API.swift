@@ -2,28 +2,28 @@
 /// DO NOT EDIT!
 import Weaver
 // MARK: - MovieAPI
-final class MovieAPIDependencyContainer: DependencyContainer {
-    init(parent: DependencyContainer) {
+public final class MovieAPIDependencyContainer: DependencyContainer {
+    public init(parent: DependencyContainer) {
         super.init(parent)
     }
-    override func registerDependencies(in store: DependencyStore) {
+    override public func registerDependencies(in store: DependencyStore) {
     }
 }
-protocol MovieAPIDependencyResolver {
+public protocol MovieAPIDependencyResolver {
     var urlSession: URLSession { get }
 }
 extension MovieAPIDependencyContainer: MovieAPIDependencyResolver {
-    var urlSession: URLSession {
+    public var urlSession: URLSession {
         return resolve(URLSession.self, name: "urlSession")
     }
 }
 extension MovieAPI {
-    static func makeMovieAPI(injecting parentDependencies: DependencyContainer) -> MovieAPI {
+    public static func makeMovieAPI(injecting parentDependencies: DependencyContainer) -> MovieAPI {
         let dependencies = MovieAPIDependencyContainer(parent: parentDependencies)
         return MovieAPI(injecting: dependencies)
     }
 }
-protocol MovieAPIDependencyInjectable {
+public protocol MovieAPIDependencyInjectable {
     init(injecting dependencies: MovieAPIDependencyResolver)
 }
 extension MovieAPI: MovieAPIDependencyInjectable {}

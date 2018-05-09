@@ -170,14 +170,16 @@ public struct ParameterAnnotation: Token {
 
 public struct InjectableType: Token {
     let name: String
+    let accessLevel: AccessLevel
 
     public static func ==(lhs: InjectableType, rhs: InjectableType) -> Bool {
         guard lhs.name == rhs.name else { return false }
+        guard lhs.accessLevel == rhs.accessLevel else { return false }
         return true
     }
 
     public var description: String {
-        return "\(name) {"
+        return "\(accessLevel.rawValue) \(name) {"
     }
 }
 

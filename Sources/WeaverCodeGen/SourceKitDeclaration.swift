@@ -22,6 +22,7 @@ struct SourceKitDeclaration {
     let name: String
     let isInjectable: Bool
     let hasBody: Bool
+    let accessLevel: AccessLevel
     
     init?(_ dictionary: [String: Any]) {
         
@@ -46,17 +47,23 @@ struct SourceKitDeclaration {
         }
         self.name = name
         
-        self.hasBody = dictionary.keys.contains(SwiftDocKey.bodyOffset.rawValue)
+        hasBody = dictionary.keys.contains(SwiftDocKey.bodyOffset.rawValue)
+        
+        if let attributeKindString = dictionary["key.accessibility"] as? String {
+            self.accessLevel = AccessLevel(attributeKindString)
+        } else {
+            accessLevel = .default
+        }
     }
 }
 
-// MARK: - Convertion
+// MARK: - Conversion
 
 extension SourceKitDeclaration {
     
     var toToken: AnyTokenBox {
         if isInjectable {
-            return TokenBox(value: InjectableType(name: name), offset: offset, length: length, line: -1)
+            return TokenBox(value: InjectableType(name: name, accessLevel: accessLevel), offset: offset, length: length, line: -1)
         } else {
             return TokenBox(value: AnyDeclaration(), offset: offset, length: length, line: -1)
         }
@@ -75,3 +82,18 @@ extension SourceKitDeclaration {
         }
     }
 }
+
+private extension AccessLevel {
+
+    init(_ stringValue: String) {
+        switch stringValue {
+        case "source.lang.swift.accessibility.internal":
+            self = .internal
+        case "source.lang.swift.accessibility.public":
+            self = .public
+        default:
+            self = .default
+        }
+    }
+}
+
