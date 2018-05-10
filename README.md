@@ -4,6 +4,8 @@
 
 <p align="center">A painless dependency injection framework for Swift (iOS/macOS/Linux).</p>
 
+[![Build Status](https://travis-ci.com/scribd/Weaver.svg?branch=master)](https://travis-ci.com/scribd/Weaver)
+
 ## Features
 
 - [x] Dependency declaration via annotations
