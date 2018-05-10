@@ -69,7 +69,7 @@ Weaver's Swift framework is available with `CocoaPods`, `Carthage` and `Swift Pa
 
 #### CocoaPods
 
-Add `pod 'Weaver', '~> 0.9.0'` to the `Podfile`.
+Add `pod 'Weaver', :git => 'git@github.com:scribd/Weaver.git', :tag => '0.9.0'` to the `Podfile`.
 
 #### Carthage
 
