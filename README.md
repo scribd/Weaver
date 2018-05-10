@@ -6,7 +6,7 @@
 
 ## Features
 
-- [x] Pure Swift support
+- [x] Dependency declaration via annotations
 - [x] DI Container generation
 - [x] Dependency Graph compile time validation
 - [x] Non-optional dependency resolution
@@ -15,17 +15,21 @@
 - [x] Registration Scopes
 - [x] DI Container hierarchy
 
-## Dependency Injection?
+## Dependency Injection
 
-In software engineering, dependency injection is a technique whereby one object supplies the dependencies of another object. A dependency is an object that can be used (a service). An injection is the passing of a dependency to a dependent object (a client) that would use it. ([wikipedia](https://en.wikipedia.org/wiki/Dependency_injection))
+Dependency Injection basically means "giving an object its instance variables" [¹](#more-reading). It seems like it's not such a big deal, but as soon as a project gets bigger, it gets tricky. Initializers become too complex, passing down dependencies through several layers becomes time consuming and just figuring out where to get a dependency from can be hard enough to give up and finally use a singleton.
 
-This pattern is essential to keep a light coupling between objects. It makes unit testing a lot easier since a mock or a stub of a dependency can be very easily injected into the object being tested. The inversion of control also helps making the code more modular and scalable.
+However, Dependency Injection is a fundamental aspect of software architecture, and there is no good reason not to do it properly. That's where Weaver can help.
 
-## What does it do?
+## What is Weaver?
 
-Weaver is a lightweight Dependency Injection framework that is able to generate the necessary boilerplate code to inject dependencies into Swift types, based on annotations. Its command line tool also analyzes the dependency graph of a project and outputs a nice XCode error saying what’s wrong at compile time.
+Weaver is a declarative, easy-to-use and safe Dependency Injection framework for Swift.
 
-## How does it work?
+- **Declarative** because it allows to **declare dependencies via annotations** directly in the Swift code.
+- **Easy-to-use** because it **generates the necessary boilerplate code** to inject dependencies into Swift types.
+- **Safe** because it **validates the dependency graph at compile time** and outputs a nice XCode error when something's wrong.
+
+## How does Weaver work?
 
 Even though Weaver makes dependency injection work out of the box, it's important to know what it does under the hood. There are two phases to be aware of; compile time and run time.
 
@@ -46,7 +50,7 @@ The same AST is also used to generate the boilerplate code. It generates one dep
 
 ### At run time
 
-Weaver implements a lightweight DI Container object which able to register and resolve dependencies based on their scope, protocol or concrete type, name and parameters. Each container can have a parent, allowing to resolve dependencies throughout a hierarchy of containers.
+Weaver implements a lightweight DI Container object which is able to register and resolve dependencies based on their scope, protocol or concrete type, name and parameters. Each container can have a parent, allowing to resolve dependencies throughout a hierarchy of containers.
 
 When an object registers a dependency, its associated DI Container stores a builder (and sometimes an instance). When another object declares a reference to this same dependency, its associated DI Container declares an accessor, which tries to resolve the dependency. Resolving a dependency basically means to look for a builder/instance while backtracking the hierarchy of containers. If no dependency is found or if this process gets trapped into an infinite recursion, it will crash at runtime, which is why checking the dependency graph at compile time is extremely important.
 
@@ -316,6 +320,7 @@ Example:
 ## More reading...
 
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
+- [Dependency Injection Demisifyied, James Shore, 03/22/2006](http://www.jamesshore.com/Blog/Dependency-Injection-Demystified.html) ¹
 
 ## Credits
 
