@@ -2,7 +2,7 @@
   <img src="./weaver.png" width=520>
 </p>
 
-<p align="center">A painless dependency injection framework for Swift (iOS/macOS/Linux).</p>
+<p align="center">Painless dependency injection framework for Swift (iOS/macOS/Linux)</p>
 
 [![Build Status](https://travis-ci.com/scribd/Weaver.svg?branch=master)](https://travis-ci.com/scribd/Weaver)
 
