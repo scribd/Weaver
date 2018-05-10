@@ -91,6 +91,7 @@ The Weaver command line tool can be installed using `Homebrew` or manually.
 
 ```bash
 $ git clone https://github.com/scribd/Weaver.git
+$ git checkout 0.9.0
 $ cd Weaver
 $ make install
 $ weaver --help
