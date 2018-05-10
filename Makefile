@@ -1,7 +1,7 @@
 DESTDIR := /usr/local
 
 build:
-	@swift build --configuration release
+	@swift build --disable-sandbox --configuration release
 
 clean:
 	rm -rf .build
