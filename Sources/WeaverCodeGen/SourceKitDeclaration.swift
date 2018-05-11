@@ -31,27 +31,32 @@ struct SourceKitDeclaration {
             inheritedTypes = []
         }
 
-        switch kind {
-        case .class,
-             .struct:
-            isInjectable = true
+        let offset = dictionary[SwiftDocKey.offset.rawValue] as? Int64
+        let length = dictionary[SwiftDocKey.length.rawValue] as? Int64
 
-        case .extension where inheritedTypes.contains("Injectable"):
+        switch (kind, offset, length) {
+        case (.class, .some(let offset), .some(let length)),
+             (.struct, .some(let offset), .some(let length)):
             isInjectable = true
+            self.offset = Int(offset)
+            self.length = Int(length)
+
+        case (.extension, _, .some(let length)) where inheritedTypes.contains("Injectable"):
+            isInjectable = true
+            guard let nameOffset = dictionary[SwiftDocKey.nameOffset.rawValue] as? Int64 else {
+                return nil
+            }
+            self.offset = Int(nameOffset)
+            self.length = Int(length - nameOffset)
+            
+        case (_, .some(let offset), .some(let length)):
+            isInjectable = false
+            self.offset = Int(offset)
+            self.length = Int(length)
             
         default:
-            isInjectable = false
-        }
-        
-        guard let offset = dictionary[SwiftDocKey.offset.rawValue] as? Int64 else {
             return nil
         }
-        self.offset = Int(offset)
-        
-        guard let length = dictionary[SwiftDocKey.length.rawValue] as? Int64 else {
-            return nil
-        }
-        self.length = Int(length)
         
         guard let name = dictionary[SwiftDocKey.name.rawValue] as? String else {
             return nil

@@ -17,6 +17,7 @@ final class SourceKitDeclarationTests: XCTestCase {
                            kind: String = "source.lang.swift.decl.class",
                            length: Int = 42,
                            offset: Int = 42,
+                           nameOffset: Int = 10,
                            bodyOffset: Int? = 42,
                            name: String = "fake_name",
                            inheritedType: String? = nil) -> SourceKitDeclaration? {
@@ -34,10 +35,10 @@ final class SourceKitDeclarationTests: XCTestCase {
   "key.kind" : "\(kind)",
   "key.length" : \(length),
   "key.name" : "\(name)",
-  "key.namelength" : 9,
-  "key.nameoffset" : 70,
+  "key.namelength" : \(name.count),
+  "key.nameoffset" : \(nameOffset),
   "key.offset" : \(offset),
-  "key.runtime_name" : "_TtC8__main__9MyService",
+  "key.runtime_name" : "_TtC8__main__9\(name)",
   "key.substructure" : [],
   "key.inheritedtypes" : [
     \(inheritedType.flatMap { "{ \"key.name\": \"\($0)\" }" } ?? "")
@@ -75,6 +76,15 @@ final class SourceKitDeclarationTests: XCTestCase {
         
         let model = makeModel(offset: 42)
         XCTAssertEqual(model?.offset, 42)
+    }
+    
+    func test_init_should_set_offset_when_kind_is_extension_of_Injectable() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.extension",
+                              length: 20,
+                              nameOffset: 10,
+                              inheritedType: "Injectable")
+        XCTAssertEqual(model?.offset, 10)
     }
     
     // MARK: - name
