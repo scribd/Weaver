@@ -18,7 +18,8 @@ final class SourceKitDeclarationTests: XCTestCase {
                            length: Int = 42,
                            offset: Int = 42,
                            bodyOffset: Int? = 42,
-                           name: String = "fake_name") -> SourceKitDeclaration? {
+                           name: String = "fake_name",
+                           inheritedType: String? = nil) -> SourceKitDeclaration? {
 
         let jsonString = """
 {
@@ -37,7 +38,10 @@ final class SourceKitDeclarationTests: XCTestCase {
   "key.nameoffset" : 70,
   "key.offset" : \(offset),
   "key.runtime_name" : "_TtC8__main__9MyService",
-  "key.substructure" : []
+  "key.substructure" : [],
+  "key.inheritedtypes" : [
+    \(inheritedType.flatMap { "{ \"key.name\": \"\($0)\" }" } ?? "")
+  ]
 }
 """
         guard let data = jsonString.data(using: .utf8) else {
@@ -98,6 +102,18 @@ final class SourceKitDeclarationTests: XCTestCase {
     func test_init_should_set_isInjectable_to_false_if_kind_is_enum() {
         
         let model = makeModel(kind: "source.lang.swift.decl.enum")
+        XCTAssertEqual(model?.isInjectable, false)
+    }
+    
+    func test_init_should_set_isInjectable_to_true_if_kind_is_extension_of_Injectable() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "Injectable")
+        XCTAssertEqual(model?.isInjectable, true)
+    }
+    
+    func test_init_should_set_isInjectable_to_false_if_kind_is_extension_wihout_Injectable_inheritance() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.extension")
         XCTAssertEqual(model?.isInjectable, false)
     }
     

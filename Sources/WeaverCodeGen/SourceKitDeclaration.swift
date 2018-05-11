@@ -10,13 +10,6 @@ import SourceKittenFramework
 
 struct SourceKitDeclaration {
     
-    enum Constant {
-        static let injectableDeclarationKinds: [SwiftDeclarationKind] = [
-            .`class`,
-            .`struct`
-        ]
-    }
-    
     let offset: Int
     let length: Int
     let name: String
@@ -30,7 +23,25 @@ struct SourceKitDeclaration {
               let kind = SwiftDeclarationKind(rawValue: kindString) else {
             return nil
         }
-        isInjectable = Constant.injectableDeclarationKinds.contains(kind)
+        
+        let inheritedTypes: [String]
+        if let inheritedTypeDicts = dictionary[SwiftDocKey.inheritedtypes.rawValue] as? [[String: Any]] {
+            inheritedTypes = inheritedTypeDicts.flatMap { $0[SwiftDocKey.name.rawValue] as? String }
+        } else {
+            inheritedTypes = []
+        }
+
+        switch kind {
+        case .class,
+             .struct:
+            isInjectable = true
+
+        case .extension where inheritedTypes.contains("Injectable"):
+            isInjectable = true
+            
+        default:
+            isInjectable = false
+        }
         
         guard let offset = dictionary[SwiftDocKey.offset.rawValue] as? Int64 else {
             return nil
