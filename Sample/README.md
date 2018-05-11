@@ -4,7 +4,7 @@ This project is a sample which demonstrates that Weaver works in practice. It's 
 
 ## Installation
 
-Run these command in a terminal:
+Run these commands in a terminal:
 
 ```bash
 $ git clone https://github.com/scribd/Weaver.git 
