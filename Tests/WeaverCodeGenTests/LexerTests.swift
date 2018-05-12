@@ -25,7 +25,7 @@ final class MyService {
             let tokens = try lexer.tokenize()
 
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService", accessLevel: .default), offset: 7, length: 19, line: 1))
+                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService"), offset: 7, length: 19, line: 1))
                 XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 25, length: 1, line: 2))
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -49,8 +49,8 @@ final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 4 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService", accessLevel: .default), offset: 7, length: 57, line: 1))
-                XCTAssertEqual(tokens[1] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyEmbeddedService", accessLevel: .default), offset: 33, length: 29, line: 2))
+                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService"), offset: 7, length: 57, line: 1))
+                XCTAssertEqual(tokens[1] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyEmbeddedService"), offset: 33, length: 29, line: 2))
                 XCTAssertEqual(tokens[2] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 61, length: 1, line: 3))
                 XCTAssertEqual(tokens[3] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 63, length: 1, line: 4))
             } else {
@@ -105,11 +105,11 @@ internal final class MyService {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_an_extension_of_Injectable() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_an_extension_of_ObjcInjectable() {
         
         let file = File(contents: """
 
-extension MyService: Injectable {
+extension MyService: ObjcInjectable {
 }
 """)
         do {
@@ -117,8 +117,8 @@ extension MyService: Injectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService", accessLevel: .default), offset: 1, length: 35, line: 1))
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 35, length: 1, line: 2))
+                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(value: InjectableType(name: "MyService", doesSupportObjc: true), offset: 1, length: 39, line: 1))
+                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(value: EndOfInjectableType(), offset: 39, length: 1, line: 2))
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }

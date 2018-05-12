@@ -101,9 +101,9 @@ final class SourceKitDeclarationTests: XCTestCase {
         XCTAssertEqual(model?.isInjectable, false)
     }
     
-    func test_init_should_set_isInjectable_to_true_if_kind_is_extension_of_Injectable() {
+    func test_init_should_set_isInjectable_to_true_if_kind_is_extension_of_ObjcInjectable() {
         
-        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "Injectable")
+        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "ObjcInjectable")
         XCTAssertEqual(model?.isInjectable, true)
     }
     
@@ -111,6 +111,38 @@ final class SourceKitDeclarationTests: XCTestCase {
         
         let model = makeModel(kind: "source.lang.swift.decl.extension")
         XCTAssertEqual(model?.isInjectable, false)
+    }
+    
+    // MARK: - - doesSupportObjc
+    
+    func test_init_should_set_doesSupportObjc_to_false_if_kind_is_class() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.class")
+        XCTAssertEqual(model?.doesSupportObjc, false)
+    }
+    
+    func test_init_should_set_doesSupportObjc_to_false_if_kind_is_struct() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.struct")
+        XCTAssertEqual(model?.doesSupportObjc, false)
+    }
+    
+    func test_init_should_set_doesSupportObjc_to_false_if_kind_is_enum() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.enum")
+        XCTAssertEqual(model?.doesSupportObjc, false)
+    }
+    
+    func test_init_should_set_doesSupportObjc_to_true_if_kind_is_extension_of_ObjcInjectable() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "ObjcInjectable")
+        XCTAssertEqual(model?.doesSupportObjc, true)
+    }
+    
+    func test_init_should_set_doesSupportObjc_to_false_if_kind_is_extension_wihout_ObjcInjectable_inheritance() {
+        
+        let model = makeModel(kind: "source.lang.swift.decl.extension")
+        XCTAssertEqual(model?.doesSupportObjc, false)
     }
     
     // MARK: - hasBody

@@ -13,9 +13,10 @@ struct SourceKitDeclaration {
     let offset: Int
     let length: Int
     let name: String
-    let isInjectable: Bool
     let hasBody: Bool
     let accessLevel: AccessLevel
+    let isInjectable: Bool
+    let doesSupportObjc: Bool
     
     init?(_ dictionary: [String: Any]) {
         
@@ -44,12 +45,17 @@ struct SourceKitDeclaration {
 
         switch kind {
         case .class,
-             .struct,
-             .extension where inheritedTypes.contains("Injectable"):
+             .struct:
             isInjectable = true
+            doesSupportObjc = false
+
+        case .extension where inheritedTypes.contains("ObjcInjectable"):
+            isInjectable = true
+            doesSupportObjc = true
             
         default:
             isInjectable = false
+            doesSupportObjc = false
         }
         
         guard let name = dictionary[SwiftDocKey.name.rawValue] as? String else {
@@ -69,13 +75,19 @@ struct SourceKitDeclaration {
 
 // MARK: - Conversion
 
+private extension Int {
+    /// Default value used until the real value gets determined later on.
+    static let defaultLine = -1
+}
+
 extension SourceKitDeclaration {
     
     var toToken: AnyTokenBox {
         if isInjectable {
-            return TokenBox(value: InjectableType(name: name, accessLevel: accessLevel), offset: offset, length: length, line: -1)
+            let injectableType = InjectableType(name: name, accessLevel: accessLevel, doesSupportObjc: doesSupportObjc)
+            return TokenBox(value: injectableType, offset: offset, length: length, line: .defaultLine)
         } else {
-            return TokenBox(value: AnyDeclaration(), offset: offset, length: length, line: -1)
+            return TokenBox(value: AnyDeclaration(), offset: offset, length: length, line: .defaultLine)
         }
     }
     
@@ -86,9 +98,9 @@ extension SourceKitDeclaration {
         
         let offset = self.offset + length - 1
         if isInjectable {
-            return TokenBox(value: EndOfInjectableType(), offset: offset, length: 1, line: -1)
+            return TokenBox(value: EndOfInjectableType(), offset: offset, length: 1, line: .defaultLine)
         } else {
-            return TokenBox(value: EndOfAnyDeclaration(), offset: offset, length: 1, line: -1)
+            return TokenBox(value: EndOfAnyDeclaration(), offset: offset, length: 1, line: .defaultLine)
         }
     }
 }
