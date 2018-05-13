@@ -17,3 +17,4 @@ For an example, checkout these files from the sample:
 - [WSReviewViewController+Injectable.swift](../Sample/Sample/View/WSReviewViewController+Injectable.swift)
 - [WSReviewViewController.h](../Sample/Sample/View/WSReviewViewController.h)
 - [WSReviewViewController.m](../Sample/Sample/View/WSReviewViewController.m)
+- [Weaver.WSReviewViewController+Injectable.swift](../Sample/Sample/Generated/Weaver.WSReviewViewController+Injectable.swift)
