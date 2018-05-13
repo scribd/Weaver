@@ -11,6 +11,7 @@
 - [x] Dependency declaration via annotations
 - [x] DI Container generation
 - [x] Dependency Graph compile time validation
+- [x] ObjC Support
 - [x] Non-optional dependency resolution
 - [x] Type safety
 - [x] Injection with arguments
