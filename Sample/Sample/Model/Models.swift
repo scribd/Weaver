@@ -35,3 +35,4 @@ struct Page<Model: Decodable>: Decodable {
     let total_pages: UInt
     let results: [Model]
 }
+

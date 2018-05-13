@@ -32,6 +32,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // weaver: homeViewController = HomeViewController <- UIViewController
     // weaver: homeViewController.scope = .container
     
+    // weaver: reviewManager = ReviewManager <- ReviewManaging
+    // weaver: reviewManager.scope = .container
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         window = UIWindow()
@@ -49,4 +52,3 @@ extension AppDelegateDependencyContainer {
         return .shared
     }
 }
-

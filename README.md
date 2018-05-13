@@ -11,6 +11,7 @@
 - [x] Dependency declaration via annotations
 - [x] DI Container generation
 - [x] Dependency Graph compile time validation
+- [x] ObjC Support
 - [x] Non-optional dependency resolution
 - [x] Type safety
 - [x] Injection with arguments
@@ -107,7 +108,7 @@ Arguments:
 Options:
     --output_path [default: .] - Where the swift files will be generated.
     --template_path - Custom template path.
-    --safe [default: true]
+    --unsafe [default: false]
 ```
 
 It will build and install the Weaver command line tool in `/usr/local/bin`.
@@ -122,7 +123,7 @@ weaver --output_path ${SOURCE_ROOT}/generated/files/directory/path ${SOURCE_ROOT
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
 
-**Warning - Using `--safe false` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents the project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
+**Warning - Using `--unsafe` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents the project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
 
 ## Basic Usage
 

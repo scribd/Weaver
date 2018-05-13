@@ -20,16 +20,19 @@ final class MovieViewController: UIViewController {
 
     // weaver: movieID <= UInt
     // weaver: title <= String
-
-    // weaver: movieManager <- MovieManaging
     
+    // weaver: movieManager <- MovieManaging
     // weaver: imageManager <- ImageManaging
+    
+    // weaver: reviewController = WSReviewViewController
     
     private var originalBarStyle: UIBarStyle?
     
     private lazy var thumbnailImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
+        imageView.addGestureRecognizer(imageTapGestureRecognizer)
+        imageView.isUserInteractionEnabled = true
         return imageView
     }()
     
@@ -40,6 +43,12 @@ final class MovieViewController: UIViewController {
         label.font = .systemFont(ofSize: 15)
         label.textAlignment = .natural
         return label
+    }()
+    
+    private lazy var imageTapGestureRecognizer: UITapGestureRecognizer = {
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(didTapImage(_:)))
+        recognizer.numberOfTapsRequired = 1
+        return recognizer
     }()
 
     required init(injecting dependencies: MovieViewControllerDependencyResolver) {
@@ -72,18 +81,21 @@ final class MovieViewController: UIViewController {
         edgesForExtendedLayout = []
 
         view.addSubview(thumbnailImageView)
-        thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
-        thumbnailImageView.topAnchor.constraintEqualToSystemSpacingBelow(view.topAnchor, multiplier: 2).isActive = true
-        thumbnailImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        thumbnailImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        thumbnailImageView.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1).isActive = true
-        
         view.addSubview(overviewLabel)
+        thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
         overviewLabel.translatesAutoresizingMaskIntoConstraints = false
-        overviewLabel.topAnchor.constraintEqualToSystemSpacingBelow(thumbnailImageView.bottomAnchor, multiplier: 2).isActive = true
-        overviewLabel.leadingAnchor.constraintEqualToSystemSpacingAfter(view.leadingAnchor, multiplier: 2).isActive = true
-        view.trailingAnchor.constraintEqualToSystemSpacingAfter(overviewLabel.trailingAnchor, multiplier: 2).isActive = true
-        view.bottomAnchor.constraintGreaterThanOrEqualToSystemSpacingBelow(overviewLabel.bottomAnchor, multiplier: 2).isActive = true
+
+        NSLayoutConstraint.activate([
+            thumbnailImageView.topAnchor.constraintEqualToSystemSpacingBelow(view.topAnchor, multiplier: 2),
+            thumbnailImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            thumbnailImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            thumbnailImageView.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1),
+            
+            overviewLabel.topAnchor.constraintEqualToSystemSpacingBelow(thumbnailImageView.bottomAnchor, multiplier: 2),
+            overviewLabel.leadingAnchor.constraintEqualToSystemSpacingAfter(view.leadingAnchor, multiplier: 2),
+            view.trailingAnchor.constraintEqualToSystemSpacingAfter(overviewLabel.trailingAnchor, multiplier: 2),
+            view.bottomAnchor.constraintGreaterThanOrEqualToSystemSpacingBelow(overviewLabel.bottomAnchor, multiplier: 2)
+        ])
         
         loadData { viewModel in
             self.dependencies.imageManager.getImage(with: viewModel.thumbnail) { result in
@@ -109,6 +121,16 @@ final class MovieViewController: UIViewController {
                 completion(ViewModel())
             }
         }
+    }
+}
+
+// MARK: - GestureRecognizer
+
+private extension MovieViewController {
+    
+    @objc func didTapImage(_: UITapGestureRecognizer) {
+        let controller = dependencies.reviewController(movieID: dependencies.movieID)
+        navigationController?.pushViewController(controller, animated: true)
     }
 }
 

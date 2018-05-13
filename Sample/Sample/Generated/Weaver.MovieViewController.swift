@@ -11,15 +11,22 @@ final class MovieViewControllerDependencyContainer: DependencyContainer {
         super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
+        store.register(WSReviewViewController.self, scope: .graph, name: "reviewController", builder: { (dependencies, movieID: UInt) in
+            return WSReviewViewController.makeWSReviewViewController(injecting: dependencies, movieID: movieID)
+        })
     }
 }
 protocol MovieViewControllerDependencyResolver {
     var movieID: UInt { get }
     var title: String { get }
+    func reviewController(movieID: UInt) -> WSReviewViewController
     var movieManager: MovieManaging { get }
     var imageManager: ImageManaging { get }
 }
 extension MovieViewControllerDependencyContainer: MovieViewControllerDependencyResolver {
+    func reviewController(movieID: UInt) -> WSReviewViewController {
+        return resolve(WSReviewViewController.self, name: "reviewController", parameter: movieID)
+    }
     var movieManager: MovieManaging {
         return resolve(MovieManaging.self, name: "movieManager")
     }

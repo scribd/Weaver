@@ -14,12 +14,12 @@ import PathKit
 
 let main = command(
 
-    Option<String>("output_path", ".", description: "Where the swift files will be generated."),
-    Option<TemplatePathArgument>("template_path", TemplatePathArgument(), description: "Custom template path."),
-    Flag("safe", default: true),
+    Option<String>("output_path", default: ".", description: "Where the swift files will be generated."),
+    Option<TemplatePathArgument>("template_path", default: TemplatePathArgument(), description: "Custom template path."),
+    Flag("unsafe", default: false),
     Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
 
-) { outputPath, templatePath, safeFlag, inputPaths in
+) { outputPath, templatePath, unsafeFlag, inputPaths in
 
     do {
         
@@ -63,7 +63,7 @@ let main = command(
         
         // ---- Inspect ----
 
-        if safeFlag {
+        if !unsafeFlag {
             Logger.log(.info, "")
             Logger.log(.info, "Checking dependency graph...")
             

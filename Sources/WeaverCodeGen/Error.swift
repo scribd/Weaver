@@ -77,7 +77,7 @@ extension ParserError: CustomStringConvertible {
         case .unexpectedEOF(let file):
             return printableError(0, file, "Unexpected EOF (End of file)")
         case .unexpectedToken(let line, let file):
-            return printableError(line, file, "Unexpected token at line")
+            return printableError(line, file, "Unexpected token")
         case .unknownDependency(let line, let file, let dependencyName):
             return printableError(line, file, "Unknown dependency: '\(dependencyName)'")
         }

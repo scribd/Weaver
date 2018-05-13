@@ -26,7 +26,7 @@ import Weaver
     }
 }
 
-{% if resolver.isPublic %}public {% endif %}protocol {{resolver.targetTypeName}}DependencyResolver {
+{% if resolver.doesSupportObjc %}@objc {% endif %}{% if resolver.isPublic %}public {% endif %}protocol {{resolver.targetTypeName}}DependencyResolver {
     {% for parameter in resolver.parameters %}
     var {{parameter.name}}: {{parameter.typeName}} { get }
     {% endfor %}
@@ -68,10 +68,12 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
     }
 }
 
-{% if resolver.isPublic %}public {% endif %}protocol {{resolver.targetTypeName}}DependencyInjectable {
+{% if resolver.isPublic %}public {% endif %}protocol {{resolver.targetTypeName}}{% if resolver.doesSupportObjc %}ObjC{% endif %}DependencyInjectable {
     init(injecting dependencies: {{resolver.targetTypeName}}DependencyResolver)
 }
 
+{% if not resolver.doesSupportObjc %}
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}}: {{resolver.targetTypeName}}DependencyInjectable {}
+{% endif %}
 {% endif %}
 {% endfor %}

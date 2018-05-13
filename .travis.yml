@@ -2,5 +2,11 @@ language: objective-c
 osx_image: xcode9.2
 env:
   - TOOLCHAINS=swift
+cache:
+  - bundler
+before_install:
+  - bundle install
 script:
+  - make install
   - swift test
+  - cd Sample && fastlane test

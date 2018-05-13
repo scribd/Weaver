@@ -10,19 +10,13 @@ import SourceKittenFramework
 
 struct SourceKitDeclaration {
     
-    enum Constant {
-        static let injectableDeclarationKinds: [SwiftDeclarationKind] = [
-            .`class`,
-            .`struct`
-        ]
-    }
-    
     let offset: Int
     let length: Int
     let name: String
-    let isInjectable: Bool
     let hasBody: Bool
     let accessLevel: AccessLevel
+    let isInjectable: Bool
+    let doesSupportObjc: Bool
     
     init?(_ dictionary: [String: Any]) {
         
@@ -30,17 +24,39 @@ struct SourceKitDeclaration {
               let kind = SwiftDeclarationKind(rawValue: kindString) else {
             return nil
         }
-        isInjectable = Constant.injectableDeclarationKinds.contains(kind)
         
+        let inheritedTypes: [String]
+        if let inheritedTypeDicts = dictionary[SwiftDocKey.inheritedtypes.rawValue] as? [[String: Any]] {
+            inheritedTypes = inheritedTypeDicts.flatMap { $0[SwiftDocKey.name.rawValue] as? String }
+        } else {
+            inheritedTypes = []
+        }
+
         guard let offset = dictionary[SwiftDocKey.offset.rawValue] as? Int64 else {
             return nil
         }
         self.offset = Int(offset)
         
+        
         guard let length = dictionary[SwiftDocKey.length.rawValue] as? Int64 else {
             return nil
         }
         self.length = Int(length)
+
+        switch kind {
+        case .class,
+             .struct:
+            isInjectable = true
+            doesSupportObjc = false
+
+        case .extension where inheritedTypes.first { $0.hasSuffix("ObjCDependencyInjectable") } != nil:
+            isInjectable = true
+            doesSupportObjc = true
+            
+        default:
+            isInjectable = false
+            doesSupportObjc = false
+        }
         
         guard let name = dictionary[SwiftDocKey.name.rawValue] as? String else {
             return nil
@@ -59,13 +75,19 @@ struct SourceKitDeclaration {
 
 // MARK: - Conversion
 
+private extension Int {
+    /// Default value used until the real value gets determined later on.
+    static let defaultLine = -1
+}
+
 extension SourceKitDeclaration {
     
     var toToken: AnyTokenBox {
         if isInjectable {
-            return TokenBox(value: InjectableType(name: name, accessLevel: accessLevel), offset: offset, length: length, line: -1)
+            let injectableType = InjectableType(name: name, accessLevel: accessLevel, doesSupportObjc: doesSupportObjc)
+            return TokenBox(value: injectableType, offset: offset, length: length, line: .defaultLine)
         } else {
-            return TokenBox(value: AnyDeclaration(), offset: offset, length: length, line: -1)
+            return TokenBox(value: AnyDeclaration(), offset: offset, length: length, line: .defaultLine)
         }
     }
     
@@ -76,9 +98,9 @@ extension SourceKitDeclaration {
         
         let offset = self.offset + length - 1
         if isInjectable {
-            return TokenBox(value: EndOfInjectableType(), offset: offset, length: 1, line: -1)
+            return TokenBox(value: EndOfInjectableType(), offset: offset, length: 1, line: .defaultLine)
         } else {
-            return TokenBox(value: EndOfAnyDeclaration(), offset: offset, length: 1, line: -1)
+            return TokenBox(value: EndOfAnyDeclaration(), offset: offset, length: 1, line: .defaultLine)
         }
     }
 }

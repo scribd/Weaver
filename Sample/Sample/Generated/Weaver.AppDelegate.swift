@@ -13,6 +13,9 @@ final class AppDelegateDependencyContainer: DependencyContainer {
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
             return self.urlSessionCustomRef(dependencies)
         })
+        store.register(ReviewManaging.self, scope: .container, name: "reviewManager", builder: { (dependencies) in
+            return ReviewManager.makeReviewManager(injecting: dependencies)
+        })
         store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { (dependencies) in
             return MovieAPI.makeMovieAPI(injecting: dependencies)
         })
@@ -27,6 +30,7 @@ final class AppDelegateDependencyContainer: DependencyContainer {
 protocol AppDelegateDependencyResolver {
     var movieManager: MovieManaging { get }
     var urlSession: URLSession { get }
+    var reviewManager: ReviewManaging { get }
     var movieAPI: APIProtocol { get }
     var imageManager: ImageManaging { get }
     var homeViewController: UIViewController { get }
@@ -38,6 +42,9 @@ extension AppDelegateDependencyContainer: AppDelegateDependencyResolver {
     }
     var urlSession: URLSession {
         return resolve(URLSession.self, name: "urlSession")
+    }
+    var reviewManager: ReviewManaging {
+        return resolve(ReviewManaging.self, name: "reviewManager")
     }
     var movieAPI: APIProtocol {
         return resolve(APIProtocol.self, name: "movieAPI")

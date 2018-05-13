@@ -171,7 +171,16 @@ public struct ParameterAnnotation: Token {
 public struct InjectableType: Token {
     let name: String
     let accessLevel: AccessLevel
+    let doesSupportObjc: Bool
 
+    init(name: String,
+         accessLevel: AccessLevel = .default,
+         doesSupportObjc: Bool = false) {
+        self.name = name
+        self.accessLevel = accessLevel
+        self.doesSupportObjc = doesSupportObjc
+    }
+    
     public static func ==(lhs: InjectableType, rhs: InjectableType) -> Bool {
         guard lhs.name == rhs.name else { return false }
         guard lhs.accessLevel == rhs.accessLevel else { return false }
