@@ -8,9 +8,7 @@
 
 import Foundation
 
-protocol ObjcInjectable {}
-
-extension WSReviewViewController: ObjcInjectable {
+extension WSReviewViewController: WSReviewViewControllerObjCDependencyInjectable {
  
     // weaver: movieID <= UInt
     

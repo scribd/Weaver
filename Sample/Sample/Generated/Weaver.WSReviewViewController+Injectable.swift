@@ -26,7 +26,6 @@ extension WSReviewViewController {
         return WSReviewViewController(injecting: dependencies)
     }
 }
-protocol WSReviewViewControllerDependencyInjectable {
+protocol WSReviewViewControllerObjCDependencyInjectable {
     init(injecting dependencies: WSReviewViewControllerDependencyResolver)
 }
-extension WSReviewViewController: WSReviewViewControllerDependencyInjectable {}

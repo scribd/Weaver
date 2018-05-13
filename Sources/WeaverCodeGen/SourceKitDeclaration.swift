@@ -49,7 +49,7 @@ struct SourceKitDeclaration {
             isInjectable = true
             doesSupportObjc = false
 
-        case .extension where inheritedTypes.contains("ObjcInjectable"):
+        case .extension where inheritedTypes.first { $0.hasSuffix("ObjCDependencyInjectable") } != nil:
             isInjectable = true
             doesSupportObjc = true
             

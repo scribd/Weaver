@@ -101,9 +101,9 @@ final class SourceKitDeclarationTests: XCTestCase {
         XCTAssertEqual(model?.isInjectable, false)
     }
     
-    func test_init_should_set_isInjectable_to_true_if_kind_is_extension_of_ObjcInjectable() {
+    func test_init_should_set_isInjectable_to_true_if_kind_is_extension_of_ObjCDependencyInjectable() {
         
-        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "ObjcInjectable")
+        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "FakeObjCDependencyInjectable")
         XCTAssertEqual(model?.isInjectable, true)
     }
     
@@ -133,13 +133,13 @@ final class SourceKitDeclarationTests: XCTestCase {
         XCTAssertEqual(model?.doesSupportObjc, false)
     }
     
-    func test_init_should_set_doesSupportObjc_to_true_if_kind_is_extension_of_ObjcInjectable() {
+    func test_init_should_set_doesSupportObjc_to_true_if_kind_is_extension_of_ObjCDependencyInjectable() {
         
-        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "ObjcInjectable")
+        let model = makeModel(kind: "source.lang.swift.decl.extension", inheritedType: "FakeObjCDependencyInjectable")
         XCTAssertEqual(model?.doesSupportObjc, true)
     }
     
-    func test_init_should_set_doesSupportObjc_to_false_if_kind_is_extension_wihout_ObjcInjectable_inheritance() {
+    func test_init_should_set_doesSupportObjc_to_false_if_kind_is_extension_wihout_ObjCDependencyInjectable_inheritance() {
         
         let model = makeModel(kind: "source.lang.swift.decl.extension")
         XCTAssertEqual(model?.doesSupportObjc, false)
