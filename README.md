@@ -30,7 +30,7 @@ Weaver is a declarative, easy-to-use and safe Dependency Injection framework for
 
 - **Declarative** because it allows to **declare dependencies via annotations** directly in the Swift code.
 - **Easy-to-use** because it **generates the necessary boilerplate code** to inject dependencies into Swift types.
-- **Safe** because it **validates the dependency graph at compile time** and outputs a nice XCode error when something's wrong.
+- **Safe** because it **validates the dependency graph at compile time** and outputs a nice Xcode error when something's wrong.
 
 ## How does Weaver work?
 
