@@ -53,6 +53,7 @@ private final class Graph {
 
 private final class Resolver {
     let typeName: String?
+    var config: Set<ConfigurationAttribute> = Set()
     var dependencies: [DependencyIndex: Dependency] = [:]
     var dependents: [Resolver] = []
     
@@ -200,9 +201,12 @@ private extension Inspector {
         
         for expr in exprs {
             switch expr {
-            case .typeDeclaration(let injectableType, let children):
+            case .typeDeclaration(let injectableType, let config, let children):
                 let resolver = graph.resolver(typed: injectableType.value.name)
-                try resolver.update(with: children, fileName: fileName, graph: graph)
+                try resolver.update(with: children,
+                                    config: config,
+                                    fileName: fileName,
+                                    graph: graph)
                 
             case .file,
                  .scopeAnnotation,
@@ -267,7 +271,12 @@ private extension Dependency {
 
 private extension Resolver {
     
-    func update(with children: [Expr], fileName: String, graph: Graph) throws {
+    func update(with children: [Expr],
+                config: [TokenBox<ConfigurationAnnotation>],
+                fileName: String,
+                graph: Graph) throws {
+
+        self.config = Set(config.map { $0.value.attribute })
 
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
@@ -276,9 +285,12 @@ private extension Resolver {
         
         for child in children {
             switch child {
-            case .typeDeclaration(let injectableType, let children):
+            case .typeDeclaration(let injectableType, let config, let children):
                 let resolver = graph.resolver(typed: injectableType.value.name)
-                try resolver.update(with: children, fileName: fileName, graph: graph)
+                try resolver.update(with: children,
+                                    config: config,
+                                    fileName: fileName,
+                                    graph: graph)
                 
             case .registerAnnotation(let registerAnnotation):
                 registerAnnotations.append(registerAnnotation)
@@ -300,11 +312,11 @@ private extension Resolver {
         
         for registerAnnotation in registerAnnotations {
             let dependency = try Dependency(dependentResolver: self,
-                                                      registerAnnotation: registerAnnotation,
-                                                      scopeAnnotation: scopeAnnotations[registerAnnotation.value.name],
-                                                      customRefAnnotation: customRefAnnotations[registerAnnotation.value.name],
-                                                      fileName: fileName,
-                                                      graph: graph)
+                                            registerAnnotation: registerAnnotation,
+                                            scopeAnnotation: scopeAnnotations[registerAnnotation.value.name],
+                                            customRefAnnotation: customRefAnnotations[registerAnnotation.value.name],
+                                            fileName: fileName,
+                                            graph: graph)
             let index = DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
@@ -312,10 +324,10 @@ private extension Resolver {
         
         for referenceAnnotation in referenceAnnotations {
             let dependency = try Dependency(dependentResolver: self,
-                                                      referenceAnnotation: referenceAnnotation,
-                                                      customRefAnnotation: customRefAnnotations[referenceAnnotation.value.name],
-                                                      fileName: fileName,
-                                                      graph: graph)
+                                            referenceAnnotation: referenceAnnotation,
+                                            customRefAnnotation: customRefAnnotations[referenceAnnotation.value.name],
+                                            fileName: fileName,
+                                            graph: graph)
             let index = DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
@@ -331,26 +343,24 @@ private extension Dependency {
         guard isReference && !isCustom else {
             return
         }
-        
-        guard !dependentResovler.dependents.isEmpty else {
+
+        do {
+
+            if try dependentResovler.checkIsolation() == false {
+                return
+            }
+            
+            let index = DependencyIndex(typeName: associatedResolver.typeName, name: name)
+            for dependent in dependentResovler.dependents {
+                try dependent.resolveDependency(index: index, cache: &cache)
+            }
+            
+        } catch let error as InspectorAnalysisError {
             throw InspectorError.invalidGraph(line: line,
                                               file: file,
                                               dependencyName: name,
                                               typeName: associatedResolver.typeName,
-                                              underlyingError: .unresolvableDependency)
-        }
-        
-        let index = DependencyIndex(typeName: associatedResolver.typeName, name: name)
-        for dependent in dependentResovler.dependents {
-            do {
-                try dependent.resolveDependency(index: index, cache: &cache)
-            } catch let error as InspectorAnalysisError {
-                throw InspectorError.invalidGraph(line: line,
-                                                  file: file,
-                                                  dependencyName: name,
-                                                  typeName: associatedResolver.typeName,
-                                                  underlyingError: error)
-            }
+                                              underlyingError: error)
         }
     }
 }
@@ -381,6 +391,10 @@ private extension Resolver {
             }
         }
         
+        if try checkIsolation() == false {
+           return
+        }
+        
         for dependent in dependents {
             var visitedResolversCopy = visitedResolvers
             if let _ = try? dependent.resolveDependency(index: index, visitedResolvers: &visitedResolversCopy) {
@@ -389,6 +403,32 @@ private extension Resolver {
         }
         
         throw InspectorAnalysisError.unresolvableDependency
+    }
+}
+
+// MARK: - Isolation Check
+
+private extension Resolver {
+    
+    private var isIsolated: Bool {
+        return config.contains(.isIsolated(value: true))
+    }
+    
+    func checkIsolation() throws -> Bool {
+        
+        switch (dependents.isEmpty, isIsolated) {
+        case (true, false):
+            throw InspectorAnalysisError.unresolvableDependency
+            
+        case (false, true) where dependents.first(where: { !$0.isIsolated }) != nil:
+            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents
+            
+        case (true, true):
+            return false
+            
+        case (false, _):
+            return true
+        }
     }
 }
 

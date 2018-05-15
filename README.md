@@ -321,6 +321,18 @@ Example:
 // weaver: parameterName <= ParameterType
 ```
 
+#### Configuration Annotation
+
+Sets a configuration attribute to the concerned object.
+
+Example:
+```swift
+// weaver: self.attributeName = aValue
+```
+
+##### Configuration Attributes:
+- `isIsolated: Bool` (default: `false`): any object setting this to true is considered by Weaver as an object which isn't used in the project. An object flagged as isolated can only have isolated dependents. This attribute is useful to develop a feature wihout all the dependencies setup in the project.
+
 ## More reading...
 
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)

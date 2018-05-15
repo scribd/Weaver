@@ -2,16 +2,11 @@
 //  Movie.swift
 //  Sample
 //
-//  Created by Théophane Rupin on 4/5/18.
+//  Created by Théophane Rupin on 5/13/18.
 //  Copyright © 2018 Scribd. All rights reserved.
 //
 
 import Foundation
-
-struct APIErrorModel: Decodable {
-    let status_code: Int
-    let status_message: String
-}
 
 struct Movie: Decodable {
     let vote_count: UInt
@@ -28,11 +23,3 @@ struct Movie: Decodable {
     let overview: String
     let release_date: String
 }
-
-struct Page<Model: Decodable>: Decodable {
-    let page: UInt
-    let total_results: UInt
-    let total_pages: UInt
-    let results: [Model]
-}
-

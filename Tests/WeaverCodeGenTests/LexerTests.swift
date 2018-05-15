@@ -289,6 +289,66 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_true_isIsolated_configuration_annotation() {
+        
+        let file = File(contents: """
+
+// weaver: self.isIsolated = true
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true)), offset: 1, length: 33, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_false_isIsolated_configuration_annotation() {
+        
+        let file = File(contents: """
+
+// weaver: self.isIsolated = false
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: false)), offset: 1, length: 34, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_throw_an_error_with_an_invalid_isIsolated_configuration_annotation() {
+        
+        let file = File(contents: """
+
+// weaver: self.isIsolated = ok
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            _ = try lexer.tokenize()
+            XCTAssertTrue(false, "Haven't thrown any error.")
+        } catch let error as LexerError {
+            XCTAssertEqual(error, .invalidAnnotation(line: 1, file: "test.swift", underlyingError: .invalidConfigurationAttributeValue(value: "ok", expected: "true|false")))
+        } catch {
+            XCTAssertTrue(false, "Unexpected error: \(error).")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_any_ignored_declaration() {
         
         let file = File(contents: """

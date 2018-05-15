@@ -12,6 +12,7 @@ enum TokenError: Error {
     case invalidAnnotation(String)
     case invalidScope(String)
     case invalidCustomRefValue(String)
+    case invalidConfigurationAttributeValue(value: String, expected: String)
 }
 
 enum LexerError: Error {
@@ -24,6 +25,7 @@ enum ParserError: Error {
     
     case unknownDependency(line: Int, file: String, dependencyName: String)
     case depedencyDoubleDeclaration(line: Int, file: String, dependencyName: String)
+    case configurationAttributeDoubleAssignation(line: Int, file: String, attribute: ConfigurationAttribute)
 }
 
 enum GeneratorError: Error {
@@ -38,6 +40,7 @@ enum InspectorError: Error {
 enum InspectorAnalysisError: Error {
     case cyclicDependency
     case unresolvableDependency
+    case isolatedResolverCannotHaveReferents
 }
 
 // MARK: - Description
@@ -54,6 +57,8 @@ extension TokenError: CustomStringConvertible {
             return "Invalid scope: '\(scope)'"
         case .invalidCustomRefValue(let value):
             return "Invalid customRef value: \(value). Expected true|false."
+        case .invalidConfigurationAttributeValue(let value, let expected):
+            return "Invlid configuration attribute value: \(value). Expected \(expected)."
         }
     }
 }
@@ -80,6 +85,8 @@ extension ParserError: CustomStringConvertible {
             return printableError(line, file, "Unexpected token")
         case .unknownDependency(let line, let file, let dependencyName):
             return printableError(line, file, "Unknown dependency: '\(dependencyName)'")
+        case .configurationAttributeDoubleAssignation(let line, let file, let attribute):
+            return printableError(line, file, "Configuration attribute '\(attribute.name)' was already set")
         }
     }
 }
@@ -114,6 +121,8 @@ extension InspectorAnalysisError: CustomStringConvertible {
             return "Cyclic dependency"
         case .unresolvableDependency:
             return "Unresolvable dependency"
+        case .isolatedResolverCannotHaveReferents:
+            return "Isolated resolver cannot have referents"
         }
     }
 }
@@ -136,9 +145,14 @@ extension TokenError: Equatable {
             return lScope == rScope
         case (.invalidCustomRefValue(let lValue), .invalidCustomRefValue(let rValue)):
             return lValue == rValue
+        case (.invalidConfigurationAttributeValue(let lValue, let lExpected), .invalidConfigurationAttributeValue(let rValue, let rExpected)):
+            guard lValue == rValue else { return false }
+            guard lExpected == rExpected else { return false }
+            return true
         case (.invalidAnnotation, _),
              (.invalidScope, _),
-             (.invalidCustomRefValue, _):
+             (.invalidCustomRefValue, _),
+             (.invalidConfigurationAttributeValue, _):
             return false
         }
     }
@@ -171,10 +185,17 @@ extension ParserError: Equatable {
         case (.unexpectedToken(let lLine), .unexpectedToken(let rLine)):
             return lLine == rLine
             
+        case (.configurationAttributeDoubleAssignation(let lLine, let lFile, let lAttribute), .configurationAttributeDoubleAssignation(let rLine, let rFile, let rAttribute)):
+            guard lLine == rLine else { return false }
+            guard lFile == rFile else { return false }
+            guard lAttribute == rAttribute else { return false }
+            return true
+
         case (.depedencyDoubleDeclaration, _),
              (.unknownDependency, _),
              (.unexpectedEOF, _),
-             (.unexpectedToken, _):
+             (.unexpectedToken, _),
+             (.configurationAttributeDoubleAssignation, _):
             return false
         }
     }
@@ -200,21 +221,6 @@ extension InspectorError: Equatable {
         
         case (.invalidAST, _),
              (.invalidGraph, _):
-            return false
-        }
-    }
-}
-
-extension InspectorAnalysisError: Equatable {
-    
-    static func ==(lhs: InspectorAnalysisError, rhs: InspectorAnalysisError) -> Bool {
-        switch (lhs, rhs) {
-        case (.cyclicDependency, .cyclicDependency),
-             (.unresolvableDependency, .unresolvableDependency):
-            return true
-        
-        case (.cyclicDependency, _),
-             (.unresolvableDependency, _):
             return false
         }
     }

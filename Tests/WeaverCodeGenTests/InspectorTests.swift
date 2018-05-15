@@ -66,7 +66,7 @@ final class API {
 }
 
 final class App {
-  // weaver: sessionManager <- SessionManagerProtocol
+  // weaver: api = API
 }
 """)
         
@@ -80,7 +80,7 @@ final class App {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 5, file: "test.swift", dependencyName: "sessionManager", typeName: nil, underlyingError: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 1, file: "test.swift", dependencyName: "sessionManager", typeName: nil, underlyingError: .unresolvableDependency))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -385,6 +385,122 @@ final class MovieAPI: APIProtocol {
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_a_valid_graph_with_two_isolated_objects() {
+        let file = File(contents: """
+final class AppDelegate {
+    // weaver: urlSession = URLSession
+    // weaver: urlSession.scope = .container
+    // weaver: urlSession.customRef = true
+    
+    // weaver: movieAPI = MovieAPI <- APIProtocol
+    // weaver: movieAPI.scope = .container
+        
+    // weaver: movieManager = MovieManager <- MovieManaging
+    // weaver: movieManager.scope = .container
+}
+
+final class HomeViewController: UIViewController {
+    // weaver: self.isIsolated = true
+
+    // weaver: movieManager <- MovieManaging
+    
+    // weaver: movieController = MovieViewController <- UIViewController
+    // weaver: movieController.scope = .transient
+}
+
+final class MovieViewController: UIViewController {
+    // weaver: self.isIsolated = true
+
+    // weaver: movieID <= UInt
+    // weaver: title <= String
+
+    // weaver: movieManager <- MovieManaging
+    
+    // weaver: urlSession <- URLSession
+}
+
+final class MovieManager: MovieManaging {
+    // weaver: movieAPI <- APIProtocol
+}
+
+final class MovieAPI: APIProtocol {
+    // weaver: urlSession <- URLSession
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_graph_with_an_object_flagged_as_isolated_with_a_non_isolated_dependent() {
+        let file = File(contents: """
+final class AppDelegate {
+    // weaver: urlSession = URLSession
+    // weaver: urlSession.scope = .container
+    // weaver: urlSession.customRef = true
+    
+    // weaver: movieAPI = MovieAPI <- APIProtocol
+    // weaver: movieAPI.scope = .container
+        
+    // weaver: movieManager = MovieManager <- MovieManaging
+    // weaver: movieManager.scope = .container
+
+    // weaver: homeViewController = HomeViewController <- UIViewController
+    // weaver: homeViewController.scope = .container
+}
+
+final class HomeViewController: UIViewController {
+    // weaver: self.isIsolated = true
+
+    // weaver: movieManager <- MovieManaging
+    
+    // weaver: movieController = MovieViewController <- UIViewController
+    // weaver: movieController.scope = .transient
+}
+
+final class MovieViewController: UIViewController {
+    // weaver: movieID <= UInt
+    // weaver: title <= String
+
+    // weaver: movieManager <- MovieManaging
+    
+    // weaver: urlSession <- URLSession
+}
+
+final class MovieManager: MovieManaging {
+    // weaver: movieAPI <- APIProtocol
+}
+
+final class MovieAPI: APIProtocol {
+    // weaver: urlSession <- URLSession
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, .invalidGraph(line: 34, file: "test.swift", dependencyName: "movieAPI", typeName: "MovieAPI", underlyingError: .isolatedResolverCannotHaveReferents))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
         }
     }
 }

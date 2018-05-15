@@ -121,13 +121,7 @@ public struct CustomRefAnnotation: Token {
             return nil
         }
         
-        let value: Bool
-        switch matches[1] {
-        case "true":
-            value = true
-        case "false":
-            value = false
-        default:
+        guard let value = Bool(matches[1]) else {
             throw TokenError.invalidCustomRefValue(matches[1])
         }
         
@@ -165,6 +159,38 @@ public struct ParameterAnnotation: Token {
     
     public var description: String {
         return "\(name) <= \(typeName)"
+    }
+}
+
+public struct ConfigurationAnnotation: Token {
+    
+    let attribute: ConfigurationAttribute
+    
+    public static func create(_ string: String) throws -> ConfigurationAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^self.(\\w+)\\s*=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+            return nil
+        }
+        let name = matches[0]
+        let valueString = matches[1]
+        
+        switch name {
+        case "isIsolated":
+            guard let value = Bool(valueString) else {
+                throw TokenError.invalidConfigurationAttributeValue(value: valueString, expected: "true|false")
+            }
+            return ConfigurationAnnotation(attribute: .isIsolated(value: value))
+        default:
+            return nil
+        }
+    }
+    
+    public static func ==(lhs: ConfigurationAnnotation, rhs: ConfigurationAnnotation) -> Bool {
+        guard lhs.attribute == rhs.attribute else { return false }
+        return true
+    }
+    
+    public var description: String {
+        return "\(attribute)"
     }
 }
 
@@ -239,6 +265,9 @@ enum TokenBuilder {
             return TokenBox(value: token, offset: offset, length: length, line: line)
         }
         
+        if let token = try ConfigurationAnnotation.create(body) {
+            return makeTokenBox(token)
+        }
         if let token = try RegisterAnnotation.create(body) {
             return makeTokenBox(token)
         }
