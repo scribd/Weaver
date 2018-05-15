@@ -215,7 +215,7 @@ extension ResolverData {
     convenience init?(expr: Expr, enclosingTypeNames: [String], graph: Graph) {
         
         switch expr {
-        case .typeDeclaration(let typeToken, children: let children):
+        case .typeDeclaration(let typeToken, _, children: let children):
             let targetTypeName = typeToken.value.name
             
             var scopeAnnotations = [String: ScopeAnnotation]()
@@ -326,7 +326,7 @@ private extension Generator {
 
         return exprs.flatMap { expr -> [ResolverData] in
             switch expr {
-            case .typeDeclaration(let typeToken, let children):
+            case .typeDeclaration(let typeToken, _, let children):
                 guard let resolverData = ResolverData(expr: expr, enclosingTypeNames: enclosingTypeNames, graph: graph) else {
                     return []
                 }

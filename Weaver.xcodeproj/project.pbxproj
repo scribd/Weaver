@@ -22,6 +22,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		19F5475B20A94DBC006F40DF /* ConfigurationAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */; };
 		OBJ_191 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_197 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* Package.swift */; };
 		OBJ_203 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_70 /* Package.swift */; };
@@ -452,6 +453,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationAttribute.swift; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
 		OBJ_100 /* Dictionary+Merge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dictionary+Merge.swift"; sourceTree = "<group>"; };
@@ -830,6 +832,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_18 /* AccessLevel.swift */,
+				19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */,
 				OBJ_19 /* Error.swift */,
 				OBJ_20 /* Expr.swift */,
 				OBJ_21 /* Generator.swift */,
@@ -1633,6 +1636,7 @@
 				OBJ_334 /* Error.swift in Sources */,
 				OBJ_335 /* Expr.swift in Sources */,
 				OBJ_336 /* Generator.swift in Sources */,
+				19F5475B20A94DBC006F40DF /* ConfigurationAttribute.swift in Sources */,
 				OBJ_337 /* Inspector.swift in Sources */,
 				OBJ_338 /* Lexer.swift in Sources */,
 				OBJ_339 /* Parser.swift in Sources */,

@@ -9,7 +9,7 @@ import Foundation
 
 public indirect enum Expr {
     case file(types: [Expr], name: String)
-    case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
+    case typeDeclaration(TokenBox<InjectableType>, config: [TokenBox<ConfigurationAnnotation>], children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
     case referenceAnnotation(TokenBox<ReferenceAnnotation>)
@@ -26,8 +26,9 @@ extension Expr: Equatable {
             guard lTypes.elementsEqual(rTypes) else { return false }
             guard lName == rName else { return false }
             return true
-        case (.typeDeclaration(let lToken, let lChildren), .typeDeclaration(let rToken, let rChildren)):
+        case (.typeDeclaration(let lToken, let lConfig, let lChildren), .typeDeclaration(let rToken, let rConfig, let rChildren)):
             guard lToken == rToken else { return false }
+            guard lConfig.elementsEqual(rConfig) else { return false }
             guard lChildren.elementsEqual(rChildren) else { return false }
             return true
         case (.registerAnnotation(let lhs), .registerAnnotation(let rhs)):
@@ -58,13 +59,20 @@ extension Expr: CustomStringConvertible {
     public var description: String {
         switch self {
         case .file(let types, let name):
-            return "File[\(name)]\n\n" + types.map { "\($0)" }.joined(separator: "\n")
+            return """
+            File[\(name)]
+            \(types.map { " \($0)" }.joined(separator: "\n"))
+            """
         case .registerAnnotation(let token):
             return "Register - \(token)"
         case .scopeAnnotation(let token):
             return "Scope - \(token)"
-        case .typeDeclaration(let type, let children):
-            return "\(type)\n" + children.map { "  \($0)" }.joined(separator: "\n")
+        case .typeDeclaration(let type, let config, let children):
+            return """
+            \(type)
+            \(config.map { "   \($0)" }.joined(separator: "\n"))
+            \(children.map { "   \($0)" }.joined(separator: "\n"))
+            """
         case .referenceAnnotation(let token):
             return "Reference - \(token)"
         case .customRefAnnotation(let token):
@@ -100,7 +108,7 @@ struct ExprSequence: Sequence, IteratorProtocol {
         
         switch expr {
         case .file(let exprs, _),
-             .typeDeclaration(_, let exprs):
+             .typeDeclaration(_, _, let exprs):
             stack.append(exprs)
         
         case .referenceAnnotation,

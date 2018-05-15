@@ -70,6 +70,7 @@ private extension Parser {
         let type = try parseSimpleExpr(InjectableType.self)
         
         var children = [Expr]()
+        var config = [String: TokenBox<ConfigurationAnnotation>]()
         var registrationNames = Set<String>()
         var referenceNames = Set<String>()
         var parameterNames = Set<String>()
@@ -119,17 +120,24 @@ private extension Parser {
                 }
                 children.append(.scopeAnnotation(annotation))
             
+            case is TokenBox<ConfigurationAnnotation>:
+                let annotation = try parseSimpleExpr(ConfigurationAnnotation.self)
+                guard config[annotation.value.attribute.name] == nil else {
+                    throw ParserError.configurationAttributeDoubleAssignation(line: annotation.line, file: fileName, attribute: annotation.value.attribute)
+                }
+                config[annotation.value.attribute.name] = annotation
+
             case is TokenBox<InjectableType>:
                 if let typeDeclaration = try parseInjectedTypeDeclaration() {
                     children.append(typeDeclaration)
                 }
-            
+                
             case is TokenBox<EndOfInjectableType>:
                 consumeToken()
                 if children.isEmpty {
                     return nil
                 } else {
-                    return .typeDeclaration(type, children: children)
+                    return .typeDeclaration(type, config: Array(config.values), children: children)
                 }
 
             case nil:
