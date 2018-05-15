@@ -321,7 +321,7 @@ Example:
 // weaver: parameterName <= ParameterType
 ```
 
-#### Configuration Annotation
+#### - Configuration Annotation
 
 Sets a configuration attribute to the concerned object.
 
