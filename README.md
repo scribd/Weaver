@@ -8,8 +8,8 @@
 
 ## Features
 
-- [x] Dependency declaration via annotations
-- [x] DI Container generation
+- [x] Dependency declaration via annotations (no config file needed)
+- [x] DI Containers auto-generation
 - [x] Dependency Graph compile time validation
 - [x] ObjC Support
 - [x] Non-optional dependency resolution
@@ -28,7 +28,7 @@ However, Dependency Injection is a fundamental aspect of software architecture, 
 
 Weaver is a declarative, easy-to-use and safe Dependency Injection framework for Swift.
 
-- **Declarative** because it allows to **declare dependencies via annotations** directly in the Swift code.
+- **Declarative** because it allows developers to **declare dependencies via annotations** directly in the Swift code.
 - **Easy-to-use** because it **generates the necessary boilerplate code** to inject dependencies into Swift types.
 - **Safe** because it **validates the dependency graph at compile time** and outputs a nice Xcode error when something's wrong.
 
