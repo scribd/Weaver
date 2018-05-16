@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./weaver.png" width=520>
+  <img src="https://github.com/scribd/Weaver/blob/master/weaver.png" width=520>
 </p>
 
 <p align="center">Declarative, easy-to-use and safe Dependency Injection framework for Swift (iOS/macOS/Linux)</p>
