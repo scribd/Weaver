@@ -8,18 +8,18 @@
 import Foundation
 import Weaver
 
-enum TokenError: Error {
+enum TokenError: Error, AutoEquatable {
     case invalidAnnotation(String)
     case invalidScope(String)
     case invalidCustomRefValue(String)
     case invalidConfigurationAttributeValue(value: String, expected: String)
 }
 
-enum LexerError: Error {
+enum LexerError: Error, AutoEquatable {
     case invalidAnnotation(line: Int, file: String, underlyingError: TokenError)
 }
 
-enum ParserError: Error {
+enum ParserError: Error, AutoEquatable {
     case unexpectedToken(line: Int, file: String)
     case unexpectedEOF(file: String)
     
@@ -28,16 +28,16 @@ enum ParserError: Error {
     case configurationAttributeDoubleAssignation(line: Int, file: String, attribute: ConfigurationAttribute)
 }
 
-enum GeneratorError: Error {
+enum GeneratorError: Error, AutoEquatable {
     case invalidTemplatePath(path: String)
 }
 
-enum InspectorError: Error {
+enum InspectorError: Error, AutoEquatable {
     case invalidAST(unexpectedExpr: Expr, file: String?)
     case invalidGraph(line: Int, file: String, dependencyName: String, typeName: String?, underlyingError: InspectorAnalysisError)
 }
 
-enum InspectorAnalysisError: Error {
+enum InspectorAnalysisError: Error, AutoEquatable {
     case cyclicDependency
     case unresolvableDependency
     case isolatedResolverCannotHaveReferents
@@ -131,97 +131,4 @@ extension InspectorAnalysisError: CustomStringConvertible {
 
 private func printableError(_ line: Int, _ file: String, _ message: String) -> String {
     return "\(file):\(line + 1): error: \(message)."
-}
-
-// MARK: - Equatable
-
-extension TokenError: Equatable {
-    
-    static func ==(lhs: TokenError, rhs: TokenError) -> Bool {
-        switch (lhs, rhs) {
-        case (.invalidAnnotation(let lAnnotation), .invalidAnnotation(let rAnnotation)):
-            return lAnnotation == rAnnotation
-        case (.invalidScope(let lScope), .invalidScope(let rScope)):
-            return lScope == rScope
-        case (.invalidCustomRefValue(let lValue), .invalidCustomRefValue(let rValue)):
-            return lValue == rValue
-        case (.invalidConfigurationAttributeValue(let lValue, let lExpected), .invalidConfigurationAttributeValue(let rValue, let rExpected)):
-            guard lValue == rValue else { return false }
-            guard lExpected == rExpected else { return false }
-            return true
-        case (.invalidAnnotation, _),
-             (.invalidScope, _),
-             (.invalidCustomRefValue, _),
-             (.invalidConfigurationAttributeValue, _):
-            return false
-        }
-    }
-}
-
-extension LexerError: Equatable {
-
-    static func ==(lhs: LexerError, rhs: LexerError) -> Bool {
-        switch (lhs, rhs) {
-        case (.invalidAnnotation(let lAnnotation), .invalidAnnotation(let rAnnotation)):
-            return lAnnotation == rAnnotation
-        }
-    }
-}
-
-extension ParserError: Equatable {
-
-    static func ==(lhs: ParserError, rhs: ParserError) -> Bool {
-        switch (lhs, rhs) {
-        case (.depedencyDoubleDeclaration(let lLine, let lFile, let lDependencyName), .depedencyDoubleDeclaration(let rLine, let rFile, let rDependencyName)),
-             (.unknownDependency(let lLine, let lFile, let lDependencyName), .unknownDependency(let rLine, let rFile, let rDependencyName)):
-            guard lLine == rLine else { return false }
-            guard lFile == rFile else { return false }
-            guard lDependencyName == rDependencyName else { return false }
-            return true
-            
-        case (.unexpectedEOF, .unexpectedEOF):
-            return true
-            
-        case (.unexpectedToken(let lLine), .unexpectedToken(let rLine)):
-            return lLine == rLine
-            
-        case (.configurationAttributeDoubleAssignation(let lLine, let lFile, let lAttribute), .configurationAttributeDoubleAssignation(let rLine, let rFile, let rAttribute)):
-            guard lLine == rLine else { return false }
-            guard lFile == rFile else { return false }
-            guard lAttribute == rAttribute else { return false }
-            return true
-
-        case (.depedencyDoubleDeclaration, _),
-             (.unknownDependency, _),
-             (.unexpectedEOF, _),
-             (.unexpectedToken, _),
-             (.configurationAttributeDoubleAssignation, _):
-            return false
-        }
-    }
-}
-
-extension InspectorError: Equatable {
-    
-    static func ==(lhs: InspectorError, rhs: InspectorError) -> Bool {
-        switch (lhs, rhs) {
-        case (.invalidAST(let lToken, let lFile), .invalidAST(let rToken, let rFile)):
-            guard lToken == rToken else { return false }
-            guard lFile == rFile else { return false }
-            return true
-
-        case (.invalidGraph(let lLine, let lFile, let lDependencyName, let lTypeName, let lUnderlyingIssue),
-              .invalidGraph(let rLine, let rFile, let rDependencyName, let rTypeName, let rUnderlyingIssue)):
-            guard lLine == rLine else { return false }
-            guard lFile == rFile else { return false }
-            guard lDependencyName == rDependencyName else { return false }
-            guard lTypeName == rTypeName else { return false }
-            guard lUnderlyingIssue == rUnderlyingIssue else { return false }
-            return true
-        
-        case (.invalidAST, _),
-             (.invalidGraph, _):
-            return false
-        }
-    }
 }

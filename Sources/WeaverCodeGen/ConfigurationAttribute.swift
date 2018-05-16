@@ -7,32 +7,8 @@
 
 import Foundation
 
-enum ConfigurationAttribute {
+enum ConfigurationAttribute: AutoEquatable, AutoHashable {
     case isIsolated(value: Bool)
-}
-
-// MARK: - Equatable
-
-extension ConfigurationAttribute: Equatable {
-
-    static func ==(lhs: ConfigurationAttribute, rhs: ConfigurationAttribute) -> Bool {
-        switch (lhs, rhs) {
-        case (.isIsolated(let lhs), .isIsolated(let rhs)):
-            return lhs == rhs
-        }
-    }
-}
-
-// MARK: - Hashable
-
-extension ConfigurationAttribute: Hashable {
-
-    var hashValue: Int {
-        switch self {
-        case .isIsolated(let value):
-            return description.hashValue ^ value.hashValue
-        }
-    }
 }
 
 // MARK: - Description
