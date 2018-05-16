@@ -84,17 +84,25 @@ Add `.package(url: "https://github.com/scribd/Weaver.git", from: "0.9.0")` to th
 
 The Weaver command line tool can be installed using `Homebrew` or manually.
 
-#### Homebrew (coming soon)
+#### Binary form
+
+Download the latest release with the prebuilt binary from [release tab](https://github.com/scribd/Weaver/releases). Unzip the archive into the desired destination and run `bin/weaver`
+
+#### [Homebrew](https://brew.sh) (coming soon)
 
 `brew install Weaver`
 
-#### Manually
+#### Building from source
+
+Download the latest release source code from the [release tab](https://github.com/scribd/Weaver/releases) or clone the repository.
+
+In the project directory, run `make install`. It builds and installs the command line tool in `/usr/local/bin`.
+
+#### Check installation
+
+Run the following to check if Weaver has been installed correctly.
 
 ```bash
-$ git clone https://github.com/scribd/Weaver.git
-$ git checkout 0.9.0
-$ cd Weaver
-$ make install
 $ weaver --help
 
 Usage:
@@ -111,14 +119,12 @@ Options:
     --unsafe [default: false]
 ```
 
-It will build and install the Weaver command line tool in `/usr/local/bin`.
-
 ### (3) - Weaver build phase
 
 In Xcode, add the following command to a command line build phase: 
 
 ```
-weaver --output_path ${SOURCE_ROOT}/generated/files/directory/path ${SOURCE_ROOT}/**/*.swift
+weaver --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT}/Sample -name '*.swift' | xargs`
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
