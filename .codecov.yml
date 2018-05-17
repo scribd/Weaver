@@ -1,0 +1,10 @@
+coverage:
+  ignore:
+    - Sources/WeaverCommand
+  status:
+    patch: false
+    changes: false
+    project:
+      default:
+        target: 70
+comment: false

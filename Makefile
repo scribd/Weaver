@@ -1,4 +1,4 @@
-.PHONY: clean build install package generate_sources
+.PHONY: clean build install package generate_sources test
 
 build:
 	$(call build)
@@ -21,6 +21,9 @@ package:
 uninstall:
 	rm "$(DESTDIR)/bin/weaver"
 	rm -rf "$(DESTDIR)/share/weaver"
+
+test:
+	@swift test 
 
 define generate_sources
     .sourcery/bin/sourcery
