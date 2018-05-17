@@ -7,7 +7,7 @@
 
 import Foundation
 
-public indirect enum Expr {
+public indirect enum Expr: AutoEquatable {
     case file(types: [Expr], name: String)
     case typeDeclaration(TokenBox<InjectableType>, config: [TokenBox<ConfigurationAnnotation>], children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
@@ -15,42 +15,6 @@ public indirect enum Expr {
     case referenceAnnotation(TokenBox<ReferenceAnnotation>)
     case customRefAnnotation(TokenBox<CustomRefAnnotation>)
     case parameterAnnotation(TokenBox<ParameterAnnotation>)
-}
-
-// MARK: - Equatable
-
-extension Expr: Equatable {
-    public static func ==(lhs: Expr, rhs: Expr) -> Bool {
-        switch (lhs, rhs) {
-        case (.file(let lTypes, let lName), .file(let rTypes, let rName)):
-            guard lTypes.elementsEqual(rTypes) else { return false }
-            guard lName == rName else { return false }
-            return true
-        case (.typeDeclaration(let lToken, let lConfig, let lChildren), .typeDeclaration(let rToken, let rConfig, let rChildren)):
-            guard lToken == rToken else { return false }
-            guard lConfig.elementsEqual(rConfig) else { return false }
-            guard lChildren.elementsEqual(rChildren) else { return false }
-            return true
-        case (.registerAnnotation(let lhs), .registerAnnotation(let rhs)):
-            return lhs == rhs
-        case (.scopeAnnotation(let lhs), .scopeAnnotation(let rhs)):
-            return lhs == rhs
-        case (.referenceAnnotation(let lhs), .referenceAnnotation(let rhs)):
-            return lhs == rhs
-        case (.customRefAnnotation(let lhs), .customRefAnnotation(let rhs)):
-            return lhs == rhs
-        case (.parameterAnnotation(let lhs), .parameterAnnotation(let rhs)):
-            return lhs == rhs
-        case (.file, _),
-             (.typeDeclaration, _),
-             (.registerAnnotation, _),
-             (.scopeAnnotation, _),
-             (.referenceAnnotation, _),
-             (.customRefAnnotation, _),
-             (.parameterAnnotation, _):
-            return false
-        }
-    }
 }
 
 // MARK: - Description

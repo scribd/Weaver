@@ -1,8 +1,10 @@
-
-.PHONY: clean
+.PHONY: clean build install package generate_sources
 
 build:
 	$(call build)
+
+generate_sources:
+	$(call generate_sources)
 
 clean:
 	rm -rf .build
@@ -20,7 +22,12 @@ uninstall:
 	rm "$(DESTDIR)/bin/weaver"
 	rm -rf "$(DESTDIR)/share/weaver"
 
+define generate_sources
+    .sourcery/bin/sourcery
+endef
+
 define build
+	$(call generate_sources)
 	@swift build --disable-sandbox --configuration release
 endef
 

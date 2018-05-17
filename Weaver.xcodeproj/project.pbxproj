@@ -23,6 +23,9 @@
 
 /* Begin PBXBuildFile section */
 		19F5475B20A94DBC006F40DF /* ConfigurationAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */; };
+		19FDDD4120AC96BD007138DF /* AutoTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FDDD4020AC96BD007138DF /* AutoTypes.swift */; };
+		19FDDD4220AC9784007138DF /* AutoEquatable.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FDDD3E20AC968E007138DF /* AutoEquatable.generated.swift */; };
+		19FDDD4420AC9893007138DF /* AutoHashable.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FDDD4320AC9893007138DF /* AutoHashable.generated.swift */; };
 		OBJ_191 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_197 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* Package.swift */; };
 		OBJ_203 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_70 /* Package.swift */; };
@@ -454,6 +457,9 @@
 
 /* Begin PBXFileReference section */
 		19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationAttribute.swift; sourceTree = "<group>"; };
+		19FDDD3E20AC968E007138DF /* AutoEquatable.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AutoEquatable.generated.swift; sourceTree = "<group>"; };
+		19FDDD4020AC96BD007138DF /* AutoTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoTypes.swift; sourceTree = "<group>"; };
+		19FDDD4320AC9893007138DF /* AutoHashable.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AutoHashable.generated.swift; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
 		OBJ_100 /* Dictionary+Merge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dictionary+Merge.swift"; sourceTree = "<group>"; };
@@ -831,6 +837,9 @@
 		OBJ_17 /* WeaverCodeGen */ = {
 			isa = PBXGroup;
 			children = (
+				19FDDD3E20AC968E007138DF /* AutoEquatable.generated.swift */,
+				19FDDD4320AC9893007138DF /* AutoHashable.generated.swift */,
+				19FDDD4020AC96BD007138DF /* AutoTypes.swift */,
 				OBJ_18 /* AccessLevel.swift */,
 				19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */,
 				OBJ_19 /* Error.swift */,
@@ -1332,6 +1341,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = OBJ_329 /* Build configuration list for PBXNativeTarget "WeaverCodeGen" */;
 			buildPhases = (
+				19FDDD4520AC9C7E007138DF /* Sourcery */,
 				OBJ_332 /* Sources */,
 				OBJ_343 /* Frameworks */,
 			);
@@ -1513,6 +1523,23 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		19FDDD4520AC9C7E007138DF /* Sourcery */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Sourcery;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make generate_sources";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		OBJ_190 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -1632,10 +1659,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				19FDDD4220AC9784007138DF /* AutoEquatable.generated.swift in Sources */,
 				OBJ_333 /* AccessLevel.swift in Sources */,
 				OBJ_334 /* Error.swift in Sources */,
 				OBJ_335 /* Expr.swift in Sources */,
 				OBJ_336 /* Generator.swift in Sources */,
+				19FDDD4420AC9893007138DF /* AutoHashable.generated.swift in Sources */,
+				19FDDD4120AC96BD007138DF /* AutoTypes.swift in Sources */,
 				19F5475B20A94DBC006F40DF /* ConfigurationAttribute.swift in Sources */,
 				OBJ_337 /* Inspector.swift in Sources */,
 				OBJ_338 /* Lexer.swift in Sources */,

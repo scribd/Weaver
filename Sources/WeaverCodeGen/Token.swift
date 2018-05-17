@@ -17,14 +17,26 @@ public protocol AnyTokenBox {
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token>: AnyTokenBox {
+public struct TokenBox<T: Token>: AnyTokenBox, Equatable, CustomStringConvertible {
     let value: T
     public let offset: Int
     public let length: Int
     public var line: Int
+    
+    public static func ==(lhs: TokenBox<T>, rhs: TokenBox<T>) -> Bool {
+        guard lhs.value == rhs.value else { return false }
+        guard lhs.offset == rhs.offset else { return false }
+        guard lhs.length == rhs.length else { return false }
+        guard lhs.line == rhs.line else { return false }
+        return true
+    }
+    
+    public var description: String {
+        return "\(value) - \(offset)[\(length)] - at line: \(line)"
+    }
 }
 
-public protocol Token: Equatable, CustomStringConvertible {
+public protocol Token: AutoEquatable, CustomStringConvertible {
     static func create(_ string: String) throws -> Self?
 }
 
@@ -40,13 +52,6 @@ public struct RegisterAnnotation: Token {
             return nil
         }
         return RegisterAnnotation(name: matches[0], typeName: matches[1], protocolName: matches.count >= 4 ? matches[3] : nil)
-    }
-    
-    public static func ==(lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
-        guard lhs.name == rhs.name else { return false }
-        guard lhs.typeName == rhs.typeName else { return false }
-        guard lhs.protocolName == rhs.protocolName else { return false }
-        return true
     }
     
     public var description: String {
@@ -75,12 +80,6 @@ public struct ScopeAnnotation: Token {
         return ScopeAnnotation(name: matches[0], scope: scope)
     }
     
-    public static func ==(lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
-        guard lhs.name == rhs.name else { return false }
-        guard lhs.scope == rhs.scope else { return false }
-        return true
-    }
-    
     public var description: String {
         return "\(name).scope = \(scope)"
     }
@@ -98,18 +97,12 @@ public struct ReferenceAnnotation: Token {
         return ReferenceAnnotation(name: matches[0], typeName: matches[1])
     }
     
-    public static func ==(lhs: ReferenceAnnotation, rhs: ReferenceAnnotation) -> Bool {
-        guard lhs.name == rhs.name else { return false }
-        guard lhs.typeName == rhs.typeName else { return false }
-        return true
-    }
-    
     public var description: String {
         return "\(name) <- \(typeName)"
     }
 }
 
-public struct CustomRefAnnotation: Token {
+public struct CustomRefAnnotation: Token, AutoEquatable {
 
     let name: String
     let value: Bool
@@ -128,12 +121,6 @@ public struct CustomRefAnnotation: Token {
         return CustomRefAnnotation(name: matches[0], value: value)
     }
     
-    public static func ==(lhs: CustomRefAnnotation, rhs: CustomRefAnnotation) -> Bool {
-        guard lhs.name == rhs.name else { return false }
-        guard lhs.value == rhs.value else { return false }
-        return true
-    }
-
     public var description: String {
         return "\(name).customRef = \(value ? "true" : "false")"
     }
@@ -149,12 +136,6 @@ public struct ParameterAnnotation: Token {
             return nil
         }
         return ParameterAnnotation(name: matches[0], typeName: matches[1])
-    }
-    
-    public static func ==(lhs: ParameterAnnotation, rhs: ParameterAnnotation) -> Bool {
-        guard lhs.name == rhs.name else { return false }
-        guard lhs.typeName == rhs.typeName else { return false }
-        return true
     }
     
     public var description: String {
@@ -184,11 +165,6 @@ public struct ConfigurationAnnotation: Token {
         }
     }
     
-    public static func ==(lhs: ConfigurationAnnotation, rhs: ConfigurationAnnotation) -> Bool {
-        guard lhs.attribute == rhs.attribute else { return false }
-        return true
-    }
-    
     public var description: String {
         return "\(attribute)"
     }
@@ -207,12 +183,6 @@ public struct InjectableType: Token {
         self.doesSupportObjc = doesSupportObjc
     }
     
-    public static func ==(lhs: InjectableType, rhs: InjectableType) -> Bool {
-        guard lhs.name == rhs.name else { return false }
-        guard lhs.accessLevel == rhs.accessLevel else { return false }
-        return true
-    }
-
     public var description: String {
         return "\(accessLevel.rawValue) \(name) {"
     }
@@ -228,20 +198,6 @@ public struct AnyDeclaration: Token {
 
 public struct EndOfAnyDeclaration: Token {
     public let description = "}"
-}
-
-extension TokenBox: Equatable, CustomStringConvertible {
-    public static func ==(lhs: TokenBox<T>, rhs: TokenBox<T>) -> Bool {
-        guard lhs.value == rhs.value else { return false }
-        guard lhs.offset == rhs.offset else { return false }
-        guard lhs.length == rhs.length else { return false }
-        guard lhs.line == rhs.line else { return false }
-        return true
-    }
-    
-    public var description: String {
-        return "\(value) - \(offset)[\(length)] - at line: \(line)"
-    }
 }
 
 // MARK: - Annotation Builder
