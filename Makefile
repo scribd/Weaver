@@ -1,4 +1,4 @@
-.PHONY: clean build install package generate_sources test
+.PHONY: clean build install package generate_sources test codecov
 
 build:
 	$(call build)
@@ -24,6 +24,14 @@ uninstall:
 
 test:
 	@swift test 
+	@(call install)
+	bash -c "cd Sample && fastlane test"
+
+codecov:
+	$(call build)
+	xcodebuild test -scheme Tests -enableCodeCoverage YES
+	bash -c "bash <(curl -s https://codecov.io/bash) -J Weaver -t eaa7c4af-5ca2-4e08-8f07-38a44671e5e0"
+	rm *.coverage.txt
 
 define generate_sources
     .sourcery/bin/sourcery

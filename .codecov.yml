@@ -1,6 +1,7 @@
 coverage:
   ignore:
     - Sources/WeaverCommand
+    - Tests
   status:
     patch: false
     changes: false
