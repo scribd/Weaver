@@ -7,7 +7,7 @@ cache:
   - bundler
 before_install:
   - bundle install
-  - brew bundle
+  - brew update && brew bundle
 script:
   - swift test
   - make install
