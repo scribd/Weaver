@@ -416,7 +416,7 @@ private extension Resolver {
                                                         name: dependency.name,
                                                         typeName: dependency.associatedResolver.typeName))
         } else {
-            history.append(.couldNotFindDependencyInResolver(line: line, file: file, name: index.name, typeName: typeName))
+            history.append(.dependencyNotFound(line: line, file: file, name: index.name, typeName: typeName))
         }
 
         if try checkIsolation(history: history) == false {
@@ -444,13 +444,17 @@ private extension Resolver {
     
     func checkIsolation(history: [InspectorAnalysisHistoryRecord]) throws -> Bool {
         
+        let connectedReferents = dependents.filter { !$0.isIsolated }
+        
         switch (dependents.isEmpty, isIsolated) {
         case (true, false):
             throw InspectorAnalysisError.unresolvableDependency(history: history)
             
-        case (false, true) where dependents.first(where: { !$0.isIsolated }) != nil:
-            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents
-            
+        case (false, true) where !connectedReferents.isEmpty:
+            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(typeName: typeName, referents: connectedReferents.map {
+                InspectorAnalysisResolver(line: $0.line, file: $0.file, typeName: $0.typeName)
+            })
+
         case (true, true):
             return false
             

@@ -84,7 +84,7 @@ final class App {
                                                 file: "test.swift",
                                                 dependencyName: "sessionManager",
                                                 typeName: nil,
-                                                underlyingError: .unresolvableDependency(history: [.couldNotFindDependencyInResolver(line: 4, file: "test.swift", name: "sessionManager", typeName: "App")])))
+                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 4, file: "test.swift", name: "sessionManager", typeName: "App")])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -339,7 +339,7 @@ final class Coordinator {
                                                 file: "test.swift",
                                                 dependencyName: "viewController3",
                                                 typeName: nil,
-                                                underlyingError: .unresolvableDependency(history: [.couldNotFindDependencyInResolver(line: 0, file: "test.swift", name: "viewController3", typeName: "AppDelegate")])))
+                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 0, file: "test.swift", name: "viewController3", typeName: "AppDelegate")])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -510,7 +510,12 @@ final class MovieAPI: APIProtocol {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 34, file: "test.swift", dependencyName: "movieAPI", typeName: "MovieAPI", underlyingError: .isolatedResolverCannotHaveReferents))
+            XCTAssertEqual(error, .invalidGraph(line: 34,
+                                                file: "test.swift",
+                                                dependencyName: "movieAPI",
+                                                typeName: "MovieAPI",
+                                                underlyingError: .isolatedResolverCannotHaveReferents(typeName: "HomeViewController",
+                                                                                                      referents: [InspectorAnalysisResolver(line: 0, file: "test.swift", typeName: "AppDelegate")])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -547,8 +552,8 @@ final class MovieViewController: UIViewController {
                                                 file: "test.swift",
                                                 dependencyName: "urlSession",
                                                 typeName: nil,
-                                                underlyingError: .unresolvableDependency(history: [.couldNotFindDependencyInResolver(line: 5, file: "test.swift", name: "urlSession", typeName: "HomeViewController"),
-                                                                                                   .couldNotFindDependencyInResolver(line: 0, file: "test.swift", name: "urlSession", typeName: "AppDelegate")])))
+                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 5, file: "test.swift", name: "urlSession", typeName: "HomeViewController"),
+                                                                                                   .dependencyNotFound(line: 0, file: "test.swift", name: "urlSession", typeName: "AppDelegate")])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

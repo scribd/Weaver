@@ -63,6 +63,14 @@ public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
     guard lhs.doesSupportObjc == rhs.doesSupportObjc else { return false }
     return true
 }
+// MARK: - InspectorAnalysisResolver AutoEquatable
+extension InspectorAnalysisResolver: Equatable {}
+internal func == (lhs: InspectorAnalysisResolver, rhs: InspectorAnalysisResolver) -> Bool {
+    guard compareOptionals(lhs: lhs.line, rhs: rhs.line, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.file, rhs: rhs.file, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
+    return true
+}
 // MARK: - ParameterAnnotation AutoEquatable
 extension ParameterAnnotation: Equatable {}
 public func == (lhs: ParameterAnnotation, rhs: ParameterAnnotation) -> Bool {
@@ -148,7 +156,9 @@ internal func == (lhs: InspectorAnalysisError, rhs: InspectorAnalysisError) -> B
         return true
     case (.unresolvableDependency(let lhs), .unresolvableDependency(let rhs)):
         return lhs == rhs
-    case (.isolatedResolverCannotHaveReferents, .isolatedResolverCannotHaveReferents):
+    case (.isolatedResolverCannotHaveReferents(let lhs), .isolatedResolverCannotHaveReferents(let rhs)):
+        if lhs.typeName != rhs.typeName { return false }
+        if lhs.referents != rhs.referents { return false }
         return true
     default: return false
     }
@@ -163,7 +173,7 @@ internal func == (lhs: InspectorAnalysisHistoryRecord, rhs: InspectorAnalysisHis
         if lhs.name != rhs.name { return false }
         if lhs.typeName != rhs.typeName { return false }
         return true
-    case (.couldNotFindDependencyInResolver(let lhs), .couldNotFindDependencyInResolver(let rhs)):
+    case (.dependencyNotFound(let lhs), .dependencyNotFound(let rhs)):
         if lhs.line != rhs.line { return false }
         if lhs.file != rhs.file { return false }
         if lhs.name != rhs.name { return false }
