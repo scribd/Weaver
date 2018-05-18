@@ -1,4 +1,4 @@
-.PHONY: clean build install package generate_sources
+.PHONY: clean build install package generate_sources codecov
 
 build:
 	$(call build)
@@ -21,6 +21,12 @@ package:
 uninstall:
 	rm "$(DESTDIR)/bin/weaver"
 	rm -rf "$(DESTDIR)/share/weaver"
+
+codecov:
+	$(call build)
+	xcodebuild test -scheme Tests -enableCodeCoverage YES
+	bash -c "bash <(curl -s https://codecov.io/bash) -J Weaver -t eaa7c4af-5ca2-4e08-8f07-38a44671e5e0"
+	rm *.coverage.txt
 
 define generate_sources
     .sourcery/bin/sourcery
