@@ -39,16 +39,19 @@ enum InspectorError: Error, AutoEquatable {
 
 enum InspectorAnalysisError: Error, AutoEquatable {
     case cyclicDependency
-    case unresolvableDependency
+    case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
     case isolatedResolverCannotHaveReferents
+}
+
+enum InspectorAnalysisHistoryRecord: AutoEquatable {
+    case foundUnaccessibleDependency(line: Int, file: String, name: String, typeName: String?)
+    case couldNotFindDependencyInResolver(line: Int?, file: String?, name: String, typeName: String?)
 }
 
 // MARK: - Description
 
 extension TokenError: CustomStringConvertible {
 
-    // <filename>:<linenumber>: error | warn | note : <message>\n
-    
     var description: String {
         switch self {
         case .invalidAnnotation(let annotation):
@@ -108,7 +111,11 @@ extension InspectorError: CustomStringConvertible {
         case .invalidAST(let token, let file):
             return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
         case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
-            return printableError(line, file, "Invalid graph because of issue: \(underlyingIssue): with '\(dependencyName): \(typeName ?? "_")'")
+            var description = printableError(line, file, "Invalid graph because of issue: \(underlyingIssue): with '\(dependencyName): \(typeName ?? "_")'")
+            if let history = underlyingIssue.history {
+                description = ([description] + history.map { $0.description }).joined(separator: "\n")
+            }
+            return description
         }
     }
 }
@@ -125,10 +132,40 @@ extension InspectorAnalysisError: CustomStringConvertible {
             return "Isolated resolver cannot have referents"
         }
     }
+    
+    fileprivate var history: [InspectorAnalysisHistoryRecord]? {
+        switch self {
+        case .cyclicDependency,
+             .isolatedResolverCannotHaveReferents:
+            return nil
+        case .unresolvableDependency(let history):
+            return history
+        }
+    }
+}
+
+extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
+    
+    var description: String {
+        switch self {
+        case .couldNotFindDependencyInResolver(let line, let file, let name, let typeName):
+            return printableWarning(line, file, "Could not find the dependency '\(name)' in '\(typeName ?? "_")'. You may want to register it here to solve this issue.")
+        case .foundUnaccessibleDependency(let line, let file, let name, let typeName):
+            return printableWarning(line, file, "Found unaccessible dependency '\(name)' in '\(typeName ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
+        }
+    }
 }
 
 // MARK: - Utils
 
 private func printableError(_ line: Int, _ file: String, _ message: String) -> String {
     return "\(file):\(line + 1): error: \(message)."
+}
+
+private func printableWarning(_ line: Int?, _ file: String?, _ message: String) -> String {
+    if let line = line, let file = file {
+        return "\(file):\(line + 1): warning: \(message)."
+    } else {
+        return "warning: \(message)."
+    }
 }

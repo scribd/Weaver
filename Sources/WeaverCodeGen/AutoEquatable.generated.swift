@@ -1,4 +1,4 @@
-// Generated using Sourcery 0.13.1 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 0.11.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable file_length
@@ -146,9 +146,28 @@ internal func == (lhs: InspectorAnalysisError, rhs: InspectorAnalysisError) -> B
     switch (lhs, rhs) {
     case (.cyclicDependency, .cyclicDependency):
         return true
-    case (.unresolvableDependency, .unresolvableDependency):
-        return true
+    case (.unresolvableDependency(let lhs), .unresolvableDependency(let rhs)):
+        return lhs == rhs
     case (.isolatedResolverCannotHaveReferents, .isolatedResolverCannotHaveReferents):
+        return true
+    default: return false
+    }
+}
+// MARK: - InspectorAnalysisHistoryRecord AutoEquatable
+extension InspectorAnalysisHistoryRecord: Equatable {}
+internal func == (lhs: InspectorAnalysisHistoryRecord, rhs: InspectorAnalysisHistoryRecord) -> Bool {
+    switch (lhs, rhs) {
+    case (.foundUnaccessibleDependency(let lhs), .foundUnaccessibleDependency(let rhs)):
+        if lhs.line != rhs.line { return false }
+        if lhs.file != rhs.file { return false }
+        if lhs.name != rhs.name { return false }
+        if lhs.typeName != rhs.typeName { return false }
+        return true
+    case (.couldNotFindDependencyInResolver(let lhs), .couldNotFindDependencyInResolver(let rhs)):
+        if lhs.line != rhs.line { return false }
+        if lhs.file != rhs.file { return false }
+        if lhs.name != rhs.name { return false }
+        if lhs.typeName != rhs.typeName { return false }
         return true
     default: return false
     }
