@@ -56,9 +56,16 @@ private final class Resolver {
     var config: Set<ConfigurationAttribute> = Set()
     var dependencies: [DependencyIndex: Dependency] = [:]
     var dependents: [Resolver] = []
-    
-    init(typeName: String? = nil) {
+
+    var file: String?
+    var line: Int?
+
+    init(typeName: String? = nil,
+         file: String? = nil,
+         line: Int? = nil) {
         self.typeName = typeName
+        self.file = file
+        self.line = line
     }
 }
 
@@ -108,10 +115,12 @@ private struct BuildCacheIndex {
 
 extension Graph {
     
-    func insertResolver(with registerAnnotation: RegisterAnnotation) {
-        let resolver = Resolver(typeName: registerAnnotation.typeName)
-        resolversByName[registerAnnotation.name] = resolver
-        resolversByType[registerAnnotation.typeName] = resolver
+    func insertResolver(with registerAnnotation: TokenBox<RegisterAnnotation>, fileName: String?) {
+        let resolver = Resolver(typeName: registerAnnotation.value.typeName,
+                                file: fileName,
+                                line: registerAnnotation.line)
+        resolversByName[registerAnnotation.value.name] = resolver
+        resolversByType[registerAnnotation.value.typeName] = resolver
     }
     
     func insertResolver(with referenceAnnotation: ReferenceAnnotation) {
@@ -125,11 +134,13 @@ extension Graph {
         return resolversByName[name]
     }
     
-    func resolver(typed type: String) -> Resolver {
+    func resolver(typed type: String, line: Int, fileName: String) -> Resolver {
         if let resolver = resolversByType[type] {
+            resolver.line = line
+            resolver.file = fileName
             return resolver
         }
-        let resolver = Resolver(typeName: type)
+        let resolver = Resolver(typeName: type, file: fileName, line: line)
         resolversByType[type] = resolver
         return resolver
     }
@@ -146,14 +157,18 @@ private extension Inspector {
 
     private func collectResolvers(from syntaxTrees: [Expr]) {
 
+        var fileName: String?
+        
         // Insert the resolvers for which we know the type.
         for expr in ExprSequence(exprs: syntaxTrees) {
             switch expr {
             case .registerAnnotation(let token):
-                graph.insertResolver(with: token.value)
+                graph.insertResolver(with: token, fileName: fileName)
                 
-            case .file,
-                 .typeDeclaration,
+            case .file(_, let _fileName):
+                fileName = _fileName
+            
+            case .typeDeclaration,
                  .scopeAnnotation,
                  .referenceAnnotation,
                  .customRefAnnotation,
@@ -202,7 +217,10 @@ private extension Inspector {
         for expr in exprs {
             switch expr {
             case .typeDeclaration(let injectableType, let config, let children):
-                let resolver = graph.resolver(typed: injectableType.value.name)
+                let resolver = graph.resolver(typed: injectableType.value.name,
+                                              line: injectableType.line,
+                                              fileName: fileName)
+
                 try resolver.update(with: children,
                                     config: config,
                                     fileName: fileName,
@@ -234,7 +252,7 @@ private extension Dependency {
                                               file: fileName,
                                               dependencyName: registerAnnotation.value.name,
                                               typeName: registerAnnotation.value.typeName,
-                                              underlyingError: .unresolvableDependency)
+                                              underlyingError: .unresolvableDependency(history: []))
         }
         
         self.init(name: registerAnnotation.value.name,
@@ -257,7 +275,7 @@ private extension Dependency {
                                               file: fileName,
                                               dependencyName: referenceAnnotation.value.name,
                                               typeName: referenceAnnotation.value.typeName,
-                                              underlyingError: .unresolvableDependency)
+                                              underlyingError: .unresolvableDependency(history: []))
         }
         
         self.init(name: referenceAnnotation.value.name,
@@ -277,7 +295,7 @@ private extension Resolver {
                 graph: Graph) throws {
 
         self.config = Set(config.map { $0.value.attribute })
-
+        
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
         var scopeAnnotations: [String: ScopeAnnotation] = [:]
@@ -286,7 +304,10 @@ private extension Resolver {
         for child in children {
             switch child {
             case .typeDeclaration(let injectableType, let config, let children):
-                let resolver = graph.resolver(typed: injectableType.value.name)
+                let resolver = graph.resolver(typed: injectableType.value.name,
+                                              line: injectableType.line,
+                                              fileName: fileName)
+
                 try resolver.update(with: children,
                                     config: config,
                                     fileName: fileName,
@@ -346,7 +367,7 @@ private extension Dependency {
 
         do {
 
-            if try dependentResovler.checkIsolation() == false {
+            if try dependentResovler.checkIsolation(history: []) == false {
                 return
             }
             
@@ -374,35 +395,42 @@ private extension Resolver {
         }
 
         var visitedResolvers = Set<Resolver>()
-        try resolveDependency(index: index, visitedResolvers: &visitedResolvers)
+        var history = [InspectorAnalysisHistoryRecord]()
+        try resolveDependency(index: index, visitedResolvers: &visitedResolvers, history: &history)
         
         cache.insert(cacheIndex)
     }
     
-    private func resolveDependency(index: DependencyIndex, visitedResolvers: inout Set<Resolver>) throws {
+    private func resolveDependency(index: DependencyIndex, visitedResolvers: inout Set<Resolver>, history: inout [InspectorAnalysisHistoryRecord]) throws {
         if visitedResolvers.contains(self) {
             throw InspectorAnalysisError.cyclicDependency
         }
         visitedResolvers.insert(self)
         
-        if let dependency = dependencies[index], let scope = dependency.scope {
-            if (dependency.isCustom && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
+        if let dependency = dependencies[index] {
+            if let scope = dependency.scope, (dependency.isCustom && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
                 return
             }
+            history.append(.foundUnaccessibleDependency(line: dependency.line,
+                                                        file: dependency.file,
+                                                        name: dependency.name,
+                                                        typeName: dependency.associatedResolver.typeName))
+        } else {
+            history.append(.dependencyNotFound(line: line, file: file, name: index.name, typeName: typeName))
         }
-        
-        if try checkIsolation() == false {
+
+        if try checkIsolation(history: history) == false {
            return
         }
         
         for dependent in dependents {
             var visitedResolversCopy = visitedResolvers
-            if let _ = try? dependent.resolveDependency(index: index, visitedResolvers: &visitedResolversCopy) {
+            if let _ = try? dependent.resolveDependency(index: index, visitedResolvers: &visitedResolversCopy, history: &history) {
                 return
             }
         }
         
-        throw InspectorAnalysisError.unresolvableDependency
+        throw InspectorAnalysisError.unresolvableDependency(history: history)
     }
 }
 
@@ -414,15 +442,19 @@ private extension Resolver {
         return config.contains(.isIsolated(value: true))
     }
     
-    func checkIsolation() throws -> Bool {
+    func checkIsolation(history: [InspectorAnalysisHistoryRecord]) throws -> Bool {
+        
+        let connectedReferents = dependents.filter { !$0.isIsolated }
         
         switch (dependents.isEmpty, isIsolated) {
         case (true, false):
-            throw InspectorAnalysisError.unresolvableDependency
+            throw InspectorAnalysisError.unresolvableDependency(history: history)
             
-        case (false, true) where dependents.first(where: { !$0.isIsolated }) != nil:
-            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents
-            
+        case (false, true) where !connectedReferents.isEmpty:
+            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(typeName: typeName, referents: connectedReferents.map {
+                InspectorAnalysisResolver(line: $0.line, file: $0.file, typeName: $0.typeName)
+            })
+
         case (true, true):
             return false
             

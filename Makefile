@@ -29,7 +29,7 @@ codecov:
 	rm *.coverage.txt
 
 define generate_sources
-    .sourcery/bin/sourcery
+    sourcery
 endef
 
 define build

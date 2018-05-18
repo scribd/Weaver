@@ -80,7 +80,11 @@ final class App {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 1, file: "test.swift", dependencyName: "sessionManager", typeName: nil, underlyingError: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 1,
+                                                file: "test.swift",
+                                                dependencyName: "sessionManager",
+                                                typeName: nil,
+                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 4, file: "test.swift", name: "sessionManager", typeName: "App")])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -255,7 +259,11 @@ final class ViewController {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 10, file: "test.swift", dependencyName: "appDelegate", typeName: nil, underlyingError: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 10,
+                                                file: "test.swift",
+                                                dependencyName: "appDelegate",
+                                                typeName: nil,
+                                                underlyingError: .unresolvableDependency(history: [.foundUnaccessibleDependency(line: 1, file: "test.swift", name: "appDelegate", typeName: nil)])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -327,7 +335,11 @@ final class Coordinator {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 14, file: "test.swift", dependencyName: "viewController3", typeName: nil, underlyingError: .unresolvableDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 14,
+                                                file: "test.swift",
+                                                dependencyName: "viewController3",
+                                                typeName: nil,
+                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 0, file: "test.swift", name: "viewController3", typeName: "AppDelegate")])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -498,7 +510,50 @@ final class MovieAPI: APIProtocol {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 34, file: "test.swift", dependencyName: "movieAPI", typeName: "MovieAPI", underlyingError: .isolatedResolverCannotHaveReferents))
+            XCTAssertEqual(error, .invalidGraph(line: 34,
+                                                file: "test.swift",
+                                                dependencyName: "movieAPI",
+                                                typeName: "MovieAPI",
+                                                underlyingError: .isolatedResolverCannotHaveReferents(typeName: "HomeViewController",
+                                                                                                      referents: [InspectorAnalysisResolver(line: 0, file: "test.swift", typeName: "AppDelegate")])))
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_graph_with_an_unresolvable_dependency_on_two_levels() {
+        let file = File(contents: """
+final class AppDelegate {
+    // weaver: homeViewController = HomeViewController <- UIViewController
+    // weaver: homeViewController.scope = .container
+}
+
+final class HomeViewController: UIViewController {
+    // weaver: movieController = MovieViewController <- UIViewController
+    // weaver: movieController.scope = .container
+}
+
+final class MovieViewController: UIViewController {
+    // weaver: urlSession <- URLSession
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, .invalidGraph(line: 11,
+                                                file: "test.swift",
+                                                dependencyName: "urlSession",
+                                                typeName: nil,
+                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 5, file: "test.swift", name: "urlSession", typeName: "HomeViewController"),
+                                                                                                   .dependencyNotFound(line: 0, file: "test.swift", name: "urlSession", typeName: "AppDelegate")])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

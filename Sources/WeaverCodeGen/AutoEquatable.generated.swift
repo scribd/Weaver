@@ -1,4 +1,4 @@
-// Generated using Sourcery 0.13.1 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 0.11.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable file_length
@@ -61,6 +61,14 @@ public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
     guard lhs.name == rhs.name else { return false }
     guard lhs.accessLevel == rhs.accessLevel else { return false }
     guard lhs.doesSupportObjc == rhs.doesSupportObjc else { return false }
+    return true
+}
+// MARK: - InspectorAnalysisResolver AutoEquatable
+extension InspectorAnalysisResolver: Equatable {}
+internal func == (lhs: InspectorAnalysisResolver, rhs: InspectorAnalysisResolver) -> Bool {
+    guard compareOptionals(lhs: lhs.line, rhs: rhs.line, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.file, rhs: rhs.file, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
     return true
 }
 // MARK: - ParameterAnnotation AutoEquatable
@@ -146,9 +154,30 @@ internal func == (lhs: InspectorAnalysisError, rhs: InspectorAnalysisError) -> B
     switch (lhs, rhs) {
     case (.cyclicDependency, .cyclicDependency):
         return true
-    case (.unresolvableDependency, .unresolvableDependency):
+    case (.unresolvableDependency(let lhs), .unresolvableDependency(let rhs)):
+        return lhs == rhs
+    case (.isolatedResolverCannotHaveReferents(let lhs), .isolatedResolverCannotHaveReferents(let rhs)):
+        if lhs.typeName != rhs.typeName { return false }
+        if lhs.referents != rhs.referents { return false }
         return true
-    case (.isolatedResolverCannotHaveReferents, .isolatedResolverCannotHaveReferents):
+    default: return false
+    }
+}
+// MARK: - InspectorAnalysisHistoryRecord AutoEquatable
+extension InspectorAnalysisHistoryRecord: Equatable {}
+internal func == (lhs: InspectorAnalysisHistoryRecord, rhs: InspectorAnalysisHistoryRecord) -> Bool {
+    switch (lhs, rhs) {
+    case (.foundUnaccessibleDependency(let lhs), .foundUnaccessibleDependency(let rhs)):
+        if lhs.line != rhs.line { return false }
+        if lhs.file != rhs.file { return false }
+        if lhs.name != rhs.name { return false }
+        if lhs.typeName != rhs.typeName { return false }
+        return true
+    case (.dependencyNotFound(let lhs), .dependencyNotFound(let rhs)):
+        if lhs.line != rhs.line { return false }
+        if lhs.file != rhs.file { return false }
+        if lhs.name != rhs.name { return false }
+        if lhs.typeName != rhs.typeName { return false }
         return true
     default: return false
     }
