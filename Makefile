@@ -1,4 +1,4 @@
-.PHONY: clean build install package generate_sources test codecov
+.PHONY: clean build install package generate_sources codecov
 
 build:
 	$(call build)
@@ -21,11 +21,6 @@ package:
 uninstall:
 	rm "$(DESTDIR)/bin/weaver"
 	rm -rf "$(DESTDIR)/share/weaver"
-
-test:
-	@swift test 
-	@(call install)
-	bash -c "cd Sample && fastlane test"
 
 codecov:
 	$(call build)

@@ -8,4 +8,6 @@ cache:
 before_install:
   - bundle install
 script:
-  - make test
+  - swift test
+  - make install
+  - bash -c "cd Sample && fastlane test"
