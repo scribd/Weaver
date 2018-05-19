@@ -67,6 +67,12 @@ final class ErrorTests: XCTestCase {
 fake_file.swift:43: error: The dependency graph is invalid. Dependency cannot be resolved.
 fake_file.swift:43: warning: Could not find the dependency 'fake_dependecy' in 'fake_type'. You may want to register it here to solve this issue.
 """)
+        
+        XCTAssertEqual(InspectorError.invalidGraph(line: 42, file: "fake_file.swift", dependencyName: "fake_dependency", typeName: "fake_type", underlyingError: .isolatedResolverCannotHaveReferents(typeName: "fake_type", referents: [InspectorAnalysisResolver(line: 42, file: "fake_file.swift", typeName: "fake_type")])).description, """
+fake_file.swift:43: error: The dependency graph is invalid. This type is flagged as isolated. It cannot have any connected referent.
+fake_file.swift:43: error: 'fake_type' cannot depend on 'fake_type' because it is flagged as 'isolated'. You may want to set 'fake_type.isIsolated' to 'false'.
+""")
+
     }
     
     // MARK: - InspectorAnalysisError
@@ -78,5 +84,14 @@ fake_file.swift:43: warning: Could not find the dependency 'fake_dependecy' in '
         XCTAssertEqual(InspectorAnalysisError.unresolvableDependency(history: []).description, "Dependency cannot be resolved")
         
         XCTAssertEqual(InspectorAnalysisError.isolatedResolverCannotHaveReferents(typeName: "fake_type", referents: []).description, "This type is flagged as isolated. It cannot have any connected referent")
+    }
+    
+    // MARK: - InspectorAnalysisHistoryRecord
+    
+    func test_inspectorAnalysisHistoryRecord_description() {
+        
+        XCTAssertEqual(InspectorAnalysisHistoryRecord.dependencyNotFound(line: 42, file: "fake_file.swift", name: "fake_dependency", typeName: "fake_type").description, "fake_file.swift:43: warning: Could not find the dependency 'fake_dependency' in 'fake_type'. You may want to register it here to solve this issue.")
+        
+        XCTAssertEqual(InspectorAnalysisHistoryRecord.foundUnaccessibleDependency(line: 42, file: "fake_file.swift", name: "fake_dependency", typeName: "fake_type").description, "fake_file.swift:43: warning: Found unaccessible dependency 'fake_dependency' in 'fake_type'. You may want to set its scope to '.container' or '.weak' to solve this issue.")
     }
 }
