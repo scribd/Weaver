@@ -22,6 +22,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		19C298D420B0B32A00094218 /* ErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C298D220B0B32300094218 /* ErrorTests.swift */; };
 		19F5475B20A94DBC006F40DF /* ConfigurationAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */; };
 		19FDDD4120AC96BD007138DF /* AutoTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FDDD4020AC96BD007138DF /* AutoTypes.swift */; };
 		19FDDD4220AC9784007138DF /* AutoEquatable.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FDDD3E20AC968E007138DF /* AutoEquatable.generated.swift */; };
@@ -456,6 +457,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		19C298D220B0B32300094218 /* ErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorTests.swift; sourceTree = "<group>"; };
 		19F5475A20A94DBC006F40DF /* ConfigurationAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationAttribute.swift; sourceTree = "<group>"; };
 		19FDDD3E20AC968E007138DF /* AutoEquatable.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AutoEquatable.generated.swift; sourceTree = "<group>"; };
 		19FDDD4020AC96BD007138DF /* AutoTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoTypes.swift; sourceTree = "<group>"; };
@@ -917,6 +919,7 @@
 				OBJ_42 /* LexerTests.swift */,
 				OBJ_43 /* ParserTests.swift */,
 				OBJ_44 /* SourceKitDeclarationTests.swift */,
+				19C298D220B0B32300094218 /* ErrorTests.swift */,
 			);
 			name = WeaverCodeGenTests;
 			path = Tests/WeaverCodeGenTests;
@@ -1637,6 +1640,7 @@
 			files = (
 				OBJ_292 /* GeneratorTests.swift in Sources */,
 				OBJ_293 /* InspectorTests.swift in Sources */,
+				19C298D420B0B32A00094218 /* ErrorTests.swift in Sources */,
 				OBJ_294 /* LexerTests.swift in Sources */,
 				OBJ_295 /* ParserTests.swift in Sources */,
 				OBJ_296 /* SourceKitDeclarationTests.swift in Sources */,
