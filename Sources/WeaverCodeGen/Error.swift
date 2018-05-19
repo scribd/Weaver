@@ -65,9 +65,9 @@ extension TokenError: CustomStringConvertible {
         case .invalidScope(let scope):
             return "Invalid scope: '\(scope)'"
         case .invalidCustomRefValue(let value):
-            return "Invalid customRef value: \(value). Expected true|false."
+            return "Invalid customRef value: \(value). Expected true|false"
         case .invalidConfigurationAttributeValue(let value, let expected):
-            return "Invlid configuration attribute value: \(value). Expected \(expected)."
+            return "Invalid configuration attribute value: \(value). Expected \(expected)"
         }
     }
 }
@@ -115,7 +115,7 @@ extension InspectorError: CustomStringConvertible {
     var description: String {
         switch self {
         case .invalidAST(let token, let file):
-            return "Invalid AST because of token: \(token)" + (file.flatMap { ": in file \($0)." } ?? ".")
+            return xcodeLogString(.error, nil, file, "Invalid AST because of token: \(token)")
         case .invalidGraph(let line, let file, _, _, let underlyingIssue):
             var description = xcodeLogString(.error, line, file, "The dependency graph is invalid. \(underlyingIssue)")
             if let notes = underlyingIssue.notes {
@@ -156,7 +156,7 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
     var description: String {
         switch self {
         case .dependencyNotFound(let line, let file, let name, let typeName):
-            return xcodeLogString(.warning, line, file, "Could not find the dependency '\(name)' in '\(typeName ?? "_")'. You may want to register it here to solve this issue.")
+            return xcodeLogString(.warning, line, file, "Could not find the dependency '\(name)' in '\(typeName ?? "_")'. You may want to register it here to solve this issue")
         case .foundUnaccessibleDependency(let line, let file, let name, let typeName):
             return xcodeLogString(.warning, line, file, "Found unaccessible dependency '\(name)' in '\(typeName ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
         }
@@ -171,9 +171,13 @@ private enum LogLevel: String {
 }
 
 private func xcodeLogString(_ logLevel: LogLevel, _ line: Int?, _ file: String?, _ message: String) -> String {
-    if let line = line, let file = file {
+    
+    switch (line, file) {
+    case (.some(let line), .some(let file)):
         return "\(file):\(line + 1): \(logLevel.rawValue): \(message)."
-    } else {
+    case (nil, .some(let file)):
+        return "\(file): \(logLevel.rawValue): \(message)."
+    case (_, nil):
         return "\(logLevel.rawValue): \(message)."
     }
 }
