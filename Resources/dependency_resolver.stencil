@@ -5,6 +5,8 @@ import Weaver
 {% for resolver in resolvers %}
 // MARK: - {{resolver.targetTypeName}}
 
+{% if not resolver.isIsolated %}
+
 {% if resolver.isPublic %}public {% endif %}final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer {
     {% for parameter in resolver.parameters %}
     let {{parameter.name}}: {{parameter.typeName}}
@@ -26,6 +28,8 @@ import Weaver
     }
 }
 
+{% endif %}{# not resolver.isIsolated #}
+
 {% if resolver.doesSupportObjc %}@objc {% endif %}{% if resolver.isPublic %}public {% endif %}protocol {{resolver.targetTypeName}}DependencyResolver {
     {% for parameter in resolver.parameters %}
     var {{parameter.name}}: {{parameter.typeName}} { get }
@@ -45,6 +49,8 @@ import Weaver
     {% endfor %}
 }
 
+{% if not resolver.isIsolated %}
+
 extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeName}}DependencyResolver {
     {% for reference in resolver.references %}
     {% if reference.parameters %}
@@ -59,7 +65,12 @@ extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeN
     {% endfor %}
 }
 
+{% endif %}{# not resolver.isIsolated #}
+
 {% if not resolver.isRoot %}
+
+{% if not resolver.isIsolated %}
+
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}} {
 
     {% if resolver.isPublic %}public {% endif %}static func make{{resolver.targetTypeName}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.typeName}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{resolver.targetTypeName}} {
@@ -68,12 +79,22 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
     }
 }
 
+{% endif %}{# not resolver.isIsolated #}
+
 {% if resolver.isPublic %}public {% endif %}protocol {{resolver.targetTypeName}}{% if resolver.doesSupportObjc %}ObjC{% endif %}DependencyInjectable {
     init(injecting dependencies: {{resolver.targetTypeName}}DependencyResolver)
 }
 
+{% if not resolver.isIsolated %}
+
 {% if not resolver.doesSupportObjc %}
+
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}}: {{resolver.targetTypeName}}DependencyInjectable {}
-{% endif %}
-{% endif %}
-{% endfor %}
+
+{% endif %}{# not resolver.doesSupportObjc #}
+
+{% endif %}{# not resolver.isIsolated #}
+
+{% endif %}{# not resolver.isRoot #}
+
+{% endfor %}{# resolvers #}

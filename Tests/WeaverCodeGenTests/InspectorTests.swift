@@ -84,7 +84,9 @@ final class App {
                                                 file: "test.swift",
                                                 dependencyName: "sessionManager",
                                                 typeName: nil,
-                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 4, file: "test.swift", name: "sessionManager", typeName: "App")])))
+                                                underlyingError: .unresolvableDependency(history: [
+                                                    .dependencyNotFound(line: 4, file: "test.swift", name: "sessionManager", typeName: "App")
+                                                    ])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -121,7 +123,15 @@ final class SessionManager {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, .invalidGraph(line: 9, file: "test.swift", dependencyName: "sessionManager1", typeName: "SessionManager", underlyingError: .cyclicDependency))
+            XCTAssertEqual(error, .invalidGraph(line: 9,
+                                                file: "test.swift",
+                                                dependencyName: "sessionManager1",
+                                                typeName: "SessionManager",
+                                                underlyingError: .cyclicDependency(history: [
+                                                    .triedToBuildType(line: 13, file: "test.swift", typeName: "SessionManager", stepCount: 0),
+                                                    .triedToBuildType(line: 0, file: "test.swift", typeName: "API", stepCount: 1),
+                                                    .triedToBuildType(line: 5, file: "test.swift", typeName: "Session", stepCount: 2)
+                                                    ])))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -339,7 +349,9 @@ final class Coordinator {
                                                 file: "test.swift",
                                                 dependencyName: "viewController3",
                                                 typeName: nil,
-                                                underlyingError: .unresolvableDependency(history: [.dependencyNotFound(line: 0, file: "test.swift", name: "viewController3", typeName: "AppDelegate")])))
+                                                underlyingError: .unresolvableDependency(history: [
+                                                    .dependencyNotFound(line: 0, file: "test.swift", name: "viewController3", typeName: "AppDelegate")
+                                                    ])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

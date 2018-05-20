@@ -38,7 +38,7 @@ enum InspectorError: Error, AutoEquatable {
 }
 
 enum InspectorAnalysisError: Error, AutoEquatable {
-    case cyclicDependency
+    case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
     case isolatedResolverCannotHaveReferents(typeName: String?, referents: [InspectorAnalysisResolver])
 }
@@ -46,6 +46,8 @@ enum InspectorAnalysisError: Error, AutoEquatable {
 enum InspectorAnalysisHistoryRecord: AutoEquatable {
     case foundUnaccessibleDependency(line: Int, file: String, name: String, typeName: String?)
     case dependencyNotFound(line: Int?, file: String?, name: String, typeName: String?)
+    case triedToBuildType(line: Int?, file: String?, typeName: String?, stepCount: Int)
+    case triedToResolveDependencyInResolver(line: Int?, file: String?, dependencyName: String, typeName: String?, stepCount: Int)
 }
 
 struct InspectorAnalysisResolver: AutoEquatable {
@@ -116,8 +118,8 @@ extension InspectorError: CustomStringConvertible {
         switch self {
         case .invalidAST(let token, let file):
             return xcodeLogString(.error, nil, file, "Invalid AST because of token: \(token)")
-        case .invalidGraph(let line, let file, _, _, let underlyingIssue):
-            var description = xcodeLogString(.error, line, file, "The dependency graph is invalid. \(underlyingIssue)")
+        case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
+            var description = xcodeLogString(.error, line, file, "Detected invalid dependency graph starting with '\(dependencyName): \(typeName ?? "_")'. \(underlyingIssue)")
             if let notes = underlyingIssue.notes {
                 description = ([description] + notes.map { $0.description }).joined(separator: "\n")
             }
@@ -141,10 +143,15 @@ extension InspectorAnalysisError: CustomStringConvertible {
     
     fileprivate var notes: [CustomStringConvertible]? {
         switch self {
-        case .cyclicDependency:
-            return nil
+        case .cyclicDependency(let history):
+            return history
         case .isolatedResolverCannotHaveReferents(let typeName, let referents):
-            return referents.map { xcodeLogString(.error, $0.line, $0.file, "'\($0.typeName ?? "_")' cannot depend on '\(typeName ?? "_")' because it is flagged as 'isolated'. You may want to set '\(typeName ?? "_").isIsolated' to 'false'") }
+            return referents.map {
+                xcodeLogString(.error, $0.line, $0.file,
+                               "'\($0.typeName ?? "_")' " +
+                                "cannot depend on '\(typeName ?? "_")' because it is flagged as 'isolated'. " +
+                                "You may want to set '\(typeName ?? "_").isIsolated' to 'false'")
+            }
         case .unresolvableDependency(let history):
             return history
         }
@@ -159,6 +166,58 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
             return xcodeLogString(.warning, line, file, "Could not find the dependency '\(name)' in '\(typeName ?? "_")'. You may want to register it here to solve this issue")
         case .foundUnaccessibleDependency(let line, let file, let name, let typeName):
             return xcodeLogString(.warning, line, file, "Found unaccessible dependency '\(name)' in '\(typeName ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
+        case .triedToBuildType(let line, let file, let typeName, let stepCount):
+            return xcodeLogString(.warning, line, file, "Step \(stepCount): Tried to build type '\(typeName ?? "_")'")
+        case .triedToResolveDependencyInResolver(let line, let file, let dependencyName, let typeName, let stepCount):
+            return xcodeLogString(.warning, line, file, "Step \(stepCount): Tried to resolve dependency '\(dependencyName)' in type '\(typeName ?? "_")'")
+        }
+    }
+}
+
+// MARK: - InspectorAnalysisHistoryRecord Filters
+
+extension Array where Element == InspectorAnalysisHistoryRecord {
+    
+    var unresolvableDependencyDetection: [InspectorAnalysisHistoryRecord] {
+        return filter {
+            switch $0 {
+            case .dependencyNotFound,
+                 .foundUnaccessibleDependency:
+                return true
+            case .triedToResolveDependencyInResolver,
+                 .triedToBuildType:
+                return false
+            }
+        }
+    }
+    
+    var cyclicDependencyDetection: [InspectorAnalysisHistoryRecord] {
+        return buildSteps + resolutionSteps
+    }
+    
+    var buildSteps: [InspectorAnalysisHistoryRecord] {
+        return filter {
+            switch $0 {
+            case .triedToBuildType:
+                return true
+            case .dependencyNotFound,
+                 .foundUnaccessibleDependency,
+                 .triedToResolveDependencyInResolver:
+                return false
+            }
+        }
+    }
+    
+    var resolutionSteps: [InspectorAnalysisHistoryRecord] {
+        return filter {
+            switch $0 {
+            case .triedToResolveDependencyInResolver:
+                return true
+            case .dependencyNotFound,
+                 .foundUnaccessibleDependency,
+                 .triedToBuildType:
+                return false
+            }
         }
     }
 }
