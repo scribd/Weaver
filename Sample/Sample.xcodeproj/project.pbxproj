@@ -19,6 +19,7 @@
 		19956DFA206B4F0A00751B70 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DF8206B4F0A00751B70 /* Main.storyboard */; };
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
+		19C298D620B1272800094218 /* Weaver.PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C298D520B1272800094218 /* Weaver.PersonManager.swift */; };
 		19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A4207AADD30011DF93 /* ImageManager.swift */; };
 		19DE26A9207BBD9D0011DF93 /* ManagerMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */; };
 		19DE26AB207BC21E0011DF93 /* ResolverMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */; };
@@ -73,6 +74,7 @@
 		19956E00206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		19956E05206B4F0A00751B70 /* SampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956E0B206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		19C298D520B1272800094218 /* Weaver.PersonManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.PersonManager.swift; sourceTree = "<group>"; };
 		19DE26A4207AADD30011DF93 /* ImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManager.swift; sourceTree = "<group>"; };
 		19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerMocks.swift; sourceTree = "<group>"; };
 		19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverMocks.swift; sourceTree = "<group>"; };
@@ -176,6 +178,7 @@
 		19956E18206B51FF00751B70 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
+				19C298D520B1272800094218 /* Weaver.PersonManager.swift */,
 				19F5474E20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift */,
 				19F5474A20A7D9E8006F40DF /* Weaver.ReviewManager.swift */,
 				19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */,
@@ -448,6 +451,7 @@
 			files = (
 				193EEF8B2076911D00BFE706 /* Page.swift in Sources */,
 				193A55A12097E38600319C18 /* Weaver.API.swift in Sources */,
+				19C298D620B1272800094218 /* Weaver.PersonManager.swift in Sources */,
 				193A55A42097E38600319C18 /* Weaver.MovieManager.swift in Sources */,
 				193EEF832075E97B00BFE706 /* API.swift in Sources */,
 				19F5475720A8F001006F40DF /* Movie.swift in Sources */,

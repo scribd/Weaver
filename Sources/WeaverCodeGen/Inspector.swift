@@ -403,7 +403,7 @@ private extension Resolver {
     
     private func resolveDependency(index: DependencyIndex, visitedResolvers: inout Set<Resolver>, history: inout [InspectorAnalysisHistoryRecord]) throws {
         if visitedResolvers.contains(self) {
-            throw InspectorAnalysisError.cyclicDependency
+            throw InspectorAnalysisError.cyclicDependency(history: history)
         }
         visitedResolvers.insert(self)
         
@@ -438,15 +438,11 @@ private extension Resolver {
 
 private extension Resolver {
     
-    private var isIsolated: Bool {
-        return config.contains(.isIsolated(value: true))
-    }
-    
     func checkIsolation(history: [InspectorAnalysisHistoryRecord]) throws -> Bool {
         
-        let connectedReferents = dependents.filter { !$0.isIsolated }
+        let connectedReferents = dependents.filter { !$0.config.isIsolated }
         
-        switch (dependents.isEmpty, isIsolated) {
+        switch (dependents.isEmpty, config.isIsolated) {
         case (true, false):
             throw InspectorAnalysisError.unresolvableDependency(history: history)
             
@@ -484,26 +480,28 @@ private extension Dependency {
         }
         
         var visitedResolvers = Set<Resolver>()
-        try associatedResolver.buildDependencies(from: self, visitedResolvers: &visitedResolvers)
+        try associatedResolver.buildDependencies(from: self, visitedResolvers: &visitedResolvers, history: [])
     }
 }
 
 private extension Resolver {
     
-    func buildDependencies(from sourceDependency: Dependency, visitedResolvers: inout Set<Resolver>) throws {
+    func buildDependencies(from sourceDependency: Dependency, visitedResolvers: inout Set<Resolver>, history: [InspectorAnalysisHistoryRecord]) throws {
+
+        let history = history + [.triedToBuildType(line: line, file: file, typeName: typeName, stepCount: history.count)]
 
         if visitedResolvers.contains(self) {
             throw InspectorError.invalidGraph(line: sourceDependency.line,
                                               file: sourceDependency.file,
                                               dependencyName: sourceDependency.name,
                                               typeName: typeName,
-                                              underlyingError: .cyclicDependency)
+                                              underlyingError: .cyclicDependency(history: history))
         }
         visitedResolvers.insert(self)
         
         for dependency in dependencies.values {
             var visitedResolversCopy = visitedResolvers
-            try dependency.associatedResolver.buildDependencies(from: sourceDependency, visitedResolvers: &visitedResolversCopy)
+            try dependency.associatedResolver.buildDependencies(from: sourceDependency, visitedResolvers: &visitedResolversCopy, history: history)
         }
     }
 }
