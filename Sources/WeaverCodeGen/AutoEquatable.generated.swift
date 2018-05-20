@@ -185,6 +185,13 @@ internal func == (lhs: InspectorAnalysisHistoryRecord, rhs: InspectorAnalysisHis
         if lhs.typeName != rhs.typeName { return false }
         if lhs.stepCount != rhs.stepCount { return false }
         return true
+    case (.triedToResolveDependencyInResolver(let lhs), .triedToResolveDependencyInResolver(let rhs)):
+        if lhs.line != rhs.line { return false }
+        if lhs.file != rhs.file { return false }
+        if lhs.dependencyName != rhs.dependencyName { return false }
+        if lhs.typeName != rhs.typeName { return false }
+        if lhs.stepCount != rhs.stepCount { return false }
+        return true
     default: return false
     }
 }

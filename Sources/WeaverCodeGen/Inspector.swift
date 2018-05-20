@@ -403,9 +403,16 @@ private extension Resolver {
     
     private func resolveDependency(index: DependencyIndex, visitedResolvers: inout Set<Resolver>, history: inout [InspectorAnalysisHistoryRecord]) throws {
         if visitedResolvers.contains(self) {
-            throw InspectorAnalysisError.cyclicDependency(history: history)
+            throw InspectorAnalysisError.cyclicDependency(history: history.cyclicDependencyDetection)
         }
         visitedResolvers.insert(self)
+
+        history.append(.triedToResolveDependencyInResolver(line: line,
+                                                           file: file,
+                                                           dependencyName: index.name,
+                                                           typeName: typeName,
+                                                           stepCount: history.resolutionSteps.count))
+
         
         if let dependency = dependencies[index] {
             if let scope = dependency.scope, (dependency.isCustom && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
@@ -416,7 +423,10 @@ private extension Resolver {
                                                         name: dependency.name,
                                                         typeName: dependency.associatedResolver.typeName))
         } else {
-            history.append(.dependencyNotFound(line: line, file: file, name: index.name, typeName: typeName))
+            history.append(.dependencyNotFound(line: line,
+                                               file: file,
+                                               name: index.name,
+                                               typeName: typeName))
         }
 
         if try checkIsolation(history: history) == false {
@@ -430,7 +440,7 @@ private extension Resolver {
             }
         }
         
-        throw InspectorAnalysisError.unresolvableDependency(history: history)
+        throw InspectorAnalysisError.unresolvableDependency(history: history.unresolvableDependencyDetection)
     }
 }
 
@@ -444,7 +454,7 @@ private extension Resolver {
         
         switch (dependents.isEmpty, config.isIsolated) {
         case (true, false):
-            throw InspectorAnalysisError.unresolvableDependency(history: history)
+            throw InspectorAnalysisError.unresolvableDependency(history: history.unresolvableDependencyDetection)
             
         case (false, true) where !connectedReferents.isEmpty:
             throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(typeName: typeName, referents: connectedReferents.map {
@@ -488,16 +498,20 @@ private extension Resolver {
     
     func buildDependencies(from sourceDependency: Dependency, visitedResolvers: inout Set<Resolver>, history: [InspectorAnalysisHistoryRecord]) throws {
 
-        let history = history + [.triedToBuildType(line: line, file: file, typeName: typeName, stepCount: history.count)]
-
         if visitedResolvers.contains(self) {
             throw InspectorError.invalidGraph(line: sourceDependency.line,
                                               file: sourceDependency.file,
                                               dependencyName: sourceDependency.name,
                                               typeName: typeName,
-                                              underlyingError: .cyclicDependency(history: history))
+                                              underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
         }
         visitedResolvers.insert(self)
+        
+        var history = history
+        history.append(.triedToBuildType(line: line,
+                                         file: file,
+                                         typeName: typeName,
+                                         stepCount: history.buildSteps.count))
         
         for dependency in dependencies.values {
             var visitedResolversCopy = visitedResolvers

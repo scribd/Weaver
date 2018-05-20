@@ -47,6 +47,7 @@ enum InspectorAnalysisHistoryRecord: AutoEquatable {
     case foundUnaccessibleDependency(line: Int, file: String, name: String, typeName: String?)
     case dependencyNotFound(line: Int?, file: String?, name: String, typeName: String?)
     case triedToBuildType(line: Int?, file: String?, typeName: String?, stepCount: Int)
+    case triedToResolveDependencyInResolver(line: Int?, file: String?, dependencyName: String, typeName: String?, stepCount: Int)
 }
 
 struct InspectorAnalysisResolver: AutoEquatable {
@@ -145,7 +146,12 @@ extension InspectorAnalysisError: CustomStringConvertible {
         case .cyclicDependency(let history):
             return history
         case .isolatedResolverCannotHaveReferents(let typeName, let referents):
-            return referents.map { xcodeLogString(.error, $0.line, $0.file, "'\($0.typeName ?? "_")' cannot depend on '\(typeName ?? "_")' because it is flagged as 'isolated'. You may want to set '\(typeName ?? "_").isIsolated' to 'false'") }
+            return referents.map {
+                xcodeLogString(.error, $0.line, $0.file,
+                               "'\($0.typeName ?? "_")' " +
+                                "cannot depend on '\(typeName ?? "_")' because it is flagged as 'isolated'. " +
+                                "You may want to set '\(typeName ?? "_").isIsolated' to 'false'")
+            }
         case .unresolvableDependency(let history):
             return history
         }
@@ -162,6 +168,56 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
             return xcodeLogString(.warning, line, file, "Found unaccessible dependency '\(name)' in '\(typeName ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
         case .triedToBuildType(let line, let file, let typeName, let stepCount):
             return xcodeLogString(.warning, line, file, "Step \(stepCount): Tried to build type '\(typeName ?? "_")'")
+        case .triedToResolveDependencyInResolver(let line, let file, let dependencyName, let typeName, let stepCount):
+            return xcodeLogString(.warning, line, file, "Step \(stepCount): Tried to resolve dependency '\(dependencyName)' in type '\(typeName ?? "_")'")
+        }
+    }
+}
+
+// MARK: - InspectorAnalysisHistoryRecord Filters
+
+extension Array where Element == InspectorAnalysisHistoryRecord {
+    
+    var unresolvableDependencyDetection: [InspectorAnalysisHistoryRecord] {
+        return filter {
+            switch $0 {
+            case .dependencyNotFound,
+                 .foundUnaccessibleDependency:
+                return true
+            case .triedToResolveDependencyInResolver,
+                 .triedToBuildType:
+                return false
+            }
+        }
+    }
+    
+    var cyclicDependencyDetection: [InspectorAnalysisHistoryRecord] {
+        return buildSteps + resolutionSteps
+    }
+    
+    var buildSteps: [InspectorAnalysisHistoryRecord] {
+        return filter {
+            switch $0 {
+            case .triedToBuildType:
+                return true
+            case .dependencyNotFound,
+                 .foundUnaccessibleDependency,
+                 .triedToResolveDependencyInResolver:
+                return false
+            }
+        }
+    }
+    
+    var resolutionSteps: [InspectorAnalysisHistoryRecord] {
+        return filter {
+            switch $0 {
+            case .triedToResolveDependencyInResolver:
+                return true
+            case .dependencyNotFound,
+                 .foundUnaccessibleDependency,
+                 .triedToBuildType:
+                return false
+            }
         }
     }
 }
