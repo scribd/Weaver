@@ -125,6 +125,7 @@ private final class ResolverData {
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
+    let isIsolated: Bool
     
     init(targetTypeName: String,
          registrations: [RegisterData],
@@ -133,7 +134,8 @@ private final class ResolverData {
          enclosingTypeNames: [String]?,
          isRoot: Bool,
          doesSupportObjc: Bool,
-         accessLevel: AccessLevel) {
+         accessLevel: AccessLevel,
+         config: Set<ConfigurationAttribute>) {
         self.targetTypeName = targetTypeName
         self.registrations = registrations
         self.references = references
@@ -148,6 +150,8 @@ private final class ResolverData {
         case .`internal`:
             isPublic = false
         }
+        
+        isIsolated = config.isIsolated
     }
 }
 
@@ -215,7 +219,7 @@ extension ResolverData {
     convenience init?(expr: Expr, enclosingTypeNames: [String], graph: Graph) {
         
         switch expr {
-        case .typeDeclaration(let typeToken, _, children: let children):
+        case .typeDeclaration(let typeToken, let configTokens, children: let children):
             let targetTypeName = typeToken.value.name
             
             var scopeAnnotations = [String: ScopeAnnotation]()
@@ -283,7 +287,8 @@ extension ResolverData {
                       enclosingTypeNames: enclosingTypeNames,
                       isRoot: isRoot,
                       doesSupportObjc: typeToken.value.doesSupportObjc,
-                      accessLevel: typeToken.value.accessLevel)
+                      accessLevel: typeToken.value.accessLevel,
+                      config: Set(configTokens.map { $0.value.attribute }))
             
         case .file,
              .registerAnnotation,

@@ -11,6 +11,15 @@ enum ConfigurationAttribute: AutoEquatable, AutoHashable {
     case isIsolated(value: Bool)
 }
 
+// MARK: - Convenience
+
+extension Set where Element == ConfigurationAttribute {
+    
+    var isIsolated: Bool {
+        return contains(.isIsolated(value: true))
+    }
+}
+
 // MARK: - Description
 
 extension ConfigurationAttribute: CustomStringConvertible {
@@ -29,3 +38,4 @@ extension ConfigurationAttribute: CustomStringConvertible {
         }
     }
 }
+

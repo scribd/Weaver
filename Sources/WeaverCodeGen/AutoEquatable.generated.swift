@@ -152,8 +152,8 @@ internal func == (lhs: GeneratorError, rhs: GeneratorError) -> Bool {
 extension InspectorAnalysisError: Equatable {}
 internal func == (lhs: InspectorAnalysisError, rhs: InspectorAnalysisError) -> Bool {
     switch (lhs, rhs) {
-    case (.cyclicDependency, .cyclicDependency):
-        return true
+    case (.cyclicDependency(let lhs), .cyclicDependency(let rhs)):
+        return lhs == rhs
     case (.unresolvableDependency(let lhs), .unresolvableDependency(let rhs)):
         return lhs == rhs
     case (.isolatedResolverCannotHaveReferents(let lhs), .isolatedResolverCannotHaveReferents(let rhs)):
@@ -178,6 +178,12 @@ internal func == (lhs: InspectorAnalysisHistoryRecord, rhs: InspectorAnalysisHis
         if lhs.file != rhs.file { return false }
         if lhs.name != rhs.name { return false }
         if lhs.typeName != rhs.typeName { return false }
+        return true
+    case (.triedToBuildType(let lhs), .triedToBuildType(let rhs)):
+        if lhs.line != rhs.line { return false }
+        if lhs.file != rhs.file { return false }
+        if lhs.typeName != rhs.typeName { return false }
+        if lhs.stepCount != rhs.stepCount { return false }
         return true
     default: return false
     }
