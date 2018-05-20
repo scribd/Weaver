@@ -16,16 +16,16 @@ enum TokenError: Error, AutoEquatable {
 }
 
 enum LexerError: Error, AutoEquatable {
-    case invalidAnnotation(line: Int, file: String, underlyingError: TokenError)
+    case invalidAnnotation(FileLocation, underlyingError: TokenError)
 }
 
 enum ParserError: Error, AutoEquatable {
-    case unexpectedToken(line: Int, file: String)
-    case unexpectedEOF(file: String)
+    case unexpectedToken(FileLocation)
+    case unexpectedEOF(FileLocation)
     
-    case unknownDependency(line: Int, file: String, dependencyName: String)
-    case depedencyDoubleDeclaration(line: Int, file: String, dependencyName: String)
-    case configurationAttributeDoubleAssignation(line: Int, file: String, attribute: ConfigurationAttribute)
+    case unknownDependency(PrintableDependency)
+    case depedencyDoubleDeclaration(PrintableDependency)
+    case configurationAttributeDoubleAssignation(FileLocation, attribute: ConfigurationAttribute)
 }
 
 enum GeneratorError: Error, AutoEquatable {
@@ -33,27 +33,55 @@ enum GeneratorError: Error, AutoEquatable {
 }
 
 enum InspectorError: Error, AutoEquatable {
-    case invalidAST(unexpectedExpr: Expr, file: String?)
-    case invalidGraph(line: Int, file: String, dependencyName: String, typeName: String?, underlyingError: InspectorAnalysisError)
+    case invalidAST(FileLocation, unexpectedExpr: Expr)
+    case invalidGraph(PrintableDependency, underlyingError: InspectorAnalysisError)
 }
 
 enum InspectorAnalysisError: Error, AutoEquatable {
     case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
-    case isolatedResolverCannotHaveReferents(typeName: String?, referents: [InspectorAnalysisResolver])
+    case isolatedResolverCannotHaveReferents(typeName: String?, referents: [PrintableResolver])
 }
 
 enum InspectorAnalysisHistoryRecord: AutoEquatable {
-    case foundUnaccessibleDependency(line: Int, file: String, name: String, typeName: String?)
-    case dependencyNotFound(line: Int?, file: String?, name: String, typeName: String?)
-    case triedToBuildType(line: Int?, file: String?, typeName: String?, stepCount: Int)
-    case triedToResolveDependencyInResolver(line: Int?, file: String?, dependencyName: String, typeName: String?, stepCount: Int)
+    case foundUnaccessibleDependency(PrintableDependency)
+    case dependencyNotFound(PrintableDependency)
+    case triedToBuildType(PrintableResolver, stepCount: Int)
+    case triedToResolveDependencyInType(PrintableDependency, stepCount: Int)
 }
 
-struct InspectorAnalysisResolver: AutoEquatable {
+// MARK: - Printables
+
+protocol Printable {
+    var fileLocation: FileLocation { get }
+}
+
+struct PrintableResolver: AutoEquatable, Printable {
+    let fileLocation: FileLocation
+    let typeName: String?
+}
+
+struct PrintableDependency: AutoEquatable, Printable {
+    let fileLocation: FileLocation
+    let name: String
+    let typeName: String?
+}
+
+struct FileLocation: AutoEquatable, Printable {
     let line: Int?
     let file: String?
-    let typeName: String?
+    
+    var fileLocation: FileLocation {
+        return self
+    }
+    
+    static var unknown: FileLocation {
+        return FileLocation(line: nil, file: nil)
+    }
+    
+    static func file(_ file: String?) -> FileLocation {
+        return FileLocation(line: nil, file: file)
+    }
 }
 
 // MARK: - Description
@@ -78,8 +106,8 @@ extension LexerError: CustomStringConvertible {
 
     var description: String {
         switch self {
-        case .invalidAnnotation(let line, let file, let underlyingError):
-            return xcodeLogString(.error, line, file, "\(underlyingError)")
+        case .invalidAnnotation(let location, let underlyingError):
+            return location.xcodeLogString(.error, "\(underlyingError)")
         }
     }
 }
@@ -88,16 +116,16 @@ extension ParserError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .depedencyDoubleDeclaration(let line, let file, let dependencyName):
-            return xcodeLogString(.error, line, file, "Double dependency declaration: '\(dependencyName)'")
-        case .unexpectedEOF(let file):
-            return xcodeLogString(.error, 0, file, "Unexpected EOF (End of file)")
-        case .unexpectedToken(let line, let file):
-            return xcodeLogString(.error, line, file, "Unexpected token")
-        case .unknownDependency(let line, let file, let dependencyName):
-            return xcodeLogString(.error, line, file, "Unknown dependency: '\(dependencyName)'")
-        case .configurationAttributeDoubleAssignation(let line, let file, let attribute):
-            return xcodeLogString(.error, line, file, "Configuration attribute '\(attribute.name)' was already set")
+        case .depedencyDoubleDeclaration(let dependency):
+            return dependency.xcodeLogString(.error, "Double dependency declaration: '\(dependency.name)'")
+        case .unexpectedEOF(let location):
+            return location.xcodeLogString(.error, "Unexpected EOF (End of file)")
+        case .unexpectedToken(let location):
+            return location.xcodeLogString(.error, "Unexpected token")
+        case .unknownDependency(let dependency):
+            return dependency.xcodeLogString(.error, "Unknown dependency: '\(dependency.name)'")
+        case .configurationAttributeDoubleAssignation(let location, let attribute):
+            return location.xcodeLogString(.error, "Configuration attribute '\(attribute.name)' was already set")
         }
     }
 }
@@ -116,10 +144,10 @@ extension InspectorError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .invalidAST(let token, let file):
-            return xcodeLogString(.error, nil, file, "Invalid AST because of token: \(token)")
-        case .invalidGraph(let line, let file, let dependencyName, let typeName, let underlyingIssue):
-            var description = xcodeLogString(.error, line, file, "Detected invalid dependency graph starting with '\(dependencyName): \(typeName ?? "_")'. \(underlyingIssue)")
+        case .invalidAST(let location, let token):
+            return location.xcodeLogString(.error, "Invalid AST because of token: \(token)")
+        case .invalidGraph(let dependency, let underlyingIssue):
+            var description = dependency.xcodeLogString(.error, "Detected invalid dependency graph starting with '\(dependency.name): \(dependency.typeName ?? "_")'. \(underlyingIssue)")
             if let notes = underlyingIssue.notes {
                 description = ([description] + notes.map { $0.description }).joined(separator: "\n")
             }
@@ -146,11 +174,11 @@ extension InspectorAnalysisError: CustomStringConvertible {
         case .cyclicDependency(let history):
             return history
         case .isolatedResolverCannotHaveReferents(let typeName, let referents):
-            return referents.map {
-                xcodeLogString(.error, $0.line, $0.file,
-                               "'\($0.typeName ?? "_")' " +
-                                "cannot depend on '\(typeName ?? "_")' because it is flagged as 'isolated'. " +
-                                "You may want to set '\(typeName ?? "_").isIsolated' to 'false'")
+            return referents.map { referent in
+                let message = "'\(referent.typeName ?? "_")' " +
+                    "cannot depend on '\(typeName ?? "_")' because it is flagged as 'isolated'. " +
+                    "You may want to set '\(typeName ?? "_").isIsolated' to 'false'"
+                return referent.xcodeLogString(.error, message)
             }
         case .unresolvableDependency(let history):
             return history
@@ -162,14 +190,14 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .dependencyNotFound(let line, let file, let name, let typeName):
-            return xcodeLogString(.warning, line, file, "Could not find the dependency '\(name)' in '\(typeName ?? "_")'. You may want to register it here to solve this issue")
-        case .foundUnaccessibleDependency(let line, let file, let name, let typeName):
-            return xcodeLogString(.warning, line, file, "Found unaccessible dependency '\(name)' in '\(typeName ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
-        case .triedToBuildType(let line, let file, let typeName, let stepCount):
-            return xcodeLogString(.warning, line, file, "Step \(stepCount): Tried to build type '\(typeName ?? "_")'")
-        case .triedToResolveDependencyInResolver(let line, let file, let dependencyName, let typeName, let stepCount):
-            return xcodeLogString(.warning, line, file, "Step \(stepCount): Tried to resolve dependency '\(dependencyName)' in type '\(typeName ?? "_")'")
+        case .dependencyNotFound(let dependency):
+            return dependency.xcodeLogString(.warning, "Could not find the dependency '\(dependency.name)' in '\(dependency.typeName ?? "_")'. You may want to register it here to solve this issue")
+        case .foundUnaccessibleDependency(let dependency):
+            return dependency.xcodeLogString(.warning, "Found unaccessible dependency '\(dependency.name)' in '\(dependency.typeName ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
+        case .triedToBuildType(let resolver, let stepCount):
+            return resolver.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(resolver.typeName ?? "_")'")
+        case .triedToResolveDependencyInType(let dependency, let stepCount):
+            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.name)' in type '\(dependency.typeName ?? "_")'")
         }
     }
 }
@@ -184,7 +212,7 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
             case .dependencyNotFound,
                  .foundUnaccessibleDependency:
                 return true
-            case .triedToResolveDependencyInResolver,
+            case .triedToResolveDependencyInType,
                  .triedToBuildType:
                 return false
             }
@@ -202,7 +230,7 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
                 return true
             case .dependencyNotFound,
                  .foundUnaccessibleDependency,
-                 .triedToResolveDependencyInResolver:
+                 .triedToResolveDependencyInType:
                 return false
             }
         }
@@ -211,7 +239,7 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
     var resolutionSteps: [InspectorAnalysisHistoryRecord] {
         return filter {
             switch $0 {
-            case .triedToResolveDependencyInResolver:
+            case .triedToResolveDependencyInType:
                 return true
             case .dependencyNotFound,
                  .foundUnaccessibleDependency,
@@ -229,14 +257,17 @@ private enum LogLevel: String {
     case error = "error"
 }
 
-private func xcodeLogString(_ logLevel: LogLevel, _ line: Int?, _ file: String?, _ message: String) -> String {
+private extension Printable {
     
-    switch (line, file) {
-    case (.some(let line), .some(let file)):
-        return "\(file):\(line + 1): \(logLevel.rawValue): \(message)."
-    case (nil, .some(let file)):
-        return "\(file): \(logLevel.rawValue): \(message)."
-    case (_, nil):
-        return "\(logLevel.rawValue): \(message)."
+    func xcodeLogString(_ logLevel: LogLevel, _ message: String) -> String {
+        switch (fileLocation.line, fileLocation.file) {
+        case (.some(let line), .some(let file)):
+            return "\(file):\(line + 1): \(logLevel.rawValue): \(message)."
+        case (nil, .some(let file)):
+            return "\(file):1: \(logLevel.rawValue): \(message)."
+        case (_, nil):
+            return "\(logLevel.rawValue): \(message)."
+        }
     }
 }
+

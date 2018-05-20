@@ -57,15 +57,14 @@ private final class Resolver {
     var dependencies: [DependencyIndex: Dependency] = [:]
     var dependents: [Resolver] = []
 
-    var file: String?
-    var line: Int?
+    var fileLocation: FileLocation
 
     init(typeName: String? = nil,
          file: String? = nil,
          line: Int? = nil) {
         self.typeName = typeName
-        self.file = file
-        self.line = line
+        
+        fileLocation = FileLocation(line: line, file: file)
     }
 }
 
@@ -81,8 +80,7 @@ private final class Dependency {
     let associatedResolver: Resolver
     let dependentResovler: Resolver
 
-    let line: Int
-    let file: String
+    let fileLocation: FileLocation
 
     init(name: String,
          scope: Scope? = nil,
@@ -94,11 +92,11 @@ private final class Dependency {
         self.name = name
         self.scope = scope
         self.isCustom = isCustom
-        self.line = line
-        self.file = file
         self.associatedResolver = associatedResolver
         self.dependentResovler = dependentResovler
-    }
+
+        fileLocation = FileLocation(line: line, file: file)
+}
 }
 
 private struct ResolutionCacheIndex {
@@ -136,8 +134,7 @@ extension Graph {
     
     func resolver(typed type: String, line: Int, fileName: String) -> Resolver {
         if let resolver = resolversByType[type] {
-            resolver.line = line
-            resolver.file = fileName
+            resolver.fileLocation = FileLocation(line: line, file: fileName)
             return resolver
         }
         let resolver = Resolver(typeName: type, file: fileName, line: line)
@@ -207,7 +204,7 @@ private extension Inspector {
                  .referenceAnnotation,
                  .customRefAnnotation,
                  .parameterAnnotation:
-                throw InspectorError.invalidAST(unexpectedExpr: ast, file: nil)
+                throw InspectorError.invalidAST(.unknown, unexpectedExpr: ast)
             }
         }
     }
@@ -232,7 +229,7 @@ private extension Inspector {
                  .referenceAnnotation,
                  .customRefAnnotation,
                  .parameterAnnotation:
-                throw InspectorError.invalidAST(unexpectedExpr: expr, file: fileName)
+                throw InspectorError.invalidAST(.file(fileName), unexpectedExpr: expr)
             }
         }
     }
@@ -248,10 +245,7 @@ private extension Dependency {
                      graph: Graph) throws {
 
         guard let associatedResolver = graph.resolver(named: registerAnnotation.value.name) else {
-            throw InspectorError.invalidGraph(line: registerAnnotation.line,
-                                              file: fileName,
-                                              dependencyName: registerAnnotation.value.name,
-                                              typeName: registerAnnotation.value.typeName,
+            throw InspectorError.invalidGraph(registerAnnotation.printableDependency(file: fileName),
                                               underlyingError: .unresolvableDependency(history: []))
         }
         
@@ -271,10 +265,7 @@ private extension Dependency {
                      graph: Graph) throws {
 
         guard let associatedResolver = graph.resolver(named: referenceAnnotation.value.name) else {
-            throw InspectorError.invalidGraph(line: referenceAnnotation.line,
-                                              file: fileName,
-                                              dependencyName: referenceAnnotation.value.name,
-                                              typeName: referenceAnnotation.value.typeName,
+            throw InspectorError.invalidGraph(referenceAnnotation.printableDependency(file: fileName),
                                               underlyingError: .unresolvableDependency(history: []))
         }
         
@@ -377,11 +368,7 @@ private extension Dependency {
             }
             
         } catch let error as InspectorAnalysisError {
-            throw InspectorError.invalidGraph(line: line,
-                                              file: file,
-                                              dependencyName: name,
-                                              typeName: associatedResolver.typeName,
-                                              underlyingError: error)
+            throw InspectorError.invalidGraph(printableDependency, underlyingError: error)
         }
     }
 }
@@ -407,26 +394,15 @@ private extension Resolver {
         }
         visitedResolvers.insert(self)
 
-        history.append(.triedToResolveDependencyInResolver(line: line,
-                                                           file: file,
-                                                           dependencyName: index.name,
-                                                           typeName: typeName,
-                                                           stepCount: history.resolutionSteps.count))
-
+        history.append(.triedToResolveDependencyInType(printableDependency(name: index.name), stepCount: history.resolutionSteps.count))
         
         if let dependency = dependencies[index] {
             if let scope = dependency.scope, (dependency.isCustom && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
                 return
             }
-            history.append(.foundUnaccessibleDependency(line: dependency.line,
-                                                        file: dependency.file,
-                                                        name: dependency.name,
-                                                        typeName: dependency.associatedResolver.typeName))
+            history.append(.foundUnaccessibleDependency(dependency.printableDependency))
         } else {
-            history.append(.dependencyNotFound(line: line,
-                                               file: file,
-                                               name: index.name,
-                                               typeName: typeName))
+            history.append(.dependencyNotFound(printableDependency(name: index.name)))
         }
 
         if try checkIsolation(history: history) == false {
@@ -457,9 +433,8 @@ private extension Resolver {
             throw InspectorAnalysisError.unresolvableDependency(history: history.unresolvableDependencyDetection)
             
         case (false, true) where !connectedReferents.isEmpty:
-            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(typeName: typeName, referents: connectedReferents.map {
-                InspectorAnalysisResolver(line: $0.line, file: $0.file, typeName: $0.typeName)
-            })
+            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(typeName: typeName,
+                                                                             referents: connectedReferents.map { $0.printableResolver })
 
         case (true, true):
             return false
@@ -499,23 +474,19 @@ private extension Resolver {
     func buildDependencies(from sourceDependency: Dependency, visitedResolvers: inout Set<Resolver>, history: [InspectorAnalysisHistoryRecord]) throws {
 
         if visitedResolvers.contains(self) {
-            throw InspectorError.invalidGraph(line: sourceDependency.line,
-                                              file: sourceDependency.file,
-                                              dependencyName: sourceDependency.name,
-                                              typeName: typeName,
+            throw InspectorError.invalidGraph(sourceDependency.printableDependency,
                                               underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
         }
         visitedResolvers.insert(self)
         
         var history = history
-        history.append(.triedToBuildType(line: line,
-                                         file: file,
-                                         typeName: typeName,
-                                         stepCount: history.buildSteps.count))
+        history.append(.triedToBuildType(printableResolver, stepCount: history.buildSteps.count))
         
         for dependency in dependencies.values {
             var visitedResolversCopy = visitedResolvers
-            try dependency.associatedResolver.buildDependencies(from: sourceDependency, visitedResolvers: &visitedResolversCopy, history: history)
+            try dependency.associatedResolver.buildDependencies(from: sourceDependency,
+                                                                visitedResolvers: &visitedResolversCopy,
+                                                                history: history)
         }
     }
 }
@@ -526,6 +497,46 @@ private extension Dependency {
     
     var isReference: Bool {
         return scope == nil
+    }
+}
+
+// MARK: - Conversions
+
+private extension TokenBox where T == RegisterAnnotation {
+    
+    func printableDependency(file: String) -> PrintableDependency {
+        return PrintableDependency(fileLocation: FileLocation(line: line, file: file),
+                                   name: value.name,
+                                   typeName: value.typeName)
+    }
+}
+
+private extension TokenBox where T == ReferenceAnnotation {
+    
+    func printableDependency(file: String) -> PrintableDependency {
+        return PrintableDependency(fileLocation: FileLocation(line: line, file: file),
+                                   name: value.name,
+                                   typeName: value.typeName)
+    }
+}
+
+private extension Dependency {
+    
+    var printableDependency: PrintableDependency {
+        return PrintableDependency(fileLocation: fileLocation,
+                                   name: name,
+                                   typeName: associatedResolver.typeName)
+    }
+}
+
+private extension Resolver {
+    
+    func printableDependency(name: String) -> PrintableDependency {
+        return PrintableDependency(fileLocation: fileLocation, name: name, typeName: typeName)
+    }
+    
+    var printableResolver: PrintableResolver {
+        return PrintableResolver(fileLocation: fileLocation, typeName: typeName)
     }
 }
 

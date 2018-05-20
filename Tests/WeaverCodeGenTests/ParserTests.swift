@@ -178,8 +178,10 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(line: 2, file: "test.swift", dependencyName: "api"))
-        } catch {
+            XCTAssertEqual(error, .unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
+                                                                         name: "api",
+                                                                         typeName: nil)))
+    } catch {
             XCTFail("Unexpected error: \(error).")
         }
     }
@@ -198,7 +200,9 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(line: 1, file: "test.swift", dependencyName: "api"))
+            XCTAssertEqual(error, .unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
+                                                                         name: "api",
+                                                                         typeName: nil)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -272,7 +276,9 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "api"))
+            XCTAssertEqual(error, ParserError.depedencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
+                                                                                             name: "api",
+                                                                                             typeName: nil)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -358,7 +364,9 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(line: 1, file: "test.swift", dependencyName: "api"))
+            XCTAssertEqual(error, ParserError.unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
+                                                                                    name: "api",
+                                                                                    typeName: nil)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -381,7 +389,9 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "api"))
+            XCTAssertEqual(error, ParserError.depedencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
+                                                                                             name: "api",
+                                                                                             typeName: nil)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -401,7 +411,7 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unexpectedToken(line: 0, file: "test.swift"))
+            XCTAssertEqual(error, ParserError.unexpectedToken(FileLocation(line: 0, file: "test.swift")))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -448,7 +458,9 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "movieID"))
+            XCTAssertEqual(error, ParserError.depedencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
+                                                                                             name: "movieID",
+                                                                                             typeName: nil)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -471,7 +483,9 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "movieID"))
+            XCTAssertEqual(error, ParserError.depedencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
+                                                                                             name: "movieID",
+                                                                                             typeName: nil)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -494,7 +508,9 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .depedencyDoubleDeclaration(line: 2, file: "test.swift", dependencyName: "movieID"))
+            XCTAssertEqual(error, ParserError.depedencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
+                                                                                             name: "movieID",
+                                                                                             typeName: nil)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -541,7 +557,8 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .configurationAttributeDoubleAssignation(line: 3, file: "test.swift", attribute: .isIsolated(value: false)))
+            XCTAssertEqual(error, ParserError.configurationAttributeDoubleAssignation(FileLocation(line: 3, file: "test.swift"),
+                                                                                      attribute: .isIsolated(value: false)))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

@@ -121,7 +121,7 @@ private extension Lexer {
                 }
                 return token
             } catch let error as TokenError {
-                throw LexerError.invalidAnnotation(line: currentLine, file: fileName, underlyingError: error)
+                throw LexerError.invalidAnnotation(FileLocation(line: currentLine, file: fileName), underlyingError: error)
             }
         }
     }

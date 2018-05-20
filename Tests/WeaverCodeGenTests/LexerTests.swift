@@ -283,7 +283,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, .invalidAnnotation(line: 1, file: "test.swift", underlyingError: .invalidCustomRefValue("ok")))
+            let underlyingError = TokenError.invalidCustomRefValue("ok")
+            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -343,7 +344,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, .invalidAnnotation(line: 1, file: "test.swift", underlyingError: .invalidConfigurationAttributeValue(value: "ok", expected: "true|false")))
+            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: "ok", expected: "true|false")
+            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -403,7 +405,8 @@ final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, .invalidAnnotation(line: 4, file: "test.swift", underlyingError: .invalidAnnotation("weaver: api = API <-- APIProtocol")))
+            let underlyingError = TokenError.invalidAnnotation("weaver: api = API <-- APIProtocol")
+            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 4, file: "test.swift"), underlyingError: underlyingError))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -440,7 +443,8 @@ final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, .invalidAnnotation(line: 5,  file: "test.swift", underlyingError: .invalidScope("thisScopeDoesNotExists")))
+            let underlyingError = TokenError.invalidScope("thisScopeDoesNotExists")
+            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 5, file: "test.swift"), underlyingError: underlyingError))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }

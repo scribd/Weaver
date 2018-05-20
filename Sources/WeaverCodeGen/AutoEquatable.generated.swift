@@ -55,6 +55,13 @@ public func == (lhs: EndOfInjectableType, rhs: EndOfInjectableType) -> Bool {
     guard lhs.description == rhs.description else { return false }
     return true
 }
+// MARK: - FileLocation AutoEquatable
+extension FileLocation: Equatable {}
+internal func == (lhs: FileLocation, rhs: FileLocation) -> Bool {
+    guard compareOptionals(lhs: lhs.line, rhs: rhs.line, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.file, rhs: rhs.file, compare: ==) else { return false }
+    return true
+}
 // MARK: - InjectableType AutoEquatable
 extension InjectableType: Equatable {}
 public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
@@ -63,19 +70,26 @@ public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
     guard lhs.doesSupportObjc == rhs.doesSupportObjc else { return false }
     return true
 }
-// MARK: - InspectorAnalysisResolver AutoEquatable
-extension InspectorAnalysisResolver: Equatable {}
-internal func == (lhs: InspectorAnalysisResolver, rhs: InspectorAnalysisResolver) -> Bool {
-    guard compareOptionals(lhs: lhs.line, rhs: rhs.line, compare: ==) else { return false }
-    guard compareOptionals(lhs: lhs.file, rhs: rhs.file, compare: ==) else { return false }
-    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
-    return true
-}
 // MARK: - ParameterAnnotation AutoEquatable
 extension ParameterAnnotation: Equatable {}
 public func == (lhs: ParameterAnnotation, rhs: ParameterAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
     guard lhs.typeName == rhs.typeName else { return false }
+    return true
+}
+// MARK: - PrintableDependency AutoEquatable
+extension PrintableDependency: Equatable {}
+internal func == (lhs: PrintableDependency, rhs: PrintableDependency) -> Bool {
+    guard lhs.fileLocation == rhs.fileLocation else { return false }
+    guard lhs.name == rhs.name else { return false }
+    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
+    return true
+}
+// MARK: - PrintableResolver AutoEquatable
+extension PrintableResolver: Equatable {}
+internal func == (lhs: PrintableResolver, rhs: PrintableResolver) -> Bool {
+    guard lhs.fileLocation == rhs.fileLocation else { return false }
+    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
     return true
 }
 // MARK: - ReferenceAnnotation AutoEquatable
@@ -168,28 +182,15 @@ extension InspectorAnalysisHistoryRecord: Equatable {}
 internal func == (lhs: InspectorAnalysisHistoryRecord, rhs: InspectorAnalysisHistoryRecord) -> Bool {
     switch (lhs, rhs) {
     case (.foundUnaccessibleDependency(let lhs), .foundUnaccessibleDependency(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        if lhs.name != rhs.name { return false }
-        if lhs.typeName != rhs.typeName { return false }
-        return true
+        return lhs == rhs
     case (.dependencyNotFound(let lhs), .dependencyNotFound(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        if lhs.name != rhs.name { return false }
-        if lhs.typeName != rhs.typeName { return false }
-        return true
+        return lhs == rhs
     case (.triedToBuildType(let lhs), .triedToBuildType(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        if lhs.typeName != rhs.typeName { return false }
+        if lhs.0 != rhs.0 { return false }
         if lhs.stepCount != rhs.stepCount { return false }
         return true
-    case (.triedToResolveDependencyInResolver(let lhs), .triedToResolveDependencyInResolver(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        if lhs.dependencyName != rhs.dependencyName { return false }
-        if lhs.typeName != rhs.typeName { return false }
+    case (.triedToResolveDependencyInType(let lhs), .triedToResolveDependencyInType(let rhs)):
+        if lhs.0 != rhs.0 { return false }
         if lhs.stepCount != rhs.stepCount { return false }
         return true
     default: return false
@@ -200,14 +201,11 @@ extension InspectorError: Equatable {}
 internal func == (lhs: InspectorError, rhs: InspectorError) -> Bool {
     switch (lhs, rhs) {
     case (.invalidAST(let lhs), .invalidAST(let rhs)):
+        if lhs.0 != rhs.0 { return false }
         if lhs.unexpectedExpr != rhs.unexpectedExpr { return false }
-        if lhs.file != rhs.file { return false }
         return true
     case (.invalidGraph(let lhs), .invalidGraph(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        if lhs.dependencyName != rhs.dependencyName { return false }
-        if lhs.typeName != rhs.typeName { return false }
+        if lhs.0 != rhs.0 { return false }
         if lhs.underlyingError != rhs.underlyingError { return false }
         return true
     default: return false
@@ -218,8 +216,7 @@ extension LexerError: Equatable {}
 internal func == (lhs: LexerError, rhs: LexerError) -> Bool {
     switch (lhs, rhs) {
     case (.invalidAnnotation(let lhs), .invalidAnnotation(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
+        if lhs.0 != rhs.0 { return false }
         if lhs.underlyingError != rhs.underlyingError { return false }
         return true
     }
@@ -229,24 +226,15 @@ extension ParserError: Equatable {}
 internal func == (lhs: ParserError, rhs: ParserError) -> Bool {
     switch (lhs, rhs) {
     case (.unexpectedToken(let lhs), .unexpectedToken(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        return true
+        return lhs == rhs
     case (.unexpectedEOF(let lhs), .unexpectedEOF(let rhs)):
         return lhs == rhs
     case (.unknownDependency(let lhs), .unknownDependency(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        if lhs.dependencyName != rhs.dependencyName { return false }
-        return true
+        return lhs == rhs
     case (.depedencyDoubleDeclaration(let lhs), .depedencyDoubleDeclaration(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
-        if lhs.dependencyName != rhs.dependencyName { return false }
-        return true
+        return lhs == rhs
     case (.configurationAttributeDoubleAssignation(let lhs), .configurationAttributeDoubleAssignation(let rhs)):
-        if lhs.line != rhs.line { return false }
-        if lhs.file != rhs.file { return false }
+        if lhs.0 != rhs.0 { return false }
         if lhs.attribute != rhs.attribute { return false }
         return true
     default: return false

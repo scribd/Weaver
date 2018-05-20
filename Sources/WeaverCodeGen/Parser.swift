@@ -37,6 +37,19 @@ private extension Parser {
     }
 }
 
+// MARK: - Printable
+
+private extension Parser {
+    
+    func fileLocation(line: Int? = nil) -> FileLocation {
+        return FileLocation(line: line, file: fileName)
+    }
+    
+    func printableDependency(line: Int?, name: String) -> PrintableDependency {
+        return PrintableDependency(fileLocation: fileLocation(line: line), name: name, typeName: nil)
+    }
+}
+
 // MARK: - Parsing
 
 private extension Parser {
@@ -60,9 +73,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw ParserError.unexpectedEOF(file: fileName)
+            throw ParserError.unexpectedEOF(fileLocation())
         case .some(let token):
-            throw ParserError.unexpectedToken(line: token.line, file: fileName)
+            throw ParserError.unexpectedToken(fileLocation(line: token.line))
         }
     }
 
@@ -75,9 +88,10 @@ private extension Parser {
         var referenceNames = Set<String>()
         var parameterNames = Set<String>()
         
-        let checkDoubleDeclaration = { (name: String, line: Int, file: String) throws in
+        let checkDoubleDeclaration = { (name: String, line: Int) throws in
+            let dependency = self.printableDependency(line: line, name: name)
             guard !registrationNames.contains(name) && !referenceNames.contains(name) && !parameterNames.contains(name) else {
-                throw ParserError.depedencyDoubleDeclaration(line: line, file: file, dependencyName: name)
+                throw ParserError.depedencyDoubleDeclaration(dependency)
             }
         }
         
@@ -88,42 +102,44 @@ private extension Parser {
             case is TokenBox<RegisterAnnotation>:
                 let annotation = try parseSimpleExpr(RegisterAnnotation.self)
                 let name = annotation.value.name
-                try checkDoubleDeclaration(name, annotation.line, fileName)
+                try checkDoubleDeclaration(name, annotation.line)
                 registrationNames.insert(name)
                 children.append(.registerAnnotation(annotation))
             
             case is TokenBox<ReferenceAnnotation>:
                 let annotation = try parseSimpleExpr(ReferenceAnnotation.self)
                 let name = annotation.value.name
-                try checkDoubleDeclaration(name, annotation.line, fileName)
+                try checkDoubleDeclaration(name, annotation.line)
                 referenceNames.insert(name)
                 children.append(.referenceAnnotation(annotation))
                 
             case is TokenBox<CustomRefAnnotation>:
                 let annotation = try parseSimpleExpr(CustomRefAnnotation.self)
                 guard registrationNames.contains(annotation.value.name) || referenceNames.contains(annotation.value.name) else {
-                    throw ParserError.unknownDependency(line: annotation.line, file: fileName, dependencyName: annotation.value.name)
+                    let dependency = printableDependency(line: annotation.line, name: annotation.value.name)
+                    throw ParserError.unknownDependency(dependency)
                 }
                 children.append(.customRefAnnotation(annotation))
 
             case is TokenBox<ParameterAnnotation>:
                 let annotation = try parseSimpleExpr(ParameterAnnotation.self)
                 let name = annotation.value.name
-                try checkDoubleDeclaration(name, annotation.line, fileName)
+                try checkDoubleDeclaration(name, annotation.line)
                 parameterNames.insert(name)
                 children.append(.parameterAnnotation(annotation))
                 
             case is TokenBox<ScopeAnnotation>:
                 let annotation = try parseSimpleExpr(ScopeAnnotation.self)
                 guard registrationNames.contains(annotation.value.name) else {
-                    throw ParserError.unknownDependency(line: annotation.line, file: fileName, dependencyName: annotation.value.name)
+                    let dependency = printableDependency(line: annotation.line, name: annotation.value.name)
+                    throw ParserError.unknownDependency(dependency)
                 }
                 children.append(.scopeAnnotation(annotation))
             
             case is TokenBox<ConfigurationAnnotation>:
                 let annotation = try parseSimpleExpr(ConfigurationAnnotation.self)
                 guard config[annotation.value.attribute.name] == nil else {
-                    throw ParserError.configurationAttributeDoubleAssignation(line: annotation.line, file: fileName, attribute: annotation.value.attribute)
+                    throw ParserError.configurationAttributeDoubleAssignation(fileLocation(line: annotation.line), attribute: annotation.value.attribute)
                 }
                 config[annotation.value.attribute.name] = annotation
 
@@ -141,10 +157,10 @@ private extension Parser {
                 }
 
             case nil:
-                throw ParserError.unexpectedEOF(file: fileName)
+                throw ParserError.unexpectedEOF(fileLocation())
             
             case .some(let token):
-                throw ParserError.unexpectedToken(line: token.line, file: fileName)
+                throw ParserError.unexpectedToken(fileLocation(line: token.line))
             }
         }
     }
@@ -169,7 +185,7 @@ private extension Parser {
                 return .file(types: types, name: fileName)
                 
             case .some(let token):
-                throw ParserError.unexpectedToken(line: token.line, file: fileName)
+                throw ParserError.unexpectedToken(fileLocation(line: token.line))
             }
         }
     }
