@@ -8,3 +8,4 @@ protocol PersonManagerDependencyResolver {
 protocol PersonManagerDependencyInjectable {
     init(injecting dependencies: PersonManagerDependencyResolver)
 }
+extension PersonManager: PersonManagerDependencyInjectable {}

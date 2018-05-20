@@ -53,16 +53,21 @@ import Weaver
 
 extension {{resolver.targetTypeName}}DependencyContainer: {{resolver.targetTypeName}}DependencyResolver {
     {% for reference in resolver.references %}
+
     {% if reference.parameters %}
+
     {% if resolver.isPublic %}public {% endif %}func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.typeName}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.resolvedTypeName}} {
         return resolve({{reference.resolvedTypeName}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
     }
     {% else %}
+
     {% if resolver.isPublic %}public {% endif %}var {{reference.name}}: {{reference.resolvedTypeName}} {
         return resolve({{reference.resolvedTypeName}}.self, name: "{{reference.name}}")
     }
-    {% endif %}
-    {% endfor %}
+
+    {% endif %}{# reference.paramters #}
+
+    {% endfor %}{# resolver.references #}
 }
 
 {% endif %}{# not resolver.isIsolated #}
@@ -85,15 +90,11 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
     init(injecting dependencies: {{resolver.targetTypeName}}DependencyResolver)
 }
 
-{% if not resolver.isIsolated %}
-
 {% if not resolver.doesSupportObjc %}
 
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetTypeName}}: {{resolver.targetTypeName}}DependencyInjectable {}
 
 {% endif %}{# not resolver.doesSupportObjc #}
-
-{% endif %}{# not resolver.isIsolated #}
 
 {% endif %}{# not resolver.isRoot #}
 

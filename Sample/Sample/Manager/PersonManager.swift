@@ -25,11 +25,29 @@ protocol PersonManaging {
 
 final class PersonManager: PersonManaging {
 
+    let dependencies: PersonManagerDependencyResolver
+    
     // weaver: self.isIsolated = true
     
     // weaver: movieAPI <- APIProtocol
     
+    init(injecting dependencies: PersonManagerDependencyResolver) {
+        self.dependencies = dependencies
+    }
+    
     func getPopularPersons(_ completion: @escaping (Result<Page<Person>, PersonManagerError>) -> Void) {
         
+        let request = APIRequest<Page<Person>>(path: "/person/popular")
+        
+        dependencies.movieAPI.send(request: request) { result in
+            switch result {
+            case .success(let page):
+                completion(.success(page))
+
+            case .failure(let error):
+                print(error)
+                completion(.failure(.oops))
+            }
+        }
     }
 }
