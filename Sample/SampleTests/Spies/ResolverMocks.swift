@@ -20,7 +20,7 @@ final class MovieAPIDependencyResolverSpy: MovieAPIDependencyResolver {
         URLProtocolSpy.clearSpies()
     }
     
-    // MARK: - Spies
+    // MARK: - Implementation
     
     lazy var urlSession: URLSession = {
         let config = URLSessionConfiguration.ephemeral
@@ -34,6 +34,8 @@ final class MovieManagerDependencyResolverSpy: MovieManagerDependencyResolver {
     // MARK: - Spies
 
     var movieAPISpy = APISpy()
+    
+    // MARK: - Implementation
     
     var movieAPI: APIProtocol {
         return movieAPISpy
@@ -54,6 +56,8 @@ final class ImageManagerDependencyResolverSpy: ImageManagerDependencyResolver {
     
     var movieAPISpy = APISpy()
 
+    // MARK: - Implementation
+    
     lazy var urlSession: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [URLProtocolSpy.self]

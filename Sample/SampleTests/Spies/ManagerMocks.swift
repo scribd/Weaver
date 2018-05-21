@@ -26,7 +26,7 @@ final class APISpy: APIProtocol {
     
     var sendModelRequestResultStub: Result<Any, APIError> = .failure(.emptyBodyResponse)
     
-    // MARK: - Spies
+    // MARK: - Implementation
     
     func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void) {
         dataRequestConfigRecord.append(request.config)
@@ -59,7 +59,7 @@ final class MovieManagerSpy: MovieManaging {
     
     var getMovieResultStub: Result<Movie, MovieManagerError> = .failure(.oops)
     
-    // MARK: - Spies
+    // MARK: - Implementation
     
     func getDiscoverMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void) {
         getDiscoverMoviesCallCountRecord += 1
@@ -82,7 +82,7 @@ final class ImageManagerSpy: ImageManaging {
     
     private(set) var getImageResultStub: Result<UIImage, ImageManagerError> = .failure(.oops)
     
-    // MARK: - Spies
+    // MARK: - Implementation
     
     func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void) {
         pathRecord.append(path)

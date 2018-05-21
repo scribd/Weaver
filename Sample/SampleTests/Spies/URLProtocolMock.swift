@@ -26,7 +26,7 @@ final class URLProtocolSpy: URLProtocol {
         URLProtocolSpy.responseStubs = []
     }
     
-    // MARK: - Spies
+    // MARK: - Implementation
     
     override class func canInit(with request: URLRequest) -> Bool {
         URLProtocolSpy.requestsRecord.append(request)
