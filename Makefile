@@ -1,3 +1,5 @@
+VERSION := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Weaver.xcodeproj/WeaverCodeGen_Info.plist)
+
 .PHONY: clean build install package generate_sources codecov
 
 build:
@@ -13,14 +15,14 @@ install:
 	$(call build)
 	$(call install_files,/usr/local) 
 
+uninstall:
+	rm "/usr/local/bin/weaver"
+	rm -rf "/usr/local/share/weaver"
+
 package:
 	$(call build)
 	$(call install_files,./build/package/weaver)
-	cd ./build/package/ && zip -r ../../weaver.zip ./weaver
-
-uninstall:
-	rm "$(DESTDIR)/bin/weaver"
-	rm -rf "$(DESTDIR)/share/weaver"
+	cd ./build/package/ && zip -r ../../weaver-$(VERSION).zip ./weaver
 
 codecov:
 	$(call build)
