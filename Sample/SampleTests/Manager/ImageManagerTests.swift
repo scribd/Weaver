@@ -13,20 +13,20 @@ import XCTest
 
 final class ImageManagerTests: XCTestCase {
     
-    var imageManagerDependencyResolverMock: ImageManagerDependencyResolverMock!
+    var imageManagerDependencyResolverSpy: ImageManagerDependencyResolverSpy!
     var imageManager: ImageManager!
     
     override func setUp() {
         super.setUp()
         
-        imageManagerDependencyResolverMock = ImageManagerDependencyResolverMock()
-        imageManager = ImageManager(injecting: imageManagerDependencyResolverMock)
+        imageManagerDependencyResolverSpy = ImageManagerDependencyResolverSpy()
+        imageManager = ImageManager(injecting: imageManagerDependencyResolverSpy)
     }
     
     override func tearDown() {
         defer { super.tearDown() }
         
-        imageManagerDependencyResolverMock = nil
+        imageManagerDependencyResolverSpy = nil
         imageManager = nil
     }
     
@@ -34,16 +34,16 @@ final class ImageManagerTests: XCTestCase {
         
         let imageData = UIImagePNGRepresentation(.from(color: .black))!
 
-        let movieAPIMock = imageManagerDependencyResolverMock.movieAPIMock
-        movieAPIMock.sendDataRequestResultStub = .success(imageData)
+        let movieAPISpy = imageManagerDependencyResolverSpy.movieAPISpy
+        movieAPISpy.sendDataRequestResultStub = .success(imageData)
         
         let expectation = self.expectation(description: "get_image")
         imageManager.getImage(with: "image") { result in
             switch result {
             case .success(let image):
                 XCTAssertEqual(UIImagePNGRepresentation(image), imageData)
-                XCTAssertEqual(movieAPIMock.dataRequestConfigSpy.first?.path, "image")
-                XCTAssertEqual(movieAPIMock.dataRequestConfigSpy.count, 1)
+                XCTAssertEqual(movieAPISpy.dataRequestConfigRecord.first?.path, "image")
+                XCTAssertEqual(movieAPISpy.dataRequestConfigRecord.count, 1)
                 
             case .failure(let error):
                 XCTFail("Unexpected error: \(error).")

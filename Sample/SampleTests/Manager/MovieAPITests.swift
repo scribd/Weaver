@@ -13,15 +13,15 @@ import XCTest
 
 final class MovieAPITests: XCTestCase {
 
-    var movieAPIDependencyResolverMock: MovieAPIDependencyResolverMock!
+    var movieAPIDependencyResolverSpy: MovieAPIDependencyResolverSpy!
     
     var movieAPI: MovieAPI!
     
     override func setUp() {
         super.setUp()
         
-        movieAPIDependencyResolverMock = MovieAPIDependencyResolverMock()
-        movieAPI = MovieAPI(injecting: movieAPIDependencyResolverMock)
+        movieAPIDependencyResolverSpy = MovieAPIDependencyResolverSpy()
+        movieAPI = MovieAPI(injecting: movieAPIDependencyResolverSpy)
     }
     
     override func tearDown() {
@@ -29,7 +29,7 @@ final class MovieAPITests: XCTestCase {
             super.tearDown()
         }
         
-        movieAPIDependencyResolverMock = nil
+        movieAPIDependencyResolverSpy = nil
         movieAPI = nil
     }
     
@@ -43,14 +43,14 @@ final class MovieAPITests: XCTestCase {
         let selectResponse = { (request: URLRequest) -> Bool in
             return request.url?.host == "test" && request.url?.path == "/test"
         }
-        URLProtocolMock.responseStubs.append((select: selectResponse, stub: .success(responseStub)))
+        URLProtocolSpy.responseStubs.append((select: selectResponse, stub: .success(responseStub)))
         
         let request = APIRequest<Data>(method: .get, host: "http://test", path: "/test")
         
         let expectation = self.expectation(description: "send")
         
         movieAPI.send(request: request) { result in
-            XCTAssertNotNil(URLProtocolMock.requestsSpy.first)
+            XCTAssertNotNil(URLProtocolSpy.requestsRecord.first)
 
             switch result {
             case .success:

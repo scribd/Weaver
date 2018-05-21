@@ -13,7 +13,7 @@ import XCTest
 
 final class MovieManagerTests: XCTestCase {
     
-    var movieManagerDependencyResolverMock: MovieManagerDependencyResolverMock!
+    var movieManagerDependencyResolverSpy: MovieManagerDependencyResolverSpy!
     var movieManager: MovieManager!
     
     var movie: Movie {
@@ -26,14 +26,14 @@ final class MovieManagerTests: XCTestCase {
     override func setUp() {
         super.setUp()
         
-        movieManagerDependencyResolverMock = MovieManagerDependencyResolverMock()
-        movieManager = MovieManager(injecting: movieManagerDependencyResolverMock)
+        movieManagerDependencyResolverSpy = MovieManagerDependencyResolverSpy()
+        movieManager = MovieManager(injecting: movieManagerDependencyResolverSpy)
     }
     
     override func tearDown() {
         defer { super.tearDown() }
         
-        movieManagerDependencyResolverMock = nil
+        movieManagerDependencyResolverSpy = nil
         movieManager = nil
     }
     
@@ -41,16 +41,16 @@ final class MovieManagerTests: XCTestCase {
 
         let page = Page(page: 2, total_results: 2, total_pages: 10, results: [movie, movie])
         
-        let movieAPIMock = movieManagerDependencyResolverMock.movieAPIMock
-        movieAPIMock.sendModelRequestResultStub = .success(page)
+        let movieAPISpy = movieManagerDependencyResolverSpy.movieAPISpy
+        movieAPISpy.sendModelRequestResultStub = .success(page)
         
         let expectation = self.expectation(description: "get_movies")
         movieManager.getDiscoverMovies { result in
             switch result {
             case .success(let page):
                 XCTAssertEqual(page.results.count, 2)
-                XCTAssertEqual(movieAPIMock.modelRequestConfigSpy.first?.path, "/discover/movie")
-                XCTAssertEqual(movieAPIMock.modelRequestConfigSpy.count, 1)
+                XCTAssertEqual(movieAPISpy.modelRequestConfigRecord.first?.path, "/discover/movie")
+                XCTAssertEqual(movieAPISpy.modelRequestConfigRecord.count, 1)
                 
             case .failure(let error):
                 XCTFail("Unexpected error: \(error).")
@@ -64,16 +64,16 @@ final class MovieManagerTests: XCTestCase {
     
     func test_movieManager_getMovie_should_retriave_a_movie() {
         
-        let movieAPIMock = movieManagerDependencyResolverMock.movieAPIMock
-        movieAPIMock.sendModelRequestResultStub = .success(movie)
+        let movieAPISpy = movieManagerDependencyResolverSpy.movieAPISpy
+        movieAPISpy.sendModelRequestResultStub = .success(movie)
         
         let expectation = self.expectation(description: "get_movie")
         movieManager.getMovie(id: 42) { result in
             switch result {
             case .success(let movie):
                 XCTAssertEqual(movie.id, 42)
-                XCTAssertEqual(movieAPIMock.modelRequestConfigSpy.first?.path, "/movie/42")
-                XCTAssertEqual(movieAPIMock.modelRequestConfigSpy.count, 1)
+                XCTAssertEqual(movieAPISpy.modelRequestConfigRecord.first?.path, "/movie/42")
+                XCTAssertEqual(movieAPISpy.modelRequestConfigRecord.count, 1)
                 
             case .failure(let error):
                 XCTFail("Unexpected error: \(error).")

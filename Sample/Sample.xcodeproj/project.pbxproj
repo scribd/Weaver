@@ -165,7 +165,7 @@
 		19956E08206B4F0A00751B70 /* SampleTests */ = {
 			isa = PBXGroup;
 			children = (
-				19F5473F20A74C50006F40DF /* Mock */,
+				19F5473F20A74C50006F40DF /* Spies */,
 				19F5473E20A74C3E006F40DF /* Manager */,
 				19956E0B206B4F0A00751B70 /* Info.plist */,
 			);
@@ -237,14 +237,14 @@
 			path = Manager;
 			sourceTree = "<group>";
 		};
-		19F5473F20A74C50006F40DF /* Mock */ = {
+		19F5473F20A74C50006F40DF /* Spies */ = {
 			isa = PBXGroup;
 			children = (
 				19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */,
 				19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */,
 				19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */,
 			);
-			path = Mock;
+			path = Spies;
 			sourceTree = "<group>";
 		};
 		7B3652179375C85283922125 /* Frameworks */ = {

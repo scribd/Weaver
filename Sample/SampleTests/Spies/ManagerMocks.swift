@@ -1,5 +1,5 @@
 //
-//  Mocks.swift
+//  Spies.swift
 //  SampleTests
 //
 //  Created by Théophane Rupin on 4/9/18.
@@ -12,13 +12,13 @@ import XCTest
 
 @testable import Sample
 
-final class APIMock: APIProtocol {
+final class APISpy: APIProtocol {
     
     // MARK: - Spies
     
-    private(set) var dataRequestConfigSpy = [APIRequestConfig]()
+    private(set) var dataRequestConfigRecord = [APIRequestConfig]()
 
-    private(set) var modelRequestConfigSpy = [APIRequestConfig]()
+    private(set) var modelRequestConfigRecord = [APIRequestConfig]()
     
     // MARK: - Stubs
     
@@ -26,15 +26,15 @@ final class APIMock: APIProtocol {
     
     var sendModelRequestResultStub: Result<Any, APIError> = .failure(.emptyBodyResponse)
     
-    // MARK: - Mocks
+    // MARK: - Spies
     
     func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void) {
-        dataRequestConfigSpy.append(request.config)
+        dataRequestConfigRecord.append(request.config)
         completion(sendDataRequestResultStub)
     }
     
     func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) where Model: Decodable {
-        modelRequestConfigSpy.append(request.config)
+        modelRequestConfigRecord.append(request.config)
 
         switch sendModelRequestResultStub {
         case .success(let model):
@@ -45,13 +45,13 @@ final class APIMock: APIProtocol {
     }
 }
 
-final class MovieManagerMock: MovieManaging {
+final class MovieManagerSpy: MovieManaging {
     
     // MARK: - Spies
     
-    private(set) var getDiscoverMoviesCallCountSpy = 0
+    private(set) var getDiscoverMoviesCallCountRecord = 0
     
-    private(set) var movieIdSpy = [UInt]()
+    private(set) var movieIdRecord = [UInt]()
     
     // MARK: - Stubs
     
@@ -59,33 +59,33 @@ final class MovieManagerMock: MovieManaging {
     
     var getMovieResultStub: Result<Movie, MovieManagerError> = .failure(.oops)
     
-    // MARK: - Mocks
+    // MARK: - Spies
     
     func getDiscoverMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void) {
-        getDiscoverMoviesCallCountSpy += 1
+        getDiscoverMoviesCallCountRecord += 1
         completion(getDiscoverMoviesResultStub)
     }
     
     func getMovie(id: UInt, completion: @escaping (Result<Movie, MovieManagerError>) -> Void) {
-        movieIdSpy.append(id)
+        movieIdRecord.append(id)
         completion(getMovieResultStub)
     }
 }
 
-final class ImageManagerMock: ImageManaging {
+final class ImageManagerSpy: ImageManaging {
     
     // MARK: - Spies
     
-    private(set) var pathSpy = [String]()
+    private(set) var pathRecord = [String]()
     
     // MARK: - Stubs
     
     private(set) var getImageResultStub: Result<UIImage, ImageManagerError> = .failure(.oops)
     
-    // MARK: - Mocks
+    // MARK: - Spies
     
     func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void) {
-        pathSpy.append(path)
+        pathRecord.append(path)
         completion(getImageResultStub)
     }
 }

@@ -1,5 +1,5 @@
 //
-//  URLProtocolMock.swift
+//  URLProtocolSpy.swift
 //  SampleTests
 //
 //  Created by Théophane Rupin on 4/9/18.
@@ -11,7 +11,7 @@ import XCTest
 
 @testable import Sample
 
-final class URLProtocolMock: URLProtocol {
+final class URLProtocolSpy: URLProtocol {
     
     // MARK: - Stubs
     
@@ -19,17 +19,17 @@ final class URLProtocolMock: URLProtocol {
     
     // MARK: - Spies
     
-    private(set) static var requestsSpy = [URLRequest]()
+    private(set) static var requestsRecord = [URLRequest]()
     
     static func clearSpies() {
-        URLProtocolMock.requestsSpy = []
-        URLProtocolMock.responseStubs = []
+        URLProtocolSpy.requestsRecord = []
+        URLProtocolSpy.responseStubs = []
     }
     
-    // MARK: - Mocks
+    // MARK: - Spies
     
     override class func canInit(with request: URLRequest) -> Bool {
-        URLProtocolMock.requestsSpy.append(request)
+        URLProtocolSpy.requestsRecord.append(request)
         return true
     }
     
@@ -38,7 +38,7 @@ final class URLProtocolMock: URLProtocol {
     }
     
     override func startLoading() {
-        guard let responseStub = URLProtocolMock.responseStubs.first(where: { $0.select(request) })?.stub else {
+        guard let responseStub = URLProtocolSpy.responseStubs.first(where: { $0.select(request) })?.stub else {
             XCTFail("Unexpected request: \(request)")
             return
         }
