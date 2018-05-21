@@ -15,7 +15,7 @@ import PathKit
 final class GeneratorTests: XCTestCase {
     
     private let templatePath = Path(#file).parent() + Path("../../Resources/dependency_resolver.stencil")
-    private let version = "0.9.3"
+    private let version = "0.9.4"
     
     func test_generator_should_generate_a_valid_swift_code() {
         

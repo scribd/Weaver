@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = "Weaver"
-  s.version = "0.9.3"
+  s.version = "0.9.4"
   s.swift_version = "4.0"
   s.summary = "A typesafe dependency injection framework working at compile time."
   s.homepage = "https://github.com/scribd/Weaver"
