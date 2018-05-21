@@ -7,17 +7,24 @@ final class ImageManagerDependencyContainer: DependencyContainer {
         super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
+        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
+            return Logger()
+        })
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
             return self.urlSessionCustomRef(dependencies)
         })
     }
 }
 protocol ImageManagerDependencyResolver {
+    var logger: Logger { get }
     var urlSession: URLSession { get }
     var movieAPI: APIProtocol { get }
     func urlSessionCustomRef(_ dependencies: DependencyContainer) -> URLSession
 }
 extension ImageManagerDependencyContainer: ImageManagerDependencyResolver {
+    var logger: Logger {
+        return resolve(Logger.self, name: "logger")
+    }
     var urlSession: URLSession {
         return resolve(URLSession.self, name: "urlSession")
     }

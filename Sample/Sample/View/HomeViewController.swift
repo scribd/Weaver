@@ -15,6 +15,8 @@ final class HomeViewController: UIViewController {
     
     private var movies = [Movie]()
     
+    // weaver: logger = Logger
+    
     // weaver: movieManager <- MovieManaging
     
     // weaver: movieController = MovieViewController <- UIViewController
@@ -61,7 +63,7 @@ final class HomeViewController: UIViewController {
                 self.tableView.reloadData()
                 
             case .failure(let error):
-                print(error)
+                self.dependencies.logger.log(.error, "\(error)")
             }
         }
     }

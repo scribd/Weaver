@@ -38,6 +38,8 @@ final class ReviewManager: ReviewManaging {
 
     private let dependencies: ReviewManagerDependencyResolver
     
+    // weaver: logger = Logger
+    
     // weaver: movieAPI <- APIProtocol
     
     required init(injecting dependencies: ReviewManagerDependencyResolver) {
@@ -53,7 +55,7 @@ final class ReviewManager: ReviewManaging {
             case .success(let page):
                 completion(ReviewPage(page), nil)
             case .failure(let error):
-                print(error)
+                self.dependencies.logger.log(.error, "\(error)")
                 completion(nil, ReviewManagerError(.oops))
             }
         }

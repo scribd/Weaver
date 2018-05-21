@@ -23,6 +23,8 @@ final class ImageManager: ImageManaging {
     
     private let dependencies: ImageManagerDependencyResolver
     
+    // weaver: logger = Logger
+    
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
     // weaver: urlSession.customRef = true
@@ -49,7 +51,7 @@ final class ImageManager: ImageManaging {
                 completion(.success(image))
                 
             case .failure(let error):
-                print(error)
+                self.dependencies.logger.log(.error, "\(error)")
                 completion(.failure(.oops))
             }
         }

@@ -19,6 +19,7 @@
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
 		19C298D620B1272800094218 /* Weaver.PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C298D520B1272800094218 /* Weaver.PersonManager.swift */; };
+		19C298D820B2464200094218 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C298D720B2464200094218 /* Logger.swift */; };
 		19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A4207AADD30011DF93 /* ImageManager.swift */; };
 		19DE26A9207BBD9D0011DF93 /* ManagerMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */; };
 		19DE26AB207BC21E0011DF93 /* ResolverMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */; };
@@ -73,6 +74,7 @@
 		19956E05206B4F0A00751B70 /* SampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19956E0B206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		19C298D520B1272800094218 /* Weaver.PersonManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.PersonManager.swift; sourceTree = "<group>"; };
+		19C298D720B2464200094218 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		19DE26A4207AADD30011DF93 /* ImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManager.swift; sourceTree = "<group>"; };
 		19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerMocks.swift; sourceTree = "<group>"; };
 		19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverMocks.swift; sourceTree = "<group>"; };
@@ -154,6 +156,7 @@
 				19F5473B20A74C02006F40DF /* Manager */,
 				19956E18206B51FF00751B70 /* Generated */,
 				19956DF4206B4F0A00751B70 /* AppDelegate.swift */,
+				19C298D720B2464200094218 /* Logger.swift */,
 				19956DFB206B4F0A00751B70 /* Assets.xcassets */,
 				19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */,
 				19956E00206B4F0A00751B70 /* Info.plist */,
@@ -456,6 +459,7 @@
 				19F5475520A8EFF0006F40DF /* Person.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
 				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
+				19C298D820B2464200094218 /* Logger.swift in Sources */,
 				193EEF85207683B200BFE706 /* Result.swift in Sources */,
 				19F5474520A79BCD006F40DF /* MovieViewController.swift in Sources */,
 				19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */,

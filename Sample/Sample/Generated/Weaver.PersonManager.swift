@@ -3,6 +3,7 @@
 import Weaver
 // MARK: - PersonManager
 protocol PersonManagerDependencyResolver {
+    var logger: Logger { get }
     var movieAPI: APIProtocol { get }
 }
 protocol PersonManagerDependencyInjectable {
