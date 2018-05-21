@@ -58,16 +58,16 @@ public final class Generator {
 
 private final class Graph {
 
-    private(set) var resolversByType = [String: ResolverData]()
+    private(set) var resolversByType = [String: ResolverModel]()
     private(set) var typesByName = [String: [String]]()
 
-    var resolversByFile = [String: [ResolverData]]()
+    var resolversByFile = [String: [ResolverModel]]()
     
-    func insertResolver(_ resolver: ResolverData) {
+    func insertResolver(_ resolver: ResolverModel) {
         resolversByType[resolver.targetTypeName] = resolver
     }
     
-    func insertVariable(_ variable: VariableData) {
+    func insertVariable(_ variable: VariableModel) {
         var types = typesByName[variable.name] ?? []
         types.append(variable.typeName)
         variable.abstractTypeName.flatMap { types.append($0) }
@@ -75,21 +75,22 @@ private final class Graph {
     }
 }
 
-// MARK: - Template Data
+// MARK: - Template Model
 
-private final class RegisterData {
+private final class RegisterModel {
     let name: String
     let typeName: String
     let abstractTypeName: String
     let scope: String
     let isCustom: Bool
-    var parameters: [VariableData] = []
+    var parameters: [VariableModel] = []
     
     init(name: String,
          typeName: String,
          abstractTypeName: String,
          scope: String,
          isCustom: Bool) {
+        
         self.name = name
         self.typeName = typeName
         self.abstractTypeName = abstractTypeName
@@ -98,17 +99,18 @@ private final class RegisterData {
     }
 }
 
-private final class VariableData {
+private final class VariableModel {
     let name: String
     let typeName: String
     let abstractTypeName: String?
 
-    var parameters: [VariableData] = []
+    var parameters: [VariableModel] = []
     let resolvedTypeName: String
     
     init(name: String,
          typeName: String,
          abstractTypeName: String?) {
+        
         self.name = name
         self.typeName = typeName
         self.abstractTypeName = abstractTypeName
@@ -116,11 +118,11 @@ private final class VariableData {
     }
 }
 
-private final class ResolverData {
+private final class ResolverModel {
     let targetTypeName: String
-    let registrations: [RegisterData]
-    let references: [VariableData]
-    let parameters: [VariableData]
+    let registrations: [RegisterModel]
+    let references: [VariableModel]
+    let parameters: [VariableModel]
     let enclosingTypeNames: [String]?
     let isRoot: Bool
     let isPublic: Bool
@@ -128,14 +130,15 @@ private final class ResolverData {
     let isIsolated: Bool
     
     init(targetTypeName: String,
-         registrations: [RegisterData],
-         references: [VariableData],
-         parameters: [VariableData],
+         registrations: [RegisterModel],
+         references: [VariableModel],
+         parameters: [VariableModel],
          enclosingTypeNames: [String]?,
          isRoot: Bool,
          doesSupportObjc: Bool,
          accessLevel: AccessLevel,
          config: Set<ConfigurationAttribute>) {
+        
         self.targetTypeName = targetTypeName
         self.registrations = registrations
         self.references = references
@@ -157,7 +160,7 @@ private final class ResolverData {
 
 // MARK: - Conversion
 
-extension RegisterData {
+extension RegisterModel {
     
     convenience init(registerAnnotation: RegisterAnnotation,
                      scopeAnnotation: ScopeAnnotation?,
@@ -188,7 +191,7 @@ extension RegisterData {
     }
 }
 
-extension VariableData {
+extension VariableModel {
     
     convenience init(referenceAnnotation: ReferenceAnnotation) {
         
@@ -214,7 +217,7 @@ extension VariableData {
 
 // MARK: - Building
 
-extension ResolverData {
+extension ResolverModel {
 
     convenience init?(expr: Expr, enclosingTypeNames: [String], graph: Graph) {
         
@@ -226,7 +229,7 @@ extension ResolverData {
             var registerAnnotations = [String: RegisterAnnotation]()
             var referenceAnnotations = [String: ReferenceAnnotation]()
             var customRefAnnotations = [String: CustomRefAnnotation]()
-            var parameters = [VariableData]()
+            var parameters = [VariableModel]()
             
             for child in children {
                 switch child {
@@ -243,7 +246,7 @@ extension ResolverData {
                     customRefAnnotations[annotation.value.name] = annotation.value
                     
                 case .parameterAnnotation(let annotation):
-                    parameters.append(VariableData(parameterAnnotation: annotation.value))
+                    parameters.append(VariableModel(parameterAnnotation: annotation.value))
                     
                 case .file,
                      .typeDeclaration:
@@ -252,12 +255,12 @@ extension ResolverData {
             }
             
             let registrations = registerAnnotations.map {
-                RegisterData(registerAnnotation: $0.value,
+                RegisterModel(registerAnnotation: $0.value,
                              scopeAnnotation: scopeAnnotations[$0.key],
                              customRefAnnotation: customRefAnnotations[$0.key])
             } + referenceAnnotations.flatMap {
                 if let customRefAnnotation = customRefAnnotations[$0.key] {
-                    return RegisterData(referenceAnnotation: $0.value,
+                    return RegisterModel(referenceAnnotation: $0.value,
                                         scopeAnnotation: scopeAnnotations[$0.key],
                                         customRefAnnotation: customRefAnnotation)
                 } else {
@@ -265,12 +268,12 @@ extension ResolverData {
                 }
             }
 
-            let references = registerAnnotations.map { _, register -> VariableData in
-                let variable = VariableData(registerAnnotation: register)
+            let references = registerAnnotations.map { _, register -> VariableModel in
+                let variable = VariableModel(registerAnnotation: register)
                 graph.insertVariable(variable)
                 return variable
-            } + referenceAnnotations.map { _, reference -> VariableData in
-                let variable = VariableData(referenceAnnotation: reference)
+            } + referenceAnnotations.map { _, reference -> VariableModel in
+                let variable = VariableModel(referenceAnnotation: reference)
                 graph.insertVariable(variable)
                 return variable
             }
@@ -311,7 +314,7 @@ private extension Generator {
         }
     }
     
-    private func buildResolvers(ast: Expr) -> (file: String, resolvers: [ResolverData])? {
+    private func buildResolvers(ast: Expr) -> (file: String, resolvers: [ResolverModel])? {
         switch ast {
         case .file(let types, let name):
             let resolvers = buildResolvers(exprs: types)
@@ -327,17 +330,17 @@ private extension Generator {
         }
     }
     
-    private func buildResolvers(exprs: [Expr], enclosingTypeNames: [String] = []) -> [ResolverData] {
+    private func buildResolvers(exprs: [Expr], enclosingTypeNames: [String] = []) -> [ResolverModel] {
 
-        return exprs.flatMap { expr -> [ResolverData] in
+        return exprs.flatMap { expr -> [ResolverModel] in
             switch expr {
             case .typeDeclaration(let typeToken, _, let children):
-                guard let resolverData = ResolverData(expr: expr, enclosingTypeNames: enclosingTypeNames, graph: graph) else {
+                guard let resolverModel = ResolverModel(expr: expr, enclosingTypeNames: enclosingTypeNames, graph: graph) else {
                     return []
                 }
-                graph.insertResolver(resolverData)
+                graph.insertResolver(resolverModel)
                 let enclosingTypeNames = enclosingTypeNames + [typeToken.value.name]
-                return [resolverData] + buildResolvers(exprs: children, enclosingTypeNames: enclosingTypeNames)
+                return [resolverModel] + buildResolvers(exprs: children, enclosingTypeNames: enclosingTypeNames)
                 
             case .file,
                  .registerAnnotation,
