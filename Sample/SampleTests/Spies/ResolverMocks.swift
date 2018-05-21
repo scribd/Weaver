@@ -40,6 +40,8 @@ final class MovieManagerDependencyResolverSpy: MovieManagerDependencyResolver {
     var movieAPI: APIProtocol {
         return movieAPISpy
     }
+    
+    let logger = Logger()
 }
 
 final class ImageManagerDependencyResolverSpy: ImageManagerDependencyResolver {
@@ -67,4 +69,6 @@ final class ImageManagerDependencyResolverSpy: ImageManagerDependencyResolver {
     var movieAPI: APIProtocol {
         return movieAPISpy
     }
+    
+    let logger = Logger()
 }

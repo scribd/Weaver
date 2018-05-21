@@ -18,6 +18,8 @@ final class MovieViewController: UIViewController {
     
     private let dependencies: MovieViewControllerDependencyResolver
 
+    // weaver: logger = Logger
+    
     // weaver: movieID <= UInt
     // weaver: title <= String
     
@@ -76,6 +78,8 @@ final class MovieViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        dependencies.logger.log(.info, "Showing movie: \(dependencies.title).")
+        
         title = dependencies.title
         view.backgroundColor = .black
         edgesForExtendedLayout = []
@@ -103,7 +107,7 @@ final class MovieViewController: UIViewController {
                 case .success(let image):
                     self.thumbnailImageView.image = image
                 case .failure(let error):
-                    print(error)
+                    self.dependencies.logger.log(.error, "\(error)")
                 }
             }
             
@@ -117,7 +121,7 @@ final class MovieViewController: UIViewController {
             case .success(let movie):
                 completion(ViewModel(movie))
             case .failure(let error):
-                print(error)
+                self.dependencies.logger.log(.error, "\(error)")
                 completion(ViewModel())
             }
         }

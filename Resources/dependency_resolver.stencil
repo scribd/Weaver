@@ -21,7 +21,7 @@ import Weaver
     override {% if resolver.isPublic %}public {% endif %}func registerDependencies(in store: DependencyStore) {
         {% for registration in resolver.registrations %}
         store.register({{registration.abstractTypeName}}.self, scope: .{{registration.scope}}, name: "{{registration.name}}", builder: { (dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) in{% if not registration.isCustom %}
-            return {{registration.typeName}}.make{{registration.typeName}}(injecting: dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}
+            return {{registration.typeName}}{% if registration.hasResolver %}.make{{registration.typeName}}(injecting: dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}(){% endif %}{% else %}
             return self.{{registration.name}}CustomRef(dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% endif %}
         })
         {% endfor %}

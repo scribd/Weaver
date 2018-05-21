@@ -27,6 +27,8 @@ final class MovieManager: MovieManaging {
 
     private let dependencies: MovieManagerDependencyResolver
     
+    // weaver: logger = Logger
+    
     // weaver: movieAPI <- APIProtocol
     
     required init(injecting dependencies: MovieManagerDependencyResolver) {
@@ -42,7 +44,7 @@ final class MovieManager: MovieManaging {
             case .success(let page):
                 completion(.success(page))
             case .failure(let error):
-                print(error)
+                self.dependencies.logger.log(.error, "\(error)")
                 completion(.failure(.oops))
             }
         }
@@ -57,7 +59,7 @@ final class MovieManager: MovieManaging {
             case .success(let movie):
                 completion(.success(movie))
             case .failure(let error):
-                print(error)
+                self.dependencies.logger.log(.error, "\(error)")
                 completion(.failure(.oops))
             }
         }

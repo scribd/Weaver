@@ -28,6 +28,8 @@ final class PersonManager: PersonManaging {
     let dependencies: PersonManagerDependencyResolver
     
     // weaver: self.isIsolated = true
+
+    // weaver: logger = Logger
     
     // weaver: movieAPI <- APIProtocol
     
@@ -45,7 +47,7 @@ final class PersonManager: PersonManaging {
                 completion(.success(page))
 
             case .failure(let error):
-                print(error)
+                self.dependencies.logger.log(.error, "\(error)")
                 completion(.failure(.oops))
             }
         }

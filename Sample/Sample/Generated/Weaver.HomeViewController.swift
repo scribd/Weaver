@@ -11,7 +11,7 @@ final class HomeViewControllerDependencyContainer: DependencyContainer {
             return MovieViewController.makeMovieViewController(injecting: dependencies, movieID: movieID, title: title)
         })
         store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
-            return Logger.makeLogger(injecting: dependencies)
+            return Logger()
         })
     }
 }

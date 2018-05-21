@@ -34,6 +34,7 @@ public final class Generator {
         buildResolvers(asts: asts)
         
         linkParameters()
+        linkRegistrations()
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
@@ -60,6 +61,19 @@ private final class Graph {
 
     private(set) var resolversByType = [String: ResolverModel]()
     private(set) var typesByName = [String: [String]]()
+    
+    fileprivate lazy var  resolvers: [ResolverModel] = {
+        return resolversByFile.values.flatMap { $0 }
+    }()
+    
+    fileprivate lazy var registrations: [RegisterModel] = {
+        return resolvers.flatMap { $0.registrations }
+    }()
+    
+    fileprivate lazy var references: [VariableModel] = {
+        return resolvers.flatMap { $0.references }
+    }()
+
 
     var resolversByFile = [String: [ResolverModel]]()
     
@@ -84,6 +98,7 @@ private final class RegisterModel {
     let scope: String
     let isCustom: Bool
     var parameters: [VariableModel] = []
+    var hasResolver: Bool = false
     
     init(name: String,
          typeName: String,
@@ -359,17 +374,13 @@ private extension Generator {
 private extension Generator {
     
     func linkParameters() {
-        let resolvers = graph.resolversByFile.values.flatMap { $0 }
-        let registrations = resolvers.flatMap { $0.registrations }
-        let references = resolvers.flatMap { $0.references }
-
         // link parameters to registrations
-        for registration in registrations {
+        for registration in graph.registrations {
             registration.parameters = graph.resolversByType[registration.typeName]?.parameters ?? []
         }
 
         // link parameters to references
-        for reference in references {
+        for reference in graph.references {
             reference.parameters = graph.resolversByType[reference.typeName]?.parameters ?? []
             
             if reference.parameters.isEmpty, let types = graph.typesByName[reference.name] {
@@ -380,6 +391,12 @@ private extension Generator {
                     }
                 }
             }
+        }
+    }
+    
+    func linkRegistrations() {
+        for registration in graph.registrations {
+            registration.hasResolver = graph.resolversByType[registration.typeName] != nil
         }
     }
 }
