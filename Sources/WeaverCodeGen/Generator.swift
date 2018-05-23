@@ -84,7 +84,7 @@ private final class RegisterModel {
     let scope: String
     let isCustom: Bool
     var parameters: [VariableModel] = []
-    var hasResolver: Bool = false
+    var hasBuilder: Bool = false
     
     init(name: String,
          typeName: String,
@@ -100,6 +100,12 @@ private final class RegisterModel {
     }
 }
 
+private enum VariableModelType {
+    case registration
+    case reference
+    case parameter
+}
+
 private final class VariableModel {
     let name: String
     let typeName: String
@@ -107,14 +113,17 @@ private final class VariableModel {
 
     var parameters: [VariableModel] = []
     let resolvedTypeName: String
+    let type: VariableModelType
     
     init(name: String,
          typeName: String,
-         abstractTypeName: String?) {
+         abstractTypeName: String?,
+         type: VariableModelType) {
         
         self.name = name
         self.typeName = typeName
         self.abstractTypeName = abstractTypeName
+        self.type = type
         resolvedTypeName = abstractTypeName ?? typeName
     }
 }
@@ -198,21 +207,24 @@ extension VariableModel {
         
         self.init(name: referenceAnnotation.name,
                   typeName: referenceAnnotation.typeName,
-                  abstractTypeName: nil)
+                  abstractTypeName: nil,
+                  type: .reference)
     }
     
     convenience init(registerAnnotation: RegisterAnnotation) {
         
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.typeName,
-                  abstractTypeName: registerAnnotation.protocolName)
+                  abstractTypeName: registerAnnotation.protocolName,
+                  type: .registration)
     }
     
     convenience init(parameterAnnotation: ParameterAnnotation) {
         
         self.init(name: parameterAnnotation.name,
                   typeName: parameterAnnotation.typeName,
-                  abstractTypeName: nil)
+                  abstractTypeName: nil,
+                  type: .parameter)
     }
 }
 
@@ -367,8 +379,13 @@ private extension Generator {
         
         // link parameters to registrations
         for registration in registrations {
-            registration.parameters = graph.resolversByType[registration.typeName]?.parameters ?? []
-            registration.hasResolver = graph.resolversByType[registration.typeName] != nil
+            if let resolver = graph.resolversByType[registration.typeName] {
+                registration.parameters = resolver.parameters
+                registration.hasBuilder = !resolver.parameters.isEmpty || !resolver.references.filter { $0.type == .reference }.isEmpty
+            } else {
+                registration.parameters = []
+                registration.hasBuilder = false
+            }
         }
 
         // link parameters to references
