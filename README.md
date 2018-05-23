@@ -72,15 +72,15 @@ Weaver's Swift framework is available with `CocoaPods`, `Carthage` and `Swift Pa
 
 #### CocoaPods
 
-Add `pod 'Weaver', :git => 'git@github.com:scribd/Weaver.git', :tag => '0.9.3'` to the `Podfile`.
+Add `pod 'Weaver', :git => 'git@github.com:scribd/Weaver.git', :tag => '0.9.4'` to the `Podfile`.
 
 #### Carthage
 
-Add `github "scribd/Weaver" ~> 0.9.3` to the `Cartfile`.
+Add `github "scribd/Weaver" ~> 0.9.4` to the `Cartfile`.
 
 #### SwiftPM
 
-Add `.package(url: "https://github.com/scribd/Weaver.git", from: "0.9.3")` to the dependencies section of the `Package.swift` file.
+Add `.package(url: "https://github.com/scribd/Weaver.git", from: "0.9.4")` to the dependencies section of the `Package.swift` file.
 
 ### (2) - Weaver command line tool installation
 
