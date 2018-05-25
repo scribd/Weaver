@@ -126,7 +126,7 @@ Options:
 In Xcode, add the following command to a command line build phase: 
 
 ```
-weaver --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT}/Sample -name '*.swift' | xargs`
+weaver --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT} -name '*.swift' | xargs`
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
