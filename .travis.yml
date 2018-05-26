@@ -12,3 +12,5 @@ script:
   - swift test
   - make install
   - bash -c "cd Sample && fastlane test"
+  - ./tools/check_carthage.sh
+  - pod lib lint

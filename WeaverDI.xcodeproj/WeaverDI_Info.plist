@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<plist version="1.0">
+<?xml version="0.9.5" encoding="UTF-8"?>
+<plist version="0.9.5">
 <dict>
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
@@ -12,9 +12,9 @@
   <key>CFBundleName</key>
   <string>$(PRODUCT_NAME)</string>
   <key>CFBundlePackageType</key>
-  <string>BNDL</string>
+  <string>FMWK</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.9.0</string>
+  <string>0.9.5</string>
   <key>CFBundleSignature</key>
   <string>????</string>
   <key>CFBundleVersion</key>

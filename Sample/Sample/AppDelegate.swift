@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import Weaver
+import WeaverDI
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

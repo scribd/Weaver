@@ -143,10 +143,10 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Weaver/Weaver.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/WeaverDI/WeaverDI.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/Weaver/Weaver.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/WeaverDI/WeaverDI.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then
   wait

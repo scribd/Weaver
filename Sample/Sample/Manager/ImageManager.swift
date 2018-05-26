@@ -8,7 +8,7 @@
 
 import Foundation
 import UIKit
-import Weaver
+import WeaverDI
 
 enum ImageManagerError: Error {
     case oops

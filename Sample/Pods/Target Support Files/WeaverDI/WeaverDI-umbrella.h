@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double WeaverVersionNumber;
-FOUNDATION_EXPORT const unsigned char WeaverVersionString[];
+FOUNDATION_EXPORT double WeaverDIVersionNumber;
+FOUNDATION_EXPORT const unsigned char WeaverDIVersionString[];
 

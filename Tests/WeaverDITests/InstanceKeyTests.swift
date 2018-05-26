@@ -8,7 +8,7 @@
 import Foundation
 import XCTest
 
-@testable import Weaver
+@testable import WeaverDI
 
 final class InstanceKeyTests: XCTestCase {
     
