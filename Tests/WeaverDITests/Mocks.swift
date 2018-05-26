@@ -7,7 +7,7 @@
 
 import Foundation
 
-@testable import Weaver
+@testable import WeaverDI
 
 final class InstanceCacheMock: InstanceCaching {
 

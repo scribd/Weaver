@@ -8,7 +8,7 @@
 import Foundation
 import Stencil
 import PathKit
-import Weaver
+import WeaverDI
 
 public final class Generator {
 

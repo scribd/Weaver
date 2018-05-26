@@ -7,7 +7,7 @@
 
 import Foundation
 import SourceKittenFramework
-import Weaver
+import WeaverDI
 
 // MARK: - Token
 

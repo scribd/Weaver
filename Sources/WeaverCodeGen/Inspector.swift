@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Weaver
+import WeaverDI
 
 // MARK: - Inspector
 
