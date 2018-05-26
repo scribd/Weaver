@@ -1,4 +1,4 @@
-VERSION := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Weaver.xcodeproj/WeaverCodeGen_Info.plist)
+VERSION := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" WeaverDI.xcodeproj/WeaverCodeGen_Info.plist)
 
 .PHONY: clean build install package generate_sources codecov
 
