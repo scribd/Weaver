@@ -263,7 +263,7 @@ private extension NSRegularExpression {
         let result = self
             .matches(in: string, range: NSMakeRange(0, string.utf16.count))
             .flatMap { match in (1..<match.numberOfRanges).map { match.range(at: $0) } }
-            .flatMap { Range($0, in: string) }
+            .compactMap { Range($0, in: string) }
             .map { String(string[$0]) }
         
         if result.isEmpty {

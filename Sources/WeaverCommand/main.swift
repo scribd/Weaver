@@ -26,7 +26,7 @@ let main = command(
         // ---- Parse ----
         
         Logger.log(.info, "Parsing...")
-        let asts: [Expr] = try inputPaths.values.flatMap { filePath in
+        let asts: [Expr] = try inputPaths.values.compactMap { filePath in
             guard let file = File(path: filePath.string) else {
                 return nil
             }
@@ -43,7 +43,7 @@ let main = command(
         
         // ---- Collect ----
         
-        let dataToWrite: [(path: Path, data: String?)] = generatedData.flatMap { (file, data) in
+        let dataToWrite: [(path: Path, data: String?)] = generatedData.compactMap { (file, data) in
 
             let filePath = Path(file)
 

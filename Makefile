@@ -6,7 +6,7 @@ build:
 	$(call build)
 
 generate_sources:
-	$(call generate_sources)
+	bash -c "(command -v sourcery && sourcery) || echo 'warning: Sourcery is not installed'"
 
 clean:
 	rm -rf .build
@@ -30,12 +30,7 @@ codecov:
 	bash -c "bash <(curl -s https://codecov.io/bash) -J Weaver -t eaa7c4af-5ca2-4e08-8f07-38a44671e5e0"
 	rm *.coverage.txt
 
-define generate_sources
-    sourcery
-endef
-
 define build
-	$(call generate_sources)
 	@swift build --disable-sandbox --configuration release
 endef
 

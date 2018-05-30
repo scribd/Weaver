@@ -99,7 +99,7 @@ private extension Lexer {
     func tokenize(from sourceKitTokens: [SyntaxToken]) throws -> [AnyTokenBox] {
 
         var currentLine = lines.startIndex
-        return try sourceKitTokens.flatMap { syntaxToken in
+        return try sourceKitTokens.compactMap { syntaxToken in
             
             guard SyntaxKind(rawValue: syntaxToken.type) == .comment else {
                 return nil
