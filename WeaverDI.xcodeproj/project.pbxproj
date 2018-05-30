@@ -983,7 +983,7 @@
 			path = Tests/WeaverCodeGenTests;
 			sourceTree = SOURCE_ROOT;
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -997,7 +997,6 @@
 				OBJ_55 /* Dependencies */,
 				OBJ_180 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_55 /* Dependencies */ = {
@@ -1335,6 +1334,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = OBJ_325 /* Build configuration list for PBXNativeTarget "WeaverCodeGen" */;
 			buildPhases = (
+				19F3CD5620BF3851007C3076 /* Generate Sources */,
 				OBJ_328 /* Sources */,
 				OBJ_343 /* Frameworks */,
 			);
@@ -1501,7 +1501,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_180 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1531,6 +1531,23 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		19F3CD5620BF3851007C3076 /* Generate Sources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Sources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make generate_sources";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		OBJ_198 /* Sources */ = {

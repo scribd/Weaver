@@ -27,7 +27,7 @@ struct SourceKitDeclaration {
         
         let inheritedTypes: [String]
         if let inheritedTypeDicts = dictionary[SwiftDocKey.inheritedtypes.rawValue] as? [[String: Any]] {
-            inheritedTypes = inheritedTypeDicts.flatMap { $0[SwiftDocKey.name.rawValue] as? String }
+            inheritedTypes = inheritedTypeDicts.compactMap { $0[SwiftDocKey.name.rawValue] as? String }
         } else {
             inheritedTypes = []
         }
