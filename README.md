@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="weaver.png" width=520>
-</p>
+![logo](weaver.png)
 
 <p align="center">Declarative, easy-to-use and safe Dependency Injection framework for Swift (iOS/macOS/Linux)</p>
 
@@ -10,7 +8,7 @@
 [![CocoaPods Version](https://img.shields.io/cocoapods/v/WeaverDI.svg?style=flat)](http://cocoapods.org/pods/WeaverDI)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/scribd-weaver/Lobby)
 
-![](weaver.gif)
+![demo](weaver.gif)
 
 ## Features
 
