@@ -12,7 +12,8 @@ WeaverDI.xcodeproj/WeaverDI_Info.plist \
 WeaverDI.xcodeproj/WeaverCodeGen_Info.plist \
 WeaverDI.podspec \
 Resources/dependency_resolver.stencil \
-Tests/WeaverCodeGenTests/GeneratorTests.swift
+Tests/WeaverCodeGenTests/GeneratorTests.swift \
+Sources/WeaverCommand/main.swift
 
 previous_version=${current_version%.*}.$((${current_version##*.}-1))
 sed -i '' "s/${previous_version//./\\.}/$current_version/g" README.md
