@@ -13,7 +13,6 @@ import Darwin
 import PathKit
 
 let main = command(
-
     Option<String>("output_path", default: ".", description: "Where the swift files will be generated."),
     Option<TemplatePathArgument>("template_path", default: TemplatePathArgument(), description: "Custom template path."),
     Flag("unsafe", default: false),
@@ -88,11 +87,10 @@ let main = command(
 
         Logger.log(.info, "")
         Logger.log(.info, "Done.")
-        
     } catch {
         Logger.log(.error, "\(error)")
         exit(1)
     }
 }
 
-main.run()
+main.run("0.9.7")
