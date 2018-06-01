@@ -221,6 +221,72 @@ final class DependencyContainerTests: XCTestCase {
         
         XCTAssertNil(weakDependencyContainer)
     }
+    
+    func test_many_access_in_parallel() {
+        let dependencyContainer = DependencyContainer()
+        for index in 1...1000 {
+            
+            dependencyContainer.register(DependencyStub.self, scope: .graph, name: "serial_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+                return DependencyStub(dependencies: dependencies, parameter1: parameter1)
+            }
+            let result = dependencyContainer.resolve(DependencyStub.self, name: "serial_\(index)", parameter: index)
+            XCTAssertEqual(result.parameter1, index)
+            
+            DispatchQueue.main.async {
+                dependencyContainer.register(DependencyStub.self, scope: .graph, name: "main_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+                    return DependencyStub(dependencies: dependencies, parameter1: parameter1)
+                }
+                let result = dependencyContainer.resolve(DependencyStub.self, name: "main_\(index)", parameter: index)
+                
+                XCTAssertEqual(result.parameter1, index)
+            }
+            
+            DispatchQueue.global(qos: .background).async {
+                dependencyContainer.register(DependencyStub.self, scope: .graph, name: "background_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+                    return DependencyStub(dependencies: dependencies, parameter1: parameter1)
+                }
+                let result = dependencyContainer.resolve(DependencyStub.self, name: "background_\(index)", parameter: index)
+                
+                XCTAssertEqual(result.parameter1, index)
+            }
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                dependencyContainer.register(DependencyStub.self, scope: .graph, name: "initiated_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+                    return DependencyStub(dependencies: dependencies, parameter1: parameter1)
+                }
+            }
+        }
+        
+        for index in 1...1000 {
+            DispatchQueue.global(qos: .userInitiated).async {
+                let result = dependencyContainer.resolve(DependencyStub.self, name: "initiated_\(index)", parameter: index)
+                
+                XCTAssertEqual(result.parameter1, index)
+            }
+            
+            let result = dependencyContainer.resolve(DependencyStub.self, name: "serial_\(index)", parameter: index)
+            XCTAssertEqual(result.parameter1, index)
+        }
+        
+        waitDelay()
+        
+        for index in 1...1000 {
+            let result = dependencyContainer.resolve(DependencyStub.self, name: "main_\(index)", parameter: index)
+            XCTAssertEqual(result.parameter1, index)
+            
+            let result_background = dependencyContainer.resolve(DependencyStub.self, name: "background_\(index)", parameter: index)
+            XCTAssertEqual(result_background.parameter1, index)
+        }
+    }
+    
+    private func waitDelay() {
+        let timeout = expectation(description: "Queue Dispatch Completion")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            timeout.fulfill()
+        }
+        
+        waitForExpectations(timeout: 10, handler: nil)
+    }
 }
 
 // MARK: - Stubs
