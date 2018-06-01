@@ -26,15 +26,6 @@ open class DependencyContainer {
         registerDependencies(in: self)
     }
     
-    public init(_ parent: DependencyContainer? = nil) {
-        self.parent = parent
-        instances = InstanceCache()
-        builders = BuilderStore()
-        builders.parent = parent?.builders
-        
-        registerDependencies(in: self)
-    }
-    
     open func registerDependencies(in store: DependencyStore) {
         // No-op
     }
