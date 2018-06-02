@@ -223,69 +223,41 @@ final class DependencyContainerTests: XCTestCase {
     }
     
     func test_many_access_in_parallel() {
-        let dependencyContainer = DependencyContainer()
+        
+        let parentDependencyContainer = DependencyContainer()
+        let dependencyContainer = DependencyContainer(parent: parentDependencyContainer)
+        
+        var expectations = [XCTestExpectation]()
         for index in 1...1000 {
             
-            dependencyContainer.register(DependencyStub.self, scope: .graph, name: "serial_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
-                return DependencyStub(dependencies: dependencies, parameter1: parameter1)
-            }
-            let result = dependencyContainer.resolve(DependencyStub.self, name: "serial_\(index)", parameter: index)
-            XCTAssertEqual(result.parameter1, index)
+            let mainQueueExpectation = expectation(description: "user_initiated_\(index)")
+            expectations.append(mainQueueExpectation)
             
-            DispatchQueue.main.async {
-                dependencyContainer.register(DependencyStub.self, scope: .graph, name: "main_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+            DispatchQueue.global(qos: .userInitiated).async {
+                parentDependencyContainer.register(DependencyStub.self, scope: .container, name: "user_initiated_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
                     return DependencyStub(dependencies: dependencies, parameter1: parameter1)
                 }
-                let result = dependencyContainer.resolve(DependencyStub.self, name: "main_\(index)", parameter: index)
+                let result = dependencyContainer.resolve(DependencyStub.self, name: "user_initiated_\(index)", parameter: index)
                 
                 XCTAssertEqual(result.parameter1, index)
+                mainQueueExpectation.fulfill()
             }
             
+            let backgroundQueueExpectation = expectation(description: "background_queue_\(index)")
+            expectations.append(backgroundQueueExpectation)
+            
             DispatchQueue.global(qos: .background).async {
-                dependencyContainer.register(DependencyStub.self, scope: .graph, name: "background_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+                parentDependencyContainer.register(DependencyStub.self, scope: .container, name: "background_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
                     return DependencyStub(dependencies: dependencies, parameter1: parameter1)
                 }
                 let result = dependencyContainer.resolve(DependencyStub.self, name: "background_\(index)", parameter: index)
                 
                 XCTAssertEqual(result.parameter1, index)
-            }
-            
-            DispatchQueue.global(qos: .userInitiated).async {
-                dependencyContainer.register(DependencyStub.self, scope: .graph, name: "initiated_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
-                    return DependencyStub(dependencies: dependencies, parameter1: parameter1)
-                }
+                backgroundQueueExpectation.fulfill()
             }
         }
         
-        for index in 1...1000 {
-            DispatchQueue.global(qos: .userInitiated).async {
-                let result = dependencyContainer.resolve(DependencyStub.self, name: "initiated_\(index)", parameter: index)
-                
-                XCTAssertEqual(result.parameter1, index)
-            }
-            
-            let result = dependencyContainer.resolve(DependencyStub.self, name: "serial_\(index)", parameter: index)
-            XCTAssertEqual(result.parameter1, index)
-        }
-        
-        waitDelay()
-        
-        for index in 1...1000 {
-            let result = dependencyContainer.resolve(DependencyStub.self, name: "main_\(index)", parameter: index)
-            XCTAssertEqual(result.parameter1, index)
-            
-            let result_background = dependencyContainer.resolve(DependencyStub.self, name: "background_\(index)", parameter: index)
-            XCTAssertEqual(result_background.parameter1, index)
-        }
-    }
-    
-    private func waitDelay() {
-        let timeout = expectation(description: "Queue Dispatch Completion")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            timeout.fulfill()
-        }
-        
-        waitForExpectations(timeout: 10, handler: nil)
+        self.wait(for: expectations, timeout: 5)
     }
 }
 
