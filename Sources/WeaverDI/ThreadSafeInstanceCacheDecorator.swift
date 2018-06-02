@@ -10,18 +10,20 @@ import Foundation
 final class ThreadSafeInstanceCacheDecorator: InstanceCaching {
     
     private let instances: InstanceCaching
-    private let semaphore: DispatchSemaphore = DispatchSemaphore(value: 1)
+    private let queue = DispatchQueue(label: "\(ThreadSafeInstanceCacheDecorator.self)")
     
     init(instances: InstanceCaching) {
         self.instances = instances
     }
     
     func cache<T>(for key: InstanceKey, scope: Scope, builder: () -> T) -> T {
-        self.semaphore.wait()
-        defer {
-            self.semaphore.signal()
+        var entry: T?
+        
+        queue.sync {
+            entry = self.instances.cache(for: key, scope: scope, builder: builder)
         }
         
-        return self.instances.cache(for: key, scope: scope, builder: builder)
+        assert(entry != nil, "Entry can't theoritically be nil.")
+        return entry ?? builder()
     }
 }
