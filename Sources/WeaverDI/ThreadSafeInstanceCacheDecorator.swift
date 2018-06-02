@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ThreadSafeInstanceCacheDecorator: InstanceCaching {
+final class ThreadSafeInstanceCacheDecorator: InstanceCaching {
     
     let instances: InstanceCaching
     let semaphore: DispatchSemaphore = DispatchSemaphore(value: 1)
