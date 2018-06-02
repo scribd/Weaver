@@ -7,13 +7,13 @@
 
 import Foundation
 
-class ThreadSafeBuilderStoringDecorator: BuilderStoring {
+final class ThreadSafeBuilderStoreDecorator: BuilderStoring {
     
-    let builderStoring: BuilderStoring
+    private let builders: BuilderStoring
     private let queue: DispatchQueue = DispatchQueue(label: "ThreadSafeBuilderStoringDecorator")
     
-    init(builderStoring: BuilderStoring) {
-        self.builderStoring = builderStoring
+    init(builders: BuilderStoring) {
+        self.builders = builders
     }
     
     func get<B>(for key: InstanceKey, isCalledFromAChild: Bool) -> B? {
@@ -21,7 +21,7 @@ class ThreadSafeBuilderStoringDecorator: BuilderStoring {
         var getValue: B? = nil
         
         self.queue.async {
-            getValue = self.builderStoring.get(for: key, isCalledFromAChild: isCalledFromAChild)
+            getValue = self.builders.get(for: key, isCalledFromAChild: isCalledFromAChild)
             semaphore.signal()
         }
         
@@ -31,16 +31,16 @@ class ThreadSafeBuilderStoringDecorator: BuilderStoring {
     
     func set<B>(builder: B, scope: Scope, for key: InstanceKey) {
         self.queue.async {
-            self.builderStoring.set(builder: builder, scope: scope, for: key)
+            self.builders.set(builder: builder, scope: scope, for: key)
         }
     }
     
     var parent: BuilderStoring? {
         get {
-            return self.builderStoring.parent
+            return self.builders.parent
         }
         set {
-            self.builderStoring.parent = newValue
+            self.builders.parent = newValue
         }
     }
 }

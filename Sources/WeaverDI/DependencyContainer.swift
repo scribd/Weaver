@@ -20,7 +20,7 @@ open class DependencyContainer {
          instanceCache: InstanceCaching = InstanceCache()) {
         self.parent = parent
         instances = ThreadSafeInstanceCachingDecorator(cache: instanceCache)
-        builders = ThreadSafeBuilderStoringDecorator(builderStoring: builderStore)
+        builders = ThreadSafeBuilderStoreDecorator(builders: builderStore)
         builders.parent = parent?.builders
         
         registerDependencies(in: self)
