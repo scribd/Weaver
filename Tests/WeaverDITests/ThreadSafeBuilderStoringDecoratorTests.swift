@@ -22,7 +22,7 @@ class ThreadSafeBuilderStoringDecoratorTests: XCTestCase {
     func test_set_should_delegate_to_inner_builder() {
         let builderMock = BuilderStoreMock()
         
-        let sut = ThreadSafeBuilderStoringDecorator(builderStoring: builderMock)
+        let sut = ThreadSafeBuilderStoreDecorator(builders: builderMock)
         sut.set(builder: builder, scope: .container, for: instanceKey)
         
         waitDelay()
@@ -37,7 +37,7 @@ class ThreadSafeBuilderStoringDecoratorTests: XCTestCase {
     func test_get_should_delegate_to_inner_builder() {
         let builderMock = BuilderStoreMock()
         
-        let sut = ThreadSafeBuilderStoringDecorator(builderStoring: builderMock)
+        let sut = ThreadSafeBuilderStoreDecorator(builders: builderMock)
         sut.set(builder: builder, scope: .container, for: instanceKey)
         
         let result: (()-> String)? = sut.get(for: instanceKey, isCalledFromAChild: true)
@@ -50,7 +50,7 @@ class ThreadSafeBuilderStoringDecoratorTests: XCTestCase {
     func test_many_access_in_parallel() {
         let builderMock = BuilderStoreMock()
         
-        let sut = ThreadSafeBuilderStoringDecorator(builderStoring: builderMock)
+        let sut = ThreadSafeBuilderStoreDecorator(builders: builderMock)
         
         for index in 1...1000 {
             DispatchQueue.main.async {

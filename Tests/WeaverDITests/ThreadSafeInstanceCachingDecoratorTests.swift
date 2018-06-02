@@ -23,7 +23,7 @@ class ThreadSafeInstanceCachingDecoratorTests: XCTestCase {
     func test_set_should_delegate_to_inner_builder() {
         let cacheMock = InstanceCacheMock()
         
-        let sut = ThreadSafeInstanceCachingDecorator(cache: cacheMock)
+        let sut = ThreadSafeInstanceCacheDecorator(instances: cacheMock)
         
         _ = sut.cache(for: instanceKey, scope: .container, builder: self.builder)
         
@@ -34,7 +34,7 @@ class ThreadSafeInstanceCachingDecoratorTests: XCTestCase {
     
     func test_many_access_in_parallel() {
         let cacheMock = InstanceCacheMock()
-        let sut = ThreadSafeInstanceCachingDecorator(cache: cacheMock)
+        let sut = ThreadSafeInstanceCacheDecorator(instances: cacheMock)
         
         for index in 1...1000 {
             DispatchQueue.main.async {
