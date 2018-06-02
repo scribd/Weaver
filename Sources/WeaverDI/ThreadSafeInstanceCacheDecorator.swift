@@ -7,13 +7,13 @@
 
 import Foundation
 
-class ThreadSafeInstanceCachingDecorator: InstanceCaching {
+class ThreadSafeInstanceCacheDecorator: InstanceCaching {
     
-    let cache: InstanceCaching
+    let instances: InstanceCaching
     let semaphore: DispatchSemaphore = DispatchSemaphore(value: 1)
     
-    init(cache: InstanceCaching) {
-        self.cache = cache
+    init(instances: InstanceCaching) {
+        self.instances = instances
     }
     
     func cache<T>(for key: InstanceKey, scope: Scope, builder: () -> T) -> T {
@@ -22,6 +22,6 @@ class ThreadSafeInstanceCachingDecorator: InstanceCaching {
             self.semaphore.signal()
         }
         
-        return self.cache.cache(for: key, scope: scope, builder: builder)
+        return self.instances.cache(for: key, scope: scope, builder: builder)
     }
 }
