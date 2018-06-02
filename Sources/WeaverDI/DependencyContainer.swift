@@ -16,14 +16,18 @@ open class DependencyContainer {
     private let parent: DependencyContainer?
     
     init(parent: DependencyContainer? = nil,
-         builderStore: BuilderStoring = ThreadSafeBuilderStoringDecorator(builderStoring: BuilderStore()),
-         instanceCache: InstanceCaching = ThreadSafeInstanceCachingDecorator(cache: InstanceCache())) {
+         builderStore: BuilderStoring = BuilderStore(),
+         instanceCache: InstanceCaching = InstanceCache()) {
         self.parent = parent
-        instances = instanceCache
-        builders = builderStore
+        instances = ThreadSafeInstanceCachingDecorator(cache: instanceCache)
+        builders = ThreadSafeBuilderStoringDecorator(builderStoring: builderStore)
         builders.parent = parent?.builders
         
         registerDependencies(in: self)
+    }
+    
+    public convenience init(_ parent:  DependencyContainer? = nil) {
+        self.init(parent: parent)
     }
     
     open func registerDependencies(in store: DependencyStore) {
