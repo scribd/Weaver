@@ -10,7 +10,7 @@ import Foundation
 final class ThreadSafeBuilderStoreDecorator: BuilderStoring {
     
     private let builders: BuilderStoring
-    private let queue: DispatchQueue = DispatchQueue(label: "ThreadSafeBuilderStoringDecorator")
+    private let queue: DispatchQueue = DispatchQueue(label: "\(ThreadSafeBuilderStoreDecorator.self)")
     
     init(builders: BuilderStoring) {
         self.builders = builders
