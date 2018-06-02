@@ -17,15 +17,12 @@ final class ThreadSafeBuilderStoreDecorator: BuilderStoring {
     }
     
     func get<B>(for key: InstanceKey, isCalledFromAChild: Bool) -> B? {
-        let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
         var getValue: B? = nil
         
-        self.queue.async {
+        queue.sync {
             getValue = self.builders.get(for: key, isCalledFromAChild: isCalledFromAChild)
-            semaphore.signal()
         }
         
-        semaphore.wait()
         return getValue
     }
     
