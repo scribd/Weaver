@@ -320,7 +320,7 @@ Example:
 // weaver: dependencyName.customRef = aBoolean
 ```
 
-`aBoolean`: Boolean definining if the dependency should have a custom reference or not. Can take the value `true` or `false`.
+`aBoolean`: Boolean defining if the dependency should have a custom reference or not. Can take the value `true` or `false`.
 
 #### - Parameter Annotation
 
