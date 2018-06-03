@@ -51,7 +51,7 @@ swift files -> scan() -> [Token] -> parse() -> AST -|
 
 Weaver's command line tool scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's [SourceKit](https://github.com/apple/swift/tree/master/tools/SourceKit), making this step pretty reliable.
 
-This AST is then used to generate a dependency graph on which a bunch of safety checks are peformed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, which means that the project will fail to compile.
+This AST is then used to generate a dependency graph on which a bunch of safety checks are performed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, which means that the project will fail to compile.
 
 The same AST is also used to generate the boilerplate code. It generates one dependency container per class/struct with injectable dependencies. It also generates a bunch of extensions and protocols in order to make the dependency injection almost transparent for the developer.
 
@@ -320,7 +320,7 @@ Example:
 // weaver: dependencyName.customRef = aBoolean
 ```
 
-`aBoolean`: Boolean definining if the dependency should have a custom reference or not. Can take the value `true` or `false`.
+`aBoolean`: Boolean defining if the dependency should have a custom reference or not. Can take the value `true` or `false`.
 
 #### - Parameter Annotation
 
