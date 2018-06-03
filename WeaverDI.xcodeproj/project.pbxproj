@@ -22,6 +22,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		19F3CD6820C43F32007C3076 /* shim-swift-4.1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */; };
 		OBJ_199 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_205 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_57 /* Package.swift */; };
 		OBJ_211 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_78 /* Package.swift */; };
@@ -457,6 +458,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
 		OBJ_100 /* Reporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
@@ -885,6 +887,7 @@
 		OBJ_17 /* WeaverCodeGen */ = {
 			isa = PBXGroup;
 			children = (
+				19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */,
 				OBJ_18 /* AccessLevel.swift */,
 				OBJ_19 /* AutoEquatable.generated.swift */,
 				OBJ_20 /* AutoHashable.generated.swift */,
@@ -1657,6 +1660,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				19F3CD6820C43F32007C3076 /* shim-swift-4.1.swift in Sources */,
 				OBJ_329 /* AccessLevel.swift in Sources */,
 				OBJ_330 /* AutoEquatable.generated.swift in Sources */,
 				OBJ_331 /* AutoHashable.generated.swift in Sources */,
