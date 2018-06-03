@@ -221,6 +221,44 @@ final class DependencyContainerTests: XCTestCase {
         
         XCTAssertNil(weakDependencyContainer)
     }
+    
+    func test_many_access_in_parallel() {
+        
+        let parentDependencyContainer = DependencyContainer()
+        let dependencyContainer = DependencyContainer(parent: parentDependencyContainer)
+        
+        var expectations = [XCTestExpectation]()
+        for index in 1...1000 {
+            
+            let mainQueueExpectation = expectation(description: "user_initiated_\(index)")
+            expectations.append(mainQueueExpectation)
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                parentDependencyContainer.register(DependencyStub.self, scope: .container, name: "user_initiated_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+                    return DependencyStub(dependencies: dependencies, parameter1: parameter1)
+                }
+                let result = dependencyContainer.resolve(DependencyStub.self, name: "user_initiated_\(index)", parameter: index)
+                
+                XCTAssertEqual(result.parameter1, index)
+                mainQueueExpectation.fulfill()
+            }
+            
+            let backgroundQueueExpectation = expectation(description: "background_queue_\(index)")
+            expectations.append(backgroundQueueExpectation)
+            
+            DispatchQueue.global(qos: .background).async {
+                parentDependencyContainer.register(DependencyStub.self, scope: .container, name: "background_\(index)") { (dependencies: DependencyResolver, parameter1: Int) in
+                    return DependencyStub(dependencies: dependencies, parameter1: parameter1)
+                }
+                let result = dependencyContainer.resolve(DependencyStub.self, name: "background_\(index)", parameter: index)
+                
+                XCTAssertEqual(result.parameter1, index)
+                backgroundQueueExpectation.fulfill()
+            }
+        }
+        
+        self.wait(for: expectations, timeout: 5)
+    }
 }
 
 // MARK: - Stubs

@@ -19,20 +19,15 @@ open class DependencyContainer {
          builderStore: BuilderStoring = BuilderStore(),
          instanceCache: InstanceCaching = InstanceCache()) {
         self.parent = parent
-        instances = instanceCache
-        builders = builderStore
+        instances = ThreadSafeInstanceCacheDecorator(instances: instanceCache)
+        builders = ThreadSafeBuilderStoreDecorator(builders: builderStore)
         builders.parent = parent?.builders
         
         registerDependencies(in: self)
     }
     
-    public init(_ parent: DependencyContainer? = nil) {
-        self.parent = parent
-        instances = InstanceCache()
-        builders = BuilderStore()
-        builders.parent = parent?.builders
-        
-        registerDependencies(in: self)
+    public convenience init(_ parent:  DependencyContainer? = nil) {
+        self.init(parent: parent)
     }
     
     open func registerDependencies(in store: DependencyStore) {

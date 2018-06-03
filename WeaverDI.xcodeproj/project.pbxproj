@@ -22,6 +22,10 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1D0E137A20C0A49D005D74B5 /* ThreadSafeBuilderStoreDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E137820C0A493005D74B5 /* ThreadSafeBuilderStoreDecorator.swift */; };
+		1D0E137C20C0E594005D74B5 /* ThreadSafeInstanceCacheDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E137B20C0E594005D74B5 /* ThreadSafeInstanceCacheDecorator.swift */; };
+		1D0E137E20C0E68B005D74B5 /* ThreadSafeBuilderStoringDecoratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E137D20C0E68B005D74B5 /* ThreadSafeBuilderStoringDecoratorTests.swift */; };
+		1D0E138020C0EEB1005D74B5 /* ThreadSafeInstanceCachingDecoratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E137F20C0EEB1005D74B5 /* ThreadSafeInstanceCachingDecoratorTests.swift */; };
 		OBJ_199 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_205 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_57 /* Package.swift */; };
 		OBJ_211 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_78 /* Package.swift */; };
@@ -457,6 +461,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1D0E137820C0A493005D74B5 /* ThreadSafeBuilderStoreDecorator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafeBuilderStoreDecorator.swift; sourceTree = "<group>"; };
+		1D0E137B20C0E594005D74B5 /* ThreadSafeInstanceCacheDecorator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafeInstanceCacheDecorator.swift; sourceTree = "<group>"; };
+		1D0E137D20C0E68B005D74B5 /* ThreadSafeBuilderStoringDecoratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafeBuilderStoringDecoratorTests.swift; sourceTree = "<group>"; };
+		1D0E137F20C0EEB1005D74B5 /* ThreadSafeInstanceCachingDecoratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafeInstanceCachingDecoratorTests.swift; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
 		OBJ_100 /* Reporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
@@ -964,6 +972,8 @@
 				OBJ_40 /* InstanceCacheTests.swift */,
 				OBJ_41 /* InstanceKeyTests.swift */,
 				OBJ_42 /* Mocks.swift */,
+				1D0E137D20C0E68B005D74B5 /* ThreadSafeBuilderStoringDecoratorTests.swift */,
+				1D0E137F20C0EEB1005D74B5 /* ThreadSafeInstanceCachingDecoratorTests.swift */,
 			);
 			name = WeaverDITests;
 			path = Tests/WeaverDITests;
@@ -1072,6 +1082,8 @@
 				OBJ_14 /* InstanceCache.swift */,
 				OBJ_15 /* InstanceKey.swift */,
 				OBJ_16 /* Scope.swift */,
+				1D0E137820C0A493005D74B5 /* ThreadSafeBuilderStoreDecorator.swift */,
+				1D0E137B20C0E594005D74B5 /* ThreadSafeInstanceCacheDecorator.swift */,
 			);
 			name = WeaverDI;
 			path = Sources/WeaverDI;
@@ -1820,8 +1832,10 @@
 				OBJ_502 /* BuilderStoreTests.swift in Sources */,
 				OBJ_503 /* DependencyContainerTests.swift in Sources */,
 				OBJ_504 /* InstanceCacheTests.swift in Sources */,
+				1D0E137E20C0E68B005D74B5 /* ThreadSafeBuilderStoringDecoratorTests.swift in Sources */,
 				OBJ_505 /* InstanceKeyTests.swift in Sources */,
 				OBJ_506 /* Mocks.swift in Sources */,
+				1D0E138020C0EEB1005D74B5 /* ThreadSafeInstanceCachingDecoratorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1831,8 +1845,10 @@
 			files = (
 				OBJ_514 /* BuilderStore.swift in Sources */,
 				OBJ_515 /* Dependencies.swift in Sources */,
+				1D0E137A20C0A49D005D74B5 /* ThreadSafeBuilderStoreDecorator.swift in Sources */,
 				OBJ_516 /* DependencyContainer.swift in Sources */,
 				OBJ_517 /* DependencyResolver.swift in Sources */,
+				1D0E137C20C0E594005D74B5 /* ThreadSafeInstanceCacheDecorator.swift in Sources */,
 				OBJ_518 /* DependencyStore.swift in Sources */,
 				OBJ_519 /* InstanceCache.swift in Sources */,
 				OBJ_520 /* InstanceKey.swift in Sources */,
