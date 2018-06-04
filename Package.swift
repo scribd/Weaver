@@ -7,9 +7,9 @@ let package = Package(
         .library(name: "WeaverDI", targets: ["WeaverDI"])
     ],
     dependencies: [
-        .package(url: "https://github.com/jpsim/SourceKitten.git", from: "0.19.1"),
+        .package(url: "https://github.com/jpsim/SourceKitten.git", from: "0.21.0"),
         .package(url: "https://github.com/kylef/Commander.git", from: "0.6.0"),
-        .package(url: "https://github.com/kylef/Stencil.git", from: "0.10.1")
+        .package(url: "https://github.com/kylef/Stencil.git", from: "0.11.0")
     ],
     targets: [
         .target(name: "WeaverDI"),
