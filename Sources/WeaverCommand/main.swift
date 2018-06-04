@@ -93,4 +93,4 @@ let main = command(
     }
 }
 
-main.run("0.9.9")
+main.run("0.9.10")
