@@ -12,16 +12,24 @@ import XCTest
 
 final class DependencyContainerTests: XCTestCase {
     
-    var instanceCacheMock: InstanceCacheMock!
-    var builderStoreMock: BuilderStoreMock!
+    var instanceStoreSpy: InstanceStoreSpy!
+    var builderStoreSpy: BuilderStoreSpy!
     var dependencyContainer: DependencyContainer!
     
     override func setUp() {
         super.setUp()
 
-        instanceCacheMock = InstanceCacheMock()
-        builderStoreMock = BuilderStoreMock()
-        dependencyContainer = DependencyContainer(builderStore: builderStoreMock, instanceCache: instanceCacheMock)
+        instanceStoreSpy = InstanceStoreSpy()
+        builderStoreSpy = BuilderStoreSpy()
+        dependencyContainer = DependencyContainer(builderStore: builderStoreSpy, instanceStore: instanceStoreSpy)
+    }
+    
+    override func tearDown() {
+        defer { super.tearDown() }
+        
+        instanceStoreSpy = nil
+        builderStoreSpy = nil
+        dependencyContainer = nil
     }
 
     // MARK: - Register / Resolve
@@ -40,14 +48,13 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test")
 
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.key, instanceKey)
-        XCTAssertEqual(instanceCacheMock.scope, .graph)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
 
-        XCTAssertEqual(builderStoreMock.getCallCount, 1)
-        XCTAssertEqual(builderStoreMock.setCallCount, 1)
-        XCTAssertEqual(builderStoreMock.scope, .graph)
-        XCTAssertEqual(builderStoreMock.key, instanceKey)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
     }
     
     func test_register_then_resolve_with_one_parameter_should_build_the_dependency() {
@@ -64,16 +71,15 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterType: Int.self)
         
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.key, instanceKey)
-        XCTAssertEqual(instanceCacheMock.scope, .graph)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
+        
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
     
         XCTAssertEqual(dependency.parameter1, 42)
-        
-        XCTAssertEqual(builderStoreMock.getCallCount, 1)
-        XCTAssertEqual(builderStoreMock.setCallCount, 1)
-        XCTAssertEqual(builderStoreMock.scope, .graph)
-        XCTAssertEqual(builderStoreMock.key, instanceKey)
     }
 
     func test_register_then_resolve_with_two_paramters_should_build_the_dependency() {
@@ -90,17 +96,16 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self)
 
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.key, instanceKey)
-        XCTAssertEqual(instanceCacheMock.scope, .graph)
-        
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
+
         XCTAssertEqual(dependency.parameter1, 42)
         XCTAssertEqual(dependency.parameter2, "43")
-        
-        XCTAssertEqual(builderStoreMock.getCallCount, 1)
-        XCTAssertEqual(builderStoreMock.setCallCount, 1)
-        XCTAssertEqual(builderStoreMock.scope, .graph)
-        XCTAssertEqual(builderStoreMock.key, instanceKey)
+
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
     }
     
     func test_register_then_resolve_with_three_paramters_should_build_the_dependency() {
@@ -117,18 +122,17 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self)
         
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.key, instanceKey)
-        XCTAssertEqual(instanceCacheMock.scope, .graph)
-        
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
+
         XCTAssertEqual(dependency.parameter1, 42)
         XCTAssertEqual(dependency.parameter2, "43")
         XCTAssertEqual(dependency.parameter3, 44.0)
         
-        XCTAssertEqual(builderStoreMock.getCallCount, 1)
-        XCTAssertEqual(builderStoreMock.setCallCount, 1)
-        XCTAssertEqual(builderStoreMock.scope, .graph)
-        XCTAssertEqual(builderStoreMock.key, instanceKey)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
     }
     
     func test_register_then_resolve_with_four_paramters_should_build_the_dependency() {
@@ -145,27 +149,27 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self, Float.self)
         
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.cacheCallCount, 1)
-        XCTAssertEqual(instanceCacheMock.key, instanceKey)
-        XCTAssertEqual(instanceCacheMock.scope, .graph)
-        
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
+
         XCTAssertEqual(dependency.parameter1, 42)
         XCTAssertEqual(dependency.parameter2, "43")
         XCTAssertEqual(dependency.parameter3, 44.0)
         XCTAssertEqual(dependency.parameter4, 45 as Float)
         
-        XCTAssertEqual(builderStoreMock.getCallCount, 1)
-        XCTAssertEqual(builderStoreMock.setCallCount, 1)
-        XCTAssertEqual(builderStoreMock.scope, .graph)
-        XCTAssertEqual(builderStoreMock.key, instanceKey)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.last, instanceKey)
+        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
     }
 
     // MARK: - Retain cycle
     
     func test_container_should_deallocate_after_calling_register_and_resolve_with_no_paramter() {
         
+        dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { dependencies in
+        dependencyContainer.register(DependencyStub.self, scope: .weak) { dependencies in
             return DependencyStub(dependencies: dependencies)
         }
         _ = dependencyContainer.resolve(DependencyStub.self)
@@ -176,8 +180,9 @@ final class DependencyContainerTests: XCTestCase {
     
     func test_container_should_deallocate_after_calling_register_and_resolve_with_one_paramter() {
         
+        dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int) in
+        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameter: 42)
@@ -188,8 +193,9 @@ final class DependencyContainerTests: XCTestCase {
 
     func test_container_should_deallocate_after_calling_refister_and_resolve_with_two_parameters() {
         
+        dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
+        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43")
@@ -200,8 +206,9 @@ final class DependencyContainerTests: XCTestCase {
 
     func test_container_should_deallocate_after_calling_register_and_resolve_with_three_paramter() {
         
+        dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
+        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43", 44.0)
@@ -212,8 +219,9 @@ final class DependencyContainerTests: XCTestCase {
     
     func test_container_should_deallocate_after_calling_register_and_resolve_with_four_paramters() {
         
+        dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .graph) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
+        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3, parameter4: parameter4)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43", 44.0, 45 as Float)

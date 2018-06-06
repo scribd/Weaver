@@ -11,15 +11,15 @@ open class DependencyContainer {
     
     private var builders: BuilderStoring
     
-    private let instances: InstanceCaching
+    private let instances: InstanceStoring
     
     private let parent: DependencyContainer?
     
     init(parent: DependencyContainer? = nil,
          builderStore: BuilderStoring = BuilderStore(),
-         instanceCache: InstanceCaching = InstanceCache()) {
+         instanceStore: InstanceStoring = InstanceStore()) {
         self.parent = parent
-        instances = instanceCache
+        instances = instanceStore
         builders = builderStore
         builders.parent = parent?.builders
         
@@ -28,7 +28,7 @@ open class DependencyContainer {
     
     public init(_ parent: DependencyContainer? = nil) {
         self.parent = parent
-        instances = InstanceCache()
+        instances = InstanceStore()
         builders = BuilderStore()
         builders.parent = parent?.builders
         
@@ -103,7 +103,7 @@ extension DependencyContainer: DependencyStore {
         let key = InstanceKey(for: serviceType, name: name)
 
         let builderWrapper: (DependencyContainer) -> S = { strongSelf in
-            return strongSelf.instances.cache(for: key, scope: scope) { builder(strongSelf) }
+            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf) }
         }
 
         builders.set(builder: builderWrapper, scope: scope, for: key)
@@ -113,7 +113,7 @@ extension DependencyContainer: DependencyStore {
         let key = InstanceKey(for: serviceType, name: name, parameterType: P1.self)
 
         let builderWrapper: (DependencyContainer, P1) -> S = { strongSelf, parameter in
-            return strongSelf.instances.cache(for: key, scope: scope) { builder(strongSelf, parameter) }
+            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, parameter) }
         }
         
         builders.set(builder: builderWrapper, scope: scope, for: key)
@@ -123,7 +123,7 @@ extension DependencyContainer: DependencyStore {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self)
 
         let builderWrapper: (DependencyContainer, P1, P2) -> S = { strongSelf, p1, p2 in
-            return strongSelf.instances.cache(for: key, scope: scope) { builder(strongSelf, p1, p2) }
+            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, p1, p2) }
         }
         
         builders.set(builder: builderWrapper, scope: scope, for: key)
@@ -133,7 +133,7 @@ extension DependencyContainer: DependencyStore {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self)
 
         let builderWrapper: (DependencyContainer, P1, P2, P3) -> S = { strongSelf, p1, p2, p3 in
-            return strongSelf.instances.cache(for: key, scope: scope) { builder(strongSelf, p1, p2, p3) }
+            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, p1, p2, p3) }
         }
         
         builders.set(builder: builderWrapper, scope: scope, for: key)
@@ -143,7 +143,7 @@ extension DependencyContainer: DependencyStore {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self, P4.self)
 
         let builderWrapper: (DependencyContainer, P1, P2, P3, P4) -> S = { strongSelf, p1, p2, p3, p4 in
-            return strongSelf.instances.cache(for: key, scope: scope) { builder(strongSelf, p1, p2, p3, p4) }
+            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, p1, p2, p3, p4) }
         }
         
         builders.set(builder: builderWrapper, scope: scope, for: key)
