@@ -42,6 +42,14 @@ final class BuilderStoreTests: XCTestCase {
         childBuilderStore.parent = parentBuilderStore
     }
     
+    override func tearDown() {
+        defer { super.tearDown() }
+        
+        rootBuilderStore = nil
+        parentBuilderStore = nil
+        childBuilderStore = nil
+    }
+    
     // MARK: - Set / Get through hierarchy
     
     func test_set_then_get_should_retrieve_the_builder_registered_in_the_child_first() {

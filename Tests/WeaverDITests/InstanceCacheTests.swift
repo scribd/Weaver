@@ -21,6 +21,12 @@ final class InstanceCacheSpecs: XCTestCase {
         instances = InstanceStore()
     }
     
+    override func tearDown() {
+        defer { super.tearDown() }
+        
+        instances = nil
+    }
+    
     // When scope is `weak`.
     
     func test_set_should_release_weak_references_when_its_not_being_hold_anymore() {
