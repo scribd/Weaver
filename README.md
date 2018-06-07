@@ -21,6 +21,7 @@
 - [x] Injection with arguments
 - [x] Registration Scopes
 - [x] DI Container hierarchy
+- [x] Thread safety
 
 ## Dependency Injection
 
