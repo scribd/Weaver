@@ -48,7 +48,7 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test")
 
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 1)
         XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
         XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
 
@@ -71,7 +71,7 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterType: Int.self)
         
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 1)
         XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
         XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
         
@@ -96,7 +96,7 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self)
 
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 1)
         XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
         XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
 
@@ -122,7 +122,7 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self)
         
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 1)
         XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
         XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
 
@@ -149,7 +149,7 @@ final class DependencyContainerTests: XCTestCase {
         let instanceKey = InstanceKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self, Float.self)
         
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(instanceStoreSpy.keyRecords.count, 1)
         XCTAssertEqual(instanceStoreSpy.keyRecords.last, instanceKey)
         XCTAssertEqual(instanceStoreSpy.scopeRecords.last, .graph)
 
@@ -228,6 +228,36 @@ final class DependencyContainerTests: XCTestCase {
         dependencyContainer = nil
         
         XCTAssertNil(weakDependencyContainer)
+    }
+    
+    func test_container_should_safely_resolve_concurrently() {
+
+        let dependencyContainer = DependencyContainer()
+        dependencyContainer.register(DependencyStub.self, scope: .container) { (dependencies: DependencyResolver) in
+            return DependencyStub(dependencies: dependencies)
+        }
+
+        let dispatchQueue = DispatchQueue(label: "\(DependencyContainerTests.self)", attributes: [.concurrent])
+        
+        let lock = NSLock()
+        var dependencyRefs = Set<ObjectIdentifier>()
+
+        let expectations = (1...10000).map { index -> XCTestExpectation in
+            
+            let expectation = self.expectation(description: "concurrent_resolution_\(index)")
+            dispatchQueue.async {
+                let dependency = dependencyContainer.resolve(DependencyStub.self)
+                lock.lock()
+                dependencyRefs.insert(ObjectIdentifier(dependency))
+                lock.unlock()
+                expectation.fulfill()
+            }
+            return expectation
+        }
+        
+        wait(for: expectations, timeout: 5)
+        
+        XCTAssertEqual(dependencyRefs.count, 1)
     }
 }
 

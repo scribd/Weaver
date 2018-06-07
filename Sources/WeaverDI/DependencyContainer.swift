@@ -19,7 +19,7 @@ open class DependencyContainer {
          builderStore: BuilderStoring = BuilderStore(),
          instanceStore: InstanceStoring = InstanceStore()) {
         self.parent = parent
-        instances = instanceStore
+        instances = SynchronizedInstanceStore(instanceStore)
         builders = builderStore
         builders.parent = parent?.builders
         
@@ -28,7 +28,7 @@ open class DependencyContainer {
     
     public init(_ parent: DependencyContainer? = nil) {
         self.parent = parent
-        instances = InstanceStore()
+        instances = SynchronizedInstanceStore(InstanceStore())
         builders = BuilderStore()
         builders.parent = parent?.builders
         

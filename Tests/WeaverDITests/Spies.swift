@@ -15,20 +15,10 @@ final class InstanceStoreSpy: InstanceStoring {
     
     private(set) var scopeRecords = [Scope]()
     
-    private(set) var instanceRecords = [Any]()
-    
-    var instanceStubs = [InstanceKey: AnyObject]()
-    
-    func set<T>(value: (instance: T, scope: Scope), for key: InstanceKey) {
+    func set<T>(for key: InstanceKey, scope: Scope, builder: () -> T) -> T {
         keyRecords.append(key)
-        scopeRecords.append(value.scope)
-        instanceRecords.append(value.instance)
-        instanceStubs[key] = value.instance as AnyObject
-    }
-    
-    func get<T>(for key: InstanceKey) -> T? {
-        keyRecords.append(key)
-        return instanceStubs[key] as? T
+        scopeRecords.append(scope)
+        return builder()
     }
 }
 
