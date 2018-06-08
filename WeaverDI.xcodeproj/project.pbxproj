@@ -22,6 +22,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60C20CA5E4100FDA7F5 /* Builder.swift */; };
+		1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */; };
 		19F3CD6820C43F32007C3076 /* shim-swift-4.1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */; };
 		OBJ_199 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_205 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_57 /* Package.swift */; };
@@ -456,6 +458,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1917D60C20CA5E4100FDA7F5 /* Builder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
+		1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderTests.swift; sourceTree = "<group>"; };
 		19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
@@ -958,6 +962,7 @@
 		OBJ_37 /* WeaverDITests */ = {
 			isa = PBXGroup;
 			children = (
+				1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */,
 				OBJ_38 /* BuilderStoreTests.swift */,
 				OBJ_39 /* DependencyContainerTests.swift */,
 				OBJ_41 /* InstanceKeyTests.swift */,
@@ -1062,6 +1067,7 @@
 		OBJ_8 /* WeaverDI */ = {
 			isa = PBXGroup;
 			children = (
+				1917D60C20CA5E4100FDA7F5 /* Builder.swift */,
 				OBJ_9 /* BuilderStore.swift */,
 				OBJ_10 /* Dependencies.swift */,
 				OBJ_11 /* DependencyContainer.swift */,
@@ -1817,6 +1823,7 @@
 			files = (
 				OBJ_502 /* BuilderStoreTests.swift in Sources */,
 				OBJ_503 /* DependencyContainerTests.swift in Sources */,
+				1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */,
 				OBJ_505 /* InstanceKeyTests.swift in Sources */,
 				OBJ_506 /* Spies.swift in Sources */,
 			);
@@ -1833,6 +1840,7 @@
 				OBJ_518 /* DependencyStore.swift in Sources */,
 				OBJ_520 /* InstanceKey.swift in Sources */,
 				OBJ_521 /* Scope.swift in Sources */,
+				1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

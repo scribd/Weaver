@@ -206,39 +206,6 @@ final class DependencyContainerTests: XCTestCase {
         
         XCTAssertNil(weakDependencyContainer)
     }
-    
-    func test_container_should_safely_resolve_concurrently() {
-
-        let dependencyContainer = DependencyContainer()
-    
-        for index in (0...999) {
-            dependencyContainer.register(DependencyStub.self, scope: .container, name: "\(index)") { (dependencies: DependencyResolver) in
-                return DependencyStub(dependencies: dependencies)
-            }
-        }
-
-        let dispatchQueue = DispatchQueue(label: "\(DependencyContainerTests.self)", attributes: [.concurrent])
-        
-        let lock = NSLock()
-        var dependencyRefs = Set<ObjectIdentifier>()
-
-        let expectations = (1...100000).map { index -> XCTestExpectation in
-            
-            let expectation = self.expectation(description: "concurrent_resolution_\(index)")
-            dispatchQueue.async {
-                let dependency = dependencyContainer.resolve(DependencyStub.self, name: "\(index % 1000)")
-                lock.lock()
-                dependencyRefs.insert(ObjectIdentifier(dependency))
-                lock.unlock()
-                expectation.fulfill()
-            }
-            return expectation
-        }
-        
-        wait(for: expectations, timeout: 5)
-        
-        XCTAssertEqual(dependencyRefs.count, 1000)
-    }
 }
 
 // MARK: - Stubs
