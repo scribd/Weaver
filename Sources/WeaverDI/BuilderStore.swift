@@ -7,29 +7,27 @@
 
 import Foundation
 
-/// Object responsible of storing and fetching the dependency builders
+// MARK: - Storing
+
 protocol BuilderStoring: AnyObject {
     
-    /// Gets a builder for a key.
-    /// Will attempt to get a valid builder from the parent if none is found at its own level.
-    func get<B>(for key: InstanceKey, isCalledFromAChild: Bool) -> B?
+    func get(for key: InstanceKey, isCalledFromAChild: Bool) -> Builder?
 
-    /// Sets a builder for a key.
-    func set<B>(builder: B, scope: Scope, for key: InstanceKey)
+    func set<P, I>(scope: Scope, key: InstanceKey, builder: @escaping (() -> P) -> I)
 
     var parent: BuilderStoring? { get set }
 }
 
-// MARK: - Convenience
+// MARK: - Default
 
 extension BuilderStoring {
 
-    func get<B>(for key: InstanceKey) -> B? {
+    func get(for key: InstanceKey) -> Builder? {
         return get(for: key, isCalledFromAChild: false)
     }
 }
 
-// MARK: - Implementation
+// MARK: - Store
 
 final class BuilderStore: BuilderStoring {
     
@@ -37,36 +35,75 @@ final class BuilderStore: BuilderStoring {
     
     weak var parent: BuilderStoring? = nil
     
-    func get<B>(for key: InstanceKey, isCalledFromAChild: Bool) -> B? {
+    func get(for key: InstanceKey, isCalledFromAChild: Bool) -> Builder? {
         
-        guard let builder = builders[key], let body = builder.body as? B else {
+        guard let builder = builders[key] else {
             return parent?.get(for: key, isCalledFromAChild: true)
         }
         
         if (isCalledFromAChild && builder.scope.allowsAccessFromChildren) || !isCalledFromAChild {
-            return body
+            return builder
         }
         
         return parent?.get(for: key, isCalledFromAChild: true)
     }
     
-    func set<B>(builder: B, scope: Scope, for key: InstanceKey) {
+    func set<P, I>(scope: Scope, key: InstanceKey, builder: @escaping (() -> P) -> I) {
         builders[key] = Builder(scope: scope, body: builder)
     }
 }
 
-// MARK: - Instance Builder
+// MARK: - Builder
 
-private extension BuilderStore {
+final class Builder {
+
+    let scope: Scope
+    private let body: Any
+    private var instance: Instance?
     
-    final class Builder {
+    init(scope: Scope, body: Any) {
+        self.scope = scope
+        self.body = body
+    }
+    
+    func functor<P, I>() -> (() -> P) -> I {
         
-        let scope: Scope
-        let body: Any
-        
-        init(scope: Scope, body: Any) {
-            self.scope = scope
-            self.body = body
+        guard let body = body as? (() -> P) -> I else {
+            fatalError("Type \(((() -> P) -> I).self) doesn't correspond to body type: \(self.body.self)")
         }
+        
+        guard !scope.isTransient else {
+            return body
+        }
+        
+        return { (parameters: () -> P) -> I in
+            if let instance = self.instance?.value as? I {
+                return instance
+            }
+            
+            let instance = body(parameters)
+            self.instance = Instance(value: instance as AnyObject, scope: self.scope)
+            return instance
+        }
+    }
+}
+
+// MARK: - Instance
+
+private final class Instance {
+    private weak var weakValue: AnyObject?
+    private var strongValue: AnyObject?
+    
+    init(value: AnyObject, scope: Scope) {
+
+        if scope.isWeak {
+            weakValue = value
+        } else {
+            strongValue = value
+        }
+    }
+    
+    var value: AnyObject? {
+        return weakValue ?? strongValue ?? nil
     }
 }
