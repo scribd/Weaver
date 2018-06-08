@@ -19,7 +19,7 @@ final class MovieManagerTests: XCTestCase {
     var movie: Movie {
         return Movie(vote_count: 1, id: 42, video: false, vote_average: 0, title: "test",
                      popularity: 2, poster_path: "test", original_language: "en",
-                     original_title: "test", backdrop_path: "test", adult: false,
+                     original_title: "test", adult: false,
                      overview: "test", release_date: "01-01-2001")
     }
     

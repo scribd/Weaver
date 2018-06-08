@@ -210,8 +210,11 @@ final class DependencyContainerTests: XCTestCase {
     func test_container_should_safely_resolve_concurrently() {
 
         let dependencyContainer = DependencyContainer()
-        dependencyContainer.register(DependencyStub.self, scope: .container) { (dependencies: DependencyResolver) in
-            return DependencyStub(dependencies: dependencies)
+    
+        for index in (0...999) {
+            dependencyContainer.register(DependencyStub.self, scope: .container, name: "\(index)") { (dependencies: DependencyResolver) in
+                return DependencyStub(dependencies: dependencies)
+            }
         }
 
         let dispatchQueue = DispatchQueue(label: "\(DependencyContainerTests.self)", attributes: [.concurrent])
@@ -219,11 +222,11 @@ final class DependencyContainerTests: XCTestCase {
         let lock = NSLock()
         var dependencyRefs = Set<ObjectIdentifier>()
 
-        let expectations = (1...10000).map { index -> XCTestExpectation in
+        let expectations = (1...100000).map { index -> XCTestExpectation in
             
             let expectation = self.expectation(description: "concurrent_resolution_\(index)")
             dispatchQueue.async {
-                let dependency = dependencyContainer.resolve(DependencyStub.self)
+                let dependency = dependencyContainer.resolve(DependencyStub.self, name: "\(index % 1000)")
                 lock.lock()
                 dependencyRefs.insert(ObjectIdentifier(dependency))
                 lock.unlock()
@@ -234,7 +237,7 @@ final class DependencyContainerTests: XCTestCase {
         
         wait(for: expectations, timeout: 5)
         
-        XCTAssertEqual(dependencyRefs.count, 1)
+        XCTAssertEqual(dependencyRefs.count, 1000)
     }
 }
 
