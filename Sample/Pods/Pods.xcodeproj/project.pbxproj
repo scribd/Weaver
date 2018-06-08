@@ -8,21 +8,22 @@
 
 /* Begin PBXBuildFile section */
 		045588A7C2E1543A3C14F92083CFBDA3 /* Pods-SampleTests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = F3E8C563F4222A78417A9F6E09E96C83 /* Pods-SampleTests-dummy.m */; };
-		25FF607D9C3DE58AD105B4BEF2FE9AD4 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6082FB96BB79244420082DCFE0D365FB /* Dependencies.swift */; };
-		49F1706013FE84E9FF14FB61CC730BD6 /* Scope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155325C9ABDCFCF91F14A2843DC87FE6 /* Scope.swift */; };
-		5417A3F4E5282C197760E1F0AF4CC627 /* InstanceKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3577D3EF44400AEC3789B24F4799B4 /* InstanceKey.swift */; };
-		55BAEA0FB9937CFC13188FFCAAF2299E /* DependencyResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68CC1671DA733C7F642BA7517EF4DC78 /* DependencyResolver.swift */; };
-		600EF31EE606A094E32A57230B89BC7B /* BuilderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1676524A974B27053BC2AF8441F20F0F /* BuilderStore.swift */; };
+		057AAB4DE05022055ED804F4F963BD54 /* DependencyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B5FD91FA935B2A04BF443A0AE96994B /* DependencyStore.swift */; };
+		15475FDDDEB083B28DC1E73C7D17CFBC /* WeaverDI-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = BB64D4DD00333822E04C7465546CB93C /* WeaverDI-dummy.m */; };
+		62E7FF68F766ABD042D2E7AA400E071A /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E375E92CEE25FCC5ADACEBAEF8E234E6 /* DependencyContainer.swift */; };
 		6EE9518448AE9EB982EDD42720EACACD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A16F4CFC63FAC439D7A04994F579A03 /* Foundation.framework */; };
-		71F118C13497EBB09D83412F85755506 /* WeaverDI-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 953B8B4985BC90660DCE00B655F24C3E /* WeaverDI-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		71F118C13497EBB09D83412F85755506 /* WeaverDI-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 6C480EF00AACEA6C86D24F9F51775E3A /* WeaverDI-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7222D8C502A4A71BF8920F6EFB73B29D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A16F4CFC63FAC439D7A04994F579A03 /* Foundation.framework */; };
+		79D189D11C0F9705A489A0E2AF8216B8 /* InstanceKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDD48C65BE0EA09DBD69312245757F8C /* InstanceKey.swift */; };
 		7B39C41D3CB50307D50DE649F0608FCF /* Pods-SampleTests-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 891297231C4652F26EB62E334EF8282D /* Pods-SampleTests-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		83B4F2D14E8115DDB2B5B50B4C3600E7 /* Pods-Sample-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 290864FAA54CED65ED7F494D42D45F0D /* Pods-Sample-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		848A62154F2BABBF459EF5274411D94E /* Pods-Sample-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = D615816B2430767A60732C274DBDF1CA /* Pods-Sample-dummy.m */; };
-		8FEC7C6B91565ABF90F30C7E8DADA1C2 /* DependencyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA7113E82E4E886DD37B281E670B9EC /* DependencyStore.swift */; };
+		8A9CDE372FC805B47ADF6D4572528A0A /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D88E1BA4A12D63385902D1B979615E3 /* Builder.swift */; };
+		900CE20E79C5B43C463C98FF3EAAD847 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A6E7BFB32819252A845B65EB370064 /* Dependencies.swift */; };
 		A8BBD76EBBC26C2204A159EBE2CE163D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A16F4CFC63FAC439D7A04994F579A03 /* Foundation.framework */; };
-		BA9E27A8CBA9E8FBDC8EAEF9D5ABD7CD /* WeaverDI-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = BBD27A33951A3C52C90648E12BD0258D /* WeaverDI-dummy.m */; };
-		BC482F883A41985B6A1F06C88616ED06 /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CEE9FD15FD9A0520153470D27B926D5 /* DependencyContainer.swift */; };
+		CD8C40FE6FF35415629D2E30AA7F6C79 /* DependencyResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394414EFC407CD31DDE13E37C1731168 /* DependencyResolver.swift */; };
+		D37C9753D368BF37B941E25398AE3733 /* Scope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163ED7E81DD5FF3FD0897F3B1ABF154A /* Scope.swift */; };
+		E7EC0689A62FB13C1FBCC1FB70CD90D6 /* BuilderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7EE3D5F463DC1731E70594BDB470386 /* BuilderStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,45 +45,46 @@
 
 /* Begin PBXFileReference section */
 		078A5BDD53DC18B8A2E84BD2BD02F923 /* Pods-SampleTests-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-SampleTests-frameworks.sh"; sourceTree = "<group>"; };
+		0D88E1BA4A12D63385902D1B979615E3 /* Builder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Builder.swift; path = Sources/WeaverDI/Builder.swift; sourceTree = "<group>"; };
 		0EDDBC12C4D4D64B046678B9B8893007 /* Pods-Sample-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-Sample-acknowledgements.plist"; sourceTree = "<group>"; };
-		155325C9ABDCFCF91F14A2843DC87FE6 /* Scope.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Scope.swift; path = Sources/WeaverDI/Scope.swift; sourceTree = "<group>"; };
-		1676524A974B27053BC2AF8441F20F0F /* BuilderStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BuilderStore.swift; path = Sources/WeaverDI/BuilderStore.swift; sourceTree = "<group>"; };
-		1CEE9FD15FD9A0520153470D27B926D5 /* DependencyContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DependencyContainer.swift; path = Sources/WeaverDI/DependencyContainer.swift; sourceTree = "<group>"; };
+		163ED7E81DD5FF3FD0897F3B1ABF154A /* Scope.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Scope.swift; path = Sources/WeaverDI/Scope.swift; sourceTree = "<group>"; };
 		1DC5E468D33C27C20643F88DBEE1B4A3 /* Pods-SampleTests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-SampleTests.modulemap"; sourceTree = "<group>"; };
 		212F189E75960FC70E71258FB30EC087 /* Pods-Sample.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-Sample.modulemap"; sourceTree = "<group>"; };
-		247EAC3F9986AAF16A7DA56DCED0C0EB /* WeaverDI.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; lastKnownFileType = text; path = WeaverDI.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		290864FAA54CED65ED7F494D42D45F0D /* Pods-Sample-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-Sample-umbrella.h"; sourceTree = "<group>"; };
-		3A56E79653CE2DD19CB73BCD91A0DCD7 /* WeaverDI-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WeaverDI-prefix.pch"; sourceTree = "<group>"; };
+		2AC2C02DCF7BD9DCC838588E0067A0AE /* WeaverDI.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = WeaverDI.modulemap; sourceTree = "<group>"; };
+		394414EFC407CD31DDE13E37C1731168 /* DependencyResolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DependencyResolver.swift; path = Sources/WeaverDI/DependencyResolver.swift; sourceTree = "<group>"; };
+		3B5FD91FA935B2A04BF443A0AE96994B /* DependencyStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DependencyStore.swift; path = Sources/WeaverDI/DependencyStore.swift; sourceTree = "<group>"; };
+		3DEDB0F2870A260FD97904E21A43053E /* WeaverDI.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WeaverDI.xcconfig; sourceTree = "<group>"; };
 		4E64B5DA8162D8E22D76CE4EAA505DD5 /* Pods-SampleTests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-SampleTests-acknowledgements.markdown"; sourceTree = "<group>"; };
 		4F24E7C05EFBD5CE124F7D5CC103AF9E /* Pods-Sample-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Sample-resources.sh"; sourceTree = "<group>"; };
 		58A2F4B0F957106D56A473F6FF8DFAB9 /* Pods-SampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-SampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5A16F4CFC63FAC439D7A04994F579A03 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		5AEFA2D6A7EFB0AD2123EBF790E85843 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5B10ACB24F554EC5BFBE633397E767CE /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		6082FB96BB79244420082DCFE0D365FB /* Dependencies.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Dependencies.swift; path = Sources/WeaverDI/Dependencies.swift; sourceTree = "<group>"; };
-		649323269CF54AA5A4343F7CC41B524A /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
-		68CC1671DA733C7F642BA7517EF4DC78 /* DependencyResolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DependencyResolver.swift; path = Sources/WeaverDI/DependencyResolver.swift; sourceTree = "<group>"; };
 		6923E3AF44CB07E0D2B6E5176DE9C841 /* Pods-Sample-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Sample-frameworks.sh"; sourceTree = "<group>"; };
+		6C480EF00AACEA6C86D24F9F51775E3A /* WeaverDI-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WeaverDI-umbrella.h"; sourceTree = "<group>"; };
+		70EEF197FBF82A9E807801241BE51F9C /* WeaverDI.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; lastKnownFileType = text; path = WeaverDI.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		7162FB319E3C6D4A7AA2DC20C2C06013 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
 		74DC5C0A7BD2F81567BB7CF1A4085D1B /* Pods-Sample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Sample.debug.xcconfig"; sourceTree = "<group>"; };
 		77FA7075AFAE53B8BCC14421AB67CED2 /* Pods-Sample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Sample.release.xcconfig"; sourceTree = "<group>"; };
-		7A7D28FA8BA95A91741EBBD050C70143 /* WeaverDI.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = WeaverDI.modulemap; sourceTree = "<group>"; };
+		7BBF43602C7900D26275BA5D4BA08B76 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
 		82FF3F8212D2808390EAD2A257647C9F /* Pods-SampleTests-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-SampleTests-resources.sh"; sourceTree = "<group>"; };
-		86C7E003C75DD604727660AE3F648C49 /* WeaverDI.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = WeaverDI.xcconfig; sourceTree = "<group>"; };
-		88FA782A65A96039B67186C1A062F439 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		8513BDD895F70F46428166E71E5361F8 /* WeaverDI-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WeaverDI-prefix.pch"; sourceTree = "<group>"; };
 		891297231C4652F26EB62E334EF8282D /* Pods-SampleTests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-SampleTests-umbrella.h"; sourceTree = "<group>"; };
 		93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		953B8B4985BC90660DCE00B655F24C3E /* WeaverDI-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "WeaverDI-umbrella.h"; sourceTree = "<group>"; };
 		96D866EC9DF0CC4C513DE3DB5E1EF2B1 /* Pods-SampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-SampleTests.release.xcconfig"; sourceTree = "<group>"; };
+		9B0130C2F70DC115EBAFB5D0E25AF412 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A4A6E7BFB32819252A845B65EB370064 /* Dependencies.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Dependencies.swift; path = Sources/WeaverDI/Dependencies.swift; sourceTree = "<group>"; };
 		AD1A2CB2BD6712759CD463531769DE54 /* Pods_SampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_SampleTests.framework; path = "Pods-SampleTests.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B70008B438F6E525DF83E0EB8BC0D9E2 /* Pods-Sample-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-Sample-acknowledgements.markdown"; sourceTree = "<group>"; };
-		BBD27A33951A3C52C90648E12BD0258D /* WeaverDI-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "WeaverDI-dummy.m"; sourceTree = "<group>"; };
+		BB64D4DD00333822E04C7465546CB93C /* WeaverDI-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "WeaverDI-dummy.m"; sourceTree = "<group>"; };
 		C0E9003436BF8CB957B060A132FA3071 /* Pods-SampleTests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-SampleTests-acknowledgements.plist"; sourceTree = "<group>"; };
-		CFA7113E82E4E886DD37B281E670B9EC /* DependencyStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DependencyStore.swift; path = Sources/WeaverDI/DependencyStore.swift; sourceTree = "<group>"; };
 		D615816B2430767A60732C274DBDF1CA /* Pods-Sample-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-Sample-dummy.m"; sourceTree = "<group>"; };
+		E375E92CEE25FCC5ADACEBAEF8E234E6 /* DependencyContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DependencyContainer.swift; path = Sources/WeaverDI/DependencyContainer.swift; sourceTree = "<group>"; };
 		E7F8B8468F0999AD27EA01740A77BF60 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EDD48C65BE0EA09DBD69312245757F8C /* InstanceKey.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = InstanceKey.swift; path = Sources/WeaverDI/InstanceKey.swift; sourceTree = "<group>"; };
 		F3E8C563F4222A78417A9F6E09E96C83 /* Pods-SampleTests-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-SampleTests-dummy.m"; sourceTree = "<group>"; };
 		F737C8ADD2EC4F8465254C7E6ABF137A /* WeaverDI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = WeaverDI.framework; path = WeaverDI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		FA3577D3EF44400AEC3789B24F4799B4 /* InstanceKey.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = InstanceKey.swift; path = Sources/WeaverDI/InstanceKey.swift; sourceTree = "<group>"; };
+		F7EE3D5F463DC1731E70594BDB470386 /* BuilderStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BuilderStore.swift; path = Sources/WeaverDI/BuilderStore.swift; sourceTree = "<group>"; };
 		FD3D42D0738918FB8638F68F174C6A35 /* Pods_Sample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_Sample.framework; path = "Pods-Sample.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -114,10 +116,10 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0409A92EE7BB1BC417B54AECFAD05FB2 /* Development Pods */ = {
+		1C49EBDA7B705AB44153F2F5A3B2B781 /* Development Pods */ = {
 			isa = PBXGroup;
 			children = (
-				68EF91A098C088AB434F6626B30495D9 /* WeaverDI */,
+				7D5FEB61474D7689A6AADB41C0AB9889 /* WeaverDI */,
 			);
 			name = "Development Pods";
 			sourceTree = "<group>";
@@ -130,18 +132,29 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
-		68EF91A098C088AB434F6626B30495D9 /* WeaverDI */ = {
+		7154E71EBE56DE8E0232C495EA1D04F0 /* Pod */ = {
 			isa = PBXGroup;
 			children = (
-				1676524A974B27053BC2AF8441F20F0F /* BuilderStore.swift */,
-				6082FB96BB79244420082DCFE0D365FB /* Dependencies.swift */,
-				1CEE9FD15FD9A0520153470D27B926D5 /* DependencyContainer.swift */,
-				68CC1671DA733C7F642BA7517EF4DC78 /* DependencyResolver.swift */,
-				CFA7113E82E4E886DD37B281E670B9EC /* DependencyStore.swift */,
-				FA3577D3EF44400AEC3789B24F4799B4 /* InstanceKey.swift */,
-				155325C9ABDCFCF91F14A2843DC87FE6 /* Scope.swift */,
-				CC1AB4C80845B5A7A49DDBED81F1F46C /* Pod */,
-				F6E27BDC37191EFC248E4E41EAE89B11 /* Support Files */,
+				7162FB319E3C6D4A7AA2DC20C2C06013 /* LICENSE */,
+				7BBF43602C7900D26275BA5D4BA08B76 /* README.md */,
+				70EEF197FBF82A9E807801241BE51F9C /* WeaverDI.podspec */,
+			);
+			name = Pod;
+			sourceTree = "<group>";
+		};
+		7D5FEB61474D7689A6AADB41C0AB9889 /* WeaverDI */ = {
+			isa = PBXGroup;
+			children = (
+				0D88E1BA4A12D63385902D1B979615E3 /* Builder.swift */,
+				F7EE3D5F463DC1731E70594BDB470386 /* BuilderStore.swift */,
+				A4A6E7BFB32819252A845B65EB370064 /* Dependencies.swift */,
+				E375E92CEE25FCC5ADACEBAEF8E234E6 /* DependencyContainer.swift */,
+				394414EFC407CD31DDE13E37C1731168 /* DependencyResolver.swift */,
+				3B5FD91FA935B2A04BF443A0AE96994B /* DependencyStore.swift */,
+				EDD48C65BE0EA09DBD69312245757F8C /* InstanceKey.swift */,
+				163ED7E81DD5FF3FD0897F3B1ABF154A /* Scope.swift */,
+				7154E71EBE56DE8E0232C495EA1D04F0 /* Pod */,
+				96293F62DF24432F33F2C808279EECBE /* Support Files */,
 			);
 			name = WeaverDI;
 			path = ../..;
@@ -151,11 +164,25 @@
 			isa = PBXGroup;
 			children = (
 				93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */,
-				0409A92EE7BB1BC417B54AECFAD05FB2 /* Development Pods */,
+				1C49EBDA7B705AB44153F2F5A3B2B781 /* Development Pods */,
 				BC3CA7F9E30CC8F7E2DD044DD34432FC /* Frameworks */,
 				E978D9F54BA9F33DBC55C3CF516F336B /* Products */,
 				C1D042CB911D786D7902EE9C99F61B00 /* Targets Support Files */,
 			);
+			sourceTree = "<group>";
+		};
+		96293F62DF24432F33F2C808279EECBE /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				9B0130C2F70DC115EBAFB5D0E25AF412 /* Info.plist */,
+				2AC2C02DCF7BD9DCC838588E0067A0AE /* WeaverDI.modulemap */,
+				3DEDB0F2870A260FD97904E21A43053E /* WeaverDI.xcconfig */,
+				BB64D4DD00333822E04C7465546CB93C /* WeaverDI-dummy.m */,
+				8513BDD895F70F46428166E71E5361F8 /* WeaverDI-prefix.pch */,
+				6C480EF00AACEA6C86D24F9F51775E3A /* WeaverDI-umbrella.h */,
+			);
+			name = "Support Files";
+			path = "Sample/Pods/Target Support Files/WeaverDI";
 			sourceTree = "<group>";
 		};
 		99EB45F0A3F3A83565657F30DBC5B0C9 /* Pods-Sample */ = {
@@ -211,16 +238,6 @@
 			name = "Targets Support Files";
 			sourceTree = "<group>";
 		};
-		CC1AB4C80845B5A7A49DDBED81F1F46C /* Pod */ = {
-			isa = PBXGroup;
-			children = (
-				649323269CF54AA5A4343F7CC41B524A /* LICENSE */,
-				88FA782A65A96039B67186C1A062F439 /* README.md */,
-				247EAC3F9986AAF16A7DA56DCED0C0EB /* WeaverDI.podspec */,
-			);
-			name = Pod;
-			sourceTree = "<group>";
-		};
 		E978D9F54BA9F33DBC55C3CF516F336B /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -229,20 +246,6 @@
 				F737C8ADD2EC4F8465254C7E6ABF137A /* WeaverDI.framework */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		F6E27BDC37191EFC248E4E41EAE89B11 /* Support Files */ = {
-			isa = PBXGroup;
-			children = (
-				5AEFA2D6A7EFB0AD2123EBF790E85843 /* Info.plist */,
-				7A7D28FA8BA95A91741EBBD050C70143 /* WeaverDI.modulemap */,
-				86C7E003C75DD604727660AE3F648C49 /* WeaverDI.xcconfig */,
-				BBD27A33951A3C52C90648E12BD0258D /* WeaverDI-dummy.m */,
-				3A56E79653CE2DD19CB73BCD91A0DCD7 /* WeaverDI-prefix.pch */,
-				953B8B4985BC90660DCE00B655F24C3E /* WeaverDI-umbrella.h */,
-			);
-			name = "Support Files";
-			path = "Sample/Pods/Target Support Files/WeaverDI";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -279,7 +282,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = E6FB4BF0B97A8CD8D723529B0946ABDF /* Build configuration list for PBXNativeTarget "WeaverDI" */;
 			buildPhases = (
-				0A4DF53871EA56D66153C8762690EE65 /* Sources */,
+				289AEAF3FC12E190931F8A57E3ED5A38 /* Sources */,
 				DF2CD61413A6119FE71FF595798FD0DB /* Frameworks */,
 				D28503AFE983A8D323C47820F2CB80E3 /* Headers */,
 			);
@@ -357,18 +360,19 @@
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		0A4DF53871EA56D66153C8762690EE65 /* Sources */ = {
+		289AEAF3FC12E190931F8A57E3ED5A38 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				600EF31EE606A094E32A57230B89BC7B /* BuilderStore.swift in Sources */,
-				25FF607D9C3DE58AD105B4BEF2FE9AD4 /* Dependencies.swift in Sources */,
-				BC482F883A41985B6A1F06C88616ED06 /* DependencyContainer.swift in Sources */,
-				55BAEA0FB9937CFC13188FFCAAF2299E /* DependencyResolver.swift in Sources */,
-				8FEC7C6B91565ABF90F30C7E8DADA1C2 /* DependencyStore.swift in Sources */,
-				5417A3F4E5282C197760E1F0AF4CC627 /* InstanceKey.swift in Sources */,
-				49F1706013FE84E9FF14FB61CC730BD6 /* Scope.swift in Sources */,
-				BA9E27A8CBA9E8FBDC8EAEF9D5ABD7CD /* WeaverDI-dummy.m in Sources */,
+				8A9CDE372FC805B47ADF6D4572528A0A /* Builder.swift in Sources */,
+				E7EC0689A62FB13C1FBCC1FB70CD90D6 /* BuilderStore.swift in Sources */,
+				900CE20E79C5B43C463C98FF3EAAD847 /* Dependencies.swift in Sources */,
+				62E7FF68F766ABD042D2E7AA400E071A /* DependencyContainer.swift in Sources */,
+				CD8C40FE6FF35415629D2E30AA7F6C79 /* DependencyResolver.swift in Sources */,
+				057AAB4DE05022055ED804F4F963BD54 /* DependencyStore.swift in Sources */,
+				79D189D11C0F9705A489A0E2AF8216B8 /* InstanceKey.swift in Sources */,
+				D37C9753D368BF37B941E25398AE3733 /* Scope.swift in Sources */,
+				15475FDDDEB083B28DC1E73C7D17CFBC /* WeaverDI-dummy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,7 +412,7 @@
 /* Begin XCBuildConfiguration section */
 		02A47A79CCFA43184A08C159CDD74AC3 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 86C7E003C75DD604727660AE3F648C49 /* WeaverDI.xcconfig */;
+			baseConfigurationReference = 3DEDB0F2870A260FD97904E21A43053E /* WeaverDI.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -703,7 +707,7 @@
 		};
 		EADE36AAE97DACA5899ECEB2769D176E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 86C7E003C75DD604727660AE3F648C49 /* WeaverDI.xcconfig */;
+			baseConfigurationReference = 3DEDB0F2870A260FD97904E21A43053E /* WeaverDI.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
