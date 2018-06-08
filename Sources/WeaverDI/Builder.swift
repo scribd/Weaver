@@ -15,11 +15,29 @@ final class Builder {
     private let body: Any
     
     private var instance: Instance?
-    private let locker = NSLock()
+    private let instanceLocker = NSLock()
+    
+    private var isSet = false
+    private let isSetDispatchQueue = DispatchQueue(label: "\(Builder.self)", attributes: .concurrent)
     
     init(scope: Scope, body: Any) {
         self.scope = scope
         self.body = body
+    }
+    
+    private var syncIsSet: Bool {
+        set {
+            isSetDispatchQueue.async(flags: .barrier) {
+                self.isSet = newValue
+            }
+        }
+        get {
+            var isSet = false
+            isSetDispatchQueue.sync {
+                isSet = self.isSet
+            }
+            return isSet
+        }
     }
     
     func functor<P, I>() -> (() -> P) -> I {
@@ -33,15 +51,31 @@ final class Builder {
         }
         
         return { (parameters: () -> P) -> I in
-            self.locker.lock()
-            defer { self.locker.unlock() }
-            
-            if let instance = self.instance?.value as? I {
+
+            if self.syncIsSet {
+                guard let instance = self.instance?.value as? I else {
+                    fatalError()
+                }
                 return instance
             }
+
+            self.instanceLocker.lock()
             
+            if self.syncIsSet {
+                guard let instance = self.instance?.value as? I else {
+                    fatalError()
+                }
+                self.instanceLocker.unlock()
+                return instance
+            }
+
             let instance = body(parameters)
             self.instance = Instance(value: instance as AnyObject, scope: self.scope)
+            
+            self.syncIsSet = true
+
+            self.instanceLocker.unlock()
+
             return instance
         }
     }

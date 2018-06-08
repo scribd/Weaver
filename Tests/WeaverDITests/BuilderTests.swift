@@ -74,10 +74,10 @@ final class BuilderTests: XCTestCase {
         
         let dispatchQueue = DispatchQueue(label: "\(DependencyContainerTests.self)", attributes: [.concurrent])
 
-        let expectations = (0...9999).flatMap { stepIndex -> [XCTestExpectation] in
+        let expectations = (1...10000).flatMap { stepIndex -> [XCTestExpectation] in
             let builder = Builder(scope: .container, body: { (_: () -> Void) -> NSObject in return NSObject() })
             
-            return (1...15).map { threadIndex -> XCTestExpectation in
+            return (1...100).map { threadIndex -> XCTestExpectation in
                 let expectation = self.expectation(description: "concurrent_resolution_\(stepIndex)_\(threadIndex)")
                 dispatchQueue.async {
                     let functor: (() -> Void) -> NSObject = builder.functor()
