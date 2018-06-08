@@ -9,21 +9,8 @@ import Foundation
 
 @testable import WeaverDI
 
-final class InstanceStoreSpy: InstanceStoring {
-
-    private(set) var keyRecords = [InstanceKey]()
-    
-    private(set) var scopeRecords = [Scope]()
-    
-    func set<T>(for key: InstanceKey, scope: Scope, builder: () -> T) -> T {
-        keyRecords.append(key)
-        scopeRecords.append(scope)
-        return builder()
-    }
-}
-
 final class BuilderStoreSpy: BuilderStoring {
-
+ 
     private(set) var getRecordsCallCount = 0
     
     private(set) var setRecordsCallCount = 0
@@ -31,22 +18,25 @@ final class BuilderStoreSpy: BuilderStoring {
     private(set) var keyRecords = [InstanceKey]()
     
     private(set) var scopeRecords = [Scope]()
+    
+    private(set) var isCalledFromAChildRecords = [Bool]()
 
     private(set) var builderRecords = [Any]()
     
-    var builderStubs = [InstanceKey:Any]()
+    var builderStubs = [InstanceKey: Builder]()
     
     weak var parent: BuilderStoring?
 
-    func get<B>(for key: InstanceKey, isCalledFromAChild: Bool) -> B? {
+    func get(for key: InstanceKey, isCalledFromAChild: Bool) -> Builder? {
         keyRecords.append(key)
-        return builderStubs[key] as? B
+        isCalledFromAChildRecords.append(isCalledFromAChild)
+        return builderStubs[key]
     }
     
-    func set<B>(builder: B, scope: Scope, for key: InstanceKey) {
+    func set<P, I>(scope: Scope, key: InstanceKey, builder: @escaping (() -> P) -> I) {
         builderRecords.append(builder as Any)
         scopeRecords.append(scope)
         keyRecords.append(key)
-        builderStubs[key] = builder
+        builderStubs[key] = Builder(scope: scope, body: builder)
     }
 }

@@ -11,15 +11,11 @@ open class DependencyContainer {
     
     private var builders: BuilderStoring
     
-    private let instances: InstanceStoring
-    
     private let parent: DependencyContainer?
     
     init(parent: DependencyContainer? = nil,
-         builderStore: BuilderStoring = BuilderStore(),
-         instanceStore: InstanceStoring = InstanceStore()) {
+         builderStore: BuilderStoring = BuilderStore()) {
         self.parent = parent
-        instances = SynchronizedInstanceStore(instanceStore)
         builders = builderStore
         builders.parent = parent?.builders
         
@@ -28,7 +24,6 @@ open class DependencyContainer {
     
     public init(_ parent: DependencyContainer? = nil) {
         self.parent = parent
-        instances = SynchronizedInstanceStore(InstanceStore())
         builders = BuilderStore()
         builders.parent = parent?.builders
         
@@ -47,51 +42,51 @@ extension DependencyContainer: DependencyResolver {
     public func resolve<S>(_ serviceType: S.Type, name: String? = nil) -> S {
         let key = InstanceKey(for: serviceType, name: name)
 
-        guard let builder: (DependencyContainer) -> S = builders.get(for: key) else {
+        guard let builder = builders.get(for: key) else {
             fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder(self)
+        return builder.functor()({ self })
     }
     
     public func resolve<S, P1>(_ serviceType: S.Type, name: String? = nil, parameter: P1) -> S {
         let key = InstanceKey(for: serviceType, name: name, parameterType: P1.self)
         
-        guard let builder: (DependencyContainer, P1) -> S = builders.get(for: key) else {
-            fatalError("\(DependencyContainer.self): Could not resolve \(key)")
+        guard let builder = builders.get(for: key) else {
+            fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder(self, parameter)
+        return builder.functor()({ (self, parameter) })
     }
     
     public func resolve<S, P1, P2>(_ serviceType: S.Type, name: String? = nil, parameters p1: P1, _ p2: P2) -> S {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self)
         
-        guard let builder: (DependencyContainer, P1, P2) -> S = builders.get(for: key) else {
-            fatalError("\(DependencyContainer.self): Could not resolve \(key)")
+        guard let builder = builders.get(for: key) else {
+            fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder(self, p1, p2)
+        return builder.functor()({ (self, p1, p2) })
     }
     
     public func resolve<S, P1, P2, P3>(_ serviceType: S.Type, name: String? = nil, parameters p1: P1, _ p2: P2, _ p3: P3) -> S {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self)
         
-        guard let builder: (DependencyContainer, P1, P2, P3) -> S = builders.get(for: key) else {
-            fatalError("\(DependencyContainer.self): Could not resolve \(key)")
+        guard let builder = builders.get(for: key) else {
+            fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder(self, p1, p2, p3)
+        return builder.functor()({ (self, p1, p2, p3) })
     }
     
     public func resolve<S, P1, P2, P3, P4>(_ serviceType: S.Type, name: String? = nil, parameters p1: P1, _ p2: P2, _ p3: P3, _ p4: P4) -> S {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self, P4.self)
         
-        guard let builder: (DependencyContainer, P1, P2, P3, P4) -> S = builders.get(for: key) else {
-            fatalError("\(DependencyContainer.self): Could not resolve \(key)")
+        guard let builder = builders.get(for: key) else {
+            fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder(self, p1, p2, p3, p4)
+        return builder.functor()({ (self, p1, p2, p3, p4) })
     }
 }
 
@@ -101,51 +96,41 @@ extension DependencyContainer: DependencyStore {
     
     public func register<S>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer) -> S) {
         let key = InstanceKey(for: serviceType, name: name)
-
-        let builderWrapper: (DependencyContainer) -> S = { strongSelf in
-            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf) }
+        
+        builders.set(scope: scope, key: key) { (parameter: () -> (DependencyContainer)) -> S in
+            return builder(parameter())
         }
-
-        builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
     public func register<S, P1>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1) -> S) {
         let key = InstanceKey(for: serviceType, name: name, parameterType: P1.self)
 
-        let builderWrapper: (DependencyContainer, P1) -> S = { strongSelf, parameter in
-            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, parameter) }
+        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1)) -> S in
+            return builder(parameters().0, parameters().1)
         }
-        
-        builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
     public func register<S, P1, P2>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2) -> S) {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self)
 
-        let builderWrapper: (DependencyContainer, P1, P2) -> S = { strongSelf, p1, p2 in
-            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, p1, p2) }
+        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2)) -> S in
+            return builder(parameters().0, parameters().1, parameters().2)
         }
-        
-        builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
     public func register<S, P1, P2, P3>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2, P3) -> S) {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self)
 
-        let builderWrapper: (DependencyContainer, P1, P2, P3) -> S = { strongSelf, p1, p2, p3 in
-            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, p1, p2, p3) }
+        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2, P3)) -> S in
+            return builder(parameters().0, parameters().1, parameters().2, parameters().3)
         }
-        
-        builders.set(builder: builderWrapper, scope: scope, for: key)
     }
     
     public func register<S, P1, P2, P3, P4>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2, P3, P4) -> S) {
         let key = InstanceKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self, P4.self)
 
-        let builderWrapper: (DependencyContainer, P1, P2, P3, P4) -> S = { strongSelf, p1, p2, p3, p4 in
-            return strongSelf.instances.set(for: key, scope: scope) { builder(strongSelf, p1, p2, p3, p4) }
+        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2, P3, P4)) -> S in
+            return builder(parameters().0, parameters().1, parameters().2, parameters().3, parameters().4)
         }
-        
-        builders.set(builder: builderWrapper, scope: scope, for: key)
     }
 }

@@ -22,6 +22,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60C20CA5E4100FDA7F5 /* Builder.swift */; };
+		1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */; };
 		19F3CD6820C43F32007C3076 /* shim-swift-4.1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */; };
 		OBJ_199 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_205 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_57 /* Package.swift */; };
@@ -188,7 +190,6 @@
 		OBJ_495 /* shim.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_179 /* shim.swift */; };
 		OBJ_502 /* BuilderStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* BuilderStoreTests.swift */; };
 		OBJ_503 /* DependencyContainerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* DependencyContainerTests.swift */; };
-		OBJ_504 /* InstanceCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_40 /* InstanceCacheTests.swift */; };
 		OBJ_505 /* InstanceKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_41 /* InstanceKeyTests.swift */; };
 		OBJ_506 /* Spies.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* Spies.swift */; };
 		OBJ_508 /* WeaverDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "WeaverDI::WeaverDI::Product" /* WeaverDI.framework */; };
@@ -197,7 +198,6 @@
 		OBJ_516 /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* DependencyContainer.swift */; };
 		OBJ_517 /* DependencyResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* DependencyResolver.swift */; };
 		OBJ_518 /* DependencyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* DependencyStore.swift */; };
-		OBJ_519 /* InstanceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* InstanceStore.swift */; };
 		OBJ_520 /* InstanceKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* InstanceKey.swift */; };
 		OBJ_521 /* Scope.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Scope.swift */; };
 /* End PBXBuildFile section */
@@ -458,6 +458,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1917D60C20CA5E4100FDA7F5 /* Builder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
+		1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderTests.swift; sourceTree = "<group>"; };
 		19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
@@ -502,7 +504,6 @@
 		OBJ_137 /* library_wrapper_CXString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = library_wrapper_CXString.swift; sourceTree = "<group>"; };
 		OBJ_138 /* library_wrapper_Documentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = library_wrapper_Documentation.swift; sourceTree = "<group>"; };
 		OBJ_139 /* library_wrapper_Index.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = library_wrapper_Index.swift; sourceTree = "<group>"; };
-		OBJ_14 /* InstanceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceStore.swift; sourceTree = "<group>"; };
 		OBJ_140 /* library_wrapper_sourcekitd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = library_wrapper_sourcekitd.swift; sourceTree = "<group>"; };
 		OBJ_141 /* shim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = shim.swift; sourceTree = "<group>"; };
 		OBJ_143 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/theophanerupin/Projects/Scribd/Weaver/.build/checkouts/SourceKitten.git-6484296299232452758/Package.swift"; sourceTree = "<group>"; };
@@ -557,7 +558,6 @@
 		OBJ_35 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		OBJ_38 /* BuilderStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderStoreTests.swift; sourceTree = "<group>"; };
 		OBJ_39 /* DependencyContainerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyContainerTests.swift; sourceTree = "<group>"; };
-		OBJ_40 /* InstanceCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceCacheTests.swift; sourceTree = "<group>"; };
 		OBJ_41 /* InstanceKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceKeyTests.swift; sourceTree = "<group>"; };
 		OBJ_42 /* Spies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spies.swift; sourceTree = "<group>"; };
 		OBJ_44 /* ErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorTests.swift; sourceTree = "<group>"; };
@@ -962,9 +962,9 @@
 		OBJ_37 /* WeaverDITests */ = {
 			isa = PBXGroup;
 			children = (
+				1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */,
 				OBJ_38 /* BuilderStoreTests.swift */,
 				OBJ_39 /* DependencyContainerTests.swift */,
-				OBJ_40 /* InstanceCacheTests.swift */,
 				OBJ_41 /* InstanceKeyTests.swift */,
 				OBJ_42 /* Spies.swift */,
 			);
@@ -1067,12 +1067,12 @@
 		OBJ_8 /* WeaverDI */ = {
 			isa = PBXGroup;
 			children = (
+				1917D60C20CA5E4100FDA7F5 /* Builder.swift */,
 				OBJ_9 /* BuilderStore.swift */,
 				OBJ_10 /* Dependencies.swift */,
 				OBJ_11 /* DependencyContainer.swift */,
 				OBJ_12 /* DependencyResolver.swift */,
 				OBJ_13 /* DependencyStore.swift */,
-				OBJ_14 /* InstanceStore.swift */,
 				OBJ_15 /* InstanceKey.swift */,
 				OBJ_16 /* Scope.swift */,
 			);
@@ -1823,7 +1823,7 @@
 			files = (
 				OBJ_502 /* BuilderStoreTests.swift in Sources */,
 				OBJ_503 /* DependencyContainerTests.swift in Sources */,
-				OBJ_504 /* InstanceCacheTests.swift in Sources */,
+				1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */,
 				OBJ_505 /* InstanceKeyTests.swift in Sources */,
 				OBJ_506 /* Spies.swift in Sources */,
 			);
@@ -1838,9 +1838,9 @@
 				OBJ_516 /* DependencyContainer.swift in Sources */,
 				OBJ_517 /* DependencyResolver.swift in Sources */,
 				OBJ_518 /* DependencyStore.swift in Sources */,
-				OBJ_519 /* InstanceStore.swift in Sources */,
 				OBJ_520 /* InstanceKey.swift in Sources */,
 				OBJ_521 /* Scope.swift in Sources */,
+				1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
