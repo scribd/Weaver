@@ -1,5 +1,5 @@
 //
-//  InstanceKey.swift
+//  BuilderKey.swift
 //  Weaver
 //
 //  Created by Théophane Rupin on 2/21/18.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct InstanceKey: CustomStringConvertible {
+struct BuilderKey: CustomStringConvertible {
     
     let description: String
     
@@ -34,13 +34,13 @@ struct InstanceKey: CustomStringConvertible {
 
 // MARK: - Hashable
 
-extension InstanceKey: Hashable {
+extension BuilderKey: Hashable {
 
     var hashValue: Int {
         return description.hashValue
     }
     
-    static func ==(lhs: InstanceKey, rhs: InstanceKey) -> Bool {
+    static func ==(lhs: BuilderKey, rhs: BuilderKey) -> Bool {
         return lhs.description == rhs.description
     }
 }

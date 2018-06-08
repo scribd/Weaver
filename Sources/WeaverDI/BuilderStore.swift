@@ -11,9 +11,9 @@ import Foundation
 
 protocol BuilderStoring: AnyObject {
     
-    func get(for key: InstanceKey, isCalledFromAChild: Bool) -> Builder?
+    func get(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder?
 
-    func set<P, I>(scope: Scope, key: InstanceKey, builder: @escaping (() -> P) -> I)
+    func set<P, I>(scope: Scope, key: BuilderKey, builder: @escaping (() -> P) -> I)
 
     var parent: BuilderStoring? { get set }
 }
@@ -22,7 +22,7 @@ protocol BuilderStoring: AnyObject {
 
 extension BuilderStoring {
 
-    func get(for key: InstanceKey) -> Builder? {
+    func get(for key: BuilderKey) -> Builder? {
         return get(for: key, isCalledFromAChild: false)
     }
 }
@@ -31,11 +31,11 @@ extension BuilderStoring {
 
 final class BuilderStore: BuilderStoring {
     
-    private var builders: [InstanceKey: Builder] = [:]
+    private var builders: [BuilderKey: Builder] = [:]
     
     weak var parent: BuilderStoring? = nil
     
-    func get(for key: InstanceKey, isCalledFromAChild: Bool) -> Builder? {
+    func get(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder? {
         
         guard let builder = builders[key] else {
             return parent?.get(for: key, isCalledFromAChild: true)
@@ -48,7 +48,7 @@ final class BuilderStore: BuilderStoring {
         return parent?.get(for: key, isCalledFromAChild: true)
     }
     
-    func set<P, I>(scope: Scope, key: InstanceKey, builder: @escaping (() -> P) -> I) {
+    func set<P, I>(scope: Scope, key: BuilderKey, builder: @escaping (() -> P) -> I) {
         builders[key] = Builder(scope: scope, body: builder)
     }
 }
