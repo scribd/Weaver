@@ -59,7 +59,9 @@ final class Builder {
 
     let scope: Scope
     private let body: Any
+    
     private var instance: Instance?
+    private let locker = NSLock()
     
     init(scope: Scope, body: Any) {
         self.scope = scope
@@ -77,6 +79,9 @@ final class Builder {
         }
         
         return { (parameters: () -> P) -> I in
+            self.locker.lock()
+            defer { self.locker.unlock() }
+            
             if let instance = self.instance?.value as? I {
                 return instance
             }
