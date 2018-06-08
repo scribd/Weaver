@@ -194,7 +194,6 @@
 		OBJ_506 /* Spies.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* Spies.swift */; };
 		OBJ_508 /* WeaverDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "WeaverDI::WeaverDI::Product" /* WeaverDI.framework */; };
 		OBJ_514 /* BuilderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* BuilderStore.swift */; };
-		OBJ_515 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* Dependencies.swift */; };
 		OBJ_516 /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* DependencyContainer.swift */; };
 		OBJ_517 /* DependencyResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* DependencyResolver.swift */; };
 		OBJ_518 /* DependencyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* DependencyStore.swift */; };
@@ -462,7 +461,6 @@
 		1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderTests.swift; sourceTree = "<group>"; };
 		19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		OBJ_10 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
 		OBJ_100 /* Reporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
 		OBJ_101 /* Reporters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reporters.swift; sourceTree = "<group>"; };
 		OBJ_102 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/theophanerupin/Projects/Scribd/Weaver/.build/checkouts/Spectre.git--7655155069707042687/Package.swift"; sourceTree = "<group>"; };
@@ -1070,7 +1068,6 @@
 				1917D60C20CA5E4100FDA7F5 /* Builder.swift */,
 				OBJ_15 /* BuilderKey.swift */,
 				OBJ_9 /* BuilderStore.swift */,
-				OBJ_10 /* Dependencies.swift */,
 				OBJ_11 /* DependencyContainer.swift */,
 				OBJ_12 /* DependencyResolver.swift */,
 				OBJ_13 /* DependencyStore.swift */,
@@ -1834,7 +1831,6 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_514 /* BuilderStore.swift in Sources */,
-				OBJ_515 /* Dependencies.swift in Sources */,
 				OBJ_516 /* DependencyContainer.swift in Sources */,
 				OBJ_517 /* DependencyResolver.swift in Sources */,
 				OBJ_518 /* DependencyStore.swift in Sources */,

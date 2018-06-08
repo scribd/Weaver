@@ -19,7 +19,7 @@ final class DependencyContainerTests: XCTestCase {
         super.setUp()
 
         builderStoreSpy = BuilderStoreSpy()
-        dependencyContainer = DependencyContainer(builderStore: builderStoreSpy)
+        dependencyContainer = DependencyContainer(builders: builderStoreSpy)
     }
     
     override func tearDown() {
@@ -35,7 +35,7 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { dependencies in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .graph, name: "test") { dependencies in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies)
         }
@@ -54,7 +54,7 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1)
         }
@@ -75,7 +75,7 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2)
         }
@@ -97,7 +97,7 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3)
         }
@@ -120,7 +120,7 @@ final class DependencyContainerTests: XCTestCase {
         
         var builderCallCount = 0
         
-        dependencyContainer.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .graph, name: "test") { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3, parameter4: parameter4)
         }
@@ -146,7 +146,7 @@ final class DependencyContainerTests: XCTestCase {
         
         dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .weak) { dependencies in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .weak) { dependencies in
             return DependencyStub(dependencies: dependencies)
         }
         _ = dependencyContainer.resolve(DependencyStub.self)
@@ -159,7 +159,7 @@ final class DependencyContainerTests: XCTestCase {
         
         dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameter: 42)
@@ -172,7 +172,7 @@ final class DependencyContainerTests: XCTestCase {
         
         dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43")
@@ -185,7 +185,7 @@ final class DependencyContainerTests: XCTestCase {
         
         dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43", 44.0)
@@ -198,7 +198,7 @@ final class DependencyContainerTests: XCTestCase {
         
         dependencyContainer = DependencyContainer()
         weak var weakDependencyContainer: DependencyContainer? = dependencyContainer
-        dependencyContainer.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
+        dependencyContainer.dependencies.register(DependencyStub.self, scope: .weak) { (dependencies: DependencyResolver, parameter1: Int, parameter2: String, parameter3: Double, parameter4: Float) in
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3, parameter4: parameter4)
         }
         _ = dependencyContainer.resolve(DependencyStub.self, parameters: 42, "43", 44.0, 45 as Float)

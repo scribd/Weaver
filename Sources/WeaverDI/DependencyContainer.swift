@@ -9,25 +9,28 @@ import Foundation
 
 open class DependencyContainer {
     
-    private var builders: BuilderStoring
+    private let builders: BuilderStoring
     
     private let parent: DependencyContainer?
     
+    lazy var dependencies = InternalDependencyStore(builders)
+    
     init(parent: DependencyContainer? = nil,
-         builderStore: BuilderStoring = BuilderStore()) {
+         builders: BuilderStoring = BuilderStore()) {
         self.parent = parent
-        builders = builderStore
-        builders.parent = parent?.builders
         
-        registerDependencies(in: self)
+        builders.parent = parent?.builders
+        self.builders = builders
+        
+        registerDependencies(in: dependencies)
     }
     
     public init(_ parent: DependencyContainer? = nil) {
         self.parent = parent
         builders = BuilderStore()
         builders.parent = parent?.builders
-        
-        registerDependencies(in: self)
+
+        registerDependencies(in: dependencies)
     }
     
     open func registerDependencies(in store: DependencyStore) {
@@ -92,45 +95,54 @@ extension DependencyContainer: DependencyResolver {
 
 // MARK: - DependencyStore
 
-extension DependencyContainer: DependencyStore {
-    
-    public func register<S>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer) -> S) {
-        let key = BuilderKey(for: serviceType, name: name)
+extension DependencyContainer {
+
+    final class InternalDependencyStore: DependencyStore {
         
-        builders.set(scope: scope, key: key) { (parameter: () -> (DependencyContainer)) -> S in
-            return builder(parameter())
+        private let builders: BuilderStoring
+        
+        init(_ builders: BuilderStoring) {
+            self.builders = builders
         }
-    }
-    
-    public func register<S, P1>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1) -> S) {
-        let key = BuilderKey(for: serviceType, name: name, parameterType: P1.self)
 
-        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1)) -> S in
-            return builder(parameters().0, parameters().1)
+        public func register<S>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer) -> S) {
+            let key = BuilderKey(for: serviceType, name: name)
+            
+            builders.set(scope: scope, key: key) { (parameter: () -> (DependencyContainer)) -> S in
+                return builder(parameter())
+            }
         }
-    }
-    
-    public func register<S, P1, P2>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2) -> S) {
-        let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self)
-
-        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2)) -> S in
-            return builder(parameters().0, parameters().1, parameters().2)
+        
+        public func register<S, P1>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1) -> S) {
+            let key = BuilderKey(for: serviceType, name: name, parameterType: P1.self)
+            
+            builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1)) -> S in
+                return builder(parameters().0, parameters().1)
+            }
         }
-    }
-    
-    public func register<S, P1, P2, P3>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2, P3) -> S) {
-        let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self)
-
-        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2, P3)) -> S in
-            return builder(parameters().0, parameters().1, parameters().2, parameters().3)
+        
+        public func register<S, P1, P2>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2) -> S) {
+            let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self)
+            
+            builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2)) -> S in
+                return builder(parameters().0, parameters().1, parameters().2)
+            }
         }
-    }
-    
-    public func register<S, P1, P2, P3, P4>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2, P3, P4) -> S) {
-        let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self, P4.self)
-
-        builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2, P3, P4)) -> S in
-            return builder(parameters().0, parameters().1, parameters().2, parameters().3, parameters().4)
+        
+        public func register<S, P1, P2, P3>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2, P3) -> S) {
+            let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self)
+            
+            builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2, P3)) -> S in
+                return builder(parameters().0, parameters().1, parameters().2, parameters().3)
+            }
+        }
+        
+        public func register<S, P1, P2, P3, P4>(_ serviceType: S.Type, scope: Scope, name: String? = nil, builder: @escaping (DependencyContainer, P1, P2, P3, P4) -> S) {
+            let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self, P4.self)
+            
+            builders.set(scope: scope, key: key) { (parameters: () -> (DependencyContainer, P1, P2, P3, P4)) -> S in
+                return builder(parameters().0, parameters().1, parameters().2, parameters().3, parameters().4)
+            }
         }
     }
 }
