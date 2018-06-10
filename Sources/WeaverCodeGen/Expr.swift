@@ -7,44 +7,16 @@
 
 import Foundation
 
+// MARK: Expressions
+
 public indirect enum Expr: AutoEquatable {
     case file(types: [Expr], name: String)
-    case typeDeclaration(TokenBox<InjectableType>, config: [TokenBox<ConfigurationAnnotation>], children: [Expr])
+    case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
     case referenceAnnotation(TokenBox<ReferenceAnnotation>)
-    case customRefAnnotation(TokenBox<CustomRefAnnotation>)
     case parameterAnnotation(TokenBox<ParameterAnnotation>)
-}
-
-// MARK: - Description
-
-extension Expr: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .file(let types, let name):
-            return """
-            File[\(name)]
-            \(types.map { " \($0)" }.joined(separator: "\n"))
-            """
-        case .registerAnnotation(let token):
-            return "Register - \(token)"
-        case .scopeAnnotation(let token):
-            return "Scope - \(token)"
-        case .typeDeclaration(let type, let config, let children):
-            return """
-            \(type)
-            \(config.map { "   \($0)" }.joined(separator: "\n"))
-            \(children.map { "   \($0)" }.joined(separator: "\n"))
-            """
-        case .referenceAnnotation(let token):
-            return "Reference - \(token)"
-        case .customRefAnnotation(let token):
-            return "CustomRef - \(token)"
-        case .parameterAnnotation(let token):
-            return "Parameter - \(token)"
-        }
-    }
+    case configurationAnnotation(TokenBox<ConfigurationAnnotation>)
 }
 
 // MARK: - Sequence
@@ -61,28 +33,96 @@ struct ExprSequence: Sequence, IteratorProtocol {
         guard let exprs = stack.popLast() else {
             return nil
         }
-
+        
         guard let expr = exprs.first else {
             return next()
         }
-
+        
         var mutableExprs = exprs
         mutableExprs.removeFirst()
         stack.append(mutableExprs)
         
         switch expr {
         case .file(let exprs, _),
-             .typeDeclaration(_, _, let exprs):
+             .typeDeclaration(_, let exprs):
             stack.append(exprs)
-        
+            
         case .referenceAnnotation,
              .registerAnnotation,
              .scopeAnnotation,
-             .customRefAnnotation,
-             .parameterAnnotation:
+             .parameterAnnotation,
+             .configurationAnnotation:
             break
         }
         
         return expr
+    }
+}
+
+// MARK: - Description
+
+extension Expr: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .file(let types, let name):
+            return """
+            File[\(name)]
+            \(types.map { " \($0)" }.joined(separator: "\n"))
+            """
+        case .registerAnnotation(let token):
+            return "Register - \(token)"
+        case .scopeAnnotation(let token):
+            return "Scope - \(token)"
+        case .typeDeclaration(let type, let children):
+            return """
+            \(type)
+            \(children.map { "   \($0)" }.joined(separator: "\n"))
+            """
+        case .referenceAnnotation(let token):
+            return "Reference - \(token)"
+        case .parameterAnnotation(let token):
+            return "Parameter - \(token)"
+        case .configurationAnnotation(let token):
+            return "Configuration - \(token)"
+        }
+    }
+}
+
+// MARK: - Convenience
+
+extension Expr {
+    
+    func toFile() -> (types: [Expr], name: String)? {
+        switch self {
+        case .file(let types, let name):
+            return (types, name)
+        default:
+            return nil
+        }
+    }
+    
+    func toTypeDeclaration() -> (token: TokenBox<InjectableType>, children: [Expr])? {
+        switch self {
+        case .typeDeclaration(let token, let children):
+            return (token, children)
+        default:
+            return nil
+        }
+    }
+    
+    func toReferenceAnnotation() -> TokenBox<ReferenceAnnotation>? {
+        switch self {
+        case .referenceAnnotation(let token):
+            return token
+        default:
+            return nil
+        }
+    }
+}
+
+extension ExprSequence {
+
+    var referenceAnnotations: [TokenBox<ReferenceAnnotation>] {
+        return compactMap {$0.toReferenceAnnotation() }
     }
 }

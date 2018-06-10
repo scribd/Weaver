@@ -57,6 +57,18 @@ fileprivate func hashDictionary<T: Hashable, U: Hashable>(_ dictionary: [T: U]?)
 
 
 // MARK: - AutoHashable for classes, protocols, structs
+// MARK: - ConfigurationAnnotation AutoHashable
+extension ConfigurationAnnotation: Hashable {
+    public var hashValue: Int {
+        let attributeHashValue = attribute.hashValue
+        let targetHashValue = target.hashValue
+
+        return combineHashes([
+            attributeHashValue,
+            targetHashValue,
+            0])
+    }
+}
 
 // MARK: - AutoHashable for Enums
 
@@ -66,6 +78,20 @@ extension ConfigurationAttribute: Hashable {
         switch self {
         case .isIsolated(let data):
             return combineHashes([1, data.hashValue])
+        case .customRef(let data):
+            return combineHashes([2, data.hashValue])
+        }
+    }
+}
+
+// MARK: - ConfigurationAttributeTarget AutoHashable
+extension ConfigurationAttributeTarget: Hashable {
+    internal var hashValue: Int {
+        switch self {
+        case .`self`:
+            return combineHashes([1, ])
+        case .dependency(let data):
+            return combineHashes([2, data.hashValue])
         }
     }
 }

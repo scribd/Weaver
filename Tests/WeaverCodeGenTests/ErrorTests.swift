@@ -41,18 +41,10 @@ final class ErrorTests: XCTestCase {
         XCTAssertEqual(errorDescription, expectedDescription)
     }
     
-    func test_tokenError_invalidCustomRefValue_description() {
-        
-        errorDescription = TokenError.invalidCustomRefValue("fake_annotation").description
-        expectedDescription = "Invalid customRef value: fake_annotation. Expected true|false"
-        
-        XCTAssertEqual(errorDescription, expectedDescription)
-    }
-    
     func test_tokenError_invalidConfigurationAttributeValue_description() {
         
         errorDescription = TokenError.invalidConfigurationAttributeValue(value: "fake_value", expected: "fake_expected_value").description
-        expectedDescription = "Invalid configuration attribute value: fake_value. Expected fake_expected_value"
+        expectedDescription = "Invalid configuration attribute value: 'fake_value'. Expected 'fake_expected_value'"
         
         XCTAssertEqual(errorDescription, expectedDescription)
     }

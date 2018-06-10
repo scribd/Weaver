@@ -27,13 +27,13 @@ import WeaverDI
         {% for registration in resolver.registrations %}
 
         store.register({{registration.abstractTypeName}}.self, scope: .{{registration.scope}}, name: "{{registration.name}}", builder: { (dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) in
-            {% if not registration.isCustom %}
+            {% if not registration.customRef %}
 
             return {{registration.typeName}}{% if registration.hasBuilder %}.make{{registration.typeName}}(injecting: dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}(){% endif %}
-            {% else %}{# not registration.isCustom #}
+            {% else %}{# not registration.customRef #}
 
             return self.{{registration.name}}CustomRef(dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %})
-            {% endif %}{# not registration.isCustom #}
+            {% endif %}{# not registration.customRef #}
         })
 
         {% endfor %}{# resolver.registrations #}
@@ -60,9 +60,9 @@ import WeaverDI
 
     {% for registration in resolver.registrations %}
 
-    {% if registration.isCustom %}
+    {% if registration.customRef %}
     func {{registration.name}}CustomRef(_ dependencies: DependencyContainer{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) -> {{registration.abstractTypeName}}
-    {% endif %}{# registration.isCustom #}
+    {% endif %}{# registration.customRef #}
 
     {% endfor %}{# resolver.registrations  #}
 }

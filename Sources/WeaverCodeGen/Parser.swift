@@ -83,7 +83,7 @@ private extension Parser {
         let type = try parseSimpleExpr(InjectableType.self)
         
         var children = [Expr]()
-        var config = [String: TokenBox<ConfigurationAnnotation>]()
+        var configurationAnnotations = [ConfigurationAttributeTarget: TokenBox<ConfigurationAnnotation>]()
         var registrationNames = Set<String>()
         var referenceNames = Set<String>()
         var parameterNames = Set<String>()
@@ -113,14 +113,6 @@ private extension Parser {
                 referenceNames.insert(name)
                 children.append(.referenceAnnotation(annotation))
                 
-            case is TokenBox<CustomRefAnnotation>:
-                let annotation = try parseSimpleExpr(CustomRefAnnotation.self)
-                guard registrationNames.contains(annotation.value.name) || referenceNames.contains(annotation.value.name) else {
-                    let dependency = printableDependency(line: annotation.line, name: annotation.value.name)
-                    throw ParserError.unknownDependency(dependency)
-                }
-                children.append(.customRefAnnotation(annotation))
-
             case is TokenBox<ParameterAnnotation>:
                 let annotation = try parseSimpleExpr(ParameterAnnotation.self)
                 let name = annotation.value.name
@@ -131,17 +123,20 @@ private extension Parser {
             case is TokenBox<ScopeAnnotation>:
                 let annotation = try parseSimpleExpr(ScopeAnnotation.self)
                 guard registrationNames.contains(annotation.value.name) else {
-                    let dependency = printableDependency(line: annotation.line, name: annotation.value.name)
+                    let dependency = printableDependency(line: annotation.line,
+                                                         name: annotation.value.name)
                     throw ParserError.unknownDependency(dependency)
                 }
                 children.append(.scopeAnnotation(annotation))
             
             case is TokenBox<ConfigurationAnnotation>:
                 let annotation = try parseSimpleExpr(ConfigurationAnnotation.self)
-                guard config[annotation.value.attribute.name] == nil else {
-                    throw ParserError.configurationAttributeDoubleAssignation(fileLocation(line: annotation.line), attribute: annotation.value.attribute)
+                guard configurationAnnotations[annotation.value.target] == nil else {
+                    throw ParserError.configurationAttributeDoubleAssignation(fileLocation(line: annotation.line),
+                                                                              attribute: annotation.value.attribute)
                 }
-                config[annotation.value.attribute.name] = annotation
+                configurationAnnotations[annotation.value.target] = annotation
+                children.append(.configurationAnnotation(annotation))
 
             case is TokenBox<InjectableType>:
                 if let typeDeclaration = try parseInjectedTypeDeclaration() {
@@ -153,7 +148,7 @@ private extension Parser {
                 if children.isEmpty {
                     return nil
                 } else {
-                    return .typeDeclaration(type, config: Array(config.values), children: children)
+                    return .typeDeclaration(type, children: children)
                 }
 
             case nil:
@@ -161,6 +156,17 @@ private extension Parser {
             
             case .some(let token):
                 throw ParserError.unexpectedToken(fileLocation(line: token.line))
+            }
+            
+            for configurationAnnotation in configurationAnnotations.values {
+                switch configurationAnnotation.value.target {
+                case .dependency(let name) where !referenceNames.contains(name) && !registrationNames.contains(name):
+                    throw ParserError.unknownDependency(printableDependency(line: configurationAnnotation.line, name: name))
+                    
+                case .dependency,
+                     .`self`:
+                    break
+                }
             }
         }
     }
@@ -190,3 +196,5 @@ private extension Parser {
         }
     }
 }
+
+
