@@ -35,7 +35,7 @@ extension ConfigurationAttribute: CustomStringConvertible {
         case .isIsolated(let value):
             return "Config Attr - self.isIsolated = \(value)"
         case .customRef(let value):
-            return "Config Attr - dependency.customRef - \(value)"
+            return "Config Attr - dependency.customRef = \(value)"
         }
     }
     

@@ -290,6 +290,25 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
+    func test_tokenizer_should_throw_an_error_with_a_custom_ref_annotation_with_the_wrong_target() {
+        
+        let file = File(contents: """
+
+// weaver: self.customRef = true
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            _ = try lexer.tokenize()
+            XCTAssertTrue(false, "Haven't thrown any error.")
+        } catch let error as LexerError {
+            let underlyingError = TokenError.invalidConfigurationAttributeTarget(name: "customRef", target: .`self`)
+            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
+        } catch {
+            XCTAssertTrue(false, "Unexpected error: \(error).")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_a_true_isIsolated_configuration_annotation() {
         
         let file = File(contents: """
@@ -373,6 +392,26 @@ func ignoredFunc() {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_tokenizer_should_throw_an_error_with_an_unknown_configuration_attribute() {
+        
+        let file = File(contents: """
+
+// weaver: self.fakeAttribute = true
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            _ = try lexer.tokenize()
+            XCTAssertTrue(false, "Haven't thrown any error.")
+        } catch let error as LexerError {
+            let underlyingError = TokenError.unknownConfigurationAttribute(name: "fakeAttribute")
+            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
+        } catch {
+            XCTAssertTrue(false, "Unexpected error: \(error).")
+        }
+    }
+    
     
     func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_annotation() {
         

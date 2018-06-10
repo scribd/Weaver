@@ -22,10 +22,11 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		190C26E920C9930E009128AA /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190C26E820C9930E009128AA /* Configuration.swift */; };
 		1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60C20CA5E4100FDA7F5 /* Builder.swift */; };
 		1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */; };
+		194F90CB20CDC50400F594F5 /* ConfigurationAttributeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */; };
 		1979255620CD6E100025A06D /* Instance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1979255520CD6E100025A06D /* Instance.swift */; };
-		190C26E920C9930E009128AA /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190C26E820C9930E009128AA /* Configuration.swift */; };
 		19F3CD6820C43F32007C3076 /* shim-swift-4.1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */; };
 		OBJ_199 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_205 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_57 /* Package.swift */; };
@@ -459,10 +460,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		190C26E820C9930E009128AA /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		1917D60C20CA5E4100FDA7F5 /* Builder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
 		1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderTests.swift; sourceTree = "<group>"; };
+		194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationAttributeTests.swift; sourceTree = "<group>"; };
 		1979255520CD6E100025A06D /* Instance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instance.swift; sourceTree = "<group>"; };
-		190C26E820C9930E009128AA /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_100 /* Reporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
@@ -984,6 +986,7 @@
 				OBJ_47 /* LexerTests.swift */,
 				OBJ_48 /* ParserTests.swift */,
 				OBJ_49 /* SourceKitDeclarationTests.swift */,
+				194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */,
 			);
 			name = WeaverCodeGenTests;
 			path = Tests/WeaverCodeGenTests;
@@ -1651,6 +1654,7 @@
 			buildActionMask = 0;
 			files = (
 				OBJ_300 /* ErrorTests.swift in Sources */,
+				194F90CB20CDC50400F594F5 /* ConfigurationAttributeTests.swift in Sources */,
 				OBJ_301 /* GeneratorTests.swift in Sources */,
 				OBJ_302 /* InspectorTests.swift in Sources */,
 				OBJ_303 /* LexerTests.swift in Sources */,
