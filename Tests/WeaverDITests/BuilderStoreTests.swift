@@ -60,7 +60,7 @@ final class BuilderStoreTests: XCTestCase {
         
         let builder: Builder<String, Void>? = childBuilderStore.get(for: builderKey)
         
-        XCTAssertEqual(builder?.getLazyBuilder()({()}), "child_builder")
+        XCTAssertEqual(builder?.make()({()}), "child_builder")
     }
     
     func test_set_then_get_should_retrieve_the_builder_registered_in_the_parent_when_its_child_has_not_it_set() {
@@ -70,7 +70,7 @@ final class BuilderStoreTests: XCTestCase {
 
         let builder: Builder<String, Void>? = childBuilderStore.get(for: builderKey)
 
-        XCTAssertEqual(builder?.getLazyBuilder()({()}), "parent_builder")
+        XCTAssertEqual(builder?.make()({()}), "parent_builder")
     }
 
     func test_set_then_get_should_retrieve_the_builder_registered_in_the_root_when_no_child_has_it_set_and_the_builder_is_not_shared_with_children() {
@@ -89,6 +89,6 @@ final class BuilderStoreTests: XCTestCase {
 
         let builder: Builder<String, Void>? = childBuilderStore.get(for: builderKey)
 
-        XCTAssertEqual(builder?.getLazyBuilder()({()}), "root_builder")
+        XCTAssertEqual(builder?.make()({()}), "root_builder")
     }
 }

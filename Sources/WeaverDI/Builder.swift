@@ -20,56 +20,75 @@ final class Builder<I, P>: AnyBuilder {
     
     typealias Body = (() -> P) -> I
     
-    private let body: Body
-    
     let scope: Scope
 
-    private var lazyInstance: LazyInstance
+    private var instance: Instance
 
     init(scope: Scope, body: @escaping Body) {
 
         self.scope = scope
-        self.body = body
         
-        if scope.isWeak {
-            lazyInstance = .weak(WeakLazyInstance(body: body))
-        } else {
-            lazyInstance = .strong(StrongLazyInstance(body: body))
-        }
+        instance = Instance(scope: scope, body: body)
     }
     
-    func getLazyBuilder() -> Body {
-        
-        guard !scope.isTransient else {
-            return body
-        }
-        
+    func make() -> Body {
         return { (parameters: () -> P) -> I in
-            return self.lazyInstance.getInstance(parameters: parameters)
+            return self.instance.getInstance(parameters: parameters)
         }
     }
 }
 
-// MARK: - LazyInstance
+// MARK: - Instance
 
 private extension Builder {
 
-    private enum LazyInstance {
-        case strong(StrongLazyInstance)
-        case weak(WeakLazyInstance)
+    private enum Instance {
+        case strongLazy(StrongLazyInstance)
+        case weakLazy(WeakLazyInstance)
+        case transient(TransientInstance)
+        
+        init(scope: Scope, body: @escaping Body) {
+            if scope.isTransient {
+                self = .transient(TransientInstance(body: body))
+            } else if scope.isWeak {
+                self = .weakLazy(WeakLazyInstance(body: body))
+            } else {
+                self = .strongLazy(StrongLazyInstance(body: body))
+            }
+        }
         
         func getInstance(parameters: () -> P) -> I {
             switch self {
-            case .strong(let lazyInstance):
-                return lazyInstance.getInstance(parameters: parameters)
-            case .weak(let lazyInstance):
-                return lazyInstance.getInstance(parameters: parameters)
+            case .transient(let instance):
+                return instance.getInstance(parameters: parameters)
+            case .strongLazy(let instance):
+                return instance.getInstance(parameters: parameters)
+            case .weakLazy(let instance):
+                return instance.getInstance(parameters: parameters)
             }
         }
     }
 }
 
-// MARK: - LazyInstance
+// MARK: - TransientInstance
+
+private extension Builder {
+
+    final class TransientInstance {
+     
+        private let body: Body
+
+        init(body: @escaping Body) {
+            self.body = body
+        }
+
+        func getInstance(parameters: () -> P) -> I {
+            return body(parameters)
+        }
+    }
+}
+
+// MARK: - StrongLazyInstance
 
 private extension Builder {
 

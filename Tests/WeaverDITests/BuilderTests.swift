@@ -16,8 +16,8 @@ final class BuilderTests: XCTestCase {
         
         let builder = Builder(scope: .weak, body: { (_: () -> Void) -> NSObject in return NSObject() })
         
-        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
-        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -28,8 +28,8 @@ final class BuilderTests: XCTestCase {
         
         let builder = Builder(scope: .container, body: { (_: () -> Void) -> NSObject in return NSObject() })
         
-        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
-        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -40,8 +40,8 @@ final class BuilderTests: XCTestCase {
         
         let builder = Builder(scope: .graph, body: { (_: () -> Void) -> NSObject in return NSObject() })
         
-        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
-        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -52,8 +52,8 @@ final class BuilderTests: XCTestCase {
         
         let builder = Builder(scope: .transient, body: { (_: () -> Void) -> NSObject in return NSObject() })
         
-        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
-        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertNotEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -76,7 +76,7 @@ final class BuilderTests: XCTestCase {
             return (1...100).map { threadIndex -> XCTestExpectation in
                 let expectation = self.expectation(description: "concurrent_resolution_\(stepIndex)_\(threadIndex)")
                 dispatchQueue.async {
-                    let instance = builder.getLazyBuilder()({()})
+                    let instance = builder.make()({()})
                     
                     lock.lock()
                     instances.insert(instance)

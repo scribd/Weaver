@@ -49,7 +49,7 @@ extension DependencyContainer: DependencyResolver {
             fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder.getLazyBuilder()({ self })
+        return builder.make()({ self })
     }
     
     public func resolve<S, P1>(_ serviceType: S.Type, name: String? = nil, parameter: P1) -> S {
@@ -59,7 +59,7 @@ extension DependencyContainer: DependencyResolver {
             fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder.getLazyBuilder()({ (self, parameter) })
+        return builder.make()({ (self, parameter) })
     }
     
     public func resolve<S, P1, P2>(_ serviceType: S.Type, name: String? = nil, parameters p1: P1, _ p2: P2) -> S {
@@ -69,7 +69,7 @@ extension DependencyContainer: DependencyResolver {
             fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder.getLazyBuilder()({ (self, p1, p2) })
+        return builder.make()({ (self, p1, p2) })
     }
     
     public func resolve<S, P1, P2, P3>(_ serviceType: S.Type, name: String? = nil, parameters p1: P1, _ p2: P2, _ p3: P3) -> S {
@@ -79,7 +79,7 @@ extension DependencyContainer: DependencyResolver {
             fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder.getLazyBuilder()({ (self, p1, p2, p3) })
+        return builder.make()({ (self, p1, p2, p3) })
     }
     
     public func resolve<S, P1, P2, P3, P4>(_ serviceType: S.Type, name: String? = nil, parameters p1: P1, _ p2: P2, _ p3: P3, _ p4: P4) -> S {
@@ -89,7 +89,7 @@ extension DependencyContainer: DependencyResolver {
             fatalError("\(DependencyContainer.self): Could not resolve \(key).")
         }
         
-        return builder.getLazyBuilder()({ (self, p1, p2, p3, p4) })
+        return builder.make()({ (self, p1, p2, p3, p4) })
     }
 }
 
