@@ -47,7 +47,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
-        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
+        XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
     
     func test_register_then_resolve_with_one_parameter_should_build_the_dependency() {
@@ -66,7 +66,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
-        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
+        XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     
         XCTAssertEqual(dependency.parameter1, 42)
     }
@@ -90,7 +90,7 @@ final class DependencyContainerTests: XCTestCase {
 
         XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
-        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
+        XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
     
     func test_register_then_resolve_with_three_paramters_should_build_the_dependency() {
@@ -113,7 +113,7 @@ final class DependencyContainerTests: XCTestCase {
         
         XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
-        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
+        XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
     
     func test_register_then_resolve_with_four_paramters_should_build_the_dependency() {
@@ -137,7 +137,7 @@ final class DependencyContainerTests: XCTestCase {
         
         XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
-        XCTAssertEqual(builderStoreSpy.scopeRecords.last, .graph)
+        XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
 
     // MARK: - Retain cycle

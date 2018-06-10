@@ -15,10 +15,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_a_weak_instance_when_scope_is_weak() {
         
         let builder = Builder(scope: .weak, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
+        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -28,10 +27,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_a_strong_instance_when_scope_is_container() {
         
         let builder = Builder(scope: .container, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
+        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -41,10 +39,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_a_strong_instance_when_scope_is_graph() {
         
         let builder = Builder(scope: .graph, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
+        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -54,10 +51,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_new_instances_when_scope_is_transient() {
         
         let builder = Builder(scope: .transient, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.getLazyBuilder()({()})
+        weak var weakInstance: NSObject? = builder.getLazyBuilder()({()})
         
         XCTAssertNotEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -80,8 +76,7 @@ final class BuilderTests: XCTestCase {
             return (1...100).map { threadIndex -> XCTestExpectation in
                 let expectation = self.expectation(description: "concurrent_resolution_\(stepIndex)_\(threadIndex)")
                 dispatchQueue.async {
-                    let functor: (() -> Void) -> NSObject = builder.functor()
-                    let instance = functor({()})
+                    let instance = builder.getLazyBuilder()({()})
                     
                     lock.lock()
                     instances.insert(instance)

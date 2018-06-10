@@ -16,27 +16,24 @@ final class BuilderStoreSpy: BuilderStoring {
     private(set) var setRecordsCallCount = 0
     
     private(set) var keyRecords = [BuilderKey]()
-    
-    private(set) var scopeRecords = [Scope]()
-    
+        
     private(set) var isCalledFromAChildRecords = [Bool]()
 
-    private(set) var builderRecords = [Any]()
+    private(set) var builderRecords = [AnyBuilder]()
     
-    var builderStubs = [BuilderKey: Builder]()
+    var builderStubs = [BuilderKey: AnyBuilder]()
     
     weak var parent: BuilderStoring?
 
-    func get(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder? {
+    func get<I, P>(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder<I, P>? {
         keyRecords.append(key)
         isCalledFromAChildRecords.append(isCalledFromAChild)
-        return builderStubs[key]
+        return builderStubs[key] as? Builder<I, P>
     }
     
-    func set<P, I>(scope: Scope, key: BuilderKey, builder: @escaping (() -> P) -> I) {
-        builderRecords.append(builder as Any)
-        scopeRecords.append(scope)
+    func set<I, P>(_ builder: Builder<I, P>, for key: BuilderKey) {
+        builderRecords.append(builder)
         keyRecords.append(key)
-        builderStubs[key] = Builder(scope: scope, body: builder)
+        builderStubs[key] = builder
     }
 }
