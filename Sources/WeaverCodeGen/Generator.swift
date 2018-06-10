@@ -137,7 +137,7 @@ private final class ResolverModel {
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
-    let config: ResolverConfiguration
+    let isIsolated: Bool
     
     init(targetTypeName: String,
          registrations: [RegisterModel],
@@ -164,7 +164,7 @@ private final class ResolverModel {
             isPublic = false
         }
         
-        self.config = config
+        self.isIsolated = config.isIsolated
     }
 }
 
