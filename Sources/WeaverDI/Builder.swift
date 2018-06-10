@@ -17,22 +17,31 @@ protocol AnyBuilder {
 // MARK: - Builder
 
 final class Builder<I, P>: AnyBuilder {
+    
     typealias Body = (() -> P) -> I
+    
+    private let body: Body
+    
+    let scope: Scope
 
     private var lazyInstance: LazyInstance
 
     init(scope: Scope, body: @escaping Body) {
-        lazyInstance = LazyInstance(scope: scope, body: body)
-    }
-    
-    var scope: Scope {
-        return lazyInstance.scope
+
+        self.scope = scope
+        self.body = body
+        
+        if scope.isWeak {
+            lazyInstance = .weak(WeakLazyInstance(body: body))
+        } else {
+            lazyInstance = .strong(StrongLazyInstance(body: body))
+        }
     }
     
     func getLazyBuilder() -> Body {
         
-        guard !lazyInstance.scope.isTransient else {
-            return lazyInstance.body
+        guard !scope.isTransient else {
+            return body
         }
         
         return { (parameters: () -> P) -> I in
@@ -45,23 +54,40 @@ final class Builder<I, P>: AnyBuilder {
 
 private extension Builder {
 
-    final class LazyInstance {
+    private enum LazyInstance {
+        case strong(StrongLazyInstance)
+        case weak(WeakLazyInstance)
         
-        let body: Body
-        let scope: Scope
+        func getInstance(parameters: () -> P) -> I {
+            switch self {
+            case .strong(let lazyInstance):
+                return lazyInstance.getInstance(parameters: parameters)
+            case .weak(let lazyInstance):
+                return lazyInstance.getInstance(parameters: parameters)
+            }
+        }
+    }
+}
+
+// MARK: - LazyInstance
+
+private extension Builder {
+
+    final class StrongLazyInstance {
         
-        private var instance: Instance?
+        private let body: Body
+        
+        private var instance: I?
         private let instanceLocker = DispatchSemaphore(value: 1)
         
         private var isLoaded = false
-        private let isLoadedDispatchQueue = DispatchQueue(label: "\(Builder.self)", attributes: .concurrent)
+        private let isLoadedDispatchQueue = DispatchQueue(label: "\(Builder.self).isLoadedDispatchQueue", attributes: .concurrent)
         
-        init(scope: Scope, body: @escaping Body) {
-            self.scope = scope
+        init(body: @escaping Body) {
             self.body = body
         }
         
-        private var syncIsSet: Bool {
+        private var syncIsLoaded: Bool {
             set {
                 isLoadedDispatchQueue.async(flags: .barrier) {
                     self.isLoaded = newValue
@@ -78,8 +104,8 @@ private extension Builder {
         
         func getInstance(parameters: () -> P) -> I {
             
-            if syncIsSet {
-                guard let instance = self.instance?.value else {
+            if syncIsLoaded {
+                guard let instance = self.instance else {
                     fatalError("Instance is nil, you just found a race condition.")
                 }
                 return instance
@@ -87,8 +113,8 @@ private extension Builder {
             
             instanceLocker.wait()
             
-            if syncIsSet {
-                guard let instance = self.instance?.value else {
+            if syncIsLoaded {
+                guard let instance = self.instance else {
                     fatalError("Instance is nil, you just found a race condition.")
                 }
                 instanceLocker.signal()
@@ -96,37 +122,43 @@ private extension Builder {
             }
             
             let instance = body(parameters)
-            self.instance = Instance(value: instance, scope: self.scope)
+            self.instance = instance
             
-            syncIsSet = true
+            syncIsLoaded = true
             instanceLocker.signal()
             
             return instance
         }
     }
+}
 
-    // MARK: - Instance
+// MARK: - WeakLazyInstance
 
-    private final class Instance {
+private extension Builder {
+    
+    final class WeakLazyInstance {
         
-        private weak var weakValue: AnyObject?
-
-        private var strongValue: I?
+        private let body: Body
         
-        init(value: I, scope: Scope) {
-            
-            if scope.isWeak {
-                weakValue = value as AnyObject
-            } else {
-                strongValue = value
-            }
+        private weak var instance: AnyObject?
+        private let instanceLocker = DispatchSemaphore(value: 1)
+        
+        init(body: @escaping Body) {
+            self.body = body
         }
         
-        var value: I? {
-            if let value = weakValue as? I {
-                return value
+        func getInstance(parameters: () -> P) -> I {
+            self.instanceLocker.wait()
+            defer { self.instanceLocker.signal() }
+            
+            if let instance = self.instance as? I {
+                return instance
             }
-            return strongValue
+            
+            let instance = body(parameters)
+            self.instance = instance as AnyObject
+            
+            return instance
         }
     }
 }
