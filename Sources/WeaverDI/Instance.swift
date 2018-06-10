@@ -12,24 +12,16 @@ extension Builder {
     /// Instantiation strategies enumeration.
     enum Instance {
         case transient(TransientInstance)
-        case weakLazy(AnyWeakLazyInstance)
-        case strongLazy(AnyStrongLazyInstance)
+        case weakLazy(WeakLazyInstance)
+        case strongLazy(StrongLazyInstance)
         
         init(scope: Scope, body: @escaping Body) {
             if scope.isTransient {
-                self = .transient(TransientInstance(body: body))
+                self = .transient(.make(body))
             } else if scope.isWeak {
-                if #available(OSX 10.12, *), #available(iOS 10.0, *) {
-                    self = .weakLazy(WeakLazyInstance_OSX_10_12_iOS_10_0(body: body))
-                } else {
-                    self = .weakLazy(WeakLazyInstance(body: body))
-                }
+                self = .weakLazy(.make(body))
             } else {
-                if #available(OSX 10.12, *), #available(iOS 10.0, *) {
-                    self = .strongLazy(StrongLazyInstance_OSX_10_12_iOS_10_0(body: body))
-                } else {
-                    self = .strongLazy(StrongLazyInstance(body: body))
-                }
+                self = .strongLazy(.make(body))
             }
         }
         
@@ -37,32 +29,10 @@ extension Builder {
             switch self {
             case .transient(let instance):
                 return instance.getInstance(parameters: parameters)
-                
-            case .weakLazy(let _instance):
-                if #available(OSX 10.12, *), #available(iOS 10.0, *) {
-                    guard let instance = _instance as? WeakLazyInstance_OSX_10_12_iOS_10_0 else {
-                        fatalError("Instance (\(_instance) is not of type \(WeakLazyInstance_OSX_10_12_iOS_10_0.self).")
-                    }
-                    return instance.getInstance(parameters: parameters)
-                } else {
-                    guard let instance = _instance as? WeakLazyInstance else {
-                        fatalError("Instance (\(_instance) is not of type \(WeakLazyInstance.self).")
-                    }
-                    return instance.getInstance(parameters: parameters)
-                }
-                
-            case .strongLazy(let _instance):
-                if #available(OSX 10.12, *), #available(iOS 10.0, *) {
-                    guard let instance = _instance as? StrongLazyInstance_OSX_10_12_iOS_10_0 else {
-                        fatalError("Instance (\(_instance) is not of type \(StrongLazyInstance_OSX_10_12_iOS_10_0.self).")
-                    }
-                    return instance.getInstance(parameters: parameters)
-                } else {
-                    guard let instance = _instance as? StrongLazyInstance else {
-                        fatalError("Instance (\(_instance) is not of type \(StrongLazyInstance.self).")
-                    }
-                    return instance.getInstance(parameters: parameters)
-                }
+            case .weakLazy(let instance):
+                return instance.getInstance(parameters: parameters)
+            case .strongLazy(let instance):
+                return instance.getInstance(parameters: parameters)
             }
         }
     }
@@ -77,10 +47,14 @@ extension Builder {
         
         private let body: Body
         
-        init(body: @escaping Body) {
+        init(_ body: @escaping Body) {
             self.body = body
         }
         
+        static func make(_ body: @escaping Body) -> TransientInstance {
+            return TransientInstance(body)
+        }
+
         func getInstance(parameters: () -> P) -> I {
             return body(parameters)
         }
@@ -89,57 +63,31 @@ extension Builder {
 
 // MARK: - StrongLazyInstance
 
-protocol AnyStrongLazyInstance {}
-
 extension Builder {
-    
-    /// A `StrongLazyInstance_OSX_10_12_iOS_10_0` is a thread-safe instance type which lazily builds
-    /// and stores a strong reference on the service.
-    /// This version is optimized for any os greater than OSX 10.12 or iOS 10.0
-    @available(OSX 10.12, *)
-    @available(iOS 10.0, *)
-    final class StrongLazyInstance_OSX_10_12_iOS_10_0: AnyStrongLazyInstance {
-        
-        private let body: Body
-        private var lock = os_unfair_lock()
-        
-        private var instance: I?
-        
-        init(body: @escaping Body) {
-            self.body = body
-        }
-        
-        func getInstance(parameters: () -> P) -> I {
-            
-            os_unfair_lock_lock(&lock)
-            defer { os_unfair_lock_unlock(&lock) }
-            
-            if let instance = self.instance {
-                return instance
-            }
-            
-            let instance = body(parameters)
-            self.instance = instance
-            
-            return instance
-        }
-    }
     
     /// A `StrongLazyInstance` is a thread-safe instance type which lazily builds
     /// and stores a strong reference on the service.
     /// This version is optimized for any os lower than OSX 10.12 or iOS 10.0
-    final class StrongLazyInstance: AnyStrongLazyInstance {
+    class StrongLazyInstance {
         
-        private let body: Body
+        fileprivate let body: Body
         
-        private var instance: I?
+        fileprivate var instance: I?
+        fileprivate var isLoaded = false
+
         private let instanceLocker = DispatchSemaphore(value: 1)
-        
-        private var isLoaded = false
         private let isLoadedDispatchQueue = DispatchQueue(label: "\(Builder.self).isLoadedDispatchQueue", attributes: .concurrent)
         
-        init(body: @escaping Body) {
+        init(_ body: @escaping Body) {
             self.body = body
+        }
+        
+        static func make(_ body: @escaping Body) -> StrongLazyInstance {
+            if #available(OSX 10.12, *), #available(iOS 10.0, *) {
+                return StrongLazyInstance_OSX_10_12_iOS_10_0(body)
+            } else {
+                return StrongLazyInstance(body)
+            }
         }
         
         private var syncIsLoaded: Bool {
@@ -185,34 +133,63 @@ extension Builder {
             return instance
         }
     }
+    
+    /// A `StrongLazyInstance_OSX_10_12_iOS_10_0` is a thread-safe instance type which lazily builds
+    /// and stores a strong reference on the service.
+    /// This version is optimized for any os greater than OSX 10.12 or iOS 10.0
+    @available(OSX 10.12, *)
+    @available(iOS 10.0, *)
+    final class StrongLazyInstance_OSX_10_12_iOS_10_0: StrongLazyInstance {
+        
+        private var lock = os_unfair_lock()
+        
+        override func getInstance(parameters: () -> P) -> I {
+            
+            os_unfair_lock_lock(&lock)
+            defer { os_unfair_lock_unlock(&lock) }
+            
+            if let instance = self.instance {
+                return instance
+            }
+            
+            let instance = body(parameters)
+            self.instance = instance
+            
+            return instance
+        }
+    }
 }
 
 // MARK: - WeakLazyInstance
 
-protocol AnyWeakLazyInstance {}
-
 extension Builder {
     
-    /// A `WeakLazyInstance_OSX_10_12_iOS_10_0` is a thread-safe instance type which lazily builds
+    /// A `WeakLazyInstance` is a thread-safe instance type which lazily builds
     /// and stores a weak reference on the service.
-    /// This version is optimized for any os greater than OSX 10.12 or iOS 10.0
-    @available(OSX 10.12, *)
-    @available(iOS 10.0, *)
-    final class WeakLazyInstance_OSX_10_12_iOS_10_0: AnyWeakLazyInstance {
+    /// This version is optimized for any os lower than OSX 10.12 or iOS 10.0
+    class WeakLazyInstance {
         
-        private let body: Body
-        private var lock = os_unfair_lock()
+        fileprivate let body: Body
         
-        private weak var instance: AnyObject?
+        fileprivate weak var instance: AnyObject?
         
-        init(body: @escaping Body) {
+        private let instanceLocker = DispatchSemaphore(value: 1)
+        
+        init(_ body: @escaping Body) {
             self.body = body
         }
         
+        static func make(_ body: @escaping Body) -> WeakLazyInstance {
+            if #available(OSX 10.12, *), #available(iOS 10.0, *) {
+                return WeakLazyInstance_OSX_10_12_iOS_10_0(body)
+            } else {
+                return WeakLazyInstance(body)
+            }
+        }
+        
         func getInstance(parameters: () -> P) -> I {
-            
-            os_unfair_lock_lock(&lock)
-            defer { os_unfair_lock_unlock(&lock) }
+            self.instanceLocker.wait()
+            defer { self.instanceLocker.signal() }
             
             if let instance = self.instance as? I {
                 return instance
@@ -224,24 +201,19 @@ extension Builder {
             return instance
         }
     }
-    
-    /// A `WeakLazyInstance` is a thread-safe instance type which lazily builds
+    /// A `WeakLazyInstance_OSX_10_12_iOS_10_0` is a thread-safe instance type which lazily builds
     /// and stores a weak reference on the service.
-    /// This version is optimized for any os lower than OSX 10.12 or iOS 10.0
-    final class WeakLazyInstance: AnyWeakLazyInstance {
+    /// This version is optimized for any os greater than OSX 10.12 or iOS 10.0
+    @available(OSX 10.12, *)
+    @available(iOS 10.0, *)
+    final class WeakLazyInstance_OSX_10_12_iOS_10_0: WeakLazyInstance {
         
-        private let body: Body
+        private var lock = os_unfair_lock()
         
-        private weak var instance: AnyObject?
-        private let instanceLocker = DispatchSemaphore(value: 1)
-        
-        init(body: @escaping Body) {
-            self.body = body
-        }
-        
-        func getInstance(parameters: () -> P) -> I {
-            self.instanceLocker.wait()
-            defer { self.instanceLocker.signal() }
+        override func getInstance(parameters: () -> P) -> I {
+            
+            os_unfair_lock_lock(&lock)
+            defer { os_unfair_lock_unlock(&lock) }
             
             if let instance = self.instance as? I {
                 return instance
