@@ -24,6 +24,7 @@
 /* Begin PBXBuildFile section */
 		1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60C20CA5E4100FDA7F5 /* Builder.swift */; };
 		1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */; };
+		1979255620CD6E100025A06D /* Instance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1979255520CD6E100025A06D /* Instance.swift */; };
 		19F3CD6820C43F32007C3076 /* shim-swift-4.1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */; };
 		OBJ_199 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_205 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_57 /* Package.swift */; };
@@ -459,6 +460,7 @@
 /* Begin PBXFileReference section */
 		1917D60C20CA5E4100FDA7F5 /* Builder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
 		1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderTests.swift; sourceTree = "<group>"; };
+		1979255520CD6E100025A06D /* Instance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instance.swift; sourceTree = "<group>"; };
 		19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_100 /* Reporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
@@ -1071,6 +1073,7 @@
 				OBJ_11 /* DependencyContainer.swift */,
 				OBJ_12 /* DependencyResolver.swift */,
 				OBJ_13 /* DependencyStore.swift */,
+				1979255520CD6E100025A06D /* Instance.swift */,
 				OBJ_16 /* Scope.swift */,
 			);
 			name = WeaverDI;
@@ -1836,6 +1839,7 @@
 				OBJ_518 /* DependencyStore.swift in Sources */,
 				OBJ_520 /* BuilderKey.swift in Sources */,
 				OBJ_521 /* Scope.swift in Sources */,
+				1979255620CD6E100025A06D /* Instance.swift in Sources */,
 				1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

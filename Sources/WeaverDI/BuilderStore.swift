@@ -11,9 +11,9 @@ import Foundation
 
 protocol BuilderStoring: AnyObject {
     
-    func get(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder?
+    func get<I, P>(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder<I, P>?
 
-    func set<P, I>(scope: Scope, key: BuilderKey, builder: @escaping (() -> P) -> I)
+    func set<I, P>(_ buidler: Builder<I, P>, for key: BuilderKey)
 
     var parent: BuilderStoring? { get set }
 }
@@ -22,8 +22,12 @@ protocol BuilderStoring: AnyObject {
 
 extension BuilderStoring {
 
-    func get(for key: BuilderKey) -> Builder? {
+    func get<I, P>(for key: BuilderKey) -> Builder<I, P>? {
         return get(for: key, isCalledFromAChild: false)
+    }
+    
+    func set<I, P>(scope: Scope, for key: BuilderKey, body: @escaping Builder<I, P>.Body) {
+        set(Builder(scope: scope, body: body), for: key)
     }
 }
 
@@ -31,14 +35,18 @@ extension BuilderStoring {
 
 final class BuilderStore: BuilderStoring {
     
-    private var builders: [BuilderKey: Builder] = [:]
+    private var builders: [BuilderKey: AnyBuilder] = [:]
     
     weak var parent: BuilderStoring? = nil
     
-    func get(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder? {
+    func get<I, P>(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder<I, P>? {
         
-        guard let builder = builders[key] else {
+        guard let foundBuilder = builders[key] else {
             return parent?.get(for: key, isCalledFromAChild: true)
+        }
+    
+        guard let builder = foundBuilder as? Builder<I, P> else {
+            fatalError("Found a builder (\(foundBuilder.self)) with an incorrect type \(Builder<I, P>.self).")
         }
         
         if (isCalledFromAChild && builder.scope.allowsAccessFromChildren) || !isCalledFromAChild {
@@ -48,7 +56,7 @@ final class BuilderStore: BuilderStoring {
         return parent?.get(for: key, isCalledFromAChild: true)
     }
     
-    func set<P, I>(scope: Scope, key: BuilderKey, builder: @escaping (() -> P) -> I) {
-        builders[key] = Builder(scope: scope, body: builder)
+    func set<I, P>(_ builder: Builder<I, P>, for key: BuilderKey) {
+        builders[key] = builder
     }
 }

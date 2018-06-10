@@ -15,10 +15,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_a_weak_instance_when_scope_is_weak() {
         
         let builder = Builder(scope: .weak, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -28,10 +27,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_a_strong_instance_when_scope_is_container() {
         
         let builder = Builder(scope: .container, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -41,10 +39,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_a_strong_instance_when_scope_is_graph() {
         
         let builder = Builder(scope: .graph, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -54,10 +51,9 @@ final class BuilderTests: XCTestCase {
     func test_builder_should_create_new_instances_when_scope_is_transient() {
         
         let builder = Builder(scope: .transient, body: { (_: () -> Void) -> NSObject in return NSObject() })
-        let functor: (() -> Void) -> NSObject = builder.functor()
         
-        var strongInstance: NSObject? = functor({()})
-        weak var weakInstance: NSObject? = functor({()})
+        var strongInstance: NSObject? = builder.make()({()})
+        weak var weakInstance: NSObject? = builder.make()({()})
         
         XCTAssertNotEqual(strongInstance, weakInstance)
         strongInstance = nil
@@ -70,22 +66,21 @@ final class BuilderTests: XCTestCase {
     func xtest_builder_should_ensure_thread_safety_when_building_concurrently() {
 
         var instances = Set<NSObject>()
-        let lock = NSLock()
+        let lock = DispatchSemaphore(value: 1)
         
         let dispatchQueue = DispatchQueue(label: "\(DependencyContainerTests.self)", attributes: [.concurrent])
 
-        let expectations = (0...9999).flatMap { stepIndex -> [XCTestExpectation] in
+        let expectations = (1...10000).flatMap { stepIndex -> [XCTestExpectation] in
             let builder = Builder(scope: .container, body: { (_: () -> Void) -> NSObject in return NSObject() })
             
-            return (1...15).map { threadIndex -> XCTestExpectation in
+            return (1...100).map { threadIndex -> XCTestExpectation in
                 let expectation = self.expectation(description: "concurrent_resolution_\(stepIndex)_\(threadIndex)")
                 dispatchQueue.async {
-                    let functor: (() -> Void) -> NSObject = builder.functor()
-                    let instance = functor({()})
+                    let instance = builder.make()({()})
                     
-                    lock.lock()
+                    lock.wait()
                     instances.insert(instance)
-                    lock.unlock()
+                    lock.signal()
                     expectation.fulfill()
                 }
                 return expectation

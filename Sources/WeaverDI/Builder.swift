@@ -7,62 +7,40 @@
 
 import Foundation
 
-// MARK: - Builder
-
-final class Builder {
+/// A representation of any builder.
+protocol AnyBuilder {
     
-    let scope: Scope
-    private let body: Any
-    
-    private var instance: Instance?
-    private let locker = NSLock()
-    
-    init(scope: Scope, body: Any) {
-        self.scope = scope
-        self.body = body
-    }
-    
-    func functor<P, I>() -> (() -> P) -> I {
-        
-        guard let body = body as? (() -> P) -> I else {
-            fatalError("Type \(((() -> P) -> I).self) doesn't correspond to body type: \(self.body.self)")
-        }
-        
-        guard !scope.isTransient else {
-            return body
-        }
-        
-        return { (parameters: () -> P) -> I in
-            self.locker.lock()
-            defer { self.locker.unlock() }
-            
-            if let instance = self.instance?.value as? I {
-                return instance
-            }
-            
-            let instance = body(parameters)
-            self.instance = Instance(value: instance as AnyObject, scope: self.scope)
-            return instance
-        }
-    }
+    var scope: Scope { get }
 }
 
-// MARK: - Instance
+// MARK: - Builder
 
-private final class Instance {
-    private weak var weakValue: AnyObject?
-    private var strongValue: AnyObject?
+/// A `Builder` is an object responsible for lazily building the instance of a service.
+/// It is fully thread-safe.
+/// - Parameters
+///     - I: Instance type.
+///     - P: Parameters type. Usually a tuple containing multiple parameters (eg. `(p1: Int, p2: String, ...)`)
+final class Builder<I, P>: AnyBuilder {
     
-    init(value: AnyObject, scope: Scope) {
-        
-        if scope.isWeak {
-            weakValue = value
-        } else {
-            strongValue = value
-        }
+    typealias Body = (() -> P) -> I
+    
+    let scope: Scope
+
+    private var instance: Instance
+
+    /// Inits a builder.
+    /// - Parameters
+    ///     - scope: Service's scope used to determine which building & storing strategy to use.
+    ///     - body: Block responsible of calling the service's initializer (eg. `init(p1: Int, p2: String, ...)`).
+    init(scope: Scope, body: @escaping Body) {
+        self.scope = scope
+        instance = Instance(scope: scope, body: body)
     }
     
-    var value: AnyObject? {
-        return weakValue ?? strongValue ?? nil
+    /// Makes the builder's body, which can then get called to build the service's instance, and store it.
+    func make() -> Body {
+        return { (parameters: () -> P) -> I in
+            return self.instance.getInstance(parameters: parameters)
+        }
     }
 }

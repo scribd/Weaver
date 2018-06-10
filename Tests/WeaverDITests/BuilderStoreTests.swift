@@ -54,44 +54,41 @@ final class BuilderStoreTests: XCTestCase {
     
     func test_set_then_get_should_retrieve_the_builder_registered_in_the_child_first() {
         
-        rootBuilderStore.set(scope: .container, key: builderKey) { self.rootBuilder($0()) }
-        parentBuilderStore.set(scope: .container, key: builderKey) { self.parentBuilder($0()) }
-        childBuilderStore.set(scope: .container, key: builderKey) { self.childBuilder($0()) }
+        rootBuilderStore.set(scope: .container, for: builderKey) { self.rootBuilder($0()) }
+        parentBuilderStore.set(scope: .container, for: builderKey) { self.parentBuilder($0()) }
+        childBuilderStore.set(scope: .container, for: builderKey) { self.childBuilder($0()) }
         
-        let builder: Builder? = childBuilderStore.get(for: builderKey)
-        let functor: ((() -> Void) -> String)? = builder?.functor()
+        let builder: Builder<String, Void>? = childBuilderStore.get(for: builderKey)
         
-        XCTAssertEqual(functor?({()}), "child_builder")
+        XCTAssertEqual(builder?.make()({()}), "child_builder")
     }
     
     func test_set_then_get_should_retrieve_the_builder_registered_in_the_parent_when_its_child_has_not_it_set() {
 
-        rootBuilderStore.set(scope: .container, key: builderKey) { self.rootBuilder($0()) }
-        parentBuilderStore.set(scope: .container, key: builderKey) { self.parentBuilder($0()) }
+        rootBuilderStore.set(scope: .container, for: builderKey) { self.rootBuilder($0()) }
+        parentBuilderStore.set(scope: .container, for: builderKey) { self.parentBuilder($0()) }
 
-        let builder: Builder? = childBuilderStore.get(for: builderKey)
-        let functor: ((() -> Void) -> String)? = builder?.functor()
+        let builder: Builder<String, Void>? = childBuilderStore.get(for: builderKey)
 
-        XCTAssertEqual(functor?({()}), "parent_builder")
+        XCTAssertEqual(builder?.make()({()}), "parent_builder")
     }
 
     func test_set_then_get_should_retrieve_the_builder_registered_in_the_root_when_no_child_has_it_set_and_the_builder_is_not_shared_with_children() {
 
-        rootBuilderStore.set(scope: .graph, key: builderKey) { self.rootBuilder($0()) }
+        rootBuilderStore.set(scope: .graph, for: builderKey) { self.rootBuilder($0()) }
 
-        let builder: Builder? = childBuilderStore.get(for: builderKey)
+        let builder: Builder<String, Void>? = childBuilderStore.get(for: builderKey)
 
         XCTAssertNil(builder)
     }
 
     func test_set_then_get_should_retrieve_the_builder_registered_in_the_root_when_the_child_has_not_it_set_and_the_parent_has_it_set_but_not_shared_with_children() {
 
-        rootBuilderStore.set(scope: .container, key: builderKey) { self.rootBuilder($0()) }
-        parentBuilderStore.set(scope: .graph, key: builderKey) { self.parentBuilder($0()) }
+        rootBuilderStore.set(scope: .container, for: builderKey) { self.rootBuilder($0()) }
+        parentBuilderStore.set(scope: .graph, for: builderKey) { self.parentBuilder($0()) }
 
-        let builder: Builder? = childBuilderStore.get(for: builderKey)
-        let functor: ((() -> Void) -> String)? = builder?.functor()
+        let builder: Builder<String, Void>? = childBuilderStore.get(for: builderKey)
 
-        XCTAssertEqual(functor?({()}), "root_builder")
+        XCTAssertEqual(builder?.make()({()}), "root_builder")
     }
 }
