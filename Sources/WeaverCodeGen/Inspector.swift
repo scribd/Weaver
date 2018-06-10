@@ -53,15 +53,17 @@ private final class Graph {
 
 private final class Resolver {
     let typeName: String?
-    var config: Set<ConfigurationAttribute> = Set()
+    var config: ResolverConfiguration
     var dependencies: [DependencyIndex: Dependency] = [:]
     var dependents: [Resolver] = []
 
     var fileLocation: FileLocation
 
-    init(typeName: String? = nil,
+    init(config: ResolverConfiguration = .empty,
+         typeName: String? = nil,
          file: String? = nil,
          line: Int? = nil) {
+        self.config = config
         self.typeName = typeName
         
         fileLocation = FileLocation(line: line, file: file)
@@ -76,27 +78,27 @@ private struct DependencyIndex {
 private final class Dependency {
     let name: String
     let scope: Scope?
-    let isCustom: Bool
     let associatedResolver: Resolver
     let dependentResovler: Resolver
+    var config: DependencyConfiguration
 
     let fileLocation: FileLocation
 
     init(name: String,
          scope: Scope? = nil,
-         isCustom: Bool,
+         config: DependencyConfiguration = .empty,
          line: Int,
          file: String,
          associatedResolver: Resolver,
          dependentResovler: Resolver) {
         self.name = name
         self.scope = scope
-        self.isCustom = isCustom
+        self.config = config
         self.associatedResolver = associatedResolver
         self.dependentResovler = dependentResovler
 
         fileLocation = FileLocation(line: line, file: file)
-}
+    }
 }
 
 private struct ResolutionCacheIndex {
@@ -113,7 +115,9 @@ private struct BuildCacheIndex {
 
 extension Graph {
     
-    func insertResolver(with registerAnnotation: TokenBox<RegisterAnnotation>, fileName: String?) {
+    func insertResolver(with registerAnnotation: TokenBox<RegisterAnnotation>,
+                        fileName: String?) {
+        
         let resolver = Resolver(typeName: registerAnnotation.value.typeName,
                                 file: fileName,
                                 line: registerAnnotation.line)
@@ -168,42 +172,24 @@ private extension Inspector {
             case .typeDeclaration,
                  .scopeAnnotation,
                  .referenceAnnotation,
-                 .customRefAnnotation,
-                 .parameterAnnotation:
+                 .parameterAnnotation,
+                 .configurationAnnotation:
                 break
             }
         }
 
         // Insert the resolvers for which we don't know the type.
-        for expr in ExprSequence(exprs: syntaxTrees) {
-            switch expr {
-            case .referenceAnnotation(let token):
-                graph.insertResolver(with: token.value)
-                
-            case .file,
-                 .registerAnnotation,
-                 .typeDeclaration,
-                 .scopeAnnotation,
-                 .customRefAnnotation,
-                 .parameterAnnotation:
-                break
-            }
+        for token in ExprSequence(exprs: syntaxTrees).referenceAnnotations {
+            graph.insertResolver(with: token.value)
         }
     }
     
     private func linkResolvers(from syntaxTrees: [Expr]) throws {
         
         for ast in syntaxTrees {
-            switch ast {
-            case .file(let types, let name):
-                try linkResolvers(from: types, fileName: name)
-                
-            case .typeDeclaration,
-                 .scopeAnnotation,
-                 .registerAnnotation,
-                 .referenceAnnotation,
-                 .customRefAnnotation,
-                 .parameterAnnotation:
+            if let file = ast.toFile() {
+                try linkResolvers(from: file.types, fileName: file.name)
+            } else {
                 throw InspectorError.invalidAST(.unknown, unexpectedExpr: ast)
             }
         }
@@ -212,25 +198,17 @@ private extension Inspector {
     private func linkResolvers(from exprs: [Expr], fileName: String) throws {
         
         for expr in exprs {
-            switch expr {
-            case .typeDeclaration(let injectableType, let config, let children):
-                let resolver = graph.resolver(typed: injectableType.value.name,
-                                              line: injectableType.line,
-                                              fileName: fileName)
-
-                try resolver.update(with: children,
-                                    config: config,
-                                    fileName: fileName,
-                                    graph: graph)
-                
-            case .file,
-                 .scopeAnnotation,
-                 .registerAnnotation,
-                 .referenceAnnotation,
-                 .customRefAnnotation,
-                 .parameterAnnotation:
+            guard let (token, children) = expr.toTypeDeclaration() else {
                 throw InspectorError.invalidAST(.file(fileName), unexpectedExpr: expr)
             }
+
+            let resolver = graph.resolver(typed: token.value.name,
+                                          line: token.line,
+                                          fileName: fileName)
+            
+            try resolver.update(with: children,
+                                fileName: fileName,
+                                graph: graph)
         }
     }
 }
@@ -240,7 +218,7 @@ private extension Dependency {
     convenience init(dependentResolver: Resolver,
                      registerAnnotation: TokenBox<RegisterAnnotation>,
                      scopeAnnotation: ScopeAnnotation? = nil,
-                     customRefAnnotation: CustomRefAnnotation?,
+                     config: [TokenBox<ConfigurationAnnotation>],
                      fileName: String,
                      graph: Graph) throws {
 
@@ -249,9 +227,11 @@ private extension Dependency {
                                               underlyingError: .unresolvableDependency(history: []))
         }
         
+        let config = DependencyConfiguration(with: config.map { $0.value.attribute })
+        
         self.init(name: registerAnnotation.value.name,
                   scope: scopeAnnotation?.scope ?? .`default`,
-                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue,
+                  config: config,
                   line: registerAnnotation.line,
                   file: fileName,
                   associatedResolver: associatedResolver,
@@ -260,7 +240,7 @@ private extension Dependency {
     
     convenience init(dependentResolver: Resolver,
                      referenceAnnotation: TokenBox<ReferenceAnnotation>,
-                     customRefAnnotation: CustomRefAnnotation?,
+                     config: [TokenBox<ConfigurationAnnotation>],
                      fileName: String,
                      graph: Graph) throws {
 
@@ -268,9 +248,11 @@ private extension Dependency {
             throw InspectorError.invalidGraph(referenceAnnotation.printableDependency(file: fileName),
                                               underlyingError: .unresolvableDependency(history: []))
         }
-        
+
+        let config = DependencyConfiguration(with: config.map { $0.value.attribute })
+
         self.init(name: referenceAnnotation.value.name,
-                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue,
+                  config: config,
                   line: referenceAnnotation.line,
                   file: fileName,
                   associatedResolver: associatedResolver,
@@ -281,26 +263,22 @@ private extension Dependency {
 private extension Resolver {
     
     func update(with children: [Expr],
-                config: [TokenBox<ConfigurationAnnotation>],
                 fileName: String,
                 graph: Graph) throws {
 
-        self.config = Set(config.map { $0.value.attribute })
-        
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
         var scopeAnnotations: [String: ScopeAnnotation] = [:]
-        var customRefAnnotations: [String: CustomRefAnnotation] = [:]
+        var configurationAnnotations: [ConfigurationAttributeTarget: [TokenBox<ConfigurationAnnotation>]] = [:]
         
         for child in children {
             switch child {
-            case .typeDeclaration(let injectableType, let config, let children):
+            case .typeDeclaration(let injectableType, let children):
                 let resolver = graph.resolver(typed: injectableType.value.name,
                                               line: injectableType.line,
                                               fileName: fileName)
 
                 try resolver.update(with: children,
-                                    config: config,
                                     fileName: fileName,
                                     graph: graph)
                 
@@ -313,8 +291,9 @@ private extension Resolver {
             case .scopeAnnotation(let scopeAnnotation):
                 scopeAnnotations[scopeAnnotation.value.name] = scopeAnnotation.value
                 
-            case .customRefAnnotation(let customRefAnnotation):
-                customRefAnnotations[customRefAnnotation.value.name] = customRefAnnotation.value
+            case .configurationAnnotation(let configurationAnnotation):
+                let target = configurationAnnotation.value.target
+                configurationAnnotations[target] = (configurationAnnotations[target] ?? []) + [configurationAnnotation]
                 
             case .file,
                  .parameterAnnotation:
@@ -322,11 +301,14 @@ private extension Resolver {
             }
         }
         
+        self.config = ResolverConfiguration(with: configurationAnnotations[.`self`]?.map { $0.value })
+        
         for registerAnnotation in registerAnnotations {
+            let name = registerAnnotation.value.name
             let dependency = try Dependency(dependentResolver: self,
                                             registerAnnotation: registerAnnotation,
-                                            scopeAnnotation: scopeAnnotations[registerAnnotation.value.name],
-                                            customRefAnnotation: customRefAnnotations[registerAnnotation.value.name],
+                                            scopeAnnotation: scopeAnnotations[name],
+                                            config: configurationAnnotations[.dependency(name: name)] ?? [],
                                             fileName: fileName,
                                             graph: graph)
             let index = DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
@@ -335,12 +317,13 @@ private extension Resolver {
         }
         
         for referenceAnnotation in referenceAnnotations {
+            let name = referenceAnnotation.value.name
             let dependency = try Dependency(dependentResolver: self,
                                             referenceAnnotation: referenceAnnotation,
-                                            customRefAnnotation: customRefAnnotations[referenceAnnotation.value.name],
+                                            config: configurationAnnotations[.dependency(name: name)] ?? [],
                                             fileName: fileName,
                                             graph: graph)
-            let index = DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
+            let index = DependencyIndex(typeName: dependency.associatedResolver.typeName, name: name)
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
         }
@@ -352,7 +335,7 @@ private extension Resolver {
 private extension Dependency {
     
     func resolve(with cache: inout Set<ResolutionCacheIndex>) throws {
-        guard isReference && !isCustom else {
+        guard isReference && !config.customRef else {
             return
         }
 
@@ -397,7 +380,7 @@ private extension Resolver {
         history.append(.triedToResolveDependencyInType(printableDependency(name: index.name), stepCount: history.resolutionSteps.count))
         
         if let dependency = dependencies[index] {
-            if let scope = dependency.scope, (dependency.isCustom && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
+            if let scope = dependency.scope, (dependency.config.customRef && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
                 return
             }
             history.append(.foundUnaccessibleDependency(dependency.printableDependency))
@@ -456,7 +439,7 @@ private extension Dependency {
         }
         buildCache.insert(buildCacheIndex)
         
-        guard !isReference && !isCustom else {
+        guard !isReference && !config.customRef else {
             return
         }
         

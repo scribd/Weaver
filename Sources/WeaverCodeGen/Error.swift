@@ -11,8 +11,9 @@ import WeaverDI
 enum TokenError: Error, AutoEquatable {
     case invalidAnnotation(String)
     case invalidScope(String)
-    case invalidCustomRefValue(String)
     case invalidConfigurationAttributeValue(value: String, expected: String)
+    case invalidConfigurationAttributeTarget(name: String, target: ConfigurationAttributeTarget)
+    case unknownConfigurationAttribute(name: String)
 }
 
 enum LexerError: Error, AutoEquatable {
@@ -94,10 +95,12 @@ extension TokenError: CustomStringConvertible {
             return "Invalid annotation: '\(annotation)'"
         case .invalidScope(let scope):
             return "Invalid scope: '\(scope)'"
-        case .invalidCustomRefValue(let value):
-            return "Invalid customRef value: \(value). Expected true|false"
         case .invalidConfigurationAttributeValue(let value, let expected):
-            return "Invalid configuration attribute value: \(value). Expected \(expected)"
+            return "Invalid configuration attribute value: '\(value)'. Expected '\(expected)'"
+        case .invalidConfigurationAttributeTarget(let name, let target):
+            return "Can't assign configuration attribute '\(name)' on '\(target)'"
+        case .unknownConfigurationAttribute(let name):
+            return "Unknown configuration attribute: '\(name)'"
         }
     }
 }

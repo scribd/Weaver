@@ -34,13 +34,7 @@ public func == (lhs: AnyDeclaration, rhs: AnyDeclaration) -> Bool {
 extension ConfigurationAnnotation: Equatable {}
 public func == (lhs: ConfigurationAnnotation, rhs: ConfigurationAnnotation) -> Bool {
     guard lhs.attribute == rhs.attribute else { return false }
-    return true
-}
-// MARK: - CustomRefAnnotation AutoEquatable
-extension CustomRefAnnotation: Equatable {}
-public func == (lhs: CustomRefAnnotation, rhs: CustomRefAnnotation) -> Bool {
-    guard lhs.name == rhs.name else { return false }
-    guard lhs.value == rhs.value else { return false }
+    guard lhs.target == rhs.target else { return false }
     return true
 }
 // MARK: - EndOfAnyDeclaration AutoEquatable
@@ -126,6 +120,20 @@ internal func == (lhs: ConfigurationAttribute, rhs: ConfigurationAttribute) -> B
     switch (lhs, rhs) {
     case (.isIsolated(let lhs), .isIsolated(let rhs)):
         return lhs == rhs
+    case (.customRef(let lhs), .customRef(let rhs)):
+        return lhs == rhs
+    default: return false
+    }
+}
+// MARK: - ConfigurationAttributeTarget AutoEquatable
+extension ConfigurationAttributeTarget: Equatable {}
+internal func == (lhs: ConfigurationAttributeTarget, rhs: ConfigurationAttributeTarget) -> Bool {
+    switch (lhs, rhs) {
+    case (.`self`, .`self`):
+        return true
+    case (.dependency(let lhs), .dependency(let rhs)):
+        return lhs == rhs
+    default: return false
     }
 }
 // MARK: - Expr AutoEquatable
@@ -138,7 +146,6 @@ public func == (lhs: Expr, rhs: Expr) -> Bool {
         return true
     case (.typeDeclaration(let lhs), .typeDeclaration(let rhs)):
         if lhs.0 != rhs.0 { return false }
-        if lhs.config != rhs.config { return false }
         if lhs.children != rhs.children { return false }
         return true
     case (.registerAnnotation(let lhs), .registerAnnotation(let rhs)):
@@ -147,9 +154,9 @@ public func == (lhs: Expr, rhs: Expr) -> Bool {
         return lhs == rhs
     case (.referenceAnnotation(let lhs), .referenceAnnotation(let rhs)):
         return lhs == rhs
-    case (.customRefAnnotation(let lhs), .customRefAnnotation(let rhs)):
-        return lhs == rhs
     case (.parameterAnnotation(let lhs), .parameterAnnotation(let rhs)):
+        return lhs == rhs
+    case (.configurationAnnotation(let lhs), .configurationAnnotation(let rhs)):
         return lhs == rhs
     default: return false
     }
@@ -248,12 +255,16 @@ internal func == (lhs: TokenError, rhs: TokenError) -> Bool {
         return lhs == rhs
     case (.invalidScope(let lhs), .invalidScope(let rhs)):
         return lhs == rhs
-    case (.invalidCustomRefValue(let lhs), .invalidCustomRefValue(let rhs)):
-        return lhs == rhs
     case (.invalidConfigurationAttributeValue(let lhs), .invalidConfigurationAttributeValue(let rhs)):
         if lhs.value != rhs.value { return false }
         if lhs.expected != rhs.expected { return false }
         return true
+    case (.invalidConfigurationAttributeTarget(let lhs), .invalidConfigurationAttributeTarget(let rhs)):
+        if lhs.name != rhs.name { return false }
+        if lhs.target != rhs.target { return false }
+        return true
+    case (.unknownConfigurationAttribute(let lhs), .unknownConfigurationAttribute(let rhs)):
+        return lhs == rhs
     default: return false
     }
 }

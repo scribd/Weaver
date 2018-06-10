@@ -29,9 +29,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 109, line: 0),
-                                                              config: [],
                                                               children: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyEmbeddedService", accessLevel: .default), offset: 32, length: 81, line: 1),
-                                                                                          config: [],
                                                                                           children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session", protocolName: "SessionProtocol"), offset: 62, length: 48, line: 2))])])],
                                      name: "test.swift")
 
@@ -56,7 +54,6 @@ final class MyService {
             let syntaxTree = try parser.parse()
 
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 89, line: 0),
-                                                              config: [],
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 36, line: 1)),
                                                                          .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 64, length: 30, line: 2))])],
                                      name: "test.swift")
@@ -81,7 +78,6 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 58, line: 0),
-                                                              config: [],
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol?"), offset: 26, length: 37, line: 1))])],
                                      name: "test.swift")
             
@@ -105,7 +101,6 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 57, line: 0),
-                                                              config: [],
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 36, line: 1))])],
                                      name: "test.swift")
             
@@ -129,7 +124,6 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 42, line: 0),
-                                                              config: [],
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: nil), offset: 26, length: 21, line: 1))])],
                                      name: "test.swift")
             
@@ -153,7 +147,6 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 51, line: 0),
-                                                              config: [],
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift")
             
@@ -223,9 +216,8 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 85, line: 0),
-                                                              config: [],
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1)),
-                                                                         .customRefAnnotation(TokenBox(value: CustomRefAnnotation(name: "api", value: true), offset: 58, length: 32, line: 2))])],
+                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")), offset: 58, length: 32, line: 2))])],
                                      name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
@@ -249,9 +241,8 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 91, line: 0),
-                                                              config: [],
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 36, line: 1)),
-                                                                         .customRefAnnotation(TokenBox(value: CustomRefAnnotation(name: "api", value: true), offset: 64, length: 32, line: 2))])],
+                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")), offset: 64, length: 32, line: 2))])],
                                      name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)
@@ -323,7 +314,6 @@ class Test {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 51, line: 0),
-                                                              config: [],
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift")
             
@@ -431,7 +421,6 @@ final class MovieManager {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MovieManager"), offset: 6, length: 52, line: 0),
-                                                              config: [],
                                                               children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(name: "movieID", typeName: "UInt?"), offset: 29, length: 28, line: 1))])],
                                      name: "test.swift")
             
@@ -531,8 +520,8 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 87, line: 0),
-                                                              config: [TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true)), offset: 58, length: 34, line: 2)],
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1))])],
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1)),
+                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`), offset: 58, length: 34, line: 2))])],
                                      name: "test.swift")
             
             XCTAssertEqual(syntaxTree, expected)

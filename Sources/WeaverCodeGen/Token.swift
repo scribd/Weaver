@@ -102,30 +102,6 @@ public struct ReferenceAnnotation: Token {
     }
 }
 
-public struct CustomRefAnnotation: Token, AutoEquatable {
-
-    let name: String
-    let value: Bool
-    
-    static let defaultValue = false
-    
-    public static func create(_ string: String) throws -> CustomRefAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.customRef\\s*=\\s*(\\w+)\\s*$").matches(in: string) else {
-            return nil
-        }
-        
-        guard let value = Bool(matches[1]) else {
-            throw TokenError.invalidCustomRefValue(matches[1])
-        }
-        
-        return CustomRefAnnotation(name: matches[0], value: value)
-    }
-    
-    public var description: String {
-        return "\(name).customRef = \(value ? "true" : "false")"
-    }
-}
-
 public struct ParameterAnnotation: Token {
     
     let name: String
@@ -143,30 +119,29 @@ public struct ParameterAnnotation: Token {
     }
 }
 
-public struct ConfigurationAnnotation: Token {
+public struct ConfigurationAnnotation: Token, AutoHashable {
     
     let attribute: ConfigurationAttribute
     
+    let target: ConfigurationAttributeTarget
+    
     public static func create(_ string: String) throws -> ConfigurationAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^self.(\\w+)\\s*=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.(\\w+)\\s*=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
             return nil
         }
-        let name = matches[0]
-        let valueString = matches[1]
         
-        switch name {
-        case "isIsolated":
-            guard let value = Bool(valueString) else {
-                throw TokenError.invalidConfigurationAttributeValue(value: valueString, expected: "true|false")
-            }
-            return ConfigurationAnnotation(attribute: .isIsolated(value: value))
-        default:
-            return nil
+        let target = ConfigurationAttributeTarget(matches[0])
+        let attribute = try ConfigurationAttribute(name: matches[1], valueString: matches[2])
+        
+        guard validate(configurationAttribute: attribute, with: target) else {
+            throw TokenError.invalidConfigurationAttributeTarget(name: attribute.name.rawValue, target: target)
         }
+        
+        return ConfigurationAnnotation(attribute: attribute, target: target)
     }
     
     public var description: String {
-        return "\(attribute)"
+        return "\(target).\(attribute)"
     }
 }
 
@@ -228,9 +203,6 @@ enum TokenBuilder {
             return makeTokenBox(token)
         }
         if let token = try ReferenceAnnotation.create(body) {
-            return makeTokenBox(token)
-        }
-        if let token = try CustomRefAnnotation.create(body) {
             return makeTokenBox(token)
         }
         if let token = try ScopeAnnotation.create(body) {

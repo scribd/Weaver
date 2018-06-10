@@ -261,8 +261,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<CustomRefAnnotation>, TokenBox(value: CustomRefAnnotation(name: "api", value: true), offset: 1, length: 32, line: 1))
-                XCTAssertEqual(tokens[1] as? TokenBox<CustomRefAnnotation>, TokenBox(value: CustomRefAnnotation(name: "api", value: false), offset: 33, length: 32, line: 2))
+                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")), offset: 1, length: 32, line: 1))
+                XCTAssertEqual(tokens[1] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: false), target: .dependency(name: "api")), offset: 33, length: 32, line: 2))
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -283,7 +283,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidCustomRefValue("ok")
+            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: "ok", expected: "true|false")
             XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
@@ -302,7 +302,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true)), offset: 1, length: 33, line: 1))
+                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`), offset: 1, length: 33, line: 1))
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -323,7 +323,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: false)), offset: 1, length: 34, line: 1))
+                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: false), target: .`self`), offset: 1, length: 34, line: 1))
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }

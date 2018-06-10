@@ -82,7 +82,7 @@ private final class RegisterModel {
     let typeName: String
     let abstractTypeName: String
     let scope: String
-    let isCustom: Bool
+    let customRef: Bool
     var parameters: [VariableModel] = []
     var hasBuilder: Bool = false
     
@@ -90,13 +90,13 @@ private final class RegisterModel {
          typeName: String,
          abstractTypeName: String,
          scope: String,
-         isCustom: Bool) {
+         config: DependencyConfiguration) {
         
         self.name = name
         self.typeName = typeName
         self.abstractTypeName = abstractTypeName
         self.scope = scope
-        self.isCustom = isCustom
+        customRef = config.customRef
     }
 }
 
@@ -137,7 +137,7 @@ private final class ResolverModel {
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
-    let isIsolated: Bool
+    let config: ResolverConfiguration
     
     init(targetTypeName: String,
          registrations: [RegisterModel],
@@ -147,7 +147,7 @@ private final class ResolverModel {
          isRoot: Bool,
          doesSupportObjc: Bool,
          accessLevel: AccessLevel,
-         config: Set<ConfigurationAttribute>) {
+         config: ResolverConfiguration) {
         
         self.targetTypeName = targetTypeName
         self.registrations = registrations
@@ -164,7 +164,7 @@ private final class ResolverModel {
             isPublic = false
         }
         
-        isIsolated = config.isIsolated
+        self.config = config
     }
 }
 
@@ -174,30 +174,32 @@ extension RegisterModel {
     
     convenience init(registerAnnotation: RegisterAnnotation,
                      scopeAnnotation: ScopeAnnotation?,
-                     customRefAnnotation: CustomRefAnnotation?) {
+                     configurationAnnotations: [ConfigurationAnnotation]) {
        
         let optionChars = CharacterSet(charactersIn: "?")
         let scope = scopeAnnotation?.scope ?? .`default`
-
+        let config = DependencyConfiguration(with: configurationAnnotations)
+        
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.typeName.trimmingCharacters(in: optionChars),
                   abstractTypeName: registerAnnotation.protocolName ?? registerAnnotation.typeName,
                   scope: scope.stringValue,
-                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue)
+                  config: config)
     }
     
     convenience init(referenceAnnotation: ReferenceAnnotation,
                      scopeAnnotation: ScopeAnnotation?,
-                     customRefAnnotation: CustomRefAnnotation?) {
+                     configurationAnnotations: [ConfigurationAnnotation]) {
         
         let optionChars = CharacterSet(charactersIn: "?")
         let scope = scopeAnnotation?.scope ?? .`default`
-        
+        let config = DependencyConfiguration(with: configurationAnnotations)
+
         self.init(name: referenceAnnotation.name,
                   typeName: referenceAnnotation.typeName.trimmingCharacters(in: optionChars),
                   abstractTypeName: referenceAnnotation.typeName,
                   scope: scope.stringValue,
-                  isCustom: customRefAnnotation?.value ?? CustomRefAnnotation.defaultValue)
+                  config: config)
     }
 }
 
@@ -235,13 +237,13 @@ extension ResolverModel {
     convenience init?(expr: Expr, enclosingTypeNames: [String], graph: Graph) {
         
         switch expr {
-        case .typeDeclaration(let typeToken, let configTokens, children: let children):
+        case .typeDeclaration(let typeToken, children: let children):
             let targetTypeName = typeToken.value.name
             
             var scopeAnnotations = [String: ScopeAnnotation]()
             var registerAnnotations = [String: RegisterAnnotation]()
             var referenceAnnotations = [String: ReferenceAnnotation]()
-            var customRefAnnotations = [String: CustomRefAnnotation]()
+            var configurationAnnotations = [ConfigurationAttributeTarget: [ConfigurationAnnotation]]()
             var parameters = [VariableModel]()
             
             for child in children {
@@ -255,11 +257,12 @@ extension ResolverModel {
                 case .referenceAnnotation(let annotation):
                     referenceAnnotations[annotation.value.name] = annotation.value
                     
-                case .customRefAnnotation(let annotation):
-                    customRefAnnotations[annotation.value.name] = annotation.value
-                    
                 case .parameterAnnotation(let annotation):
                     parameters.append(VariableModel(parameterAnnotation: annotation.value))
+                    
+                case .configurationAnnotation(let annotation):
+                    let target = annotation.value.target
+                    configurationAnnotations[target] = (configurationAnnotations[target] ?? []) + [annotation.value]
                     
                 case .file,
                      .typeDeclaration:
@@ -269,32 +272,27 @@ extension ResolverModel {
             
             let registrations = registerAnnotations.map {
                 RegisterModel(registerAnnotation: $0.value,
-                             scopeAnnotation: scopeAnnotations[$0.key],
-                             customRefAnnotation: customRefAnnotations[$0.key])
-            } + referenceAnnotations.compactMap {
-                if let customRefAnnotation = customRefAnnotations[$0.key] {
-                    return RegisterModel(referenceAnnotation: $0.value,
-                                        scopeAnnotation: scopeAnnotations[$0.key],
-                                        customRefAnnotation: customRefAnnotation)
-                } else {
-                    return nil
-                }
-            }
+                              scopeAnnotation: scopeAnnotations[$0.key],
+                              configurationAnnotations: configurationAnnotations[.dependency(name: $0.value.name)] ?? [])
+            } + referenceAnnotations.map {
+                RegisterModel(referenceAnnotation: $0.value,
+                              scopeAnnotation: scopeAnnotations[$0.key],
+                              configurationAnnotations: configurationAnnotations[.dependency(name: $0.value.name)] ?? [])
+            }.filter { $0.customRef }
 
-            let references = registerAnnotations.map { _, register -> VariableModel in
-                let variable = VariableModel(registerAnnotation: register)
-                graph.insertVariable(variable)
-                return variable
-            } + referenceAnnotations.map { _, reference -> VariableModel in
-                let variable = VariableModel(referenceAnnotation: reference)
-                graph.insertVariable(variable)
-                return variable
-            }
+            let references =
+                registerAnnotations.map { VariableModel(registerAnnotation: $1) } +
+                referenceAnnotations.compactMap { VariableModel(referenceAnnotation: $1) }
+            
+            references.forEach(graph.insertVariable)
             
             let isRoot = referenceAnnotations.filter {
-                let isCustom = customRefAnnotations[$0.key]?.value ?? CustomRefAnnotation.defaultValue
-                return !isCustom
+                let configurationAnnotations = configurationAnnotations[.dependency(name: $0.value.name)]
+                let config = DependencyConfiguration(with: configurationAnnotations)
+                return !config.customRef
             }.isEmpty
+            
+            let config = ResolverConfiguration(with: configurationAnnotations[.`self`])
 
             self.init(targetTypeName: targetTypeName,
                       registrations: registrations,
@@ -304,14 +302,14 @@ extension ResolverModel {
                       isRoot: isRoot,
                       doesSupportObjc: typeToken.value.doesSupportObjc,
                       accessLevel: typeToken.value.accessLevel,
-                      config: Set(configTokens.map { $0.value.attribute }))
+                      config: config)
             
         case .file,
              .registerAnnotation,
              .scopeAnnotation,
              .referenceAnnotation,
-             .customRefAnnotation,
-             .parameterAnnotation:
+             .parameterAnnotation,
+             .configurationAnnotation:
             return nil
         }
     }
@@ -328,41 +326,25 @@ private extension Generator {
     }
     
     private func buildResolvers(ast: Expr) -> (file: String, resolvers: [ResolverModel])? {
-        switch ast {
-        case .file(let types, let name):
-            let resolvers = buildResolvers(exprs: types)
-            return (name, resolvers)
-            
-        case .typeDeclaration,
-             .registerAnnotation,
-             .scopeAnnotation,
-             .referenceAnnotation,
-             .customRefAnnotation,
-             .parameterAnnotation:
+        guard let file = ast.toFile() else {
             return nil
         }
+        let resolvers = buildResolvers(exprs: file.types)
+        return (file.name, resolvers)
     }
     
     private func buildResolvers(exprs: [Expr], enclosingTypeNames: [String] = []) -> [ResolverModel] {
 
         return exprs.flatMap { expr -> [ResolverModel] in
-            switch expr {
-            case .typeDeclaration(let typeToken, _, let children):
-                guard let resolverModel = ResolverModel(expr: expr, enclosingTypeNames: enclosingTypeNames, graph: graph) else {
-                    return []
-                }
-                graph.insertResolver(resolverModel)
-                let enclosingTypeNames = enclosingTypeNames + [typeToken.value.name]
-                return [resolverModel] + buildResolvers(exprs: children, enclosingTypeNames: enclosingTypeNames)
-                
-            case .file,
-                 .registerAnnotation,
-                 .referenceAnnotation,
-                 .scopeAnnotation,
-                 .customRefAnnotation,
-                 .parameterAnnotation:
+            guard let (token, children) = expr.toTypeDeclaration(),
+                  let resolverModel = ResolverModel(expr: expr,
+                                                    enclosingTypeNames: enclosingTypeNames,
+                                                    graph: graph) else {
                 return []
             }
+            graph.insertResolver(resolverModel)
+            let enclosingTypeNames = enclosingTypeNames + [token.value.name]
+            return [resolverModel] + buildResolvers(exprs: children, enclosingTypeNames: enclosingTypeNames)
         }
     }
 }
