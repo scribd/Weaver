@@ -66,7 +66,7 @@ final class BuilderTests: XCTestCase {
     func xtest_builder_should_ensure_thread_safety_when_building_concurrently() {
 
         var instances = Set<NSObject>()
-        let lock = NSLock()
+        let lock = DispatchSemaphore(value: 1)
         
         let dispatchQueue = DispatchQueue(label: "\(DependencyContainerTests.self)", attributes: [.concurrent])
 
@@ -78,9 +78,9 @@ final class BuilderTests: XCTestCase {
                 dispatchQueue.async {
                     let instance = builder.make()({()})
                     
-                    lock.lock()
+                    lock.wait()
                     instances.insert(instance)
-                    lock.unlock()
+                    lock.signal()
                     expectation.fulfill()
                 }
                 return expectation
