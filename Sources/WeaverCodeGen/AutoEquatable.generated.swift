@@ -56,6 +56,12 @@ internal func == (lhs: FileLocation, rhs: FileLocation) -> Bool {
     guard compareOptionals(lhs: lhs.file, rhs: rhs.file, compare: ==) else { return false }
     return true
 }
+// MARK: - ImportAnnotation AutoEquatable
+extension ImportAnnotation: Equatable {}
+public func == (lhs: ImportAnnotation, rhs: ImportAnnotation) -> Bool {
+    guard lhs.moduleName == rhs.moduleName else { return false }
+    return true
+}
 // MARK: - InjectableType AutoEquatable
 extension InjectableType: Equatable {}
 public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
@@ -143,6 +149,7 @@ public func == (lhs: Expr, rhs: Expr) -> Bool {
     case (.file(let lhs), .file(let rhs)):
         if lhs.types != rhs.types { return false }
         if lhs.name != rhs.name { return false }
+        if lhs.imports != rhs.imports { return false }
         return true
     case (.typeDeclaration(let lhs), .typeDeclaration(let rhs)):
         if lhs.0 != rhs.0 { return false }
@@ -238,7 +245,7 @@ internal func == (lhs: ParserError, rhs: ParserError) -> Bool {
         return lhs == rhs
     case (.unknownDependency(let lhs), .unknownDependency(let rhs)):
         return lhs == rhs
-    case (.depedencyDoubleDeclaration(let lhs), .depedencyDoubleDeclaration(let rhs)):
+    case (.dependencyDoubleDeclaration(let lhs), .dependencyDoubleDeclaration(let rhs)):
         return lhs == rhs
     case (.configurationAttributeDoubleAssignation(let lhs), .configurationAttributeDoubleAssignation(let rhs)):
         if lhs.0 != rhs.0 { return false }

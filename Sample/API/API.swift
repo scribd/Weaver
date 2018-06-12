@@ -11,7 +11,7 @@ import WeaverDI
 
 // MARK: - Error
 
-enum APIError: Error {
+public enum APIError: Error {
     case networkingProtocolIsNotHTTP
     case network(Error)
     case url(String)
@@ -22,28 +22,28 @@ enum APIError: Error {
 
 // MARK: - HTTP method
 
-enum APIHTTPMethod {
+public enum APIHTTPMethod {
     case get
 }
 
 // MARK: - Request
 
-struct APIRequestConfig {
+public struct APIRequestConfig {
     let method: APIHTTPMethod
     let host: String?
     let path: String
     var query: [String: Any]
 }
 
-struct APIRequest<Model> {
+public struct APIRequest<Model> {
     
-    let config: APIRequestConfig
+    public let config: APIRequestConfig
     
     init(_ config: APIRequestConfig) {
         self.config = config
     }
     
-    init(method: APIHTTPMethod = .get,
+    public init(method: APIHTTPMethod = .get,
          host: String? = nil,
          path: String,
          query: [String: Any] = [:]) {
@@ -58,7 +58,7 @@ struct APIRequest<Model> {
 
 // MARK: - API
 
-protocol APIProtocol {
+public protocol APIProtocol {
     
     func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void)
     
@@ -73,11 +73,13 @@ public final class MovieAPI: APIProtocol {
     
     // weaver: urlSession <- URLSession
     
-    public init(injecting dependencies: MovieAPIDependencyResolver) {
+    // weaver: logger = Logger
+    
+    init(injecting dependencies: MovieAPIDependencyResolver) {
         self.dependencies = dependencies
     }
     
-    func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void) {
+    public func send(request: APIRequest<Data>, completion: @escaping (Result<Data, APIError>) -> Void) {
         
         let completionOnMainThread = { result in
             DispatchQueue.main.async {
@@ -93,6 +95,8 @@ public final class MovieAPI: APIProtocol {
             return
         }
         
+        dependencies.logger.log(.info, "Requesting '\(url)'.")
+
         let task = dependencies.urlSession.dataTask(with: url) { (data, response, error) in
             
             if let error = error {
@@ -121,7 +125,7 @@ public final class MovieAPI: APIProtocol {
         task.resume()
     }
 
-    func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) where Model: Decodable {
+    public func send<Model>(request: APIRequest<Model>, completion: @escaping (Result<Model, APIError>) -> Void) where Model: Decodable {
 
         let dataRequest = APIRequest<Data>(request.config)
         
@@ -149,11 +153,11 @@ public final class MovieAPI: APIProtocol {
 
 extension MovieAPI {
     
-    enum Constants {
+    public enum Constants {
         static let apiHost = "https://api.themoviedb.org/3"
         static let apiKey = "1a6eb1225335bbb37278527537d28a5d"
         
-        static let imageAPIHost = "https://image.tmdb.org/t/p/w1280"
+        public static let imageAPIHost = "https://image.tmdb.org/t/p/w1280"
     }
 }
 

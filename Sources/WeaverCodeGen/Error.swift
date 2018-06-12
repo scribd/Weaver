@@ -25,7 +25,7 @@ enum ParserError: Error, AutoEquatable {
     case unexpectedEOF(FileLocation)
     
     case unknownDependency(PrintableDependency)
-    case depedencyDoubleDeclaration(PrintableDependency)
+    case dependencyDoubleDeclaration(PrintableDependency)
     case configurationAttributeDoubleAssignation(FileLocation, attribute: ConfigurationAttribute)
 }
 
@@ -119,7 +119,7 @@ extension ParserError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .depedencyDoubleDeclaration(let dependency):
+        case .dependencyDoubleDeclaration(let dependency):
             return dependency.xcodeLogString(.error, "Double dependency declaration: '\(dependency.name)'")
         case .unexpectedEOF(let location):
             return location.xcodeLogString(.error, "Unexpected EOF (End of file)")

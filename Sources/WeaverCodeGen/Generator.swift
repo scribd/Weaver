@@ -46,7 +46,8 @@ public final class Generator {
             
             let fileLoader = FileSystemLoader(paths: [templateDirPath])
             let environment = Environment(loader: fileLoader)
-            let context = ["resolvers": resolvers]
+            let context: [String: Any] = ["resolvers": resolvers,
+                                          "imports": graph.importsByFile[file] ?? []]
             let string = try environment.renderTemplate(name: templateName, context: context)
             
             return (file: file, data: string.compacted())
@@ -62,6 +63,7 @@ private final class Graph {
     private(set) var typesByName = [String: [String]]()
 
     var resolversByFile = [String: [ResolverModel]]()
+    var importsByFile = [String: [String]]()
     
     func insertResolver(_ resolver: ResolverModel) {
         resolversByType[resolver.targetTypeName] = resolver
@@ -115,15 +117,26 @@ private final class VariableModel {
     let resolvedTypeName: String
     let type: VariableModelType
     
+    let isPublic: Bool
+    
     init(name: String,
          typeName: String,
          abstractTypeName: String?,
-         type: VariableModelType) {
+         type: VariableModelType,
+         accessLevel: AccessLevel) {
         
         self.name = name
         self.typeName = typeName
         self.abstractTypeName = abstractTypeName
         self.type = type
+        
+        switch accessLevel {
+        case .internal:
+            isPublic = false
+        case .public:
+            isPublic = true
+        }
+        
         resolvedTypeName = abstractTypeName ?? typeName
     }
 }
@@ -138,6 +151,9 @@ private final class ResolverModel {
     let isPublic: Bool
     let doesSupportObjc: Bool
     let isIsolated: Bool
+    
+    let publicReferences: [VariableModel]
+    let internalReferences: [VariableModel]
     
     init(targetTypeName: String,
          registrations: [RegisterModel],
@@ -165,6 +181,9 @@ private final class ResolverModel {
         }
         
         self.isIsolated = config.isIsolated
+        
+        publicReferences = references.filter { $0.isPublic }
+        internalReferences = references.filter { !$0.isPublic }
     }
 }
 
@@ -210,7 +229,8 @@ extension VariableModel {
         self.init(name: referenceAnnotation.name,
                   typeName: referenceAnnotation.typeName,
                   abstractTypeName: nil,
-                  type: .reference)
+                  type: .reference,
+                  accessLevel: .public)
     }
     
     convenience init(registerAnnotation: RegisterAnnotation) {
@@ -218,7 +238,8 @@ extension VariableModel {
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.typeName,
                   abstractTypeName: registerAnnotation.protocolName,
-                  type: .registration)
+                  type: .registration,
+                  accessLevel: .internal)
     }
     
     convenience init(parameterAnnotation: ParameterAnnotation) {
@@ -226,7 +247,8 @@ extension VariableModel {
         self.init(name: parameterAnnotation.name,
                   typeName: parameterAnnotation.typeName,
                   abstractTypeName: nil,
-                  type: .parameter)
+                  type: .parameter,
+                  accessLevel: .public)
     }
 }
 
@@ -263,7 +285,7 @@ extension ResolverModel {
                 case .configurationAnnotation(let annotation):
                     let target = annotation.value.target
                     configurationAnnotations[target] = (configurationAnnotations[target] ?? []) + [annotation.value]
-                    
+                                        
                 case .file,
                      .typeDeclaration:
                     break
@@ -319,18 +341,19 @@ private extension Generator {
     
     func buildResolvers(asts: [Expr]) {
         for ast in asts {
-            if let (file, resolvers) = buildResolvers(ast: ast) {
+            if let (file, imports, resolvers) = buildResolvers(ast: ast) {
                 graph.resolversByFile[file] = resolvers
+                graph.importsByFile[file] = imports
             }
         }
     }
     
-    private func buildResolvers(ast: Expr) -> (file: String, resolvers: [ResolverModel])? {
+    private func buildResolvers(ast: Expr) -> (file: String, imports: [String], resolvers: [ResolverModel])? {
         guard let file = ast.toFile() else {
             return nil
         }
         let resolvers = buildResolvers(exprs: file.types)
-        return (file.name, resolvers)
+        return (file.name, file.imports, resolvers)
     }
     
     private func buildResolvers(exprs: [Expr], enclosingTypeNames: [String] = []) -> [ResolverModel] {

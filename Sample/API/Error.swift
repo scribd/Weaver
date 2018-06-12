@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct APIErrorModel: Decodable {
-    let status_code: Int
-    let status_message: String
+public struct APIErrorModel: Decodable {
+    public let status_code: Int
+    public let status_message: String
 }

@@ -145,6 +145,23 @@ public struct ConfigurationAnnotation: Token, AutoHashable {
     }
 }
 
+public struct ImportAnnotation: Token {
+    
+    let moduleName: String
+    
+    public static func create(_ string: String) throws -> ImportAnnotation? {
+        guard let matches = try NSRegularExpression(pattern: "^import\\s+(\\w+)\\s*$").matches(in: string) else {
+            return nil
+        }
+        
+        return ImportAnnotation(moduleName: matches[0])
+    }
+    
+    public var description: String {
+        return "import \(moduleName)"
+    }
+}
+
 public struct InjectableType: Token {
     let name: String
     let accessLevel: AccessLevel
@@ -209,6 +226,9 @@ enum TokenBuilder {
             return makeTokenBox(token)
         }
         if let token = try ParameterAnnotation.create(body) {
+            return makeTokenBox(token)
+        }
+        if let token = try ImportAnnotation.create(body) {
             return makeTokenBox(token)
         }
         throw TokenError.invalidAnnotation(annotation)

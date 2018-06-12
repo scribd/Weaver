@@ -9,6 +9,8 @@
 import Foundation
 import UIKit
 
+// weaver: import API
+
 final class HomeViewController: UIViewController {
     
     private let dependencies: HomeViewControllerDependencyResolver

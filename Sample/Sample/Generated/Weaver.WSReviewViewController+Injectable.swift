@@ -4,7 +4,7 @@ import WeaverDI
 // MARK: - WSReviewViewController
 final class WSReviewViewControllerDependencyContainer: DependencyContainer {
     let movieID: UInt
-    init(parent: DependencyContainer, movieID: UInt) {
+    init(parent: DependencyContainer? = nil, movieID: UInt) {
         self.movieID = movieID
         super.init(parent)
     }

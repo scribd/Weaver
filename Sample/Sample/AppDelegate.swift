@@ -8,6 +8,9 @@
 
 import UIKit
 import WeaverDI
+import API
+
+// weaver: import API
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,12 +19,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private let dependencies = AppDelegateDependencyContainer()
     
+    // weaver: logger = Logger
+    // weaver: logger.scope = .container
+    
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
     // weaver: urlSession.customRef = true
     
     // weaver: movieAPI = MovieAPI <- APIProtocol
     // weaver: movieAPI.scope = .container
+    // weaver: movieAPI.customRef = true
 
     // weaver: imageManager = ImageManager <- ImageManaging
     // weaver: imageManager.scope = .container
@@ -50,5 +57,9 @@ extension AppDelegateDependencyContainer {
 
     func urlSessionCustomRef(_: DependencyContainer) -> URLSession {
         return .shared
+    }
+    
+    func movieAPICustomRef(_: DependencyContainer) -> APIProtocol {
+        return MovieAPI(urlSession: .shared)
     }
 }

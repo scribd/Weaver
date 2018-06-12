@@ -9,6 +9,8 @@
 import Foundation
 import UIKit
 
+// weaver: import API
+
 final class MovieViewController: UIViewController {
     
     struct ViewModel {

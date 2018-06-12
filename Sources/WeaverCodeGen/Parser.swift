@@ -91,7 +91,7 @@ private extension Parser {
         let checkDoubleDeclaration = { (name: String, line: Int) throws in
             let dependency = self.printableDependency(line: line, name: name)
             guard !registrationNames.contains(name) && !referenceNames.contains(name) && !parameterNames.contains(name) else {
-                throw ParserError.depedencyDoubleDeclaration(dependency)
+                throw ParserError.dependencyDoubleDeclaration(dependency)
             }
         }
         
@@ -137,7 +137,7 @@ private extension Parser {
                 }
                 configurationAnnotations[annotation.value.target] = annotation
                 children.append(.configurationAnnotation(annotation))
-
+                
             case is TokenBox<InjectableType>:
                 if let typeDeclaration = try parseInjectedTypeDeclaration() {
                     children.append(typeDeclaration)
@@ -174,6 +174,7 @@ private extension Parser {
     func parseFile() throws -> Expr {
         
         var types = [Expr]()
+        var imports = [ImportAnnotation]()
         
         while true {
             parseAnyDeclarations()
@@ -184,11 +185,15 @@ private extension Parser {
                     types.append(typeDeclaration)
                 }
                 
+            case is TokenBox<ImportAnnotation>:
+                let annotation = try parseSimpleExpr(ImportAnnotation.self)
+                imports.append(annotation.value)
+
             case is TokenBox<EndOfInjectableType>:
                 consumeToken()
-
+                
             case nil:
-                return .file(types: types, name: fileName)
+                return .file(types: types, name: fileName, imports: imports)
                 
             case .some(let token):
                 throw ParserError.unexpectedToken(fileLocation(line: token.line))

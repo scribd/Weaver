@@ -584,4 +584,24 @@ final class MovieViewController: UIViewController {
             XCTFail("Unexpected error: \(error).")
         }
     }
+    
+    func test_inspector_should_build_a_valid_graph_with_a_type_with_no_dependents() {
+        let file = File(contents: """
+final class MovieViewController: UIViewController {
+    // weaver: movieManager <- MovieManaging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }

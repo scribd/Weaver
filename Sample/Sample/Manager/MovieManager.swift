@@ -7,6 +7,10 @@
 //
 
 import Foundation
+import WeaverDI
+import API
+
+// weaver: import API
 
 // MARK: - Error
 
@@ -27,9 +31,10 @@ final class MovieManager: MovieManaging {
 
     private let dependencies: MovieManagerDependencyResolver
     
-    // weaver: logger = Logger
+    // weaver: logger <- Logger
     
-    // weaver: movieAPI <- APIProtocol
+    // weaver: movieAPI = APIProtocol
+    // weaver: movieAPI.customRef = true
     
     required init(injecting dependencies: MovieManagerDependencyResolver) {
         self.dependencies = dependencies
@@ -63,5 +68,11 @@ final class MovieManager: MovieManaging {
                 completion(.failure(.oops))
             }
         }
+    }
+}
+
+extension MovieManagerDependencyContainer {
+    func movieAPICustomRef(_ container: DependencyContainer) -> APIProtocol {
+        return MovieAPI(urlSession: container.resolve(URLSession.self, name: "urlSession"))
     }
 }

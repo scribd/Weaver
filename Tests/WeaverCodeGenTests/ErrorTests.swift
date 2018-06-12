@@ -62,9 +62,9 @@ final class ErrorTests: XCTestCase {
     
     // MARK: - ParserError
     
-    func test_parserError_depedencyDoubleDeclaration_description() {
+    func test_parserError_dependencyDoubleDeclaration_description() {
         
-        errorDescription = ParserError.depedencyDoubleDeclaration(PrintableDependency(fileLocation:  FileLocation(line: 42, file: "fake_file.swift"),
+        errorDescription = ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation:  FileLocation(line: 42, file: "fake_file.swift"),
                                                                                       name: "fake_dependency",
                                                                                       typeName: nil)).description
         expectedDescription = "fake_file.swift:43: error: Double dependency declaration: 'fake_dependency'."

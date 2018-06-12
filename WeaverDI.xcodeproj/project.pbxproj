@@ -891,7 +891,6 @@
 		OBJ_17 /* WeaverCodeGen */ = {
 			isa = PBXGroup;
 			children = (
-				19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */,
 				OBJ_18 /* AccessLevel.swift */,
 				OBJ_19 /* AutoEquatable.generated.swift */,
 				OBJ_20 /* AutoHashable.generated.swift */,
@@ -904,6 +903,7 @@
 				OBJ_26 /* Inspector.swift */,
 				OBJ_27 /* Lexer.swift */,
 				OBJ_28 /* Parser.swift */,
+				19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */,
 				OBJ_29 /* Scope.swift */,
 				OBJ_30 /* SourceKitDeclaration.swift */,
 				OBJ_31 /* Token.swift */,

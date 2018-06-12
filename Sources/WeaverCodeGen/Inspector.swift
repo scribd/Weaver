@@ -166,7 +166,7 @@ private extension Inspector {
             case .registerAnnotation(let token):
                 graph.insertResolver(with: token, fileName: fileName)
                 
-            case .file(_, let _fileName):
+            case .file(_, let _fileName, _):
                 fileName = _fileName
             
             case .typeDeclaration,
@@ -335,6 +335,10 @@ private extension Resolver {
 private extension Dependency {
     
     func resolve(with cache: inout Set<ResolutionCacheIndex>) throws {
+        guard !dependentResovler.dependents.isEmpty else {
+            return
+        }
+        
         guard isReference && !config.customRef else {
             return
         }
