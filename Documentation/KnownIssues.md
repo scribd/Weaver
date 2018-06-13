@@ -10,11 +10,11 @@ For example:
 
 ```swift
 final class AppDelegate {
-	// weaver: apiManager = APIManager <- APIManaging
+    // weaver: apiManager = APIManager <- APIManaging
 }
 
 final class MovieManager { // `: MovieManaging` is missing here.
-	// weaver: apiManager <- APIManaging
+    // weaver: apiManager <- APIManaging
 }
 ```
 
