@@ -4,7 +4,7 @@ This is a list of common (somtimes confusing) issues developers regularly run in
 
 ### 1. Ambiguous reference to member 'register(_:scope:name:builder:)'
 
-This usually happen when a dependency is registered correctly and access via a protocol without implementing it.
+This usually happen when a dependency is registered correctly with a protocol without implementing it.
 
 For example:
 
