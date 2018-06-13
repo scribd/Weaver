@@ -1,6 +1,6 @@
 # Known Issues
 
-This is a list of common (somtimes confusing) issues developers regularly run into when using Weaver.
+This is a list of common (sometimes confusing) issues developers regularly run into when using Weaver.
 
 ### 1. Ambiguous reference to member 'register(_:scope:name:builder:)'
 
@@ -21,7 +21,7 @@ final class APIManager { // `: APIManaging` is missing here.
 }
 ```
 
-Weaver doesn't catch this, but the project will fail with a compilation error in `Weaver.AppDelegate.swift`:
+Weaver doesn't catch this, but the compilation fails with an error in `Weaver.AppDelegate.swift`:
 
 ```
 Ambiguous reference to member 'register(_:scope:name:builder:)'
