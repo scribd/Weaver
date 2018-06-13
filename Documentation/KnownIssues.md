@@ -11,6 +11,7 @@ For example:
 ```swift
 final class AppDelegate {
     // weaver: apiManager = APIManager <- APIManaging
+    // weaver: apiManager.scope = .container
 }
 
 final class MovieManager { // `: MovieManaging` is missing here.
