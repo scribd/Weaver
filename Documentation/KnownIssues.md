@@ -14,8 +14,10 @@ final class AppDelegate {
     // weaver: apiManager.scope = .container
 }
 
-final class MovieManager { // `: MovieManaging` is missing here.
-    // weaver: apiManager <- APIManaging
+protocol APIManaging { ... }
+
+final class APIManager { // `: APIManaging` is missing here.
+    ...
 }
 ```
 
