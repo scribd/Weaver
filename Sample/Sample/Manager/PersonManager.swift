@@ -9,8 +9,6 @@
 import Foundation
 import API
 
-// weaver: import API
-
 // MARK: - Error
 
 enum PersonManagerError: Error {

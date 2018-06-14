@@ -2,6 +2,7 @@
 /// DO NOT EDIT!
 import WeaverDI
 import API
+import Foundation
 // MARK: - PersonManager
 protocol PersonManagerDependencyResolver {
     var logger: Logger { get }

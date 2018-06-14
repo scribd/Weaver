@@ -29,7 +29,11 @@ public final class Lexer {
         let sourceKitTokens = try SyntaxMap(file: file).tokens
         
         var line = lines.startIndex
-        let tokens = tokenize(from: sourceKitAST, at: &line) + (try tokenize(from: sourceKitTokens))
+
+        var tokens = [AnyTokenBox]()
+        tokens += tokenize(from: sourceKitAST, at: &line)
+        tokens += try tokenize(from: sourceKitTokens)
+        tokens += try tokenize(from: file.lines)
 
         return tokens.sorted(by: tokenSortFunction)
     }
@@ -123,6 +127,19 @@ private extension Lexer {
             } catch let error as TokenError {
                 throw LexerError.invalidAnnotation(FileLocation(line: currentLine, file: fileName), underlyingError: error)
             }
+        }
+    }
+    
+    func tokenize(from lines: [Line]) throws -> [AnyTokenBox] {
+        return try (0..<lines.count).compactMap { index in
+            let line = lines[index]
+            guard let token = try ImportDeclaration.create(line.content) else {
+                return nil
+            }
+            return TokenBox<ImportDeclaration>(value: token,
+                                               offset: line.range.location,
+                                               length: line.content.count,
+                                               line: index)
         }
     }
 }

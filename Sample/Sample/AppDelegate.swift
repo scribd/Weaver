@@ -10,8 +10,6 @@ import UIKit
 import WeaverDI
 import API
 
-// weaver: import API
-
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 

@@ -2,6 +2,8 @@
 /// DO NOT EDIT!
 import WeaverDI
 import API
+import Foundation
+import UIKit
 // MARK: - HomeViewController
 final class HomeViewControllerDependencyContainer: DependencyContainer {
     init(parent: DependencyContainer? = nil) {

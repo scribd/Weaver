@@ -2,6 +2,8 @@
 /// DO NOT EDIT!
 import WeaverDI
 import API
+import Foundation
+import UIKit
 // MARK: - MovieViewController
 final class MovieViewControllerDependencyContainer: DependencyContainer {
     let movieID: UInt

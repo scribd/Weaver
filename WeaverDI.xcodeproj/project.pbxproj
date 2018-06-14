@@ -1554,7 +1554,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make generate_sources";
+			shellScript = "make generate_sources\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

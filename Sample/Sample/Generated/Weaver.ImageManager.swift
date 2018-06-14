@@ -2,6 +2,9 @@
 /// DO NOT EDIT!
 import WeaverDI
 import API
+import Foundation
+import UIKit
+import WeaverDI
 // MARK: - ImageManager
 final class ImageManagerDependencyContainer: DependencyContainer {
     init(parent: DependencyContainer? = nil) {

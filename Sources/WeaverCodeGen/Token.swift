@@ -145,16 +145,16 @@ public struct ConfigurationAnnotation: Token, AutoHashable {
     }
 }
 
-public struct ImportAnnotation: Token {
+public struct ImportDeclaration: Token {
     
     let moduleName: String
     
-    public static func create(_ string: String) throws -> ImportAnnotation? {
+    public static func create(_ string: String) throws -> ImportDeclaration? {
         guard let matches = try NSRegularExpression(pattern: "^import\\s+(\\w+)\\s*$").matches(in: string) else {
             return nil
         }
         
-        return ImportAnnotation(moduleName: matches[0])
+        return ImportDeclaration(moduleName: matches[0])
     }
     
     public var description: String {
@@ -228,7 +228,7 @@ enum TokenBuilder {
         if let token = try ParameterAnnotation.create(body) {
             return makeTokenBox(token)
         }
-        if let token = try ImportAnnotation.create(body) {
+        if let token = try ImportDeclaration.create(body) {
             return makeTokenBox(token)
         }
         throw TokenError.invalidAnnotation(annotation)

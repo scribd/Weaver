@@ -10,8 +10,6 @@ import Foundation
 import WeaverDI
 import API
 
-// weaver: import API
-
 // MARK: - Error
 
 enum MovieManagerError: Error {

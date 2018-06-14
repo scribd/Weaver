@@ -412,7 +412,6 @@ func ignoredFunc() {
         }
     }
     
-    
     func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_annotation() {
         
         let file = File(contents: """
@@ -488,5 +487,46 @@ final class MyService {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
     }
-}
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_weaver_import_declaration() {
+        
+        let file = File(contents: """
 
+// weaver: import API
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ImportDeclaration>, TokenBox(value: ImportDeclaration(moduleName: "API"), offset: 1, length: 21, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_an_import_declaration() {
+        
+        let file = File(contents: """
+
+import API
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ImportDeclaration>, TokenBox(value: ImportDeclaration(moduleName: "API"), offset: 1, length: 10, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+}

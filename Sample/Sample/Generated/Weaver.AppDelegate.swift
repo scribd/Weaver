@@ -2,6 +2,8 @@
 /// DO NOT EDIT!
 import WeaverDI
 import API
+import UIKit
+import WeaverDI
 // MARK: - AppDelegate
 final class AppDelegateDependencyContainer: DependencyContainer {
     init() {

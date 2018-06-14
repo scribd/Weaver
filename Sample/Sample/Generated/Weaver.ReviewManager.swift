@@ -2,6 +2,7 @@
 /// DO NOT EDIT!
 import WeaverDI
 import API
+import Foundation
 // MARK: - ReviewManager
 final class ReviewManagerDependencyContainer: DependencyContainer {
     init(parent: DependencyContainer? = nil) {

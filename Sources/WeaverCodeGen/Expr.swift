@@ -10,7 +10,7 @@ import Foundation
 // MARK: Expressions
 
 public indirect enum Expr: AutoEquatable {
-    case file(types: [Expr], name: String, imports: [ImportAnnotation])
+    case file(types: [Expr], name: String, imports: [String])
     case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
@@ -95,7 +95,7 @@ extension Expr {
     func toFile() -> (types: [Expr], name: String, imports: [String])? {
         switch self {
         case .file(let types, let name, let imports):
-            return (types, name, imports.map { $0.moduleName })
+            return (types, name, imports)
         default:
             return nil
         }

@@ -56,9 +56,9 @@ internal func == (lhs: FileLocation, rhs: FileLocation) -> Bool {
     guard compareOptionals(lhs: lhs.file, rhs: rhs.file, compare: ==) else { return false }
     return true
 }
-// MARK: - ImportAnnotation AutoEquatable
-extension ImportAnnotation: Equatable {}
-public func == (lhs: ImportAnnotation, rhs: ImportAnnotation) -> Bool {
+// MARK: - ImportDeclaration AutoEquatable
+extension ImportDeclaration: Equatable {}
+public func == (lhs: ImportDeclaration, rhs: ImportDeclaration) -> Bool {
     guard lhs.moduleName == rhs.moduleName else { return false }
     return true
 }

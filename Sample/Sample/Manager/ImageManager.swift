@@ -11,8 +11,6 @@ import UIKit
 import WeaverDI
 import API
 
-// weaver: import API
-
 enum ImageManagerError: Error {
     case oops
 }

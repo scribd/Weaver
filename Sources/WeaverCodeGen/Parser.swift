@@ -174,7 +174,7 @@ private extension Parser {
     func parseFile() throws -> Expr {
         
         var types = [Expr]()
-        var imports = [ImportAnnotation]()
+        var imports = Set<String>()
         
         while true {
             parseAnyDeclarations()
@@ -185,15 +185,18 @@ private extension Parser {
                     types.append(typeDeclaration)
                 }
                 
-            case is TokenBox<ImportAnnotation>:
-                let annotation = try parseSimpleExpr(ImportAnnotation.self)
-                imports.append(annotation.value)
+            case is TokenBox<ImportDeclaration>:
+                let annotation = try parseSimpleExpr(ImportDeclaration.self)
+                imports.insert(annotation.value.moduleName)
 
             case is TokenBox<EndOfInjectableType>:
                 consumeToken()
                 
             case nil:
-                return .file(types: types, name: fileName, imports: imports)
+                let sortedImports = imports.sorted { (lhs, rhs) -> Bool in
+                    return lhs < rhs
+                }
+                return .file(types: types, name: fileName, imports: sortedImports)
                 
             case .some(let token):
                 throw ParserError.unexpectedToken(fileLocation(line: token.line))

@@ -2,6 +2,8 @@
 /// DO NOT EDIT!
 import WeaverDI
 import API
+import Foundation
+import WeaverDI
 // MARK: - MovieManager
 final class MovieManagerDependencyContainer: DependencyContainer {
     init(parent: DependencyContainer? = nil) {
