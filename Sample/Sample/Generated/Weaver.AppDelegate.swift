@@ -10,25 +10,25 @@ final class AppDelegateDependencyContainer: DependencyContainer {
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { (dependencies) in
-            return self.movieAPICustomRef(dependencies)
+            return self.movieAPICustomRef()
         })
         store.register(UIViewController.self, scope: .container, name: "homeViewController", builder: { (dependencies) in
             return HomeViewController.makeHomeViewController(injecting: dependencies)
         })
         store.register(MovieManaging.self, scope: .container, name: "movieManager", builder: { (dependencies) in
-            return self.movieManagerCustomRef(dependencies)
+            return self.movieManagerCustomRef()
         })
         store.register(Logger.self, scope: .container, name: "logger", builder: { (dependencies) in
             return Logger()
         })
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
-            return self.urlSessionCustomRef(dependencies)
+            return self.urlSessionCustomRef()
         })
         store.register(ReviewManaging.self, scope: .container, name: "reviewManager", builder: { (dependencies) in
             return ReviewManager.makeReviewManager(injecting: dependencies)
         })
         store.register(ImageManaging.self, scope: .container, name: "imageManager", builder: { (dependencies) in
-            return self.imageManagerCustomRef(dependencies)
+            return self.imageManagerCustomRef()
         })
     }
 }
@@ -40,10 +40,10 @@ protocol AppDelegateDependencyResolver {
     var urlSession: URLSession { get }
     var reviewManager: ReviewManaging { get }
     var imageManager: ImageManaging { get }
-    func movieAPICustomRef(_ dependencies: DependencyContainer) -> APIProtocol
-    func movieManagerCustomRef(_ dependencies: DependencyContainer) -> MovieManaging
-    func urlSessionCustomRef(_ dependencies: DependencyContainer) -> URLSession
-    func imageManagerCustomRef(_ dependencies: DependencyContainer) -> ImageManaging
+    func movieAPICustomRef() -> APIProtocol
+    func movieManagerCustomRef() -> MovieManaging
+    func urlSessionCustomRef() -> URLSession
+    func imageManagerCustomRef() -> ImageManaging
 }
 extension AppDelegateDependencyContainer: AppDelegateDependencyResolver {
     var movieAPI: APIProtocol {

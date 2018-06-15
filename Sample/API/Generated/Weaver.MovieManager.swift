@@ -12,7 +12,7 @@ final class MovieManagerDependencyContainer: DependencyContainer {
             return MovieAPI.makeMovieAPI(injecting: dependencies)
         })
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
-            return self.urlSessionCustomRef(dependencies)
+            return self.urlSessionCustomRef()
         })
     }
 }
@@ -20,7 +20,7 @@ protocol MovieManagerDependencyResolver {
     var movieAPI: APIProtocol { get }
     var urlSession: URLSession { get }
     var logger: Logger { get }
-    func urlSessionCustomRef(_ dependencies: DependencyContainer) -> URLSession
+    func urlSessionCustomRef() -> URLSession
 }
 extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     var movieAPI: APIProtocol {
@@ -57,9 +57,6 @@ extension MovieManagerShimDependencyContainer: MovieManagerDependencyResolver {
     }
     var urlSession: URLSession {
         return internalDependencies.resolve(URLSession.self, name: "urlSession")
-    }
-    func urlSessionCustomRef(_ dependencies: DependencyContainer) -> URLSession {
-        return internalDependencies.urlSessionCustomRef(self.internalDependencies)
     }
 }
 extension MovieManager {

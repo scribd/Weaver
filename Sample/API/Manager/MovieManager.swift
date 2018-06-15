@@ -71,8 +71,8 @@ public final class MovieManager: MovieManaging {
     }
 }
 
-extension MovieManagerDependencyContainer {
-    func urlSessionCustomRef(_: DependencyContainer) -> URLSession {
+extension MovieManagerDependencyResolver {
+    func urlSessionCustomRef() -> URLSession {
         return .shared
     }
 }

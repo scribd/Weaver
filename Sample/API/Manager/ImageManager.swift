@@ -60,7 +60,7 @@ public final class ImageManager: ImageManaging {
 
 extension ImageManagerDependencyResolver {
     
-    func urlSessionCustomRef(_: DependencyContainer) -> URLSession {
+    func urlSessionCustomRef() -> URLSession {
         let configuration = URLSessionConfiguration.default
         assert(configuration.urlCache != nil, "\(ImageManagerDependencyResolver.self): urlCache should not be nil.")
         configuration.urlCache?.diskCapacity = 1024 * 1024 * 50

@@ -36,7 +36,7 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
             return {{registration.typeName}}{% if registration.hasBuilder %}.make{{registration.typeName}}(injecting: dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}(){% endif %}
             {% else %}{# not registration.customRef #}
 
-            return self.{{registration.name}}CustomRef(dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %})
+            return self.{{registration.name}}CustomRef({% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %})
             {% endif %}{# not registration.customRef #}
         })
 
@@ -65,7 +65,7 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
     {% for registration in resolver.registrations %}
 
     {% if registration.customRef %}
-    func {{registration.name}}CustomRef(_ dependencies: DependencyContainer{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) -> {{registration.abstractTypeName}}
+    func {{registration.name}}CustomRef({% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) -> {{registration.abstractTypeName}}
     {% endif %}{# registration.customRef #}
 
     {% endfor %}{# resolver.registrations  #}
@@ -162,14 +162,6 @@ extension {{resolver.targetTypeName}}ShimDependencyContainer: {{resolver.targetT
     }
 
     {% endif %}{# reference.parameters #}
-
-    {% if reference.customRef %}
-
-    func {{reference.name}}CustomRef(_ dependencies: DependencyContainer{% for parameter in reference.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) -> {{reference.resolvedTypeName}} {
-        return internalDependencies.{{reference.name}}CustomRef(self.internalDependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %})
-    }
-
-    {% endif %}{# reference.customRef #}
 
     {% endfor %}{# resolver.internalReferences #}
 }

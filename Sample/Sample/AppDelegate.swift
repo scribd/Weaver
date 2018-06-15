@@ -53,21 +53,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-extension AppDelegateDependencyContainer {
+extension AppDelegateDependencyResolver {
 
-    func urlSessionCustomRef(_: DependencyContainer) -> URLSession {
+    func urlSessionCustomRef() -> URLSession {
         return .shared
     }
     
-    func movieAPICustomRef(_: DependencyContainer) -> APIProtocol {
+    func movieAPICustomRef() -> APIProtocol {
         return MovieAPI(urlSession: urlSession)
     }
     
-    func imageManagerCustomRef(_: DependencyContainer) -> ImageManaging {
+    func imageManagerCustomRef() -> ImageManaging {
         return ImageManager(movieAPI: movieAPI)
     }
     
-    func movieManagerCustomRef(_: DependencyContainer) -> MovieManaging {
+    func movieManagerCustomRef() -> MovieManaging {
         return MovieManager(logger: logger)
     }
 }
