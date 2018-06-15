@@ -8,37 +8,39 @@
 
 import Foundation
 import WeaverDI
-import API
 
 // MARK: - Error
 
-enum MovieManagerError: Error {
+public enum MovieManagerError: Error {
     case oops
 }
 
 // MARK: - Manager
 
-protocol MovieManaging {
+public protocol MovieManaging {
     
     func getDiscoverMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void)
     
     func getMovie(id: UInt, completion: @escaping (Result<Movie, MovieManagerError>) -> Void)
 }
 
-final class MovieManager: MovieManaging {
+public final class MovieManager: MovieManaging {
 
     private let dependencies: MovieManagerDependencyResolver
     
     // weaver: logger <- Logger
     
-    // weaver: movieAPI = APIProtocol
-    // weaver: movieAPI.customRef = true
+    // weaver: urlSession = URLSession
+    // weaver: urlSession.scope = .container
+    // weaver: urlSession.customRef = true
+    
+    // weaver: movieAPI = MovieAPI <- APIProtocol
     
     required init(injecting dependencies: MovieManagerDependencyResolver) {
         self.dependencies = dependencies
     }
     
-    func getDiscoverMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void) {
+    public func getDiscoverMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void) {
         
         let request = APIRequest<Page<Movie>>(path: "/discover/movie")
         
@@ -53,7 +55,7 @@ final class MovieManager: MovieManaging {
         }
     }
     
-    func getMovie(id: UInt, completion: @escaping (Result<Movie, MovieManagerError>) -> Void) {
+    public func getMovie(id: UInt, completion: @escaping (Result<Movie, MovieManagerError>) -> Void) {
         
         let request = APIRequest<Movie>(path: "/movie/\(id)")
         
@@ -70,7 +72,7 @@ final class MovieManager: MovieManaging {
 }
 
 extension MovieManagerDependencyContainer {
-    func movieAPICustomRef(_ container: DependencyContainer) -> APIProtocol {
-        return MovieAPI(urlSession: container.resolve(URLSession.self, name: "urlSession"))
+    func urlSessionCustomRef(_: DependencyContainer) -> URLSession {
+        return .shared
     }
 }

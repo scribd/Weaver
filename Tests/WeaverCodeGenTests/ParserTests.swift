@@ -32,7 +32,7 @@ final class MyService {
                                                               children: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyEmbeddedService", accessLevel: .default), offset: 32, length: 81, line: 1),
                                                                                           children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", typeName: "Session", protocolName: "SessionProtocol"), offset: 62, length: 48, line: 2))])])],
                                      name: "test.swift",
-                                     imports: [])
+                                     imports: ["WeaverDI"])
 
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -58,7 +58,7 @@ final class MyService {
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 36, line: 1)),
                                                                          .scopeAnnotation(TokenBox(value: ScopeAnnotation(name: "api", scope: .graph), offset: 64, length: 30, line: 2))])],
                                      name: "test.swift",
-                                     imports: [])
+                                     imports: ["WeaverDI"])
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -82,7 +82,7 @@ final class MyService {
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 58, line: 0),
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol?"), offset: 26, length: 37, line: 1))])],
                                      name: "test.swift",
-                                     imports: [])
+                                     imports: ["WeaverDI"])
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -106,7 +106,7 @@ final class MyService {
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 57, line: 0),
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 36, line: 1))])],
                                      name: "test.swift",
-                                     imports: [])
+                                     imports: ["WeaverDI"])
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -130,7 +130,7 @@ final class MyService {
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 42, line: 0),
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: nil), offset: 26, length: 21, line: 1))])],
                                      name: "test.swift",
-                                     imports: [])
+                                     imports: ["WeaverDI"])
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -154,7 +154,7 @@ final class MyService {
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 51, line: 0),
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift",
-                                     imports: [])
+                                     imports: ["WeaverDI"])
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
@@ -225,8 +225,8 @@ final class MyService {
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")), offset: 58, length: 32, line: 2))])],
                                      name: "test.swift",
-                                     imports: [])
-            
+                                     imports: ["WeaverDI"])
+
             XCTAssertEqual(syntaxTree, expected)
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -251,8 +251,8 @@ final class MyService {
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", typeName: "API", protocolName: "APIProtocol"), offset: 26, length: 36, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")), offset: 64, length: 32, line: 2))])],
                                      name: "test.swift",
-                                     imports: [])
-            
+                                     imports: ["WeaverDI"])
+
             XCTAssertEqual(syntaxTree, expected)
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -297,7 +297,7 @@ class Test {
 
             let syntaxTree = try parser.parse()
             
-            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift", imports: []))
+            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift", imports: ["WeaverDI"]))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -324,8 +324,8 @@ class Test {
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MyService"), offset: 6, length: 51, line: 0),
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift",
-                                     imports: [])
-            
+                                     imports: ["WeaverDI"])
+
             XCTAssertEqual(syntaxTree, expected)
         } catch {
             XCTFail("Unexpected error: \(error).")
@@ -342,7 +342,7 @@ class Test {
             let parser = Parser(tokens, fileName: "test.swift")
 
             let syntaxTree = try parser.parse()
-            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift", imports: []))
+            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift", imports: ["WeaverDI"]))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -432,8 +432,8 @@ final class MovieManager {
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(name: "MovieManager"), offset: 6, length: 52, line: 0),
                                                               children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(name: "movieID", typeName: "UInt?"), offset: 29, length: 28, line: 1))])],
                                      name: "test.swift",
-                                     imports: [])
-            
+                                     imports: ["WeaverDI"])
+
             XCTAssertEqual(syntaxTree, expected)
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -533,8 +533,8 @@ final class MyService {
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol"), offset: 26, length: 30, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`), offset: 58, length: 34, line: 2))])],
                                      name: "test.swift",
-                                     imports: [])
-            
+                                     imports: ["WeaverDI"])
+
             XCTAssertEqual(syntaxTree, expected)
         } catch {
             XCTFail("Unexpected error: \(error)")

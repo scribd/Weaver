@@ -118,12 +118,14 @@ private final class VariableModel {
     let type: VariableModelType
     
     let isPublic: Bool
+    let customRef: Bool
     
     init(name: String,
          typeName: String,
          abstractTypeName: String?,
          type: VariableModelType,
-         accessLevel: AccessLevel) {
+         accessLevel: AccessLevel,
+         customRef: Bool = false) {
         
         self.name = name
         self.typeName = typeName
@@ -136,7 +138,9 @@ private final class VariableModel {
         case .public:
             isPublic = true
         }
-        
+
+        self.customRef = customRef
+
         resolvedTypeName = abstractTypeName ?? typeName
     }
 }
@@ -233,13 +237,17 @@ extension VariableModel {
                   accessLevel: .public)
     }
     
-    convenience init(registerAnnotation: RegisterAnnotation) {
+    convenience init(registerAnnotation: RegisterAnnotation,
+                     configurationAnnotations: [ConfigurationAnnotation]) {
+        
+        let config = DependencyConfiguration(with: configurationAnnotations)
         
         self.init(name: registerAnnotation.name,
                   typeName: registerAnnotation.typeName,
                   abstractTypeName: registerAnnotation.protocolName,
                   type: .registration,
-                  accessLevel: .internal)
+                  accessLevel: .internal,
+                  customRef: config.customRef)
     }
     
     convenience init(parameterAnnotation: ParameterAnnotation) {
@@ -302,9 +310,12 @@ extension ResolverModel {
                               configurationAnnotations: configurationAnnotations[.dependency(name: $0.value.name)] ?? [])
             }.filter { $0.customRef }
 
-            let references =
-                registerAnnotations.map { VariableModel(registerAnnotation: $1) } +
-                referenceAnnotations.compactMap { VariableModel(referenceAnnotation: $1) }
+            let references = registerAnnotations.map {
+                VariableModel(registerAnnotation: $1,
+                              configurationAnnotations: configurationAnnotations[.dependency(name: $1.name)] ?? [])
+            } + referenceAnnotations.compactMap {
+                VariableModel(referenceAnnotation: $1)
+            }
             
             references.forEach(graph.insertVariable)
             

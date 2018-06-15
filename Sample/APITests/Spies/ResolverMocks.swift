@@ -8,7 +8,7 @@
 
 import Foundation
 
-@testable import Sample
+@testable import API
 
 final class MovieAPIDependencyResolverSpy: MovieAPIDependencyResolver {
     

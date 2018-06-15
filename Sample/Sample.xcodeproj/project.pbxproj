@@ -7,13 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		193A559F2097E38600319C18 /* Weaver.ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A55992097E38600319C18 /* Weaver.ImageManager.swift */; };
 		193A55A22097E38600319C18 /* Weaver.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */; };
-		193A55A42097E38600319C18 /* Weaver.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559E2097E38600319C18 /* Weaver.MovieManager.swift */; };
-		193EEF89207690C300BFE706 /* MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF88207690C300BFE706 /* MovieManager.swift */; };
-		193EEF8B2076911D00BFE706 /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF8A2076911D00BFE706 /* Page.swift */; };
 		194F90E220CFB78B00F594F5 /* API.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 194F90D920CFB78B00F594F5 /* API.framework */; };
-		194F90E920CFB78B00F594F5 /* APITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F90E820CFB78B00F594F5 /* APITests.swift */; };
 		194F90EB20CFB78B00F594F5 /* API.h in Headers */ = {isa = PBXBuildFile; fileRef = 194F90DB20CFB78B00F594F5 /* API.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		194F90EE20CFB78B00F594F5 /* API.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 194F90D920CFB78B00F594F5 /* API.framework */; };
 		194F90F020CFB78B00F594F5 /* API.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 194F90D920CFB78B00F594F5 /* API.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -22,32 +17,36 @@
 		194F90FE20CFBE0A00F594F5 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F90FD20CFBE0A00F594F5 /* Error.swift */; };
 		194F910020CFBE4D00F594F5 /* Weaver.API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F90FF20CFBE4D00F594F5 /* Weaver.API.swift */; };
 		194F910420CFBE9E00F594F5 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F910320CFBE9E00F594F5 /* Logger.swift */; };
+		195848D020D43F8300BB1F09 /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475420A8EFF0006F40DF /* Person.swift */; };
+		195848D120D43F8300BB1F09 /* Review.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474C20A7DCB6006F40DF /* Review.swift */; };
+		195848D320D4426100BB1F09 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474820A7D67E006F40DF /* ReviewManager.swift */; };
+		195848D420D442DF00BB1F09 /* URLProtocolMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */; };
+		195848D620D442E700BB1F09 /* ManagerMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */; };
+		195848D720D442E700BB1F09 /* ResolverMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */; };
+		195848D820D442E700BB1F09 /* ImageManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BC207C7C8C0011DF93 /* ImageManagerTests.swift */; };
+		195848D920D442E700BB1F09 /* MovieAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AC207BC7BC0011DF93 /* MovieAPITests.swift */; };
+		195848DA20D442E700BB1F09 /* MovieManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BA207C78670011DF93 /* MovieManagerTests.swift */; };
 		19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF4206B4F0A00751B70 /* AppDelegate.swift */; };
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
 		19C298D620B1272800094218 /* Weaver.PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C298D520B1272800094218 /* Weaver.PersonManager.swift */; };
-		19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A4207AADD30011DF93 /* ImageManager.swift */; };
-		19DE26A9207BBD9D0011DF93 /* ManagerMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */; };
-		19DE26AB207BC21E0011DF93 /* ResolverMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */; };
-		19DE26AD207BC7BC0011DF93 /* MovieAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AC207BC7BC0011DF93 /* MovieAPITests.swift */; };
-		19DE26AF207BCFF30011DF93 /* URLProtocolMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */; };
-		19DE26BB207C78670011DF93 /* MovieManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BA207C78670011DF93 /* MovieManagerTests.swift */; };
-		19DE26BD207C7C8C0011DF93 /* ImageManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26BC207C7C8C0011DF93 /* ImageManagerTests.swift */; };
 		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E555222076A156004C44FC /* MovieTableViewCell.swift */; };
 		19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473620A69F7F006F40DF /* WSReviewViewController.m */; };
 		19F5473920A69F96006F40DF /* WSReviewViewController+Injectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473820A69F96006F40DF /* WSReviewViewController+Injectable.swift */; };
 		19F5474320A75085006F40DF /* Weaver.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474120A75085006F40DF /* Weaver.HomeViewController.swift */; };
 		19F5474520A79BCD006F40DF /* MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474420A79BCC006F40DF /* MovieViewController.swift */; };
-		19F5474720A79BE8006F40DF /* Weaver.MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */; };
-		19F5474920A7D67E006F40DF /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474820A7D67E006F40DF /* ReviewManager.swift */; };
 		19F5474B20A7D9E8006F40DF /* Weaver.ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474A20A7D9E8006F40DF /* Weaver.ReviewManager.swift */; };
-		19F5474D20A7DCB6006F40DF /* Review.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474C20A7DCB6006F40DF /* Review.swift */; };
 		19F5474F20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474E20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift */; };
 		19F5475120A888D3006F40DF /* ReviewTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475020A888D3006F40DF /* ReviewTableViewCell.swift */; };
-		19F5475320A8EFA6006F40DF /* PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475220A8EFA6006F40DF /* PersonManager.swift */; };
-		19F5475520A8EFF0006F40DF /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475420A8EFF0006F40DF /* Person.swift */; };
-		19F5475720A8F001006F40DF /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475620A8F001006F40DF /* Movie.swift */; };
+		19FCF53D20D337FF00AB142E /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF8A2076911D00BFE706 /* Page.swift */; };
+		19FCF54020D3384300AB142E /* PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475220A8EFA6006F40DF /* PersonManager.swift */; };
+		19FCF54120D3384700AB142E /* ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19DE26A4207AADD30011DF93 /* ImageManager.swift */; };
+		19FCF54320D3388F00AB142E /* Weaver.ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FCF54220D3388F00AB142E /* Weaver.ImageManager.swift */; };
+		19FCF54420D339EB00AB142E /* MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF88207690C300BFE706 /* MovieManager.swift */; };
+		19FCF54520D33A0300AB142E /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475620A8F001006F40DF /* Movie.swift */; };
+		19FCF54720D33A4A00AB142E /* Weaver.MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */; };
+		19FCF54A20D33D2400AB142E /* Weaver.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FCF54920D33D2300AB142E /* Weaver.MovieManager.swift */; };
 		4339CBAB2240FD561342F819 /* Pods_APITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0461E8FB22779C481B87F13D /* Pods_APITests.framework */; };
 		69D9EAF8F13680E9E4815E5E /* Pods_SampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E944255483FA3D69C4CC4F97 /* Pods_SampleTests.framework */; };
 		99A98CE13EDC851DFCB960DA /* Pods_Sample_API.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 531D6C12F72BCA1C63242F4E /* Pods_Sample_API.framework */; };
@@ -102,16 +101,13 @@
 /* Begin PBXFileReference section */
 		0461E8FB22779C481B87F13D /* Pods_APITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_APITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1911FD910AE2629CF5439DAA /* Pods-APITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-APITests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-APITests/Pods-APITests.debug.xcconfig"; sourceTree = "<group>"; };
-		193A55992097E38600319C18 /* Weaver.ImageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.ImageManager.swift; sourceTree = "<group>"; };
 		193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.AppDelegate.swift; sourceTree = "<group>"; };
-		193A559E2097E38600319C18 /* Weaver.MovieManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.MovieManager.swift; sourceTree = "<group>"; };
 		193EEF88207690C300BFE706 /* MovieManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieManager.swift; sourceTree = "<group>"; };
 		193EEF8A2076911D00BFE706 /* Page.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
 		194F90D920CFB78B00F594F5 /* API.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = API.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		194F90DB20CFB78B00F594F5 /* API.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = API.h; sourceTree = "<group>"; };
 		194F90DC20CFB78B00F594F5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		194F90E120CFB78B00F594F5 /* APITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = APITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		194F90E820CFB78B00F594F5 /* APITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APITests.swift; sourceTree = "<group>"; };
 		194F90EA20CFB78B00F594F5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		194F90F720CFB80800F594F5 /* API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		194F90FA20CFB9A300F594F5 /* Result.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
@@ -150,6 +146,8 @@
 		19F5475220A8EFA6006F40DF /* PersonManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonManager.swift; sourceTree = "<group>"; };
 		19F5475420A8EFF0006F40DF /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
 		19F5475620A8F001006F40DF /* Movie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movie.swift; sourceTree = "<group>"; };
+		19FCF54220D3388F00AB142E /* Weaver.ImageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.ImageManager.swift; sourceTree = "<group>"; };
+		19FCF54920D33D2300AB142E /* Weaver.MovieManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.MovieManager.swift; sourceTree = "<group>"; };
 		1AB97391479B4402B8292DF0 /* Pods-Sample-API.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sample-API.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Sample-API/Pods-Sample-API.debug.xcconfig"; sourceTree = "<group>"; };
 		469DB316BB03D27CD90E6AFB /* Pods-Sample-API.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sample-API.release.xcconfig"; path = "Pods/Target Support Files/Pods-Sample-API/Pods-Sample-API.release.xcconfig"; sourceTree = "<group>"; };
 		5122F2B89C213B743FED810A /* Pods-SampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SampleTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SampleTests/Pods-SampleTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -203,11 +201,10 @@
 		194F90DA20CFB78B00F594F5 /* API */ = {
 			isa = PBXGroup;
 			children = (
+				19FCF53F20D3381E00AB142E /* Manager */,
+				19FCF53E20D3380300AB142E /* Model */,
 				194F90FC20CFBA2900F594F5 /* Generated */,
-				194F90F720CFB80800F594F5 /* API.swift */,
-				194F90FD20CFBE0A00F594F5 /* Error.swift */,
 				194F910320CFBE9E00F594F5 /* Logger.swift */,
-				194F90FA20CFB9A300F594F5 /* Result.swift */,
 				194F90DB20CFB78B00F594F5 /* API.h */,
 				194F90DC20CFB78B00F594F5 /* Info.plist */,
 			);
@@ -217,7 +214,8 @@
 		194F90E720CFB78B00F594F5 /* APITests */ = {
 			isa = PBXGroup;
 			children = (
-				194F90E820CFB78B00F594F5 /* APITests.swift */,
+				19F5473F20A74C50006F40DF /* Spies */,
+				19F5473E20A74C3E006F40DF /* Manager */,
 				194F90EA20CFB78B00F594F5 /* Info.plist */,
 			);
 			path = APITests;
@@ -226,6 +224,8 @@
 		194F90FC20CFBA2900F594F5 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
+				19FCF54920D33D2300AB142E /* Weaver.MovieManager.swift */,
+				19FCF54220D3388F00AB142E /* Weaver.ImageManager.swift */,
 				194F90FF20CFBE4D00F594F5 /* Weaver.API.swift */,
 			);
 			path = Generated;
@@ -259,7 +259,6 @@
 			isa = PBXGroup;
 			children = (
 				19F5473D20A74C1F006F40DF /* View */,
-				19F5473C20A74C13006F40DF /* Model */,
 				19F5473B20A74C02006F40DF /* Manager */,
 				19956E18206B51FF00751B70 /* Generated */,
 				19956DF4206B4F0A00751B70 /* AppDelegate.swift */,
@@ -274,8 +273,6 @@
 		19956E08206B4F0A00751B70 /* SampleTests */ = {
 			isa = PBXGroup;
 			children = (
-				19F5473F20A74C50006F40DF /* Spies */,
-				19F5473E20A74C3E006F40DF /* Manager */,
 				19956E0B206B4F0A00751B70 /* Info.plist */,
 			);
 			path = SampleTests;
@@ -285,13 +282,11 @@
 			isa = PBXGroup;
 			children = (
 				19C298D520B1272800094218 /* Weaver.PersonManager.swift */,
+				19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */,
 				19F5474E20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift */,
 				19F5474A20A7D9E8006F40DF /* Weaver.ReviewManager.swift */,
-				19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */,
 				19F5474120A75085006F40DF /* Weaver.HomeViewController.swift */,
 				193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */,
-				193A55992097E38600319C18 /* Weaver.ImageManager.swift */,
-				193A559E2097E38600319C18 /* Weaver.MovieManager.swift */,
 			);
 			path = Generated;
 			sourceTree = "<group>";
@@ -299,23 +294,10 @@
 		19F5473B20A74C02006F40DF /* Manager */ = {
 			isa = PBXGroup;
 			children = (
-				19DE26A4207AADD30011DF93 /* ImageManager.swift */,
-				193EEF88207690C300BFE706 /* MovieManager.swift */,
-				19F5474820A7D67E006F40DF /* ReviewManager.swift */,
 				19F5475220A8EFA6006F40DF /* PersonManager.swift */,
+				19F5474820A7D67E006F40DF /* ReviewManager.swift */,
 			);
 			path = Manager;
-			sourceTree = "<group>";
-		};
-		19F5473C20A74C13006F40DF /* Model */ = {
-			isa = PBXGroup;
-			children = (
-				19F5475620A8F001006F40DF /* Movie.swift */,
-				193EEF8A2076911D00BFE706 /* Page.swift */,
-				19F5475420A8EFF0006F40DF /* Person.swift */,
-				19F5474C20A7DCB6006F40DF /* Review.swift */,
-			);
-			path = Model;
 			sourceTree = "<group>";
 		};
 		19F5473D20A74C1F006F40DF /* View */ = {
@@ -350,6 +332,29 @@
 				19DE26AE207BCFF30011DF93 /* URLProtocolMock.swift */,
 			);
 			path = Spies;
+			sourceTree = "<group>";
+		};
+		19FCF53E20D3380300AB142E /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				194F90FD20CFBE0A00F594F5 /* Error.swift */,
+				19F5475620A8F001006F40DF /* Movie.swift */,
+				193EEF8A2076911D00BFE706 /* Page.swift */,
+				19F5475420A8EFF0006F40DF /* Person.swift */,
+				194F90FA20CFB9A300F594F5 /* Result.swift */,
+				19F5474C20A7DCB6006F40DF /* Review.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		19FCF53F20D3381E00AB142E /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				194F90F720CFB80800F594F5 /* API.swift */,
+				19DE26A4207AADD30011DF93 /* ImageManager.swift */,
+				193EEF88207690C300BFE706 /* MovieManager.swift */,
+			);
+			path = Manager;
 			sourceTree = "<group>";
 		};
 		4A1A009DE7C14B7A361DC636 /* Frameworks */ = {
@@ -706,8 +711,16 @@
 			files = (
 				194F910420CFBE9E00F594F5 /* Logger.swift in Sources */,
 				194F90FB20CFB9A300F594F5 /* Result.swift in Sources */,
+				19FCF54320D3388F00AB142E /* Weaver.ImageManager.swift in Sources */,
+				19FCF54120D3384700AB142E /* ImageManager.swift in Sources */,
+				19FCF54520D33A0300AB142E /* Movie.swift in Sources */,
 				194F910020CFBE4D00F594F5 /* Weaver.API.swift in Sources */,
+				195848D020D43F8300BB1F09 /* Person.swift in Sources */,
 				194F90FE20CFBE0A00F594F5 /* Error.swift in Sources */,
+				195848D120D43F8300BB1F09 /* Review.swift in Sources */,
+				19FCF53D20D337FF00AB142E /* Page.swift in Sources */,
+				19FCF54A20D33D2400AB142E /* Weaver.MovieManager.swift in Sources */,
+				19FCF54420D339EB00AB142E /* MovieManager.swift in Sources */,
 				194F90F820CFB80800F594F5 /* API.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -716,7 +729,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				194F90E920CFB78B00F594F5 /* APITests.swift in Sources */,
+				195848DA20D442E700BB1F09 /* MovieManagerTests.swift in Sources */,
+				195848D720D442E700BB1F09 /* ResolverMocks.swift in Sources */,
+				195848D420D442DF00BB1F09 /* URLProtocolMock.swift in Sources */,
+				195848D620D442E700BB1F09 /* ManagerMocks.swift in Sources */,
+				195848D820D442E700BB1F09 /* ImageManagerTests.swift in Sources */,
+				195848D920D442E700BB1F09 /* MovieAPITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -724,26 +742,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				193EEF8B2076911D00BFE706 /* Page.swift in Sources */,
 				19C298D620B1272800094218 /* Weaver.PersonManager.swift in Sources */,
-				193A55A42097E38600319C18 /* Weaver.MovieManager.swift in Sources */,
-				19F5475720A8F001006F40DF /* Movie.swift in Sources */,
+				19FCF54020D3384300AB142E /* PersonManager.swift in Sources */,
 				19F5474B20A7D9E8006F40DF /* Weaver.ReviewManager.swift in Sources */,
-				19F5474D20A7DCB6006F40DF /* Review.swift in Sources */,
-				19F5475520A8EFF0006F40DF /* Person.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
 				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
 				19F5474520A79BCD006F40DF /* MovieViewController.swift in Sources */,
-				19DE26A5207AADD30011DF93 /* ImageManager.swift in Sources */,
-				19F5475320A8EFA6006F40DF /* PersonManager.swift in Sources */,
-				19F5474720A79BE8006F40DF /* Weaver.MovieViewController.swift in Sources */,
-				193A559F2097E38600319C18 /* Weaver.ImageManager.swift in Sources */,
+				195848D320D4426100BB1F09 /* ReviewManager.swift in Sources */,
 				19F5474320A75085006F40DF /* Weaver.HomeViewController.swift in Sources */,
+				19FCF54720D33A4A00AB142E /* Weaver.MovieViewController.swift in Sources */,
 				19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */,
 				193A55A22097E38600319C18 /* Weaver.AppDelegate.swift in Sources */,
-				193EEF89207690C300BFE706 /* MovieManager.swift in Sources */,
 				19F5475120A888D3006F40DF /* ReviewTableViewCell.swift in Sources */,
-				19F5474920A7D67E006F40DF /* ReviewManager.swift in Sources */,
 				19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */,
 				19F5474F20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift in Sources */,
 				19F5473920A69F96006F40DF /* WSReviewViewController+Injectable.swift in Sources */,
@@ -754,12 +764,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				19DE26AB207BC21E0011DF93 /* ResolverMocks.swift in Sources */,
-				19DE26A9207BBD9D0011DF93 /* ManagerMocks.swift in Sources */,
-				19DE26AD207BC7BC0011DF93 /* MovieAPITests.swift in Sources */,
-				19DE26BD207C7C8C0011DF93 /* ImageManagerTests.swift in Sources */,
-				19DE26BB207C78670011DF93 /* MovieManagerTests.swift in Sources */,
-				19DE26AF207BCFF30011DF93 /* URLProtocolMock.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

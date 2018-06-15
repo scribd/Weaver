@@ -30,9 +30,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // weaver: imageManager = ImageManager <- ImageManaging
     // weaver: imageManager.scope = .container
+    // weaver: imageManager.customRef = true
     
     // weaver: movieManager = MovieManager <- MovieManaging
     // weaver: movieManager.scope = .container
+    // weaver: movieManager.customRef = true
     
     // weaver: homeViewController = HomeViewController <- UIViewController
     // weaver: homeViewController.scope = .container
@@ -58,6 +60,14 @@ extension AppDelegateDependencyContainer {
     }
     
     func movieAPICustomRef(_: DependencyContainer) -> APIProtocol {
-        return MovieAPI(urlSession: .shared)
+        return MovieAPI(urlSession: urlSession)
+    }
+    
+    func imageManagerCustomRef(_: DependencyContainer) -> ImageManaging {
+        return ImageManager(movieAPI: movieAPI)
+    }
+    
+    func movieManagerCustomRef(_: DependencyContainer) -> MovieManaging {
+        return MovieManager(logger: logger)
     }
 }

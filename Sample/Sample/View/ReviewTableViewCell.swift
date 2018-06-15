@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import API
 
 @objc final class ReviewTableViewCellViewModel: NSObject {
     

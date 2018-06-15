@@ -585,7 +585,27 @@ final class MovieViewController: UIViewController {
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_a_type_with_no_dependents() {
+    func test_inspector_should_build_a_valid_graph_with_a_public_type_with_no_dependents() {
+        let file = File(contents: """
+public final class MovieViewController: UIViewController {
+    // weaver: movieManager <- MovieManaging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_graph_with_an_internal_type_with_no_dependents() {
         let file = File(contents: """
 final class MovieViewController: UIViewController {
     // weaver: movieManager <- MovieManaging
@@ -600,6 +620,12 @@ final class MovieViewController: UIViewController {
             let inspector = try Inspector(syntaxTrees: [syntaxTree])
             
             try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
+                                                                                  name: "movieManager",
+                                                                                  typeName: nil),
+                                                              underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

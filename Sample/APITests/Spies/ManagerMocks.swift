@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 import XCTest
 
-@testable import Sample
+@testable import API
 
 final class APISpy: APIProtocol {
     

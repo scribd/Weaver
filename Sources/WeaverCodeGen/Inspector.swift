@@ -54,16 +54,19 @@ private final class Graph {
 private final class Resolver {
     let typeName: String?
     var config: ResolverConfiguration
+    var accessLevel: AccessLevel
     var dependencies: [DependencyIndex: Dependency] = [:]
     var dependents: [Resolver] = []
 
     var fileLocation: FileLocation
 
     init(config: ResolverConfiguration = .empty,
+         accessLevel: AccessLevel = .default,
          typeName: String? = nil,
          file: String? = nil,
          line: Int? = nil) {
         self.config = config
+        self.accessLevel = accessLevel
         self.typeName = typeName
         
         fileLocation = FileLocation(line: line, file: file)
@@ -136,12 +139,18 @@ extension Graph {
         return resolversByName[name]
     }
     
-    func resolver(typed type: String, line: Int, fileName: String) -> Resolver {
+    func resolver(typed type: String,
+                  accessLevel: AccessLevel,
+                  line: Int,
+                  fileName: String) -> Resolver {
+
         if let resolver = resolversByType[type] {
             resolver.fileLocation = FileLocation(line: line, file: fileName)
+            resolver.accessLevel = accessLevel
             return resolver
         }
-        let resolver = Resolver(typeName: type, file: fileName, line: line)
+
+        let resolver = Resolver(accessLevel: accessLevel, typeName: type, file: fileName, line: line)
         resolversByType[type] = resolver
         return resolver
     }
@@ -203,6 +212,7 @@ private extension Inspector {
             }
 
             let resolver = graph.resolver(typed: token.value.name,
+                                          accessLevel: token.value.accessLevel,
                                           line: token.line,
                                           fileName: fileName)
             
@@ -275,6 +285,7 @@ private extension Resolver {
             switch child {
             case .typeDeclaration(let injectableType, let children):
                 let resolver = graph.resolver(typed: injectableType.value.name,
+                                              accessLevel: injectableType.value.accessLevel,
                                               line: injectableType.line,
                                               fileName: fileName)
 
@@ -335,7 +346,8 @@ private extension Resolver {
 private extension Dependency {
     
     func resolve(with cache: inout Set<ResolutionCacheIndex>) throws {
-        guard !dependentResovler.dependents.isEmpty else {
+        
+        if dependentResovler.accessLevel == .public && dependentResovler.dependents.isEmpty {
             return
         }
         

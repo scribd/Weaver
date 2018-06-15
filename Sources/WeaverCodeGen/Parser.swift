@@ -174,7 +174,7 @@ private extension Parser {
     func parseFile() throws -> Expr {
         
         var types = [Expr]()
-        var imports = Set<String>()
+        var imports = Set<String>(["WeaverDI"])
         
         while true {
             parseAnyDeclarations()

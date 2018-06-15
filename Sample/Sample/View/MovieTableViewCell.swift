@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import API
 
 final class MovieTableViewCell: UITableViewCell {
     

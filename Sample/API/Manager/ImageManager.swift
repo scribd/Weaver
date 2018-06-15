@@ -9,18 +9,17 @@
 import Foundation
 import UIKit
 import WeaverDI
-import API
 
-enum ImageManagerError: Error {
+public enum ImageManagerError: Error {
     case oops
 }
 
-protocol ImageManaging {
+public protocol ImageManaging {
     
     func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void)
 }
 
-final class ImageManager: ImageManaging {
+public final class ImageManager: ImageManaging {
     
     private let dependencies: ImageManagerDependencyResolver
     
@@ -38,7 +37,7 @@ final class ImageManager: ImageManaging {
         self.dependencies = dependencies
     }
     
-    func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void) {
+    public func getImage(with path: String, completion: @escaping (Result<UIImage, ImageManagerError>) -> Void) {
         
         let request = APIRequest<Data>(method: .get, host: MovieAPI.Constants.imageAPIHost, path: path)
         

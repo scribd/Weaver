@@ -9,7 +9,7 @@
 import Foundation
 import XCTest
 
-@testable import Sample
+@testable import API
 
 final class ImageManagerTests: XCTestCase {
     

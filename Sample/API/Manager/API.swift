@@ -96,7 +96,7 @@ public final class MovieAPI: APIProtocol {
         }
         
         dependencies.logger.log(.info, "Requesting '\(url)'.")
-
+        
         let task = dependencies.urlSession.dataTask(with: url) { (data, response, error) in
             
             if let error = error {
