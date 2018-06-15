@@ -70,7 +70,7 @@ public protocol APIProtocol {
 public final class MovieAPI: APIProtocol {
 
     private let dependencies: MovieAPIDependencyResolver
-    
+
     // weaver: urlSession <- URLSession
     
     // weaver: logger = Logger

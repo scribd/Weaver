@@ -32,14 +32,14 @@ public final class Inspector {
 // MARK: - Graph Objects
 
 private final class Graph {
-    private var resolversByName = [String: Resolver]()
-    private var resolversByType = [String: Resolver]()
+    private var resolversByName = OrderedDictionary<String, Resolver>()
+    private var resolversByType = OrderedDictionary<String, Resolver>()
     
     lazy var dependencies: [Dependency] = {
         var allDependencies = [Dependency]()
         
-        allDependencies.append(contentsOf: resolversByName.values.flatMap { $0.dependencies.values }.sorted { $0.name < $1.name })
-        allDependencies.append(contentsOf: resolversByType.values.flatMap { $0.dependencies.values }.sorted { $0.name < $1.name })
+        allDependencies.append(contentsOf: resolversByName.orderedValues.flatMap { $0.dependencies.orderedValues })
+        allDependencies.append(contentsOf: resolversByType.orderedValues.flatMap { $0.dependencies.orderedValues })
 
         var filteredDependencies = Set<Dependency>()
         return allDependencies.filter {
@@ -56,7 +56,7 @@ private final class Resolver {
     let typeName: String?
     var config: ResolverConfiguration
     var accessLevel: AccessLevel
-    var dependencies: [DependencyIndex: Dependency] = [:]
+    var dependencies = OrderedDictionary<DependencyIndex, Dependency>()
     var dependents: [Resolver] = []
 
     var fileLocation: FileLocation
@@ -482,7 +482,7 @@ private extension Resolver {
         var history = history
         history.append(.triedToBuildType(printableResolver, stepCount: history.buildSteps.count))
         
-        for dependency in dependencies.values {
+        for dependency in dependencies.orderedValues {
             var visitedResolversCopy = visitedResolvers
             try dependency.associatedResolver.buildDependencies(from: sourceDependency,
                                                                 visitedResolvers: &visitedResolversCopy,
@@ -601,4 +601,3 @@ extension BuildCacheIndex: Hashable {
         return true
     }
 }
-

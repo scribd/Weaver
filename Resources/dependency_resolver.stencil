@@ -36,7 +36,7 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
             return {{registration.typeName}}{% if registration.hasBuilder %}.make{{registration.typeName}}(injecting: dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}(){% endif %}
             {% else %}{# not registration.customRef #}
 
-            return self.{{registration.name}}CustomRef({% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %})
+            return self.{{registration.name}}CustomRef({% for parameter in registration.parameters %}{% if not forloop.first %}, {% endif %}{{parameter.name}}: {{parameter.name}}{% endfor %})
             {% endif %}{# not registration.customRef #}
         })
 
@@ -65,7 +65,7 @@ final class {{resolver.targetTypeName}}DependencyContainer: DependencyContainer 
     {% for registration in resolver.registrations %}
 
     {% if registration.customRef %}
-    func {{registration.name}}CustomRef({% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.typeName}}{% endfor %}) -> {{registration.abstractTypeName}}
+    func {{registration.name}}CustomRef({% for parameter in registration.parameters %}{% if not forloop.first %}, {% endif %}{{parameter.name}}: {{parameter.typeName}}{% endfor %}) -> {{registration.abstractTypeName}}
     {% endif %}{# registration.customRef #}
 
     {% endfor %}{# resolver.registrations  #}
@@ -129,20 +129,18 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
 
 final class {{resolver.targetTypeName}}ShimDependencyContainer {
 
-    private let internalDependencies = {{resolver.targetTypeName}}DependencyContainer()
+    private let internalDependencies: {{resolver.targetTypeName}}DependencyContainer
     
     {% for reference in resolver.publicReferences %}
     let {{ reference.name }}: {{ reference.typeName }}
     {% endfor %}{# resolver.publicReferences #}
 
-    init({% for reference in resolver.publicReferences %}{% if not forloop.first %}, {% endif %}{{ reference.name }}: {{ reference.typeName }}{% endfor %}{% if publicReferences %}, {% endif %}{% for parameter in resolver.parameters %}{% if not forloop.first %}, {% endif %}{{ parameter.name }}: {{ reference.typeName }}{% endfor %}) {
+    init({% for reference in resolver.publicReferences %}{% if not forloop.first %}, {% endif %}{{ reference.name }}: {{ reference.typeName }}{% endfor %}{% if resolver.publicReferences %}{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{% if not forloop.first %}, {% endif %}{{ parameter.name }}: {{ parameter.typeName }}{% endfor %}) {
+        internalDependencies = {{resolver.targetTypeName}}DependencyContainer({% for parameter in resolver.parameters %}{% if not forloop.last %}, {% endif %}{{ parameter.name }}: {{ parameter.name }}{% endfor %})
+
         {% for reference in resolver.publicReferences %}
         self.{{ reference.name }} = {{ reference.name }}
         {% endfor %}{# resolver.publicReferences #}
-
-        {% for parameter in resolver.parameters %}
-        self.{{ parameter.name }} = {{ parameter.name }}
-        {% endfor %}{# resolver.parameters #}
     }
 }
 
@@ -164,11 +162,19 @@ extension {{resolver.targetTypeName}}ShimDependencyContainer: {{resolver.targetT
     {% endif %}{# reference.parameters #}
 
     {% endfor %}{# resolver.internalReferences #}
+
+    {% for parameter in resolver.parameters %}
+
+    var {{parameter.name}}: {{parameter.typeName}} {
+        return internalDependencies.{{parameter.name}}
+    }
+
+    {% endfor %}{# resolver.parameters #}
 }
 
 extension {{resolver.targetTypeName}} {
-    public convenience init({% for reference in resolver.publicReferences %}{% if not forloop.first %}, {% endif %}{{ reference.name }}: {{ reference.typeName }}{% endfor %}{% if publicReferences %}, {% endif %}{% for parameter in resolver.parameters %}{% if not forloop.first %}, {% endif %}{{ parameter.name }}: {{ reference.typeName }}{% endfor %}) {
-        let shim = {{resolver.targetTypeName}}ShimDependencyContainer({% for reference in resolver.publicReferences %}{% if not forloop.first %}, {% endif %}{{ reference.name }}: {{ reference.name }}{% endfor %}{% if publicReferences %},{% endif %}{% for parameter in resolver.parameters %}{% if not forloop.first %}, {% endif %}{{ parameter.name }}: {{ parameter.name }}{% endfor %})
+    public convenience init({% for reference in resolver.publicReferences %}{% if not forloop.first %}, {% endif %}{{ reference.name }}: {{ reference.typeName }}{% endfor %}{% if resolver.publicReferences %}{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{% if not forloop.first %}, {% endif %}{{ parameter.name }}: {{ parameter.typeName }}{% endfor %}) {
+        let shim = {{resolver.targetTypeName}}ShimDependencyContainer({% for reference in resolver.publicReferences %}{% if not forloop.first %}, {% endif %}{{ reference.name }}: {{ reference.name }}{% endfor %}{% if resolver.publicReferences %}{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{% if not forloop.first %}, {% endif %}{{ parameter.name }}: {{ parameter.name }}{% endfor %})
         self.init(injecting: shim)
     }
 }

@@ -68,6 +68,6 @@ extension AppDelegateDependencyResolver {
     }
     
     func movieManagerCustomRef() -> MovieManaging {
-        return MovieManager(logger: logger)
+        return MovieManager(logger: logger, host: "https://api.themoviedb.org/3")
     }
 }

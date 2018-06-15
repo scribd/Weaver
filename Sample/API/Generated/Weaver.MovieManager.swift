@@ -4,7 +4,9 @@ import Foundation
 import WeaverDI
 // MARK: - MovieManager
 final class MovieManagerDependencyContainer: DependencyContainer {
-    init(parent: DependencyContainer? = nil) {
+    let host: String?
+    init(parent: DependencyContainer? = nil, host: String?) {
+        self.host = host
         super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
@@ -17,6 +19,7 @@ final class MovieManagerDependencyContainer: DependencyContainer {
     }
 }
 protocol MovieManagerDependencyResolver {
+    var host: String? { get }
     var movieAPI: APIProtocol { get }
     var urlSession: URLSession { get }
     var logger: Logger { get }
@@ -34,8 +37,8 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     }
 }
 extension MovieManager {
-    static func makeMovieManager(injecting parentDependencies: DependencyContainer) -> MovieManager {
-        let dependencies = MovieManagerDependencyContainer(parent: parentDependencies)
+    static func makeMovieManager(injecting parentDependencies: DependencyContainer, host: String?) -> MovieManager {
+        let dependencies = MovieManagerDependencyContainer(parent: parentDependencies, host: host)
         return MovieManager(injecting: dependencies)
     }
 }
@@ -45,9 +48,10 @@ protocol MovieManagerDependencyInjectable {
 extension MovieManager: MovieManagerDependencyInjectable {}
 // MARK: - MovieManagerShim
 final class MovieManagerShimDependencyContainer {
-    private let internalDependencies = MovieManagerDependencyContainer()
+    private let internalDependencies: MovieManagerDependencyContainer
     let logger: Logger
-    init(logger: Logger) {
+    init(logger: Logger, host: String?) {
+        internalDependencies = MovieManagerDependencyContainer(host: host)
         self.logger = logger
     }
 }
@@ -58,10 +62,13 @@ extension MovieManagerShimDependencyContainer: MovieManagerDependencyResolver {
     var urlSession: URLSession {
         return internalDependencies.resolve(URLSession.self, name: "urlSession")
     }
+    var host: String? {
+        return internalDependencies.host
+    }
 }
 extension MovieManager {
-    public convenience init(logger: Logger) {
-        let shim = MovieManagerShimDependencyContainer(logger: logger)
+    public convenience init(logger: Logger, host: String?) {
+        let shim = MovieManagerShimDependencyContainer(logger: logger, host: host)
         self.init(injecting: shim)
     }
 }

@@ -36,13 +36,15 @@ public final class MovieManager: MovieManaging {
     
     // weaver: movieAPI = MovieAPI <- APIProtocol
     
-    required init(injecting dependencies: MovieManagerDependencyResolver) {
+    // weaver: host <= String?
+    
+    init(injecting dependencies: MovieManagerDependencyResolver) {
         self.dependencies = dependencies
     }
     
     public func getDiscoverMovies(_ completion: @escaping (Result<Page<Movie>, MovieManagerError>) -> Void) {
         
-        let request = APIRequest<Page<Movie>>(path: "/discover/movie")
+        let request = APIRequest<Page<Movie>>(host: dependencies.host, path: "/discover/movie")
         
         dependencies.movieAPI.send(request: request) { result in
             switch result {

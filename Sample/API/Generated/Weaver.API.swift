@@ -37,9 +37,10 @@ protocol MovieAPIDependencyInjectable {
 extension MovieAPI: MovieAPIDependencyInjectable {}
 // MARK: - MovieAPIShim
 final class MovieAPIShimDependencyContainer {
-    private let internalDependencies = MovieAPIDependencyContainer()
+    private let internalDependencies: MovieAPIDependencyContainer
     let urlSession: URLSession
     init(urlSession: URLSession) {
+        internalDependencies = MovieAPIDependencyContainer()
         self.urlSession = urlSession
     }
 }

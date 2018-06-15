@@ -46,9 +46,10 @@ protocol ImageManagerDependencyInjectable {
 extension ImageManager: ImageManagerDependencyInjectable {}
 // MARK: - ImageManagerShim
 final class ImageManagerShimDependencyContainer {
-    private let internalDependencies = ImageManagerDependencyContainer()
+    private let internalDependencies: ImageManagerDependencyContainer
     let movieAPI: APIProtocol
     init(movieAPI: APIProtocol) {
+        internalDependencies = ImageManagerDependencyContainer()
         self.movieAPI = movieAPI
     }
 }

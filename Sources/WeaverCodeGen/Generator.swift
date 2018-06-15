@@ -38,7 +38,7 @@ public final class Generator {
     
     public func generate() throws -> [(file: String, data: String?)] {
 
-        return try graph.resolversByFile.map { file, resolvers in
+        return try graph.resolversByFile.orderedKeyValues.map { (file, resolvers) in
 
             guard !resolvers.isEmpty else {
                 return (file: file, data: nil)
@@ -59,10 +59,10 @@ public final class Generator {
 
 private final class Graph {
 
-    private(set) var resolversByType = [String: ResolverModel]()
+    private(set) var resolversByType = OrderedDictionary<String, ResolverModel>()
     private(set) var typesByName = [String: [String]]()
 
-    var resolversByFile = [String: [ResolverModel]]()
+    var resolversByFile = OrderedDictionary<String, [ResolverModel]>()
     var importsByFile = [String: [String]]()
     
     func insertResolver(_ resolver: ResolverModel) {
@@ -380,7 +380,7 @@ private extension Generator {
     
     func link() {
         
-        let resolvers = graph.resolversByFile.values.flatMap { $0 }
+        let resolvers = graph.resolversByFile.orderedValues.flatMap { $0 }
         let registrations = resolvers.flatMap { $0.registrations }
         let references = resolvers.flatMap { $0.references }
         
