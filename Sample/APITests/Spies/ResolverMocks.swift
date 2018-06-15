@@ -27,6 +27,8 @@ final class MovieAPIDependencyResolverSpy: MovieAPIDependencyResolver {
         config.protocolClasses = [URLProtocolSpy.self]
         return URLSession(configuration: config)
     }()
+    
+    let logger = Logger()
 }
 
 final class MovieManagerDependencyResolverSpy: MovieManagerDependencyResolver {
@@ -35,12 +37,22 @@ final class MovieManagerDependencyResolverSpy: MovieManagerDependencyResolver {
 
     var movieAPISpy = APISpy()
     
+    // MARK: - Stubs
+    
+    var host: String? = nil
+    
     // MARK: - Implementation
     
     var movieAPI: APIProtocol {
         return movieAPISpy
     }
     
+    lazy var urlSession: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [URLProtocolSpy.self]
+        return URLSession(configuration: config)
+    }()
+
     let logger = Logger()
 }
 
