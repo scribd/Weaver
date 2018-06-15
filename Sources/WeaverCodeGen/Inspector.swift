@@ -37,8 +37,9 @@ private final class Graph {
     
     lazy var dependencies: [Dependency] = {
         var allDependencies = [Dependency]()
-        allDependencies.append(contentsOf: resolversByName.values.flatMap { $0.dependencies.values })
-        allDependencies.append(contentsOf: resolversByType.values.flatMap { $0.dependencies.values })
+        
+        allDependencies.append(contentsOf: resolversByName.values.flatMap { $0.dependencies.values }.sorted { $0.name < $1.name })
+        allDependencies.append(contentsOf: resolversByType.values.flatMap { $0.dependencies.values }.sorted { $0.name < $1.name })
 
         var filteredDependencies = Set<Dependency>()
         return allDependencies.filter {
