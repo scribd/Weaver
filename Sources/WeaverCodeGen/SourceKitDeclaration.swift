@@ -52,10 +52,14 @@ struct SourceKitDeclaration {
         case .extension where inheritedTypes.first { $0.hasSuffix("ObjCDependencyInjectable") } != nil:
             isInjectable = true
             doesSupportObjc = true
-            
-        default:
+
+        case .enum,
+             .extension:
             isInjectable = false
             doesSupportObjc = false
+            
+        default:
+            return nil
         }
         
         guard let name = dictionary[SwiftDocKey.name.rawValue] as? String else {

@@ -370,7 +370,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_any_ignored_declaration() {
+    func test_tokenizer_should_generate_an_empty_token_list_with_any_ignored_declaration() {
         
         let file = File(contents: """
 
@@ -381,13 +381,7 @@ func ignoredFunc() {
 
         do {
             let tokens = try lexer.tokenize()
-            
-            if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<AnyDeclaration>, TokenBox(value: AnyDeclaration(), offset: 1, length: 22, line: 1))
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfAnyDeclaration>, TokenBox(value: EndOfAnyDeclaration(), offset: 22, length: 1, line: 2))
-            } else {
-                XCTFail("Unexpected amount of tokens: \(tokens.count).")
-            }
+            XCTAssertTrue(tokens.isEmpty)
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

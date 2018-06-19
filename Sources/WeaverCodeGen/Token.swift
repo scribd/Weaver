@@ -181,7 +181,7 @@ public struct InjectableType: Token {
 }
 
 public struct EndOfInjectableType: Token {
-    public let description = "}"
+    public let description = "_ }"
 }
 
 public struct AnyDeclaration: Token {

@@ -95,9 +95,12 @@ private extension Parser {
             }
         }
         
+        parseAnyDeclarations()
+        guard currentToken != nil else {
+            return nil
+        }
+        
         while true {
-            parseAnyDeclarations()
-
             switch currentToken {
             case is TokenBox<RegisterAnnotation>:
                 let annotation = try parseSimpleExpr(RegisterAnnotation.self)
@@ -168,6 +171,8 @@ private extension Parser {
                     break
                 }
             }
+            
+            parseAnyDeclarations()
         }
     }
     
