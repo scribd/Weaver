@@ -29,6 +29,15 @@
         }
       },
       {
+        "package": "Differ",
+        "repositoryURL": "https://github.com/tonyarnold/Differ.git",
+        "state": {
+          "branch": null,
+          "revision": "a3252fbc44b6fbc2a87539dc555a8e014233fe20",
+          "version": "1.2.3"
+        }
+      },
+      {
         "package": "Nimble",
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
@@ -65,15 +74,6 @@
         }
       },
       {
-        "package": "SWXMLHash",
-        "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
-        "state": {
-          "branch": null,
-          "revision": "17d992beb3aaeda403fd35f8d5e70ab1a8124f35",
-          "version": "4.6.0"
-        }
-      },
-      {
         "package": "SourceKit",
         "repositoryURL": "https://github.com/norio-nomura/SourceKit.git",
         "state": {
@@ -107,6 +107,15 @@
           "branch": null,
           "revision": "c2e25f25acfbe24442809c055141d8323af8f6cc",
           "version": "0.11.0"
+        }
+      },
+      {
+        "package": "SWXMLHash",
+        "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
+        "state": {
+          "branch": null,
+          "revision": "17d992beb3aaeda403fd35f8d5e70ab1a8124f35",
+          "version": "4.6.0"
         }
       },
       {

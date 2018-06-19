@@ -17,7 +17,7 @@ public protocol AnyTokenBox {
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token>: AnyTokenBox, Equatable, CustomStringConvertible {
+public struct TokenBox<T: Token & Equatable>: AnyTokenBox, Equatable, CustomStringConvertible {
     let value: T
     public let offset: Int
     public let length: Int
@@ -36,22 +36,50 @@ public struct TokenBox<T: Token>: AnyTokenBox, Equatable, CustomStringConvertibl
     }
 }
 
-public protocol Token: AutoEquatable, CustomStringConvertible {
+public protocol Token: CustomStringConvertible {
     static func create(_ string: String) throws -> Self?
+}
+
+// MARK: - Patterns
+
+private enum Patterns {
+    private static let spaces = "\\s*"
+    private static let equal = "\(spaces)=\(spaces)"
+    private static let arrow = "\(spaces)<-\(spaces)"
+    private static let name = "\\w+"
+    private static let typeName = "\(name)(<\(name)(\(spaces),\(spaces)\(name))*>)?\\??"
+    
+    static let register = "^(\(name))\(equal)(\(typeName))\(spaces)(<-\(spaces)(\(typeName))\(spaces))?$"
+    static let reference = "^(\(name))\(arrow)(\(typeName))\(spaces)$"
+    static let parameter = "^(\(name))\(spaces)<=\(spaces)(\(typeName))\(spaces)$"
+    static let scope = "^(\(name))\\.scope\(equal)\\.(\(name))\(spaces)$"
+    static let configuration = "^(\(name))\\.(\(name))\(equal)(\(name)\\??)\(spaces)$"
+    static let `import` = "^import\\s+(\(name))\(spaces)$"
 }
 
 // MARK: - Token Types
 
-public struct RegisterAnnotation: Token {
+public struct RegisterAnnotation: Token, AutoEquatable {
     let name: String
     let typeName: String
     let protocolName: String?
     
     public static func create(_ string: String) throws -> RegisterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*=\\s*(\\w+\\??)\\s*(<-\\s*(\\w+\\??)\\s*)?$").matches(in: string) else {
+        print(Patterns.register)
+        
+        guard let matches = try NSRegularExpression(pattern: Patterns.register).matches(in: string) else {
             return nil
         }
-        return RegisterAnnotation(name: matches[0], typeName: matches[1], protocolName: matches.count >= 4 ? matches[3] : nil)
+
+        let protocolName: String?
+        let arrowIndex = matches.index { $0.hasPrefix("<-") }
+        if let arrowIndex = arrowIndex, arrowIndex + 1 < matches.count {
+            protocolName = matches[arrowIndex + 1]
+        } else {
+            protocolName = nil
+        }
+        
+        return RegisterAnnotation(name: matches[0], typeName: matches[1], protocolName: protocolName)
     }
     
     public var description: String {
@@ -63,13 +91,13 @@ public struct RegisterAnnotation: Token {
     }
 }
 
-public struct ScopeAnnotation: Token {
+public struct ScopeAnnotation: Token, AutoEquatable {
 
     let name: String
     let scope: Scope
     
     public static func create(_ string: String) throws -> ScopeAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.scope).matches(in: string) else {
             return nil
         }
         
@@ -85,13 +113,13 @@ public struct ScopeAnnotation: Token {
     }
 }
 
-public struct ReferenceAnnotation: Token {
+public struct ReferenceAnnotation: Token, AutoEquatable {
     
     let name: String
     let typeName: String
     
     public static func create(_ string: String) throws -> ReferenceAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*<-\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.reference).matches(in: string) else {
             return nil
         }
         return ReferenceAnnotation(name: matches[0], typeName: matches[1])
@@ -102,13 +130,13 @@ public struct ReferenceAnnotation: Token {
     }
 }
 
-public struct ParameterAnnotation: Token {
+public struct ParameterAnnotation: Token, AutoEquatable {
     
     let name: String
     let typeName: String
     
     public static func create(_ string: String) throws -> ParameterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*<=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.parameter).matches(in: string) else {
             return nil
         }
         return ParameterAnnotation(name: matches[0], typeName: matches[1])
@@ -119,14 +147,14 @@ public struct ParameterAnnotation: Token {
     }
 }
 
-public struct ConfigurationAnnotation: Token, AutoHashable {
+public struct ConfigurationAnnotation: Token, AutoHashable, AutoEquatable {
     
     let attribute: ConfigurationAttribute
     
     let target: ConfigurationAttributeTarget
     
     public static func create(_ string: String) throws -> ConfigurationAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.(\\w+)\\s*=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.configuration).matches(in: string) else {
             return nil
         }
         
@@ -145,12 +173,12 @@ public struct ConfigurationAnnotation: Token, AutoHashable {
     }
 }
 
-public struct ImportDeclaration: Token {
+public struct ImportDeclaration: Token, AutoEquatable {
     
     let moduleName: String
     
     public static func create(_ string: String) throws -> ImportDeclaration? {
-        guard let matches = try NSRegularExpression(pattern: "^import\\s+(\\w+)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.import).matches(in: string) else {
             return nil
         }
         
@@ -162,7 +190,7 @@ public struct ImportDeclaration: Token {
     }
 }
 
-public struct InjectableType: Token {
+public struct InjectableType: Token, AutoEquatable {
     let name: String
     let accessLevel: AccessLevel
     let doesSupportObjc: Bool
@@ -180,15 +208,15 @@ public struct InjectableType: Token {
     }
 }
 
-public struct EndOfInjectableType: Token {
+public struct EndOfInjectableType: Token, AutoEquatable {
     public let description = "_ }"
 }
 
-public struct AnyDeclaration: Token {
+public struct AnyDeclaration: Token, AutoEquatable {
     public let description = "{"
 }
 
-public struct EndOfAnyDeclaration: Token {
+public struct EndOfAnyDeclaration: Token, AutoEquatable {
     public let description = "}"
 }
 
@@ -209,7 +237,7 @@ enum TokenBuilder {
             return nil
         }
 
-        func makeTokenBox<T: Token>(_ token: T) -> AnyTokenBox {
+        func makeTokenBox<T: Token & Equatable>(_ token: T) -> AnyTokenBox {
             return TokenBox(value: token, offset: offset, length: length, line: line)
         }
         
@@ -240,10 +268,6 @@ enum TokenBuilder {
 extension Token {
     public static func create(_ string: String) throws -> Self? {
         return nil
-    }
-    
-    public static func ==(lhs: Self, rhs: Self) -> Bool {
-        return true
     }
 }
 

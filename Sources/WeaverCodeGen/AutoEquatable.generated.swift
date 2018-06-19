@@ -114,10 +114,6 @@ public func == (lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
     guard lhs.scope == rhs.scope else { return false }
     return true
 }
-// MARK: - Token AutoEquatable
-public func == (lhs: Token, rhs: Token) -> Bool {
-    return true
-}
 
 // MARK: - AutoEquatable for Enums
 // MARK: - ConfigurationAttribute AutoEquatable

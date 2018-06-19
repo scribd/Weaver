@@ -187,6 +187,46 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_with_generic_types() {
+        
+        let file = File(contents: """
+
+// weaver: request = Request<T, P> <- APIRequest<T, P>
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "request", typeName: "Request<T, P>", protocolName: "APIRequest<T, P>"), offset: 1, length: 54, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_with_generic_and_optional_types() {
+        
+        let file = File(contents: """
+
+// weaver: request = Request<T, P>? <- APIRequest<T, P>?
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(value: RegisterAnnotation(name: "request", typeName: "Request<T, P>?", protocolName: "APIRequest<T, P>?"), offset: 1, length: 56, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation() {
         
         let file = File(contents: """
@@ -207,6 +247,66 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation_with_an_optional_type() {
+        
+        let file = File(contents: """
+
+// weaver: api <- APIProtocol?
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(value: ReferenceAnnotation(name: "api", typeName: "APIProtocol?"), offset: 1, length: 30, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation_with_a_generic_type() {
+        
+        let file = File(contents: """
+
+// weaver: request <- Request<T, P>
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(value: ReferenceAnnotation(name: "request", typeName: "Request<T, P>"), offset: 1, length: 35, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation_with_a_generic_optional_type() {
+        
+        let file = File(contents: """
+
+// weaver: request <- Request<T, P>?
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(value: ReferenceAnnotation(name: "request", typeName: "Request<T, P>?"), offset: 1, length: 36, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation() {
         
         let file = File(contents: """
@@ -219,6 +319,66 @@ extension MyService: MyServiceObjCDependencyInjectable {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(value: ParameterAnnotation(name: "movieID", typeName: "UInt"), offset: 1, length: 26, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation_with_an_optional_type() {
+        
+        let file = File(contents: """
+
+// weaver: movieID <= UInt?
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(value: ParameterAnnotation(name: "movieID", typeName: "UInt?"), offset: 1, length: 27, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation_with_a_generaic_type() {
+        
+        let file = File(contents: """
+
+// weaver: request <= Request<T, P>
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(value: ParameterAnnotation(name: "request", typeName: "Request<T, P>"), offset: 1, length: 35, line: 1))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation_with_a_generaic_optional_type() {
+        
+        let file = File(contents: """
+
+// weaver: request <= Request<T, P>?
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(value: ParameterAnnotation(name: "request", typeName: "Request<T, P>?"), offset: 1, length: 36, line: 1))
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
