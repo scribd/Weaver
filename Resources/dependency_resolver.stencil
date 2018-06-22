@@ -150,7 +150,7 @@ extension {{resolver.targetTypeName}}ShimDependencyContainer: {{resolver.targetT
     {% if reference.parameters %}
 
     func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.typeName}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.resolvedTypeName}} {
-        return resolve({{reference.resolvedTypeName}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
+        return internalDependencies.resolve({{reference.resolvedTypeName}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
     }
 
     {% else %}{# reference.parameters #}

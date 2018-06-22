@@ -310,12 +310,14 @@ extension ResolverModel {
             
             references.forEach(graph.insertVariable)
             
-            let isRoot = referenceAnnotations.filter {
+            let hasNonCustomReferences = referenceAnnotations.contains {
                 let configurationAnnotations = configurationAnnotations[.dependency(name: $0.value.name)]
                 let config = DependencyConfiguration(with: configurationAnnotations)
                 return !config.customRef
-            }.isEmpty
-            
+            }
+            let hasParameters = !parameters.isEmpty
+
+            let isRoot = !hasNonCustomReferences && !hasParameters
             let config = ResolverConfiguration(with: configurationAnnotations[.`self`])
 
             self.init(targetTypeName: targetTypeName,
