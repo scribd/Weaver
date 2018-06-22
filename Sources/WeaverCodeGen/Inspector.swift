@@ -397,6 +397,9 @@ private extension Resolver {
         history.append(.triedToResolveDependencyInType(printableDependency(name: index.name), stepCount: history.resolutionSteps.count))
         
         if let dependency = dependencies[index] {
+            if dependency.isReference && accessLevel == .public {
+                return
+            }
             if let scope = dependency.scope, (dependency.config.customRef && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
                 return
             }

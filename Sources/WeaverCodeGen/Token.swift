@@ -65,8 +65,6 @@ public struct RegisterAnnotation: Token, AutoEquatable {
     let protocolName: String?
     
     public static func create(_ string: String) throws -> RegisterAnnotation? {
-        print(Patterns.register)
-        
         guard let matches = try NSRegularExpression(pattern: Patterns.register).matches(in: string) else {
             return nil
         }
