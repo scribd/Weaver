@@ -655,4 +655,29 @@ final class MovieManager {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    // TODO: Make this test pass green
+    func xtest_inspector_should_build_an_invalid_graph_with_an_internal_type_accessing_to_a_public_reference_with_the_wrong_type() {
+        let file = File(contents: """
+public final class MovieViewController: UIViewController {
+    // weaver: logger <- Logging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: logger <- Logger
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch {}
+    }
 }

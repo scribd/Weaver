@@ -61,4 +61,8 @@ extension Type: CustomStringConvertible {
     public var description: String {
         return "\(name)\(generics)\(isOptional ? "?" : "")"
     }
+    
+    var indexKey: String {
+        return "\(name)\(isOptional ? "?" : "")"
+    }
 }

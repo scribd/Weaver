@@ -66,12 +66,11 @@ private final class Graph {
     var importsByFile = [String: [String]]()
     
     func insertResolver(_ resolver: ResolverModel) {
-        let type = resolver.targetType
-        resolversByType["\(type.name)\(type.isOptional ? "?" : "")"] = resolver
+        resolversByType[resolver.targetType.indexKey] = resolver
     }
     
     func resolver(for type: Type) -> ResolverModel? {
-        return resolversByType["\(type.name)\(type.isOptional ? "?" : "")"]
+        return resolversByType[type.indexKey]
     }
     
     func insertVariable(_ variable: VariableModel) {

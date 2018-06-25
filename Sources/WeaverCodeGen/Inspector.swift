@@ -127,7 +127,7 @@ extension Graph {
                                 line: registerAnnotation.line)
         resolversByName[registerAnnotation.value.name] = resolver
         let type = registerAnnotation.value.type
-        resolversByType["\(type.name)\(type.isOptional ? "?" : "")"] = resolver
+        resolversByType[type.indexKey] = resolver
     }
     
     func insertResolver(with referenceAnnotation: ReferenceAnnotation) {
@@ -146,16 +146,14 @@ extension Graph {
                   line: Int,
                   fileName: String) -> Resolver {
 
-        let key = "\(type.name)\(type.isOptional ? "?" : "")"
-        
-        if let resolver = resolversByType[key] {
+        if let resolver = resolversByType[type.indexKey] {
             resolver.fileLocation = FileLocation(line: line, file: fileName)
             resolver.accessLevel = accessLevel
             return resolver
         }
 
         let resolver = Resolver(accessLevel: accessLevel, type: type, file: fileName, line: line)
-        resolversByType[key] = resolver
+        resolversByType[type.indexKey] = resolver
         return resolver
     }
 }
