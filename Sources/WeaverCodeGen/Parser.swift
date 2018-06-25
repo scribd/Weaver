@@ -46,7 +46,7 @@ private extension Parser {
     }
     
     func printableDependency(line: Int?, name: String) -> PrintableDependency {
-        return PrintableDependency(fileLocation: fileLocation(line: line), name: name, typeName: nil)
+        return PrintableDependency(fileLocation: fileLocation(line: line), name: name, type: nil)
     }
 }
 

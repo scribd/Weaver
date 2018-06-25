@@ -26,6 +26,9 @@
 		1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60C20CA5E4100FDA7F5 /* Builder.swift */; };
 		1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */; };
 		194F90CB20CDC50400F594F5 /* ConfigurationAttributeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */; };
+		19506C4620DDC1B10068B8A6 /* Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19506C4520DDC1B10068B8A6 /* Type.swift */; };
+		19506C4820DDC27F0068B8A6 /* RegexUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19506C4720DDC27F0068B8A6 /* RegexUtils.swift */; };
+		19506C4A20DDC39D0068B8A6 /* TypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19506C4920DDC39D0068B8A6 /* TypeTests.swift */; };
 		1958492620D4678900BB1F09 /* OrderedDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1958492520D4678900BB1F09 /* OrderedDictionary.swift */; };
 		1979255620CD6E100025A06D /* Instance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1979255520CD6E100025A06D /* Instance.swift */; };
 		19F3CD6820C43F32007C3076 /* shim-swift-4.1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */; };
@@ -465,6 +468,9 @@
 		1917D60C20CA5E4100FDA7F5 /* Builder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
 		1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderTests.swift; sourceTree = "<group>"; };
 		194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationAttributeTests.swift; sourceTree = "<group>"; };
+		19506C4520DDC1B10068B8A6 /* Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Type.swift; sourceTree = "<group>"; };
+		19506C4720DDC27F0068B8A6 /* RegexUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegexUtils.swift; sourceTree = "<group>"; };
+		19506C4920DDC39D0068B8A6 /* TypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeTests.swift; sourceTree = "<group>"; };
 		1958492520D4678900BB1F09 /* OrderedDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderedDictionary.swift; sourceTree = "<group>"; };
 		1979255520CD6E100025A06D /* Instance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instance.swift; sourceTree = "<group>"; };
 		19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
@@ -906,10 +912,12 @@
 				OBJ_27 /* Lexer.swift */,
 				1958492520D4678900BB1F09 /* OrderedDictionary.swift */,
 				OBJ_28 /* Parser.swift */,
+				19506C4720DDC27F0068B8A6 /* RegexUtils.swift */,
 				19F3CD6720C43F32007C3076 /* shim-swift-4.1.swift */,
 				OBJ_29 /* Scope.swift */,
 				OBJ_30 /* SourceKitDeclaration.swift */,
 				OBJ_31 /* Token.swift */,
+				19506C4520DDC1B10068B8A6 /* Type.swift */,
 			);
 			name = WeaverCodeGen;
 			path = Sources/WeaverCodeGen;
@@ -983,13 +991,14 @@
 		OBJ_43 /* WeaverCodeGenTests */ = {
 			isa = PBXGroup;
 			children = (
+				194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */,
 				OBJ_44 /* ErrorTests.swift */,
 				OBJ_45 /* GeneratorTests.swift */,
 				OBJ_46 /* InspectorTests.swift */,
 				OBJ_47 /* LexerTests.swift */,
 				OBJ_48 /* ParserTests.swift */,
 				OBJ_49 /* SourceKitDeclarationTests.swift */,
-				194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */,
+				19506C4920DDC39D0068B8A6 /* TypeTests.swift */,
 			);
 			name = WeaverCodeGenTests;
 			path = Tests/WeaverCodeGenTests;
@@ -1663,6 +1672,7 @@
 				OBJ_303 /* LexerTests.swift in Sources */,
 				OBJ_304 /* ParserTests.swift in Sources */,
 				OBJ_305 /* SourceKitDeclarationTests.swift in Sources */,
+				19506C4A20DDC39D0068B8A6 /* TypeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1683,10 +1693,12 @@
 				1958492620D4678900BB1F09 /* OrderedDictionary.swift in Sources */,
 				OBJ_337 /* Inspector.swift in Sources */,
 				OBJ_338 /* Lexer.swift in Sources */,
+				19506C4820DDC27F0068B8A6 /* RegexUtils.swift in Sources */,
 				OBJ_339 /* Parser.swift in Sources */,
 				OBJ_340 /* Scope.swift in Sources */,
 				OBJ_341 /* SourceKitDeclaration.swift in Sources */,
 				OBJ_342 /* Token.swift in Sources */,
+				19506C4620DDC1B10068B8A6 /* Type.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -69,6 +69,9 @@ private extension Lexer {
 
             if let nextLine = findNextLine(after: line, containing: Int(startToken.offset)) {
                 line = nextLine
+                if let _typeDeclaration = SourceKitDeclaration(sourceKitAST, lineString: lines[line].content) {
+                    startToken = _typeDeclaration.toToken
+                }
                 startToken.line = line
             } else {
                 return tokens

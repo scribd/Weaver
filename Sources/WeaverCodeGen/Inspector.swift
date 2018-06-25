@@ -53,7 +53,7 @@ private final class Graph {
 }
 
 private final class Resolver {
-    let typeName: String?
+    let type: Type?
     var config: ResolverConfiguration
     var accessLevel: AccessLevel
     var dependencies = OrderedDictionary<DependencyIndex, Dependency>()
@@ -63,19 +63,19 @@ private final class Resolver {
 
     init(config: ResolverConfiguration = .empty,
          accessLevel: AccessLevel = .default,
-         typeName: String? = nil,
+         type: Type? = nil,
          file: String? = nil,
          line: Int? = nil) {
         self.config = config
         self.accessLevel = accessLevel
-        self.typeName = typeName
+        self.type = type
         
         fileLocation = FileLocation(line: line, file: file)
     }
 }
 
 private struct DependencyIndex {
-    let typeName: String?
+    let type: Type?
     let name: String
 }
 
@@ -122,11 +122,12 @@ extension Graph {
     func insertResolver(with registerAnnotation: TokenBox<RegisterAnnotation>,
                         fileName: String?) {
         
-        let resolver = Resolver(typeName: registerAnnotation.value.typeName,
+        let resolver = Resolver(type: registerAnnotation.value.type,
                                 file: fileName,
                                 line: registerAnnotation.line)
         resolversByName[registerAnnotation.value.name] = resolver
-        resolversByType[registerAnnotation.value.typeName] = resolver
+        let type = registerAnnotation.value.type
+        resolversByType["\(type.name)\(type.isOptional ? "?" : "")"] = resolver
     }
     
     func insertResolver(with referenceAnnotation: ReferenceAnnotation) {
@@ -140,19 +141,21 @@ extension Graph {
         return resolversByName[name]
     }
     
-    func resolver(typed type: String,
+    func resolver(typed type: Type,
                   accessLevel: AccessLevel,
                   line: Int,
                   fileName: String) -> Resolver {
 
-        if let resolver = resolversByType[type] {
+        let key = "\(type.name)\(type.isOptional ? "?" : "")"
+        
+        if let resolver = resolversByType[key] {
             resolver.fileLocation = FileLocation(line: line, file: fileName)
             resolver.accessLevel = accessLevel
             return resolver
         }
 
-        let resolver = Resolver(accessLevel: accessLevel, typeName: type, file: fileName, line: line)
-        resolversByType[type] = resolver
+        let resolver = Resolver(accessLevel: accessLevel, type: type, file: fileName, line: line)
+        resolversByType[key] = resolver
         return resolver
     }
 }
@@ -212,7 +215,7 @@ private extension Inspector {
                 throw InspectorError.invalidAST(.file(fileName), unexpectedExpr: expr)
             }
 
-            let resolver = graph.resolver(typed: token.value.name,
+            let resolver = graph.resolver(typed: token.value.type,
                                           accessLevel: token.value.accessLevel,
                                           line: token.line,
                                           fileName: fileName)
@@ -285,7 +288,7 @@ private extension Resolver {
         for child in children {
             switch child {
             case .typeDeclaration(let injectableType, let children):
-                let resolver = graph.resolver(typed: injectableType.value.name,
+                let resolver = graph.resolver(typed: injectableType.value.type,
                                               accessLevel: injectableType.value.accessLevel,
                                               line: injectableType.line,
                                               fileName: fileName)
@@ -323,7 +326,7 @@ private extension Resolver {
                                             config: configurationAnnotations[.dependency(name: name)] ?? [],
                                             fileName: fileName,
                                             graph: graph)
-            let index = DependencyIndex(typeName: dependency.associatedResolver.typeName, name: dependency.name)
+            let index = DependencyIndex(type: dependency.associatedResolver.type, name: dependency.name)
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
         }
@@ -335,7 +338,7 @@ private extension Resolver {
                                             config: configurationAnnotations[.dependency(name: name)] ?? [],
                                             fileName: fileName,
                                             graph: graph)
-            let index = DependencyIndex(typeName: dependency.associatedResolver.typeName, name: name)
+            let index = DependencyIndex(type: dependency.associatedResolver.type, name: name)
             dependencies[index] = dependency
             dependency.associatedResolver.dependents.append(self)
         }
@@ -362,7 +365,7 @@ private extension Dependency {
                 return
             }
             
-            let index = DependencyIndex(typeName: associatedResolver.typeName, name: name)
+            let index = DependencyIndex(type: associatedResolver.type, name: name)
             for dependent in dependentResovler.dependents {
                 try dependent.resolveDependency(index: index, cache: &cache)
             }
@@ -436,7 +439,7 @@ private extension Resolver {
             throw InspectorAnalysisError.unresolvableDependency(history: history.unresolvableDependencyDetection)
             
         case (false, true) where !connectedReferents.isEmpty:
-            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(typeName: typeName,
+            throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(type: type,
                                                                              referents: connectedReferents.map { $0.printableResolver })
 
         case (true, true):
@@ -510,7 +513,7 @@ private extension TokenBox where T == RegisterAnnotation {
     func printableDependency(file: String) -> PrintableDependency {
         return PrintableDependency(fileLocation: FileLocation(line: line, file: file),
                                    name: value.name,
-                                   typeName: value.typeName)
+                                   type: value.type)
     }
 }
 
@@ -519,7 +522,7 @@ private extension TokenBox where T == ReferenceAnnotation {
     func printableDependency(file: String) -> PrintableDependency {
         return PrintableDependency(fileLocation: FileLocation(line: line, file: file),
                                    name: value.name,
-                                   typeName: value.typeName)
+                                   type: value.type)
     }
 }
 
@@ -528,18 +531,18 @@ private extension Dependency {
     var printableDependency: PrintableDependency {
         return PrintableDependency(fileLocation: fileLocation,
                                    name: name,
-                                   typeName: associatedResolver.typeName)
+                                   type: associatedResolver.type)
     }
 }
 
 private extension Resolver {
     
     func printableDependency(name: String) -> PrintableDependency {
-        return PrintableDependency(fileLocation: fileLocation, name: name, typeName: typeName)
+        return PrintableDependency(fileLocation: fileLocation, name: name, type: type)
     }
     
     var printableResolver: PrintableResolver {
-        return PrintableResolver(fileLocation: fileLocation, typeName: typeName)
+        return PrintableResolver(fileLocation: fileLocation, type: type)
     }
 }
 
@@ -570,12 +573,12 @@ extension Dependency: Hashable {
 extension DependencyIndex: Hashable {
     
     var hashValue: Int {
-        return (typeName ?? "").hashValue ^ name.hashValue
+        return (type?.hashValue ?? 0) ^ name.hashValue
     }
     
     static func ==(lhs: DependencyIndex, rhs: DependencyIndex) -> Bool {
         guard lhs.name == rhs.name else { return false }
-        guard lhs.typeName == rhs.typeName else { return false }
+        guard lhs.type == rhs.type else { return false }
         return true
     }
 }
@@ -594,6 +597,7 @@ extension ResolutionCacheIndex: Hashable {
 }
 
 extension BuildCacheIndex: Hashable {
+    
     var hashValue: Int {
         return resolver.hashValue ^ (scope?.hashValue ?? 0)
     }

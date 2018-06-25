@@ -69,6 +69,22 @@ extension ConfigurationAnnotation: Hashable {
             0])
     }
 }
+// MARK: - Type AutoHashable
+extension Type: Hashable {
+    public var hashValue: Int {
+        let nameHashValue = name.hashValue
+        let genericNamesHashValue = hashArray(genericNames)
+        let isOptionalHashValue = isOptional.hashValue
+        let genericsHashValue = generics.hashValue
+
+        return combineHashes([
+            nameHashValue,
+            genericNamesHashValue,
+            isOptionalHashValue,
+            genericsHashValue,
+            0])
+    }
+}
 
 // MARK: - AutoHashable for Enums
 

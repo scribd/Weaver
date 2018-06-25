@@ -45,12 +45,19 @@ protocol ImageManagerDependencyInjectable {
 }
 extension ImageManager: ImageManagerDependencyInjectable {}
 // MARK: - ImageManagerShim
-final class ImageManagerShimDependencyContainer {
-    private let internalDependencies: ImageManagerDependencyContainer
+final class ImageManagerShimDependencyContainer: DependencyContainer {
+    private lazy var internalDependencies: ImageManagerDependencyContainer = {
+        return ImageManagerDependencyContainer(parent: self)
+    }()
     let movieAPI: APIProtocol
     init(movieAPI: APIProtocol) {
-        internalDependencies = ImageManagerDependencyContainer()
         self.movieAPI = movieAPI
+        super.init()
+    }
+    override func registerDependencies(in store: DependencyStore) {        
+        store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { _ in
+            return self.movieAPI
+        })
     }
 }
 extension ImageManagerShimDependencyContainer: ImageManagerDependencyResolver {

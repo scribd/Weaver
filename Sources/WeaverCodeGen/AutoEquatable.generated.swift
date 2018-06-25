@@ -65,7 +65,7 @@ public func == (lhs: ImportDeclaration, rhs: ImportDeclaration) -> Bool {
 // MARK: - InjectableType AutoEquatable
 extension InjectableType: Equatable {}
 public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
-    guard lhs.name == rhs.name else { return false }
+    guard lhs.type == rhs.type else { return false }
     guard lhs.accessLevel == rhs.accessLevel else { return false }
     guard lhs.doesSupportObjc == rhs.doesSupportObjc else { return false }
     return true
@@ -74,7 +74,7 @@ public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
 extension ParameterAnnotation: Equatable {}
 public func == (lhs: ParameterAnnotation, rhs: ParameterAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
-    guard lhs.typeName == rhs.typeName else { return false }
+    guard lhs.type == rhs.type else { return false }
     return true
 }
 // MARK: - PrintableDependency AutoEquatable
@@ -82,29 +82,29 @@ extension PrintableDependency: Equatable {}
 internal func == (lhs: PrintableDependency, rhs: PrintableDependency) -> Bool {
     guard lhs.fileLocation == rhs.fileLocation else { return false }
     guard lhs.name == rhs.name else { return false }
-    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
     return true
 }
 // MARK: - PrintableResolver AutoEquatable
 extension PrintableResolver: Equatable {}
 internal func == (lhs: PrintableResolver, rhs: PrintableResolver) -> Bool {
     guard lhs.fileLocation == rhs.fileLocation else { return false }
-    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
     return true
 }
 // MARK: - ReferenceAnnotation AutoEquatable
 extension ReferenceAnnotation: Equatable {}
 public func == (lhs: ReferenceAnnotation, rhs: ReferenceAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
-    guard lhs.typeName == rhs.typeName else { return false }
+    guard lhs.type == rhs.type else { return false }
     return true
 }
 // MARK: - RegisterAnnotation AutoEquatable
 extension RegisterAnnotation: Equatable {}
 public func == (lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
-    guard lhs.typeName == rhs.typeName else { return false }
-    guard compareOptionals(lhs: lhs.protocolName, rhs: rhs.protocolName, compare: ==) else { return false }
+    guard lhs.type == rhs.type else { return false }
+    guard compareOptionals(lhs: lhs.protocolType, rhs: rhs.protocolType, compare: ==) else { return false }
     return true
 }
 // MARK: - ScopeAnnotation AutoEquatable
@@ -112,6 +112,15 @@ extension ScopeAnnotation: Equatable {}
 public func == (lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
     guard lhs.scope == rhs.scope else { return false }
+    return true
+}
+// MARK: - Type AutoEquatable
+extension Type: Equatable {}
+public func == (lhs: Type, rhs: Type) -> Bool {
+    guard lhs.name == rhs.name else { return false }
+    guard lhs.genericNames == rhs.genericNames else { return false }
+    guard lhs.isOptional == rhs.isOptional else { return false }
+    guard lhs.generics == rhs.generics else { return false }
     return true
 }
 
@@ -181,7 +190,7 @@ internal func == (lhs: InspectorAnalysisError, rhs: InspectorAnalysisError) -> B
     case (.unresolvableDependency(let lhs), .unresolvableDependency(let rhs)):
         return lhs == rhs
     case (.isolatedResolverCannotHaveReferents(let lhs), .isolatedResolverCannotHaveReferents(let rhs)):
-        if lhs.typeName != rhs.typeName { return false }
+        if lhs.type != rhs.type { return false }
         if lhs.referents != rhs.referents { return false }
         return true
     default: return false

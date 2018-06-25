@@ -47,12 +47,21 @@ protocol MovieManagerDependencyInjectable {
 }
 extension MovieManager: MovieManagerDependencyInjectable {}
 // MARK: - MovieManagerShim
-final class MovieManagerShimDependencyContainer {
-    private let internalDependencies: MovieManagerDependencyContainer
+final class MovieManagerShimDependencyContainer: DependencyContainer {
+    private lazy var internalDependencies: MovieManagerDependencyContainer = {
+        return MovieManagerDependencyContainer(parent: self, host: self.host)
+    }()
     let logger: Logger
+    let host: String?
     init(logger: Logger, host: String?) {
-        internalDependencies = MovieManagerDependencyContainer(host: host)
         self.logger = logger
+        self.host = host
+        super.init()
+    }
+    override func registerDependencies(in store: DependencyStore) {        
+        store.register(Logger.self, scope: .container, name: "logger", builder: { _ in
+            return self.logger
+        })
     }
 }
 extension MovieManagerShimDependencyContainer: MovieManagerDependencyResolver {
@@ -61,9 +70,6 @@ extension MovieManagerShimDependencyContainer: MovieManagerDependencyResolver {
     }
     var urlSession: URLSession {
         return internalDependencies.resolve(URLSession.self, name: "urlSession")
-    }
-    var host: String? {
-        return internalDependencies.host
     }
 }
 extension MovieManager {
