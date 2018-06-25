@@ -204,7 +204,7 @@ extension RegisterModel {
         let config = DependencyConfiguration(with: configurationAnnotations)
         
         self.init(name: registerAnnotation.name,
-                  type: registerAnnotation.type.nonOptional,
+                  type: registerAnnotation.type,
                   abstractType: registerAnnotation.protocolType ?? registerAnnotation.type,
                   scope: scope.stringValue,
                   config: config)
@@ -218,7 +218,7 @@ extension RegisterModel {
         let config = DependencyConfiguration(with: configurationAnnotations)
 
         self.init(name: referenceAnnotation.name,
-                  type: referenceAnnotation.type.nonOptional,
+                  type: referenceAnnotation.type,
                   abstractType: referenceAnnotation.type,
                   scope: scope.stringValue,
                   config: config)
@@ -428,13 +428,3 @@ private extension String {
     }
 }
 
-// MARK: - NonOptionalType
-
-private extension Type {
-    
-    var nonOptional: Type {
-        let optionChars = CharacterSet(charactersIn: "?")
-        let name = self.name.trimmingCharacters(in: optionChars)
-        return Type(name: name, genericNames: genericNames)
-    }
-}

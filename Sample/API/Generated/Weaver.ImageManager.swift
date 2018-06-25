@@ -54,7 +54,7 @@ final class ImageManagerShimDependencyContainer: DependencyContainer {
         self.movieAPI = movieAPI
         super.init()
     }
-    override func registerDependencies(in store: DependencyStore) {        
+    override func registerDependencies(in store: DependencyStore) {
         store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { _ in
             return self.movieAPI
         })

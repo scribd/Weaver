@@ -45,7 +45,7 @@ final class MovieAPIShimDependencyContainer: DependencyContainer {
         self.urlSession = urlSession
         super.init()
     }
-    override func registerDependencies(in store: DependencyStore) {        
+    override func registerDependencies(in store: DependencyStore) {
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { _ in
             return self.urlSession
         })

@@ -58,7 +58,7 @@ final class MovieManagerShimDependencyContainer: DependencyContainer {
         self.host = host
         super.init()
     }
-    override func registerDependencies(in store: DependencyStore) {        
+    override func registerDependencies(in store: DependencyStore) {
         store.register(Logger.self, scope: .container, name: "logger", builder: { _ in
             return self.logger
         })
