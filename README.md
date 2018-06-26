@@ -93,9 +93,14 @@ The Weaver command line tool can be installed using `Homebrew` or manually.
 
 Download the latest release with the prebuilt binary from [release tab](https://github.com/scribd/Weaver/releases). Unzip the archive into the desired destination and run `bin/weaver`
 
-#### [Homebrew](https://brew.sh) (coming soon)
+#### [Homebrew](https://brew.sh)
 
-`brew install Weaver`
+Until it gets added to the [main Homebrew repository](https://github.com/Homebrew/homebrew-core/pull/28520), Weaver can be installed like so:
+
+```bash
+$ brew tap trupin/homebrew-core
+$ brew install weaver
+```
 
 #### Building from source
 
