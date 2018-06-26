@@ -46,7 +46,7 @@ private extension Parser {
     }
     
     func printableDependency(line: Int?, name: String) -> PrintableDependency {
-        return PrintableDependency(fileLocation: fileLocation(line: line), name: name, typeName: nil)
+        return PrintableDependency(fileLocation: fileLocation(line: line), name: name, type: nil)
     }
 }
 
@@ -91,13 +91,16 @@ private extension Parser {
         let checkDoubleDeclaration = { (name: String, line: Int) throws in
             let dependency = self.printableDependency(line: line, name: name)
             guard !registrationNames.contains(name) && !referenceNames.contains(name) && !parameterNames.contains(name) else {
-                throw ParserError.depedencyDoubleDeclaration(dependency)
+                throw ParserError.dependencyDoubleDeclaration(dependency)
             }
         }
         
+        parseAnyDeclarations()
+        guard currentToken != nil else {
+            return nil
+        }
+        
         while true {
-            parseAnyDeclarations()
-
             switch currentToken {
             case is TokenBox<RegisterAnnotation>:
                 let annotation = try parseSimpleExpr(RegisterAnnotation.self)
@@ -137,7 +140,7 @@ private extension Parser {
                 }
                 configurationAnnotations[annotation.value.target] = annotation
                 children.append(.configurationAnnotation(annotation))
-
+                
             case is TokenBox<InjectableType>:
                 if let typeDeclaration = try parseInjectedTypeDeclaration() {
                     children.append(typeDeclaration)
@@ -168,12 +171,15 @@ private extension Parser {
                     break
                 }
             }
+            
+            parseAnyDeclarations()
         }
     }
     
     func parseFile() throws -> Expr {
         
         var types = [Expr]()
+        var imports = Set<String>(["WeaverDI"])
         
         while true {
             parseAnyDeclarations()
@@ -184,11 +190,18 @@ private extension Parser {
                     types.append(typeDeclaration)
                 }
                 
+            case is TokenBox<ImportDeclaration>:
+                let annotation = try parseSimpleExpr(ImportDeclaration.self)
+                imports.insert(annotation.value.moduleName)
+
             case is TokenBox<EndOfInjectableType>:
                 consumeToken()
-
+                
             case nil:
-                return .file(types: types, name: fileName)
+                let sortedImports = imports.sorted { (lhs, rhs) -> Bool in
+                    return lhs < rhs
+                }
+                return .file(types: types, name: fileName, imports: sortedImports)
                 
             case .some(let token):
                 throw ParserError.unexpectedToken(fileLocation(line: token.line))

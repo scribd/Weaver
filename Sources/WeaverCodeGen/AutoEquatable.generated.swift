@@ -56,10 +56,16 @@ internal func == (lhs: FileLocation, rhs: FileLocation) -> Bool {
     guard compareOptionals(lhs: lhs.file, rhs: rhs.file, compare: ==) else { return false }
     return true
 }
+// MARK: - ImportDeclaration AutoEquatable
+extension ImportDeclaration: Equatable {}
+public func == (lhs: ImportDeclaration, rhs: ImportDeclaration) -> Bool {
+    guard lhs.moduleName == rhs.moduleName else { return false }
+    return true
+}
 // MARK: - InjectableType AutoEquatable
 extension InjectableType: Equatable {}
 public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
-    guard lhs.name == rhs.name else { return false }
+    guard lhs.type == rhs.type else { return false }
     guard lhs.accessLevel == rhs.accessLevel else { return false }
     guard lhs.doesSupportObjc == rhs.doesSupportObjc else { return false }
     return true
@@ -68,7 +74,7 @@ public func == (lhs: InjectableType, rhs: InjectableType) -> Bool {
 extension ParameterAnnotation: Equatable {}
 public func == (lhs: ParameterAnnotation, rhs: ParameterAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
-    guard lhs.typeName == rhs.typeName else { return false }
+    guard lhs.type == rhs.type else { return false }
     return true
 }
 // MARK: - PrintableDependency AutoEquatable
@@ -76,29 +82,29 @@ extension PrintableDependency: Equatable {}
 internal func == (lhs: PrintableDependency, rhs: PrintableDependency) -> Bool {
     guard lhs.fileLocation == rhs.fileLocation else { return false }
     guard lhs.name == rhs.name else { return false }
-    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
     return true
 }
 // MARK: - PrintableResolver AutoEquatable
 extension PrintableResolver: Equatable {}
 internal func == (lhs: PrintableResolver, rhs: PrintableResolver) -> Bool {
     guard lhs.fileLocation == rhs.fileLocation else { return false }
-    guard compareOptionals(lhs: lhs.typeName, rhs: rhs.typeName, compare: ==) else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
     return true
 }
 // MARK: - ReferenceAnnotation AutoEquatable
 extension ReferenceAnnotation: Equatable {}
 public func == (lhs: ReferenceAnnotation, rhs: ReferenceAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
-    guard lhs.typeName == rhs.typeName else { return false }
+    guard lhs.type == rhs.type else { return false }
     return true
 }
 // MARK: - RegisterAnnotation AutoEquatable
 extension RegisterAnnotation: Equatable {}
 public func == (lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
-    guard lhs.typeName == rhs.typeName else { return false }
-    guard compareOptionals(lhs: lhs.protocolName, rhs: rhs.protocolName, compare: ==) else { return false }
+    guard lhs.type == rhs.type else { return false }
+    guard compareOptionals(lhs: lhs.protocolType, rhs: rhs.protocolType, compare: ==) else { return false }
     return true
 }
 // MARK: - ScopeAnnotation AutoEquatable
@@ -108,8 +114,13 @@ public func == (lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
     guard lhs.scope == rhs.scope else { return false }
     return true
 }
-// MARK: - Token AutoEquatable
-public func == (lhs: Token, rhs: Token) -> Bool {
+// MARK: - Type AutoEquatable
+extension Type: Equatable {}
+public func == (lhs: Type, rhs: Type) -> Bool {
+    guard lhs.name == rhs.name else { return false }
+    guard lhs.genericNames == rhs.genericNames else { return false }
+    guard lhs.isOptional == rhs.isOptional else { return false }
+    guard lhs.generics == rhs.generics else { return false }
     return true
 }
 
@@ -143,6 +154,7 @@ public func == (lhs: Expr, rhs: Expr) -> Bool {
     case (.file(let lhs), .file(let rhs)):
         if lhs.types != rhs.types { return false }
         if lhs.name != rhs.name { return false }
+        if lhs.imports != rhs.imports { return false }
         return true
     case (.typeDeclaration(let lhs), .typeDeclaration(let rhs)):
         if lhs.0 != rhs.0 { return false }
@@ -178,7 +190,7 @@ internal func == (lhs: InspectorAnalysisError, rhs: InspectorAnalysisError) -> B
     case (.unresolvableDependency(let lhs), .unresolvableDependency(let rhs)):
         return lhs == rhs
     case (.isolatedResolverCannotHaveReferents(let lhs), .isolatedResolverCannotHaveReferents(let rhs)):
-        if lhs.typeName != rhs.typeName { return false }
+        if lhs.type != rhs.type { return false }
         if lhs.referents != rhs.referents { return false }
         return true
     default: return false
@@ -238,7 +250,7 @@ internal func == (lhs: ParserError, rhs: ParserError) -> Bool {
         return lhs == rhs
     case (.unknownDependency(let lhs), .unknownDependency(let rhs)):
         return lhs == rhs
-    case (.depedencyDoubleDeclaration(let lhs), .depedencyDoubleDeclaration(let rhs)):
+    case (.dependencyDoubleDeclaration(let lhs), .dependencyDoubleDeclaration(let rhs)):
         return lhs == rhs
     case (.configurationAttributeDoubleAssignation(let lhs), .configurationAttributeDoubleAssignation(let rhs)):
         if lhs.0 != rhs.0 { return false }

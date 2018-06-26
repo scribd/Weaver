@@ -78,7 +78,7 @@ final class SourceKitDeclarationTests: XCTestCase {
     func test_init_should_set_name() {
      
         let model = makeModel(name: "fake_name")
-        XCTAssertEqual(model?.name, "fake_name")
+        XCTAssertEqual(model?.type, Type(name: "fake_name"))
     }
     
     // MARK: - isInjectable
@@ -161,7 +161,7 @@ final class SourceKitDeclarationTests: XCTestCase {
     
     // MARK: - accessLevel
     
-    func test_init_shold_set_accessLevel_to_default_if_accessLevel_is_not_supported() {
+    func test_init_should_set_accessLevel_to_default_if_accessLevel_is_not_supported() {
         
         let model = makeModel(accessLevel: "source.lang.swift.accessibility.fileprivate")
         XCTAssertEqual(model?.accessLevel, .default)

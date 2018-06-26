@@ -8,8 +8,8 @@
 import Foundation
 
 public enum AccessLevel: String {
-    case `public` = "public"
-    case `internal` = "internal"
+    case `public`
+    case `internal`
     
     static let `default`: AccessLevel = .`internal`
 }
