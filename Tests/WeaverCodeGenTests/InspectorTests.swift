@@ -634,12 +634,12 @@ final class MovieViewController: UIViewController {
     func test_inspector_should_build_a_valid_graph_with_an_internal_type_accessing_to_a_public_reference() {
         let file = File(contents: """
 public final class MovieViewController: UIViewController {
-    // weaver: logger <- Logger
+    // weaver: logger <- Logger<String>
     // weaver: movieManager = MovieManager
 }
 
 final class MovieManager {
-    // weaver: logger <- Logger
+    // weaver: logger <- Logger<String>
 }
 """)
         
@@ -656,16 +656,15 @@ final class MovieManager {
         }
     }
     
-    // TODO: Make this test pass green
-    func xtest_inspector_should_build_an_invalid_graph_with_an_internal_type_accessing_to_a_public_reference_with_the_wrong_type() {
+    func test_inspector_should_build_an_invalid_graph_with_an_internal_type_accessing_to_a_public_reference_with_the_wrong_type() {
         let file = File(contents: """
 public final class MovieViewController: UIViewController {
-    // weaver: logger <- Logging
+    // weaver: logger <- Logger<Int>
     // weaver: movieManager = MovieManager
 }
 
 final class MovieManager {
-    // weaver: logger <- Logger
+    // weaver: logger <- Logger<String>
 }
 """)
         
@@ -678,6 +677,13 @@ final class MovieManager {
             
             try inspector.validate()
             XCTFail("Expected error.")
-        } catch {}
+        } catch let error as InspectorError {
+            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
+                                                                                  name: "logger",
+                                                                                  type: nil),
+                                                              underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 }

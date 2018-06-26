@@ -58,17 +58,21 @@ private final class Resolver {
     var accessLevel: AccessLevel
     var dependencies = OrderedDictionary<DependencyIndex, Dependency>()
     var dependents: [Resolver] = []
+    var referredTypes: Set<Type>
 
     var fileLocation: FileLocation
 
     init(config: ResolverConfiguration = .empty,
          accessLevel: AccessLevel = .default,
          type: Type? = nil,
+         referredType: Type? = nil,
          file: String? = nil,
          line: Int? = nil) {
         self.config = config
         self.accessLevel = accessLevel
         self.type = type
+
+        referredTypes = Set([referredType].compactMap { $0 })
         
         fileLocation = FileLocation(line: line, file: file)
     }
@@ -131,10 +135,11 @@ extension Graph {
     }
     
     func insertResolver(with referenceAnnotation: ReferenceAnnotation) {
-        if resolversByName[referenceAnnotation.name] != nil {
+        if let resolver = resolversByName[referenceAnnotation.name] {
+            resolver.referredTypes.insert(referenceAnnotation.type)
             return
         }
-        resolversByName[referenceAnnotation.name] = Resolver()
+        resolversByName[referenceAnnotation.name] = Resolver(referredType: referenceAnnotation.type)
     }
 
     func resolver(named name: String) -> Resolver? {
@@ -350,6 +355,10 @@ private extension Dependency {
     func resolve(with cache: inout Set<ResolutionCacheIndex>) throws {
         
         if dependentResovler.accessLevel == .public && dependentResovler.dependents.isEmpty {
+            guard associatedResolver.referredTypes.count <= 1 else {
+                let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [])
+                throw InspectorError.invalidGraph(printableDependency, underlyingError: underlyingError)
+            }
             return
         }
         
