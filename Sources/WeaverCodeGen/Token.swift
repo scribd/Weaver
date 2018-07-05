@@ -17,7 +17,7 @@ public protocol AnyTokenBox {
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token>: AnyTokenBox, Equatable, CustomStringConvertible {
+public struct TokenBox<T: Token & Equatable>: AnyTokenBox, Equatable, CustomStringConvertible {
     let value: T
     public let offset: Int
     public let length: Int
@@ -36,40 +36,53 @@ public struct TokenBox<T: Token>: AnyTokenBox, Equatable, CustomStringConvertibl
     }
 }
 
-public protocol Token: AutoEquatable, CustomStringConvertible {
+public protocol Token: CustomStringConvertible {
     static func create(_ string: String) throws -> Self?
 }
 
 // MARK: - Token Types
 
-public struct RegisterAnnotation: Token {
+public struct RegisterAnnotation: Token, AutoEquatable {
     let name: String
-    let typeName: String
-    let protocolName: String?
+    let type: Type
+    let protocolType: Type?
     
     public static func create(_ string: String) throws -> RegisterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*=\\s*(\\w+\\??)\\s*(<-\\s*(\\w+\\??)\\s*)?$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.register).matches(in: string) else {
             return nil
         }
-        return RegisterAnnotation(name: matches[0], typeName: matches[1], protocolName: matches.count >= 4 ? matches[3] : nil)
+
+        let protocolType: Type?
+        let arrowIndex = matches.index { $0.hasPrefix("<-") }
+        if let arrowIndex = arrowIndex, arrowIndex + 1 < matches.count {
+            protocolType = try Type(matches[arrowIndex + 1])
+        } else {
+            protocolType = nil
+        }
+        
+        guard let type = try Type(matches[1]) else {
+            return nil
+        }
+        
+        return RegisterAnnotation(name: matches[0], type: type, protocolType: protocolType)
     }
     
     public var description: String {
-        var s = "\(name) = \(typeName)"
-        if let protocolName = protocolName {
-            s += " <- \(protocolName)"
+        var s = "\(name) = \(type)"
+        if let protocolType = protocolType {
+            s += " <- \(protocolType)"
         }
         return s
     }
 }
 
-public struct ScopeAnnotation: Token {
+public struct ScopeAnnotation: Token, AutoEquatable {
 
     let name: String
     let scope: Scope
     
     public static func create(_ string: String) throws -> ScopeAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.scope).matches(in: string) else {
             return nil
         }
         
@@ -85,48 +98,54 @@ public struct ScopeAnnotation: Token {
     }
 }
 
-public struct ReferenceAnnotation: Token {
+public struct ReferenceAnnotation: Token, AutoEquatable {
     
     let name: String
-    let typeName: String
+    let type: Type
     
     public static func create(_ string: String) throws -> ReferenceAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*<-\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.reference).matches(in: string) else {
             return nil
         }
-        return ReferenceAnnotation(name: matches[0], typeName: matches[1])
+        guard let type = try Type(matches[1]) else {
+            return nil
+        }
+        return ReferenceAnnotation(name: matches[0], type: type)
     }
     
     public var description: String {
-        return "\(name) <- \(typeName)"
+        return "\(name) <- \(type)"
     }
 }
 
-public struct ParameterAnnotation: Token {
+public struct ParameterAnnotation: Token, AutoEquatable {
     
     let name: String
-    let typeName: String
+    let type: Type
     
     public static func create(_ string: String) throws -> ParameterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\s*<=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.parameter).matches(in: string) else {
             return nil
         }
-        return ParameterAnnotation(name: matches[0], typeName: matches[1])
+        guard let type = try Type(matches[1]) else {
+            return nil
+        }
+        return ParameterAnnotation(name: matches[0], type: type)
     }
     
     public var description: String {
-        return "\(name) <= \(typeName)"
+        return "\(name) <= \(type)"
     }
 }
 
-public struct ConfigurationAnnotation: Token, AutoHashable {
+public struct ConfigurationAnnotation: Token, AutoHashable, AutoEquatable {
     
     let attribute: ConfigurationAttribute
     
     let target: ConfigurationAttributeTarget
     
     public static func create(_ string: String) throws -> ConfigurationAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: "^(\\w+)\\.(\\w+)\\s*=\\s*(\\w+\\??)\\s*$").matches(in: string) else {
+        guard let matches = try NSRegularExpression(pattern: Patterns.configuration).matches(in: string) else {
             return nil
         }
         
@@ -145,33 +164,50 @@ public struct ConfigurationAnnotation: Token, AutoHashable {
     }
 }
 
-public struct InjectableType: Token {
-    let name: String
+public struct ImportDeclaration: Token, AutoEquatable {
+    
+    let moduleName: String
+    
+    public static func create(_ string: String) throws -> ImportDeclaration? {
+        guard let matches = try NSRegularExpression(pattern: Patterns.import).matches(in: string) else {
+            return nil
+        }
+        
+        return ImportDeclaration(moduleName: matches[0])
+    }
+    
+    public var description: String {
+        return "import \(moduleName)"
+    }
+}
+
+public struct InjectableType: Token, AutoEquatable {
+    let type: Type
     let accessLevel: AccessLevel
     let doesSupportObjc: Bool
 
-    init(name: String,
+    init(type: Type,
          accessLevel: AccessLevel = .default,
          doesSupportObjc: Bool = false) {
-        self.name = name
+        self.type = type
         self.accessLevel = accessLevel
         self.doesSupportObjc = doesSupportObjc
     }
     
     public var description: String {
-        return "\(accessLevel.rawValue) \(name) {"
+        return "\(accessLevel.rawValue) \(type) {"
     }
 }
 
-public struct EndOfInjectableType: Token {
-    public let description = "}"
+public struct EndOfInjectableType: Token, AutoEquatable {
+    public let description = "_ }"
 }
 
-public struct AnyDeclaration: Token {
+public struct AnyDeclaration: Token, AutoEquatable {
     public let description = "{"
 }
 
-public struct EndOfAnyDeclaration: Token {
+public struct EndOfAnyDeclaration: Token, AutoEquatable {
     public let description = "}"
 }
 
@@ -192,7 +228,7 @@ enum TokenBuilder {
             return nil
         }
 
-        func makeTokenBox<T: Token>(_ token: T) -> AnyTokenBox {
+        func makeTokenBox<T: Token & Equatable>(_ token: T) -> AnyTokenBox {
             return TokenBox(value: token, offset: offset, length: length, line: line)
         }
         
@@ -211,6 +247,9 @@ enum TokenBuilder {
         if let token = try ParameterAnnotation.create(body) {
             return makeTokenBox(token)
         }
+        if let token = try ImportDeclaration.create(body) {
+            return makeTokenBox(token)
+        }
         throw TokenError.invalidAnnotation(annotation)
     }
 }
@@ -221,26 +260,5 @@ extension Token {
     public static func create(_ string: String) throws -> Self? {
         return nil
     }
-    
-    public static func ==(lhs: Self, rhs: Self) -> Bool {
-        return true
-    }
 }
 
-// MARK: - Regex Util
-
-private extension NSRegularExpression {
-    
-    func matches(in string: String) -> [String]? {
-        let result = self
-            .matches(in: string, range: NSMakeRange(0, string.utf16.count))
-            .flatMap { match in (1..<match.numberOfRanges).map { match.range(at: $0) } }
-            .compactMap { Range($0, in: string) }
-            .map { String(string[$0]) }
-        
-        if result.isEmpty {
-            return nil
-        }
-        return result
-    }
-}

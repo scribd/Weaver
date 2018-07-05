@@ -12,13 +12,13 @@ struct SourceKitDeclaration {
     
     let offset: Int
     let length: Int
-    let name: String
+    let type: Type
     let hasBody: Bool
     let accessLevel: AccessLevel
     let isInjectable: Bool
     let doesSupportObjc: Bool
     
-    init?(_ dictionary: [String: Any]) {
+    init?(_ dictionary: [String: Any], lineString: String = "") {
         
         guard let kindString = dictionary[SwiftDocKey.kind.rawValue] as? String,
               let kind = SwiftDeclarationKind(rawValue: kindString) else {
@@ -52,16 +52,31 @@ struct SourceKitDeclaration {
         case .extension where inheritedTypes.first { $0.hasSuffix("ObjCDependencyInjectable") } != nil:
             isInjectable = true
             doesSupportObjc = true
-            
-        default:
+
+        case .enum,
+             .extension:
             isInjectable = false
             doesSupportObjc = false
-        }
-        
-        guard let name = dictionary[SwiftDocKey.name.rawValue] as? String else {
+            
+        default:
             return nil
         }
-        self.name = name
+
+        do {
+            guard let typeString = dictionary[SwiftDocKey.name.rawValue] as? String,
+                  let type = try Type(typeString) else {
+                return nil
+            }
+
+            if let matches = try NSRegularExpression(pattern: "(\(type.name)<.*>)").matches(in: lineString),
+               let _type = try Type(matches[0]) {
+                self.type = _type
+            } else {
+                self.type = type
+            }
+        } catch {
+            return nil
+        }
         
         hasBody = dictionary.keys.contains(SwiftDocKey.bodyOffset.rawValue)
         
@@ -84,7 +99,7 @@ extension SourceKitDeclaration {
     
     var toToken: AnyTokenBox {
         if isInjectable {
-            let injectableType = InjectableType(name: name, accessLevel: accessLevel, doesSupportObjc: doesSupportObjc)
+            let injectableType = InjectableType(type: type, accessLevel: accessLevel, doesSupportObjc: doesSupportObjc)
             return TokenBox(value: injectableType, offset: offset, length: length, line: .defaultLine)
         } else {
             return TokenBox(value: AnyDeclaration(), offset: offset, length: length, line: .defaultLine)

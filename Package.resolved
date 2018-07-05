@@ -29,6 +29,15 @@
         }
       },
       {
+        "package": "Differ",
+        "repositoryURL": "https://github.com/tonyarnold/Differ.git",
+        "state": {
+          "branch": null,
+          "revision": "a3252fbc44b6fbc2a87539dc555a8e014233fe20",
+          "version": "1.2.3"
+        }
+      },
+      {
         "package": "Nimble",
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {

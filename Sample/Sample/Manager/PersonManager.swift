@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import API
 
 // MARK: - Error
 

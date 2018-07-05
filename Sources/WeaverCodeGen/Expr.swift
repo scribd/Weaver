@@ -10,7 +10,7 @@ import Foundation
 // MARK: Expressions
 
 public indirect enum Expr: AutoEquatable {
-    case file(types: [Expr], name: String)
+    case file(types: [Expr], name: String, imports: [String])
     case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
     case scopeAnnotation(TokenBox<ScopeAnnotation>)
@@ -43,7 +43,7 @@ struct ExprSequence: Sequence, IteratorProtocol {
         stack.append(mutableExprs)
         
         switch expr {
-        case .file(let exprs, _),
+        case .file(let exprs, _, _),
              .typeDeclaration(_, let exprs):
             stack.append(exprs)
             
@@ -64,7 +64,7 @@ struct ExprSequence: Sequence, IteratorProtocol {
 extension Expr: CustomStringConvertible {
     public var description: String {
         switch self {
-        case .file(let types, let name):
+        case .file(let types, let name, _):
             return """
             File[\(name)]
             \(types.map { " \($0)" }.joined(separator: "\n"))
@@ -92,10 +92,10 @@ extension Expr: CustomStringConvertible {
 
 extension Expr {
     
-    func toFile() -> (types: [Expr], name: String)? {
+    func toFile() -> (types: [Expr], name: String, imports: [String])? {
         switch self {
-        case .file(let types, let name):
-            return (types, name)
+        case .file(let types, let name, let imports):
+            return (types, name, imports)
         default:
             return nil
         }

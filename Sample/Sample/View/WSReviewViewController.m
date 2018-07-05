@@ -8,6 +8,7 @@
 
 #import "WSReviewViewController.h"
 #import "Sample-Swift.h"
+@import API;
 
 NS_ASSUME_NONNULL_BEGIN
 
