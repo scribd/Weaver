@@ -142,7 +142,7 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
 final class {{resolver.targetType.name}}ShimDependencyContainer{{resolver.targetType.generics}}: DependencyContainer {
 
     private lazy var internalDependencies: {{resolver.targetType.name}}DependencyContainer = {
-        return {{resolver.targetType}}DependencyContainer(parent: self{% if resolver.parameters %}, {% endif %}{% for parameter in resolver.parameters %}{% if not forloop.last %}, {% endif %}{{ parameter.name }}: self.{{ parameter.name }}{% endfor %})
+        return {{resolver.targetType}}DependencyContainer(parent: self{% for parameter in resolver.parameters %}, {{ parameter.name }}: self.{{ parameter.name }}{% endfor %}) 
     }()
     
     {% for reference in resolver.publicReferences %}
