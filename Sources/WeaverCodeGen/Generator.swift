@@ -88,6 +88,7 @@ private final class RegisterModel {
     var type: Type
     let abstractType: Type
     let scope: String
+    let referenceType: String
     let customRef: Bool
     var parameters: [VariableModel] = []
     var hasBuilder: Bool = false
@@ -102,6 +103,17 @@ private final class RegisterModel {
         self.type = type
         self.abstractType = abstractType
         self.scope = scope
+
+        switch Scope(scope) {
+        case .weak?,
+             .transient?:
+            referenceType = "strong"
+        case .graph?,
+             .container?,
+             .none:
+            referenceType = "weak"
+        }
+
         customRef = config.customRef
     }
 }

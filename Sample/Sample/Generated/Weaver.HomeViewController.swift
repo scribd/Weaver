@@ -6,12 +6,12 @@ import UIKit
 import WeaverDI
 // MARK: - HomeViewController
 final class HomeViewControllerDependencyContainer: DependencyContainer {
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType) {
         super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(UIViewController.self, scope: .transient, name: "movieController", builder: { (dependencies, movieID: UInt, title: String) in
-            return MovieViewController.makeMovieViewController(injecting: dependencies, movieID: movieID, title: title)
+            return MovieViewController.makeMovieViewController(injecting: dependencies, referenceType: .strong, movieID: movieID, title: title)
         })
         store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
             return Logger()
@@ -35,8 +35,8 @@ extension HomeViewControllerDependencyContainer: HomeViewControllerDependencyRes
     }
 }
 extension HomeViewController {
-    static func makeHomeViewController(injecting parentDependencies: DependencyContainer) -> HomeViewController {
-        let dependencies = HomeViewControllerDependencyContainer(parent: parentDependencies)
+    static func makeHomeViewController(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType) -> HomeViewController {
+        let dependencies = HomeViewControllerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType)
         return HomeViewController(injecting: dependencies)
     }
 }

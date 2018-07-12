@@ -36,7 +36,10 @@ open class DependencyContainer {
         
         registerDependencies(in: dependencies)
     }
-    
+
+    /// Parameters:
+    ///   - parent: `DependencyContainer` from which the dependency is built.
+    ///   - parentReferenceType: Either weak or strong. This can be needed to break potential retain cycles.
     public init(_ parent: DependencyContainer? = nil,
                 parentReferenceType: ReferenceType = .strong) {
 

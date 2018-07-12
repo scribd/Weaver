@@ -5,7 +5,7 @@ import Foundation
 import WeaverDI
 // MARK: - ReviewManager
 final class ReviewManagerDependencyContainer: DependencyContainer {
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType) {
         super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
@@ -27,8 +27,8 @@ extension ReviewManagerDependencyContainer: ReviewManagerDependencyResolver {
     }
 }
 extension ReviewManager {
-    static func makeReviewManager(injecting parentDependencies: DependencyContainer) -> ReviewManager {
-        let dependencies = ReviewManagerDependencyContainer(parent: parentDependencies)
+    static func makeReviewManager(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType) -> ReviewManager {
+        let dependencies = ReviewManagerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType)
         return ReviewManager(injecting: dependencies)
     }
 }
