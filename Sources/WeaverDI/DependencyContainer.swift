@@ -8,16 +8,28 @@
 import Foundation
 
 open class DependencyContainer {
-    
+
+    public enum ReferenceType {
+        case strong
+        case weak
+    }
+
     private let builders: BuilderStoring
     
-    private let parent: DependencyContainer?
+    private let parent: DependencyResolver?
     
     lazy var dependencies = InternalDependencyStore(builders)
     
     init(parent: DependencyContainer? = nil,
+         parentReferenceType: ReferenceType = .strong,
          builders: BuilderStoring = BuilderStore()) {
-        self.parent = parent
+        
+        switch parentReferenceType {
+        case .strong:
+            self.parent = parent
+        case .weak:
+            self.parent = nil
+        }
         
         builders.parent = parent?.builders
         self.builders = builders
@@ -25,8 +37,16 @@ open class DependencyContainer {
         registerDependencies(in: dependencies)
     }
     
-    public init(_ parent: DependencyContainer? = nil) {
-        self.parent = parent
+    public init(_ parent: DependencyContainer? = nil,
+                parentReferenceType: ReferenceType = .strong) {
+
+        switch parentReferenceType {
+        case .strong:
+            self.parent = parent
+        case .weak:
+            self.parent = nil
+        }
+
         builders = BuilderStore()
         builders.parent = parent?.builders
 

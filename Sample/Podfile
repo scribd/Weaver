@@ -7,11 +7,6 @@ target 'Sample' do
 
   # Pods for Sample
   pod 'WeaverDI', :path => '../'
-
-  target 'SampleTests' do
-    inherit! :search_paths
-    # Pods for testing
-  end
   
   target 'API' do
     target 'APITests' do

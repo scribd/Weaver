@@ -245,9 +245,9 @@ import WeaverDI
 // MARK: - MovieAPI
 final class MovieAPIDependencyContainer: DependencyContainer {
     let host: String
-    init(parent: DependencyContainer? = nil, host: String) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, host: String) {
         self.host = host
-        super.init(parent)
+        super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
@@ -398,9 +398,9 @@ import WeaverDI
 // MARK: - API
 final class APIDependencyContainer: DependencyContainer {
     let host: String
-    init(parent: DependencyContainer? = nil, host: String) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, host: String) {
         self.host = host
-        super.init(parent)
+        super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(Session.self, scope: .graph, name: "session", builder: { (dependencies) in
@@ -434,7 +434,7 @@ extension API: APIDependencyInjectable {}
 // MARK: - APIShim
 final class APIShimDependencyContainer: DependencyContainer {
     private lazy var internalDependencies: APIDependencyContainer = {
-        return APIDependencyContainer(parent: self, host: self.host)
+        return APIDependencyContainer(parent: self, parentReferenceType: .weak, host: self.host)
     }()
     let logger: Logger
     let host: String
@@ -498,9 +498,9 @@ import WeaverDI
 // MARK: - API
 final class APIDependencyContainer: DependencyContainer {
     let parameter: UInt
-    init(parent: DependencyContainer? = nil, parameter: UInt) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, parameter: UInt) {
         self.parameter = parameter
-        super.init(parent)
+        super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
@@ -556,9 +556,9 @@ import WeaverDI
 // MARK: - Logger
 final class LoggerDependencyContainer: DependencyContainer {
     let domain: String
-    init(parent: DependencyContainer? = nil, domain: String) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, domain: String) {
         self.domain = domain
-        super.init(parent)
+        super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
@@ -675,9 +675,9 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
 // MARK: - Logger
 final class LoggerDependencyContainer<T>: DependencyContainer {
     let domain: String
-    init(parent: DependencyContainer? = nil, domain: String) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, domain: String) {
         self.domain = domain
-        super.init(parent)
+        super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
