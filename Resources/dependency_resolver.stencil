@@ -17,13 +17,13 @@ final class {{resolver.targetType.name}}DependencyContainer{{resolver.targetType
     let {{parameter.name}}: {{parameter.type}}
     {% endfor %}
 
-    init({% if not resolver.isRoot %}parent: DependencyContainer? = nil{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) {
+    init({% if not resolver.isRoot %}parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) {
 
         {% for parameter in resolver.parameters %}
         self.{{parameter.name}} = {{parameter.name}}
         {% endfor %}
 
-        super.init({% if not resolver.isRoot %}parent{% endif %})
+        super.init({% if not resolver.isRoot %}parent, parentReferenceType: parentReferenceType{% endif %})
     }
 
     override func registerDependencies(in store: DependencyStore) {
@@ -142,7 +142,7 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
 final class {{resolver.targetType.name}}ShimDependencyContainer{{resolver.targetType.generics}}: DependencyContainer {
 
     private lazy var internalDependencies: {{resolver.targetType.name}}DependencyContainer = {
-        return {{resolver.targetType}}DependencyContainer(parent: self{% for parameter in resolver.parameters %}, {{ parameter.name }}: self.{{ parameter.name }}{% endfor %})
+        return {{resolver.targetType}}DependencyContainer(parent: self{% for parameter in resolver.parameters %}, parentReferenceType: .weak, {{ parameter.name }}: self.{{ parameter.name }}{% endfor %})
     }()
     
     {% for reference in resolver.publicReferences %}

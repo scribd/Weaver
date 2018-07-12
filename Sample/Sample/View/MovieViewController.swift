@@ -28,6 +28,7 @@ final class MovieViewController: UIViewController {
     // weaver: imageManager <- ImageManaging
     
     // weaver: reviewController = WSReviewViewController
+    // weaver: reviewController.scope = .transient
     
     private var originalBarStyle: UIBarStyle?
     

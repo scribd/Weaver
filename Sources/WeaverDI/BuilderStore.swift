@@ -37,7 +37,7 @@ final class BuilderStore: BuilderStoring {
     
     private var builders: [BuilderKey: AnyBuilder] = [:]
     
-    weak var parent: BuilderStoring? = nil
+    weak var parent: BuilderStoring?
     
     func get<I, P>(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder<I, P>? {
         
