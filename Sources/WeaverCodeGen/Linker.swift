@@ -7,11 +7,11 @@
 
 import Foundation
 
-final class Linker {
+public final class Linker {
     
-    let graph = Graph()
+    public let graph = Graph()
 
-    init(syntaxTrees: [Expr]) throws {
+    public init(syntaxTrees: [Expr]) throws {
         try buildGraph(from: syntaxTrees)
     }
 }

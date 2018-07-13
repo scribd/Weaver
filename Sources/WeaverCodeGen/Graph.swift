@@ -8,7 +8,7 @@
 import Foundation
 import WeaverDI
 
-final class Graph {
+public final class Graph {
     
     private(set) var dependencyContainersByName = OrderedDictionary<String, DependencyContainer>()
     

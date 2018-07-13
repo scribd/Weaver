@@ -66,7 +66,8 @@ let main = command(
             Logger.log(.info, "")
             Logger.log(.info, "Checking dependency graph...")
             
-            let inspector = try Inspector(syntaxTrees: asts)
+            let linker = try Linker(syntaxTrees: asts)
+            let inspector = Inspector(graph: linker.graph)
             try inspector.validate()
         }
         

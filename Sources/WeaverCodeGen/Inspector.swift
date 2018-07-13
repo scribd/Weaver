@@ -17,8 +17,8 @@ public final class Inspector {
     private lazy var resolutionCache = Set<ResolutionCacheIndex>()
     private lazy var buildCache = Set<BuildCacheIndex>()
     
-    public init(syntaxTrees: [Expr]) throws {
-        graph = try Linker(syntaxTrees: syntaxTrees).graph
+    public init(graph: Graph) {
+        self.graph = graph
     }
     
     public func validate() throws {
