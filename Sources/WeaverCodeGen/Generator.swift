@@ -15,7 +15,7 @@ public final class Generator {
     private let templateDirPath: Path
     private let templateName: String
     
-    private let graph = Graph()
+    private let graph = GeneratorGraph()
     
     public init(asts: [Expr], template path: Path? = nil) throws {
 
@@ -55,9 +55,9 @@ public final class Generator {
     }
 }
 
-// MAKR: - Graph
+// MAKR: - GeneratorGraph
 
-private final class Graph {
+private final class GeneratorGraph {
 
     private var resolversByType = OrderedDictionary<String, ResolverModel>()
     private(set) var typesByName = [String: [Type]]()
@@ -259,7 +259,7 @@ extension VariableModel {
 
 extension ResolverModel {
 
-    convenience init?(expr: Expr, enclosingTypes: [Type], graph: Graph) {
+    convenience init?(expr: Expr, enclosingTypes: [Type], graph: GeneratorGraph) {
         
         switch expr {
         case .typeDeclaration(let typeToken, children: let children):

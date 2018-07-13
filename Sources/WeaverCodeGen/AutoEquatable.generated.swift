@@ -99,12 +99,25 @@ public func == (lhs: ReferenceAnnotation, rhs: ReferenceAnnotation) -> Bool {
     guard lhs.type == rhs.type else { return false }
     return true
 }
+// MARK: - ReferenceIndex AutoEquatable
+extension ReferenceIndex: Equatable {}
+internal func == (lhs: ReferenceIndex, rhs: ReferenceIndex) -> Bool {
+    guard lhs.name == rhs.name else { return false }
+    return true
+}
 // MARK: - RegisterAnnotation AutoEquatable
 extension RegisterAnnotation: Equatable {}
 public func == (lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
     guard lhs.type == rhs.type else { return false }
     guard compareOptionals(lhs: lhs.protocolType, rhs: rhs.protocolType, compare: ==) else { return false }
+    return true
+}
+// MARK: - RegistrationIndex AutoEquatable
+extension RegistrationIndex: Equatable {}
+internal func == (lhs: RegistrationIndex, rhs: RegistrationIndex) -> Bool {
+    guard lhs.name == rhs.name else { return false }
+    guard lhs.type == rhs.type else { return false }
     return true
 }
 // MARK: - ScopeAnnotation AutoEquatable

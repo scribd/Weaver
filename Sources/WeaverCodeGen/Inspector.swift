@@ -12,13 +12,13 @@ import WeaverDI
 
 public final class Inspector {
 
-    private let graph = Graph()
+    private let graph = InspectorGraph()
 
     private lazy var resolutionCache = Set<ResolutionCacheIndex>()
     private lazy var buildCache = Set<BuildCacheIndex>()
     
     public init(syntaxTrees: [Expr]) throws {
-        try buildGraph(from: syntaxTrees)
+        try buildInspectorGraph(from: syntaxTrees)
     }
     
     public func validate() throws {
@@ -29,9 +29,9 @@ public final class Inspector {
     }
 }
 
-// MARK: - Graph Objects
+// MARK: - InspectorGraph Objects
 
-private final class Graph {
+private final class InspectorGraph {
     private var resolversByName = OrderedDictionary<String, Resolver>()
     private var resolversByType = OrderedDictionary<String, Resolver>()
     
@@ -119,9 +119,9 @@ private struct BuildCacheIndex {
     let scope: Scope?
 }
 
-// MARK: - Graph
+// MARK: - InspectorGraph
 
-extension Graph {
+extension InspectorGraph {
     
     func insertResolver(with registerAnnotation: TokenBox<RegisterAnnotation>,
                         fileName: String?) {
@@ -167,7 +167,7 @@ extension Graph {
 
 private extension Inspector {
     
-    func buildGraph(from syntaxTrees: [Expr]) throws {
+    func buildInspectorGraph(from syntaxTrees: [Expr]) throws {
         collectResolvers(from: syntaxTrees)
         try linkResolvers(from: syntaxTrees)
     }
@@ -237,7 +237,7 @@ private extension Dependency {
                      scopeAnnotation: ScopeAnnotation? = nil,
                      config: [TokenBox<ConfigurationAnnotation>],
                      fileName: String,
-                     graph: Graph) throws {
+                     graph: InspectorGraph) throws {
 
         guard let associatedResolver = graph.resolver(named: registerAnnotation.value.name) else {
             throw InspectorError.invalidGraph(registerAnnotation.printableDependency(file: fileName),
@@ -259,7 +259,7 @@ private extension Dependency {
                      referenceAnnotation: TokenBox<ReferenceAnnotation>,
                      config: [TokenBox<ConfigurationAnnotation>],
                      fileName: String,
-                     graph: Graph) throws {
+                     graph: InspectorGraph) throws {
 
         guard let associatedResolver = graph.resolver(named: referenceAnnotation.value.name) else {
             throw InspectorError.invalidGraph(referenceAnnotation.printableDependency(file: fileName),
@@ -281,7 +281,7 @@ private extension Resolver {
     
     func update(with children: [Expr],
                 fileName: String,
-                graph: Graph) throws {
+                graph: InspectorGraph) throws {
 
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []

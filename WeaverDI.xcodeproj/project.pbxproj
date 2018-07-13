@@ -26,6 +26,8 @@
 		1917D60D20CA5E4100FDA7F5 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60C20CA5E4100FDA7F5 /* Builder.swift */; };
 		1917D60F20CA5E8100FDA7F5 /* BuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */; };
 		191EB95120FE66F3007CE644 /* Reference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191EB95020FE66F3007CE644 /* Reference.swift */; };
+		19303FCC20F9025F003584E9 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19303FCB20F9025F003584E9 /* Graph.swift */; };
+		19303FCE20F909C0003584E9 /* Linker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19303FCD20F909C0003584E9 /* Linker.swift */; };
 		194F90CB20CDC50400F594F5 /* ConfigurationAttributeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */; };
 		19506C4620DDC1B10068B8A6 /* Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19506C4520DDC1B10068B8A6 /* Type.swift */; };
 		19506C4820DDC27F0068B8A6 /* RegexUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19506C4720DDC27F0068B8A6 /* RegexUtils.swift */; };
@@ -469,6 +471,8 @@
 		1917D60C20CA5E4100FDA7F5 /* Builder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
 		1917D60E20CA5E8100FDA7F5 /* BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuilderTests.swift; sourceTree = "<group>"; };
 		191EB95020FE66F3007CE644 /* Reference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reference.swift; sourceTree = "<group>"; };
+		19303FCB20F9025F003584E9 /* Graph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
+		19303FCD20F909C0003584E9 /* Linker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Linker.swift; sourceTree = "<group>"; };
 		194F90CA20CDC50400F594F5 /* ConfigurationAttributeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationAttributeTests.swift; sourceTree = "<group>"; };
 		19506C4520DDC1B10068B8A6 /* Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Type.swift; sourceTree = "<group>"; };
 		19506C4720DDC27F0068B8A6 /* RegexUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegexUtils.swift; sourceTree = "<group>"; };
@@ -910,8 +914,10 @@
 				OBJ_23 /* Error.swift */,
 				OBJ_24 /* Expr.swift */,
 				OBJ_25 /* Generator.swift */,
+				19303FCB20F9025F003584E9 /* Graph.swift */,
 				OBJ_26 /* Inspector.swift */,
 				OBJ_27 /* Lexer.swift */,
+				19303FCD20F909C0003584E9 /* Linker.swift */,
 				1958492520D4678900BB1F09 /* OrderedDictionary.swift */,
 				OBJ_28 /* Parser.swift */,
 				19506C4720DDC27F0068B8A6 /* RegexUtils.swift */,
@@ -1687,11 +1693,13 @@
 				OBJ_329 /* AccessLevel.swift in Sources */,
 				OBJ_330 /* AutoEquatable.generated.swift in Sources */,
 				OBJ_331 /* AutoHashable.generated.swift in Sources */,
+				19303FCC20F9025F003584E9 /* Graph.swift in Sources */,
 				OBJ_332 /* AutoTypes.swift in Sources */,
 				OBJ_333 /* ConfigurationAttribute.swift in Sources */,
 				190C26E920C9930E009128AA /* Configuration.swift in Sources */,
 				OBJ_334 /* Error.swift in Sources */,
 				OBJ_335 /* Expr.swift in Sources */,
+				19303FCE20F909C0003584E9 /* Linker.swift in Sources */,
 				OBJ_336 /* Generator.swift in Sources */,
 				1958492620D4678900BB1F09 /* OrderedDictionary.swift in Sources */,
 				OBJ_337 /* Inspector.swift in Sources */,
