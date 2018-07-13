@@ -54,7 +54,7 @@ private final class InspectorGraph {
 
 private final class Resolver {
     let type: Type?
-    var config: ResolverConfiguration
+    var config: DependencyContainerConfiguration
     var accessLevel: AccessLevel
     var dependencies = OrderedDictionary<DependencyIndex, Dependency>()
     var dependents: [Resolver] = []
@@ -62,7 +62,7 @@ private final class Resolver {
 
     var fileLocation: FileLocation
 
-    init(config: ResolverConfiguration = .empty,
+    init(config: DependencyContainerConfiguration = .empty,
          accessLevel: AccessLevel = .default,
          type: Type? = nil,
          referredType: Type? = nil,
@@ -319,7 +319,7 @@ private extension Resolver {
             }
         }
         
-        self.config = ResolverConfiguration(with: configurationAnnotations[.`self`]?.map { $0.value })
+        self.config = DependencyContainerConfiguration(with: configurationAnnotations[.`self`]?.map { $0.value })
         
         for registerAnnotation in registerAnnotations {
             let name = registerAnnotation.value.name
@@ -515,7 +515,7 @@ private extension Dependency {
 
 // MARK: - Conversions
 
-private extension TokenBox where T == RegisterAnnotation {
+extension TokenBox where T == RegisterAnnotation {
     
     func printableDependency(file: String) -> PrintableDependency {
         return PrintableDependency(fileLocation: FileLocation(line: line, file: file),
@@ -524,7 +524,7 @@ private extension TokenBox where T == RegisterAnnotation {
     }
 }
 
-private extension TokenBox where T == ReferenceAnnotation {
+extension TokenBox where T == ReferenceAnnotation {
     
     func printableDependency(file: String) -> PrintableDependency {
         return PrintableDependency(fileLocation: FileLocation(line: line, file: file),

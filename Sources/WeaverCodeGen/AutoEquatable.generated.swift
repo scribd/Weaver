@@ -103,6 +103,7 @@ public func == (lhs: ReferenceAnnotation, rhs: ReferenceAnnotation) -> Bool {
 extension ReferenceIndex: Equatable {}
 internal func == (lhs: ReferenceIndex, rhs: ReferenceIndex) -> Bool {
     guard lhs.name == rhs.name else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
     return true
 }
 // MARK: - RegisterAnnotation AutoEquatable
@@ -117,7 +118,7 @@ public func == (lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
 extension RegistrationIndex: Equatable {}
 internal func == (lhs: RegistrationIndex, rhs: RegistrationIndex) -> Bool {
     guard lhs.name == rhs.name else { return false }
-    guard lhs.type == rhs.type else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
     return true
 }
 // MARK: - ScopeAnnotation AutoEquatable
@@ -134,6 +135,12 @@ public func == (lhs: Type, rhs: Type) -> Bool {
     guard lhs.genericNames == rhs.genericNames else { return false }
     guard lhs.isOptional == rhs.isOptional else { return false }
     guard lhs.generics == rhs.generics else { return false }
+    return true
+}
+// MARK: - TypeIndex AutoEquatable
+extension TypeIndex: Equatable {}
+internal func == (lhs: TypeIndex, rhs: TypeIndex) -> Bool {
+    guard lhs.value == rhs.value else { return false }
     return true
 }
 

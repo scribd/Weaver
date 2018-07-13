@@ -73,9 +73,11 @@ extension ConfigurationAnnotation: Hashable {
 extension ReferenceIndex: Hashable {
     internal var hashValue: Int {
         let nameHashValue = name.hashValue
+        let typeHashValue = type?.hashValue ?? 0
 
         return combineHashes([
             nameHashValue,
+            typeHashValue,
             0])
     }
 }
@@ -83,7 +85,7 @@ extension ReferenceIndex: Hashable {
 extension RegistrationIndex: Hashable {
     internal var hashValue: Int {
         let nameHashValue = name.hashValue
-        let typeHashValue = type.hashValue
+        let typeHashValue = type?.hashValue ?? 0
 
         return combineHashes([
             nameHashValue,
@@ -104,6 +106,16 @@ extension Type: Hashable {
             genericNamesHashValue,
             isOptionalHashValue,
             genericsHashValue,
+            0])
+    }
+}
+// MARK: - TypeIndex AutoHashable
+extension TypeIndex: Hashable {
+    internal var hashValue: Int {
+        let valueHashValue = value.hashValue
+
+        return combineHashes([
+            valueHashValue,
             0])
     }
 }

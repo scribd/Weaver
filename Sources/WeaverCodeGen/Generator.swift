@@ -168,7 +168,7 @@ private final class ResolverModel {
          isRoot: Bool,
          doesSupportObjc: Bool,
          accessLevel: AccessLevel,
-         config: ResolverConfiguration) {
+         config: DependencyContainerConfiguration) {
         
         self.targetType = targetType
         self.registrations = registrations
@@ -321,7 +321,7 @@ extension ResolverModel {
             let hasParameters = !parameters.isEmpty
 
             let isRoot = !hasNonCustomReferences && !hasParameters
-            let config = ResolverConfiguration(with: configurationAnnotations[.`self`])
+            let config = DependencyContainerConfiguration(with: configurationAnnotations[.`self`])
 
             self.init(targetType: targetType,
                       registrations: registrations,

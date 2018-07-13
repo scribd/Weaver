@@ -54,6 +54,17 @@ public struct Type: AutoHashable, AutoEquatable {
     }
 }
 
+// MARK: - Index
+
+struct TypeIndex: AutoHashable, AutoEquatable {
+
+    let value: String
+    
+    fileprivate init(type: Type) {
+        value = "\(type.name)\(type.isOptional ? "?" : "")"
+    }
+}
+
 // MARK: - Description
 
 extension Type: CustomStringConvertible {
@@ -64,5 +75,9 @@ extension Type: CustomStringConvertible {
     
     var indexKey: String {
         return "\(name)\(isOptional ? "?" : "")"
+    }
+    
+    var index: TypeIndex {
+        return TypeIndex(type: self)
     }
 }

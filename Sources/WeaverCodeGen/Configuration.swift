@@ -44,7 +44,7 @@ struct DependencyConfiguration: Configuration {
     }
 }
 
-struct ResolverConfiguration: Configuration {
+struct DependencyContainerConfiguration: Configuration {
     
     let isIsolated: Bool
     
