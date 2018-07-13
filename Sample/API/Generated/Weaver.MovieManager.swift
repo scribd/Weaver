@@ -5,13 +5,13 @@ import WeaverDI
 // MARK: - MovieManager
 final class MovieManagerDependencyContainer: DependencyContainer {
     let host: String?
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, host: String?) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, host: String?) {
         self.host = host
         super.init(parent, parentReferenceType: parentReferenceType)
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(APIProtocol.self, scope: .graph, name: "movieAPI", builder: { (dependencies) in
-            return MovieAPI.makeMovieAPI(injecting: dependencies)
+            return MovieAPI.makeMovieAPI(injecting: dependencies, referenceType: .weak)
         })
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
             return self.urlSessionCustomRef()
@@ -37,8 +37,8 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     }
 }
 extension MovieManager {
-    static func makeMovieManager(injecting parentDependencies: DependencyContainer, host: String?) -> MovieManager {
-        let dependencies = MovieManagerDependencyContainer(parent: parentDependencies, host: host)
+    static func makeMovieManager(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, host: String?) -> MovieManager {
+        let dependencies = MovieManagerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, host: host)
         return MovieManager(injecting: dependencies)
     }
 }
@@ -59,8 +59,11 @@ final class MovieManagerShimDependencyContainer: DependencyContainer {
         super.init()
     }
     override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .container, name: "logger", builder: { _ in
-            return self.logger
+        store.register(Logger.self, scope: .weak, name: "logger", builder: { [weak self] _ in
+            guard let strongSelf = self else {
+                fatalError("Container was released too early. If you see this happen, please file a bug.") 
+            }
+            return strongSelf.logger
         })
     }
 }

@@ -17,7 +17,7 @@ final class {{resolver.targetType.name}}DependencyContainer{{resolver.targetType
     let {{parameter.name}}: {{parameter.type}}
     {% endfor %}
 
-    init({% if not resolver.isRoot %}parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) {
+    init({% if not resolver.isRoot %}parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) {
 
         {% for parameter in resolver.parameters %}
         self.{{parameter.name}} = {{parameter.name}}
@@ -33,7 +33,7 @@ final class {{resolver.targetType.name}}DependencyContainer{{resolver.targetType
         store.register({{registration.abstractType}}.self, scope: .{{registration.scope}}, name: "{{registration.name}}", builder: { (dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.type}}{% endfor %}) in
             {% if not registration.customRef %}
 
-            return {{registration.type.name}}{{registration.abstractType.generics}}{% if registration.hasBuilder %}.make{{registration.type.name}}(injecting: dependencies{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}(){% endif %}
+            return {{registration.type.name}}{{registration.abstractType.generics}}{% if registration.hasBuilder %}.make{{registration.type.name}}(injecting: dependencies, referenceType: .{{registration.referenceType}}{% for parameter in registration.parameters %}, {{parameter.name}}: {{parameter.name}}{% endfor %}){% else %}(){% endif %}
             {% else %}{# not registration.customRef #}
 
             return self.{{registration.name}}CustomRef({% for parameter in registration.parameters %}{% if not forloop.first %}, {% endif %}{{parameter.name}}: {{parameter.name}}{% endfor %})
@@ -105,9 +105,9 @@ extension {{resolver.targetType.name}}DependencyContainer: {{resolver.targetType
 
 extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join: "."}}.{% endif %}{{resolver.targetType.name}} {
 
-    static func make{{resolver.targetType.name}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{resolver.targetType}} {
+    static func make{{resolver.targetType.name}}({% if not resolver.isRoot %}injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{resolver.targetType}} {
 
-        let dependencies = {{resolver.targetType.name}}DependencyContainer{{resolver.targetType.generics}}({% if not resolver.isRoot %}parent: parentDependencies{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
+        let dependencies = {{resolver.targetType.name}}DependencyContainer{{resolver.targetType.generics}}({% if not resolver.isRoot %}parent: parentDependencies, parentReferenceType: referenceType{% if resolver.parameters %}, {% endif %}{% endif %}{% for parameter in resolver.parameters %}{{parameter.name}}: {{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
         return {{resolver.targetType.name}}(injecting: dependencies)
         
     }
@@ -142,7 +142,7 @@ extension {% if resolver.enclosingTypeNames %}{{resolver.enclosingTypeNames|join
 final class {{resolver.targetType.name}}ShimDependencyContainer{{resolver.targetType.generics}}: DependencyContainer {
 
     private lazy var internalDependencies: {{resolver.targetType.name}}DependencyContainer = {
-        return {{resolver.targetType}}DependencyContainer(parent: self{% for parameter in resolver.parameters %}, parentReferenceType: .weak, {{ parameter.name }}: self.{{ parameter.name }}{% endfor %})
+        return {{resolver.targetType}}DependencyContainer(parent: self, parentReferenceType: .weak{% for parameter in resolver.parameters %}, {{ parameter.name }}: self.{{ parameter.name }}{% endfor %})
     }()
     
     {% for reference in resolver.publicReferences %}
@@ -167,8 +167,11 @@ final class {{resolver.targetType.name}}ShimDependencyContainer{{resolver.target
 
     override func registerDependencies(in store: DependencyStore) {
         {% for reference in resolver.publicReferences %}
-        store.register({{reference.type}}.self, scope: .container, name: "{{reference.name}}", builder: { _ in
-            return self.{{reference.name}}
+        store.register({{reference.type}}.self, scope: .weak, name: "{{reference.name}}", builder: { [weak self] _ in
+            guard let strongSelf = self else {
+                fatalError("Container was released too early. If you see this happen, please file a bug.")
+            }
+            return strongSelf.{{reference.name}}
         })
         {% endfor %}{# resolver.publicReferences #}
     }

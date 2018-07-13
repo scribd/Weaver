@@ -8,7 +8,7 @@ import WeaverDI
 final class MovieViewControllerDependencyContainer: DependencyContainer {
     let movieID: UInt
     let title: String
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, movieID: UInt, title: String) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, movieID: UInt, title: String) {
         self.movieID = movieID
         self.title = title
         super.init(parent, parentReferenceType: parentReferenceType)
@@ -18,7 +18,7 @@ final class MovieViewControllerDependencyContainer: DependencyContainer {
             return Logger()
         })
         store.register(WSReviewViewController.self, scope: .transient, name: "reviewController", builder: { (dependencies, movieID: UInt) in
-            return WSReviewViewController.makeWSReviewViewController(injecting: dependencies, movieID: movieID)
+            return WSReviewViewController.makeWSReviewViewController(injecting: dependencies, referenceType: .strong, movieID: movieID)
         })
     }
 }
@@ -45,8 +45,8 @@ extension MovieViewControllerDependencyContainer: MovieViewControllerDependencyR
     }
 }
 extension MovieViewController {
-    static func makeMovieViewController(injecting parentDependencies: DependencyContainer, movieID: UInt, title: String) -> MovieViewController {
-        let dependencies = MovieViewControllerDependencyContainer(parent: parentDependencies, movieID: movieID, title: title)
+    static func makeMovieViewController(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, movieID: UInt, title: String) -> MovieViewController {
+        let dependencies = MovieViewControllerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, movieID: movieID, title: title)
         return MovieViewController(injecting: dependencies)
     }
 }

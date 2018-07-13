@@ -5,7 +5,7 @@ import WeaverDI
 // MARK: - WSReviewViewController
 final class WSReviewViewControllerDependencyContainer: DependencyContainer {
     let movieID: UInt
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType = .strong, movieID: UInt) {
+    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, movieID: UInt) {
         self.movieID = movieID
         super.init(parent, parentReferenceType: parentReferenceType)
     }
@@ -22,8 +22,8 @@ extension WSReviewViewControllerDependencyContainer: WSReviewViewControllerDepen
     }
 }
 extension WSReviewViewController {
-    static func makeWSReviewViewController(injecting parentDependencies: DependencyContainer, movieID: UInt) -> WSReviewViewController {
-        let dependencies = WSReviewViewControllerDependencyContainer(parent: parentDependencies, movieID: movieID)
+    static func makeWSReviewViewController(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, movieID: UInt) -> WSReviewViewController {
+        let dependencies = WSReviewViewControllerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, movieID: movieID)
         return WSReviewViewController(injecting: dependencies)
     }
 }
