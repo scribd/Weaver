@@ -135,10 +135,11 @@ private extension Linker {
             let name = registerAnnotation.value.name
             let registration = try graph.registration(source: dependencyContainer,
                                                       registerAnnotation: registerAnnotation,
+                                                      scopeAnnotation: scopeAnnotations[name],
                                                       configuration: configurationAnnotations[.dependency(name: name)] ?? [],
                                                       file: file)
-            let registrationIndex = RegistrationIndex(name: name, type: registration.target.type)
-            dependencyContainer.registrations[registrationIndex] = registration
+            let index = DependencyIndex(name: name, type: registration.target.type)
+            dependencyContainer.registrations[index] = registration
             registration.target.sources.append(dependencyContainer)
         }
         
@@ -148,8 +149,8 @@ private extension Linker {
                                                 referenceAnnotation: referenceAnnotation,
                                                 configuration: configurationAnnotations[.dependency(name: name)] ?? [],
                                                 file: file)
-            let referenceIndex = ReferenceIndex(name: name, type: reference.target.type)
-            dependencyContainer.references[referenceIndex] = reference
+            let index = DependencyIndex(name: name, type: reference.target.type)
+            dependencyContainer.references[index] = reference
             reference.target.sources.append(dependencyContainer)
         }
     }

@@ -19,6 +19,21 @@ final class Graph {
     private(set) var typesByName = [String: [Type]]()
     
     private(set) var importsByFile = [String: [String]]()
+    
+    lazy var dependencies: [Dependency] = {
+        let allDependencies =
+            dependencyContainersByName.orderedValues.flatMap { $0.orderedDependencies } +
+            dependencyContainersByType.orderedValues.flatMap { $0.orderedDependencies }
+        
+        var filteredDependencies = Set<HashableDependency>()
+        return allDependencies.filter {
+            if filteredDependencies.contains(HashableDependency(value: $0)) {
+                return false
+            }
+            filteredDependencies.insert(HashableDependency(value: $0))
+            return true
+        }
+    }()
 }
 
 // MARK: - Write
@@ -37,6 +52,7 @@ extension Graph {
     }
     
     func insertDependencyContainer(with referenceAnnotation: ReferenceAnnotation) {
+
         let name = referenceAnnotation.name
         let type = referenceAnnotation.type
         if let dependencyContainer = dependencyContainersByName[name] {
@@ -70,7 +86,7 @@ extension Graph {
     
     func registration(source: DependencyContainer,
                       registerAnnotation: TokenBox<RegisterAnnotation>,
-                      scopeAnnotation: ScopeAnnotation? = nil,
+                      scopeAnnotation: ScopeAnnotation?,
                       configuration: [TokenBox<ConfigurationAnnotation>],
                       file: String) throws -> Registration {
         
@@ -126,9 +142,9 @@ final class DependencyContainer: Hashable {
     
     var configuration: DependencyContainerConfiguration
     
-    var registrations = [RegistrationIndex: Registration]()
+    var registrations = OrderedDictionary<DependencyIndex, Registration>()
     
-    var references = [ReferenceIndex: Reference]()
+    var references = OrderedDictionary<DependencyIndex, Reference>()
     
     var sources = [DependencyContainer]()
     
@@ -149,6 +165,16 @@ final class DependencyContainer: Hashable {
         self.fileLocation = fileLocation
     }
     
+    var orderedDependencies: [Dependency] {
+        let orderedRegistrations: [Dependency] = registrations.orderedValues
+        let orderedReferences: [Dependency] = references.orderedValues
+        return orderedRegistrations + orderedReferences
+    }
+    
+    func dependency(for index: DependencyIndex) -> Dependency? {
+        return registrations[index] ?? references[index] ?? nil
+    }
+    
     var hashValue: Int {
         return ObjectIdentifier(self).hashValue
     }
@@ -158,9 +184,46 @@ final class DependencyContainer: Hashable {
     }
 }
 
+// MARK: - Dependency
+
+protocol Dependency: AnyObject {
+    
+    var dependencyName: String { get }
+    
+    var scope: Scope? { get }
+    
+    var configuration: DependencyConfiguration { get }
+    
+    var target: DependencyContainer { get }
+    
+    var source: DependencyContainer { get }
+    
+    var fileLocation: FileLocation { get }
+}
+
+extension Dependency {
+    
+    var scope: Scope? {
+        return nil
+    }
+}
+
+private struct HashableDependency: Hashable {
+    
+    let value: Dependency
+    
+    var hashValue: Int {
+        return ObjectIdentifier(value).hashValue
+    }
+    
+    static func ==(lhs: HashableDependency, rhs: HashableDependency) -> Bool {
+        return ObjectIdentifier(lhs.value) == ObjectIdentifier(rhs.value)
+    }
+}
+
 // MARK: - Registration
 
-final class Registration: Hashable {
+final class Registration: Dependency, Hashable {
     
     let dependencyName: String
     
@@ -200,7 +263,7 @@ final class Registration: Hashable {
 
 // MARK: - Reference
 
-final class Reference: Hashable {
+final class Reference: Dependency, Hashable {
     
     let dependencyName: String
     
@@ -235,7 +298,7 @@ final class Reference: Hashable {
 
 // MARK: - Parameter
 
-final class Parameter: Hashable {
+final class Parameter {
     
     let parameterName: String
     
@@ -251,24 +314,11 @@ final class Parameter: Hashable {
         self.source = source
         self.type = type
     }
-    
-    var hashValue: Int {
-        return ObjectIdentifier(self).hashValue
-    }
-    
-    static func ==(lhs: Parameter, rhs: Parameter) -> Bool {
-        return ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
-    }
 }
 
 // MARK: - Indexes
 
-struct RegistrationIndex: AutoHashable, AutoEquatable {
-    let name: String
-    let type: Type?
-}
-
-struct ReferenceIndex: AutoHashable, AutoEquatable {
+struct DependencyIndex: AutoHashable, AutoEquatable {
     let name: String
     let type: Type?
 }

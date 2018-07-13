@@ -69,20 +69,8 @@ extension ConfigurationAnnotation: Hashable {
             0])
     }
 }
-// MARK: - ReferenceIndex AutoHashable
-extension ReferenceIndex: Hashable {
-    internal var hashValue: Int {
-        let nameHashValue = name.hashValue
-        let typeHashValue = type?.hashValue ?? 0
-
-        return combineHashes([
-            nameHashValue,
-            typeHashValue,
-            0])
-    }
-}
-// MARK: - RegistrationIndex AutoHashable
-extension RegistrationIndex: Hashable {
+// MARK: - DependencyIndex AutoHashable
+extension DependencyIndex: Hashable {
     internal var hashValue: Int {
         let nameHashValue = name.hashValue
         let typeHashValue = type?.hashValue ?? 0

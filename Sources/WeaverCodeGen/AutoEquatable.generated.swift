@@ -37,6 +37,13 @@ public func == (lhs: ConfigurationAnnotation, rhs: ConfigurationAnnotation) -> B
     guard lhs.target == rhs.target else { return false }
     return true
 }
+// MARK: - DependencyIndex AutoEquatable
+extension DependencyIndex: Equatable {}
+internal func == (lhs: DependencyIndex, rhs: DependencyIndex) -> Bool {
+    guard lhs.name == rhs.name else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
+    return true
+}
 // MARK: - EndOfAnyDeclaration AutoEquatable
 extension EndOfAnyDeclaration: Equatable {}
 public func == (lhs: EndOfAnyDeclaration, rhs: EndOfAnyDeclaration) -> Bool {
@@ -99,26 +106,12 @@ public func == (lhs: ReferenceAnnotation, rhs: ReferenceAnnotation) -> Bool {
     guard lhs.type == rhs.type else { return false }
     return true
 }
-// MARK: - ReferenceIndex AutoEquatable
-extension ReferenceIndex: Equatable {}
-internal func == (lhs: ReferenceIndex, rhs: ReferenceIndex) -> Bool {
-    guard lhs.name == rhs.name else { return false }
-    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
-    return true
-}
 // MARK: - RegisterAnnotation AutoEquatable
 extension RegisterAnnotation: Equatable {}
 public func == (lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
     guard lhs.name == rhs.name else { return false }
     guard lhs.type == rhs.type else { return false }
     guard compareOptionals(lhs: lhs.protocolType, rhs: rhs.protocolType, compare: ==) else { return false }
-    return true
-}
-// MARK: - RegistrationIndex AutoEquatable
-extension RegistrationIndex: Equatable {}
-internal func == (lhs: RegistrationIndex, rhs: RegistrationIndex) -> Bool {
-    guard lhs.name == rhs.name else { return false }
-    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
     return true
 }
 // MARK: - ScopeAnnotation AutoEquatable
