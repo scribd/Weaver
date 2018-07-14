@@ -31,7 +31,7 @@ public final class Inspector {
 
 // MARK: - Resolution Check
 
-private extension Dependency {
+private extension ResolvableDependency {
     
     func resolve(with cache: inout Set<ResolutionCacheIndex>) throws {
         
@@ -151,7 +151,7 @@ private extension DependencyContainer {
 
 // MARK: - Build Check
 
-private extension Dependency {
+private extension ResolvableDependency {
     
     func build(with buildCache: inout Set<BuildCacheIndex>) throws {
         
@@ -178,7 +178,7 @@ private extension Dependency {
 
 private extension DependencyContainer {
     
-    func buildDependencies(from sourceDependency: Dependency,
+    func buildDependencies(from sourceDependency: ResolvableDependency,
                            visitedDependencyContainers: inout Set<DependencyContainer>,
                            history: [InspectorAnalysisHistoryRecord]) throws {
 
@@ -229,7 +229,7 @@ extension TokenBox where T == ReferenceAnnotation {
     }
 }
 
-private extension Dependency {
+private extension ResolvableDependency {
     
     var printableDependency: PrintableDependency {
         return PrintableDependency(fileLocation: fileLocation,

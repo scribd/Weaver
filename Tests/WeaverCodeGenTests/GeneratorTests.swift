@@ -35,9 +35,7 @@ final class MyService {
             let ast = try parser.parse()
             
             let generator = try Generator(asts: [ast], template: templatePath)
-            let (_ , actual) = try generator.generate().first!
-
-            XCTAssertNil(actual)
+            XCTAssertNil(try generator.generate().first)
             
         } catch {
             XCTFail("Unexpected error \(error)")

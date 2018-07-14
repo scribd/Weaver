@@ -14,13 +14,18 @@ public final class Graph {
     
     private(set) var dependencyContainersByType = OrderedDictionary<TypeIndex, DependencyContainer>()
     
-    private(set) var dependencyContainersByFile = OrderedDictionary<String, [DependencyContainer]>()
-    
-    private(set) var typesByName = [String: [Type]]()
-    
     private(set) var importsByFile = [String: [String]]()
     
-    lazy var dependencies: [Dependency] = {
+    lazy var dependencyContainersByFile = dependencyContainersByType.orderedValues.reduce(OrderedDictionary<String, [DependencyContainer]>()) { (dependencyContainersByFile, dependencyContainer) in
+        guard let file = dependencyContainer.fileLocation.file else { return dependencyContainersByFile }
+        var dependencyContainersByFile = dependencyContainersByFile
+        var dependencyContainers = dependencyContainersByFile[file] ?? []
+        dependencyContainers.append(dependencyContainer)
+        dependencyContainersByFile[file] = dependencyContainers
+        return dependencyContainersByFile
+    }
+
+    lazy var dependencies: [ResolvableDependency] = {
         let allDependencies =
             dependencyContainersByName.orderedValues.flatMap { $0.orderedDependencies } +
             dependencyContainersByType.orderedValues.flatMap { $0.orderedDependencies }
@@ -34,21 +39,39 @@ public final class Graph {
             return true
         }
     }()
+    
+    lazy var typesByName = dependencies.reduce([String: [Type]]()) { (typesByName, dependency) in
+        var typesByName = typesByName
+        var types = typesByName[dependency.type.name] ?? []
+        types.append(dependency.type)
+        if dependency.type != dependency.abstractType {
+            types.append(dependency.abstractType)
+        }
+        typesByName[dependency.type.name] = types
+        return typesByName
+    }
 }
 
 // MARK: - Write
 
 extension Graph {
     
-    func insertDependencyContainer(with registerAnnotation: TokenBox<RegisterAnnotation>, file: String?) {
+    func insertDependencyContainer(with registerAnnotation: TokenBox<RegisterAnnotation>,
+                                   doesSupportObjc: Bool = false,
+                                   file: String?) {
 
         let fileLocation = FileLocation(line: registerAnnotation.line, file: file)
         let dependencyContainer = DependencyContainer(type: registerAnnotation.value.type,
+                                                      doesSupportObjc: doesSupportObjc,
                                                       fileLocation: fileLocation)
         dependencyContainersByName[registerAnnotation.value.name] = dependencyContainer
 
         let type = registerAnnotation.value.type
         dependencyContainersByType[type.index] = dependencyContainer
+        
+        if let file = file {
+            dependencyContainersByFile[file] = (dependencyContainersByFile[file] ?? []) + [dependencyContainer]
+        }
     }
     
     func insertDependencyContainer(with referenceAnnotation: ReferenceAnnotation) {
@@ -69,16 +92,19 @@ extension Graph {
     
     func dependencyContainer(type: Type,
                              accessLevel: AccessLevel,
+                             doesSupportObjc: Bool,
                              fileLocation: FileLocation) -> DependencyContainer {
         
         if let dependencyContainer = dependencyContainersByType[type.index] {
             dependencyContainer.fileLocation = fileLocation
             dependencyContainer.accessLevel = accessLevel
+            dependencyContainer.doesSupportObjc = doesSupportObjc
             return dependencyContainer
         }
         
         let dependencyContainer = DependencyContainer(type: type,
                                                       accessLevel: accessLevel,
+                                                      doesSupportObjc: doesSupportObjc,
                                                       fileLocation: fileLocation)
         dependencyContainersByType[type.index] = dependencyContainer
         return dependencyContainer
@@ -99,8 +125,10 @@ extension Graph {
         let configuration = DependencyConfiguration(with: configuration.map { $0.value.attribute })
 
         let fileLocation = FileLocation(line: registerAnnotation.line, file: file)
-        
+        let type = registerAnnotation.value.type
         return Registration(dependencyName: name,
+                            type: type,
+                            abstractType: registerAnnotation.value.protocolType ?? type,
                             scope: scopeAnnotation?.scope ?? .default,
                             configuration: configuration,
                             target: target,
@@ -125,6 +153,7 @@ extension Graph {
         let fileLocation = FileLocation(line: referenceAnnotation.line, file: file)
 
         return Reference(dependencyName: name,
+                         type: referenceAnnotation.value.type,
                          target: target,
                          source: source,
                          configuration: configuration,
@@ -140,38 +169,46 @@ final class DependencyContainer: Hashable {
     
     var accessLevel: AccessLevel
     
+    var doesSupportObjc: Bool
+    
     var configuration: DependencyContainerConfiguration
     
     var registrations = OrderedDictionary<DependencyIndex, Registration>()
     
     var references = OrderedDictionary<DependencyIndex, Reference>()
     
+    var parameters = [Parameter]()
+
     var sources = [DependencyContainer]()
     
     var referredTypes: Set<Type>
+    
+    var enclosingTypes: [Type] = []
     
     var fileLocation: FileLocation
 
     init(type: Type? = nil,
          accessLevel: AccessLevel = .default,
+         doesSupportObjc: Bool = false,
          configuration: DependencyContainerConfiguration = .empty,
          referredType: Type? = nil,
          fileLocation: FileLocation = FileLocation()) {
 
         self.type = type
         self.accessLevel = accessLevel
+        self.doesSupportObjc = doesSupportObjc
         self.configuration = configuration
         referredTypes = Set([referredType].compactMap { $0 })
         self.fileLocation = fileLocation
     }
     
-    var orderedDependencies: [Dependency] {
-        let orderedRegistrations: [Dependency] = registrations.orderedValues
-        let orderedReferences: [Dependency] = references.orderedValues
+    var orderedDependencies: [ResolvableDependency] {
+        let orderedRegistrations: [ResolvableDependency] = registrations.orderedValues
+        let orderedReferences: [ResolvableDependency] = references.orderedValues
         return orderedRegistrations + orderedReferences
     }
     
-    func dependency(for index: DependencyIndex) -> Dependency? {
+    func dependency(for index: DependencyIndex) -> ResolvableDependency? {
         return registrations[index] ?? references[index] ?? nil
     }
     
@@ -190,11 +227,13 @@ protocol Dependency: AnyObject {
     
     var dependencyName: String { get }
     
+    var type: Type { get }
+    
+    var abstractType: Type { get }
+    
     var scope: Scope? { get }
     
     var configuration: DependencyConfiguration { get }
-    
-    var target: DependencyContainer { get }
     
     var source: DependencyContainer { get }
     
@@ -203,9 +242,22 @@ protocol Dependency: AnyObject {
 
 extension Dependency {
     
+    var abstractType: Type {
+        return type
+    }
+    
     var scope: Scope? {
         return nil
     }
+    
+    var configuration: DependencyConfiguration {
+        return .empty
+    }
+}
+
+protocol ResolvableDependency: Dependency {
+    
+    var target: DependencyContainer { get }
 }
 
 private struct HashableDependency: Hashable {
@@ -223,14 +275,18 @@ private struct HashableDependency: Hashable {
 
 // MARK: - Registration
 
-final class Registration: Dependency, Hashable {
+final class Registration: ResolvableDependency, Hashable {
     
     let dependencyName: String
+    
+    let type: Type
+    
+    let abstractType: Type
     
     let scope: Scope?
     
     var configuration: DependencyConfiguration
-
+    
     let target: DependencyContainer
     
     let source: DependencyContainer
@@ -238,6 +294,8 @@ final class Registration: Dependency, Hashable {
     let fileLocation: FileLocation
     
     init(dependencyName: String,
+         type: Type,
+         abstractType: Type,
          scope: Scope? = nil,
          configuration: DependencyConfiguration = .empty,
          target: DependencyContainer,
@@ -245,6 +303,8 @@ final class Registration: Dependency, Hashable {
          fileLocation: FileLocation) {
 
         self.dependencyName = dependencyName
+        self.type = type
+        self.abstractType = abstractType
         self.scope = scope
         self.configuration = configuration
         self.target = target
@@ -263,9 +323,11 @@ final class Registration: Dependency, Hashable {
 
 // MARK: - Reference
 
-final class Reference: Dependency, Hashable {
+final class Reference: ResolvableDependency, Hashable {
     
     let dependencyName: String
+    
+    let type: Type
     
     let target: DependencyContainer
     
@@ -276,11 +338,13 @@ final class Reference: Dependency, Hashable {
     let fileLocation: FileLocation
     
     init(dependencyName: String,
+         type: Type,
          target: DependencyContainer,
          source: DependencyContainer,
          configuration: DependencyConfiguration,
          fileLocation: FileLocation) {
         self.dependencyName = dependencyName
+        self.type = type
         self.target = target
         self.source = source
         self.configuration = configuration
@@ -298,21 +362,29 @@ final class Reference: Dependency, Hashable {
 
 // MARK: - Parameter
 
-final class Parameter {
+final class Parameter: Dependency {
     
     let parameterName: String
     
+    var dependencyName: String {
+        return parameterName
+    }
+
     let source: DependencyContainer
     
     let type: Type
     
+    let fileLocation: FileLocation
+    
     init(parameterName: String,
          source: DependencyContainer,
-         type: Type) {
+         type: Type,
+         fileLocation: FileLocation) {
         
         self.parameterName = parameterName
         self.source = source
         self.type = type
+        self.fileLocation = fileLocation
     }
 }
 

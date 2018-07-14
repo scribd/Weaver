@@ -84,20 +84,25 @@ private extension Linker {
             let fileLocation = FileLocation(line: token.line, file: file)
             let dependencyContainer = graph.dependencyContainer(type: token.value.type,
                                                                 accessLevel: token.value.accessLevel,
+                                                                doesSupportObjc: token.value.doesSupportObjc,
                                                                 fileLocation: fileLocation)
 
-            try linkDependencyContainer(dependencyContainer, with: children, file: file)
+            try linkDependencyContainer(dependencyContainer,
+                                        with: children,
+                                        file: file)
         }
     }
     
     func linkDependencyContainer(_ dependencyContainer: DependencyContainer,
                                  with children: [Expr],
+                                 enclosingTypes: [Type] = [],
                                  file: String) throws {
 
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
         var scopeAnnotations: [String: ScopeAnnotation] = [:]
         var configurationAnnotations: [ConfigurationAttributeTarget: [TokenBox<ConfigurationAnnotation>]] = [:]
+        var parameters = [Parameter]()
 
         for child in children {
             switch child {
@@ -105,8 +110,12 @@ private extension Linker {
                 let fileLocation = FileLocation(line: injectableType.line, file: file)
                 let childDependencyContainer = graph.dependencyContainer(type: injectableType.value.type,
                                                                          accessLevel: injectableType.value.accessLevel,
+                                                                         doesSupportObjc: injectableType.value.doesSupportObjc,
                                                                          fileLocation: fileLocation)
-                try linkDependencyContainer(childDependencyContainer, with: children, file: file)
+                try linkDependencyContainer(childDependencyContainer,
+                                            with: children,
+                                            enclosingTypes: enclosingTypes + [injectableType.value.type],
+                                            file: file)
                 
             case .registerAnnotation(let registerAnnotation):
                 registerAnnotations.append(registerAnnotation)
@@ -121,8 +130,14 @@ private extension Linker {
                 let target = configurationAnnotation.value.target
                 configurationAnnotations[target] = (configurationAnnotations[target] ?? []) + [configurationAnnotation]
                 
-            case .file,
-                 .parameterAnnotation:
+            case .parameterAnnotation(let parameterAnnotation):
+                let parameter = Parameter(parameterName: parameterAnnotation.value.name,
+                                          source: dependencyContainer,
+                                          type: parameterAnnotation.value.type,
+                                          fileLocation: FileLocation(line: parameterAnnotation.line, file: file))
+                parameters.append(parameter)
+                
+            case .file:
                 break
             }
         }
@@ -130,6 +145,8 @@ private extension Linker {
         dependencyContainer.configuration = DependencyContainerConfiguration(
             with: configurationAnnotations[.`self`]?.map { $0.value }
         )
+        
+        dependencyContainer.enclosingTypes = enclosingTypes
         
         for registerAnnotation in registerAnnotations {
             let name = registerAnnotation.value.name
