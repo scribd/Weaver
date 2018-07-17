@@ -13,7 +13,7 @@ final class ImageManagerDependencyContainer: DependencyContainer {
             return Logger()
         })
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
-            return self.urlSessionCustomRef()
+            return URLSession()
         })
     }
 }
@@ -21,7 +21,6 @@ protocol ImageManagerDependencyResolver {
     var logger: Logger { get }
     var urlSession: URLSession { get }
     var movieAPI: APIProtocol { get }
-    func urlSessionCustomRef() -> URLSession
 }
 extension ImageManagerDependencyContainer: ImageManagerDependencyResolver {
     var logger: Logger {

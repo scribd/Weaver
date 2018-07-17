@@ -60,6 +60,11 @@ extension AppDelegateDependencyResolver {
     }
     
     func movieAPICustomRef() -> APIProtocol {
+        let configuration = URLSessionConfiguration.default
+        assert(configuration.urlCache != nil, "\(AppDelegateDependencyResolver.self): urlCache should not be nil.")
+        configuration.urlCache?.diskCapacity = 1024 * 1024 * 50
+        configuration.urlCache?.memoryCapacity = 1024 * 1024 * 5
+        let urlSession = URLSession(configuration: configuration)
         return MovieAPI(urlSession: urlSession)
     }
     
