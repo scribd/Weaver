@@ -603,7 +603,7 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
 // MARK: - MovieManagerShim
 final class MovieManagerShimDependencyContainer: DependencyContainer {
     private lazy var internalDependencies: MovieManagerDependencyContainer = {
-        return MovieManagerDependencyContainer(parent: Reference(self, type: .weak))
+        return MovieManagerDependencyContainer()
     }()
     init() {
         super.init()
