@@ -166,7 +166,7 @@ private extension DependencyContainer {
             return self
         }
         guard let dependencyContainer = parent?.value?.firstDependencyContainer(containing: key, isCalledFromAChild: true) else {
-            fatalError("Could not find key \((key)) in any parents.")
+            fatalError("\(DependencyContainer.self): Could not resolve key \(key).")
         }
         return dependencyContainer
     }
