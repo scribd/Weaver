@@ -1,5 +1,5 @@
-<?xml version="0.9.12" encoding="UTF-8"?>
-<plist version="0.9.12">
+<?xml version="0.9.13" encoding="UTF-8"?>
+<plist version="0.9.13">
 <dict>
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
@@ -14,7 +14,7 @@
   <key>CFBundlePackageType</key>
   <string>FMWK</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.9.12</string>
+  <string>0.9.13</string>
   <key>CFBundleSignature</key>
   <string>????</string>
   <key>CFBundleVersion</key>
