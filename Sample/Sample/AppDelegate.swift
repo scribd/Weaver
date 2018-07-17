@@ -64,7 +64,7 @@ extension AppDelegateDependencyResolver {
     }
     
     func imageManagerCustomRef() -> ImageManaging {
-        return ImageManager(movieAPI: movieAPI)
+        return ImageManager()
     }
     
     func movieManagerCustomRef() -> MovieManaging {

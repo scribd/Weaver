@@ -5,13 +5,13 @@ import WeaverDI
 // MARK: - MovieManager
 final class MovieManagerDependencyContainer: DependencyContainer {
     let host: String?
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, host: String?) {
+    init(parent: Reference<DependencyContainer>? = nil, host: String?) {
         self.host = host
-        super.init(parent, parentReferenceType: parentReferenceType)
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(APIProtocol.self, scope: .graph, name: "movieAPI", builder: { (dependencies) in
-            return MovieAPI.makeMovieAPI(injecting: dependencies, referenceType: .weak)
+            return MovieAPI.makeMovieAPI(injecting: dependencies)
         })
         store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
             return self.urlSessionCustomRef()
@@ -37,8 +37,8 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     }
 }
 extension MovieManager {
-    static func makeMovieManager(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, host: String?) -> MovieManager {
-        let dependencies = MovieManagerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, host: host)
+    static func makeMovieManager(injecting parentDependencies: DependencyContainer, host: String?) -> MovieManager {
+        let dependencies = MovieManagerDependencyContainer(parent: Reference(parentDependencies), host: host)
         return MovieManager(injecting: dependencies)
     }
 }
@@ -49,7 +49,7 @@ extension MovieManager: MovieManagerDependencyInjectable {}
 // MARK: - MovieManagerShim
 final class MovieManagerShimDependencyContainer: DependencyContainer {
     private lazy var internalDependencies: MovieManagerDependencyContainer = {
-        return MovieManagerDependencyContainer(parent: self, parentReferenceType: .weak, host: self.host)
+        return MovieManagerDependencyContainer(parent: Reference(self, type: .weak), host: self.host)
     }()
     let logger: Logger
     let host: String?
@@ -61,7 +61,7 @@ final class MovieManagerShimDependencyContainer: DependencyContainer {
     override func registerDependencies(in store: DependencyStore) {
         store.register(Logger.self, scope: .weak, name: "logger", builder: { [weak self] _ in
             guard let strongSelf = self else {
-                fatalError("Container was released too early. If you see this happen, please file a bug.") 
+                fatalError("Container was released too early. If you see this happen, please file a bug.")
             }
             return strongSelf.logger
         })

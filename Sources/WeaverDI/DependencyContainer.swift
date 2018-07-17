@@ -9,29 +9,18 @@ import Foundation
 
 open class DependencyContainer {
 
-    public enum ReferenceType {
-        case strong
-        case weak
-    }
-
     private let builders: BuilderStoring
     
-    private let parent: DependencyResolver?
+    private let parent: Reference<DependencyContainer>?
     
     lazy var dependencies = InternalDependencyStore(builders)
     
-    init(parent: DependencyContainer? = nil,
-         parentReferenceType: ReferenceType = .strong,
+    init(parent: Reference<DependencyContainer>? = nil,
          builders: BuilderStoring = BuilderStore()) {
+
+        self.parent = parent
         
-        switch parentReferenceType {
-        case .strong:
-            self.parent = parent
-        case .weak:
-            self.parent = nil
-        }
-        
-        builders.parent = parent?.builders
+        builders.parent = parent?.value?.builders
         self.builders = builders
         
         registerDependencies(in: dependencies)
@@ -40,18 +29,12 @@ open class DependencyContainer {
     /// Parameters:
     ///   - parent: `DependencyContainer` from which the dependency is built.
     ///   - parentReferenceType: Either weak or strong. This can be needed to break potential retain cycles.
-    public init(_ parent: DependencyContainer? = nil,
-                parentReferenceType: ReferenceType = .strong) {
+    public init(_ parent: Reference<DependencyContainer>? = nil) {
 
-        switch parentReferenceType {
-        case .strong:
-            self.parent = parent
-        case .weak:
-            self.parent = nil
-        }
+        self.parent = parent
 
         builders = BuilderStore()
-        builders.parent = parent?.builders
+        builders.parent = parent?.value?.builders
 
         registerDependencies(in: dependencies)
     }
@@ -132,7 +115,8 @@ extension DependencyContainer {
             let key = BuilderKey(for: serviceType, name: name)
             
             builders.set(scope: scope, for: key) { (parameter: () -> (DependencyContainer)) -> S in
-                return builder(parameter())
+                let dependencyContainer = parameter().firstDependencyContainer(containing: key)
+                return builder(dependencyContainer)
             }
         }
         
@@ -140,7 +124,8 @@ extension DependencyContainer {
             let key = BuilderKey(for: serviceType, name: name, parameterType: P1.self)
             
             builders.set(scope: scope, for: key) { (parameters: () -> (DependencyContainer, P1)) -> S in
-                return builder(parameters().0, parameters().1)
+                let dependencyContainer = parameters().0.firstDependencyContainer(containing: key)
+                return builder(dependencyContainer, parameters().1)
             }
         }
         
@@ -148,7 +133,8 @@ extension DependencyContainer {
             let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self)
             
             builders.set(scope: scope, for: key) { (parameters: () -> (DependencyContainer, P1, P2)) -> S in
-                return builder(parameters().0, parameters().1, parameters().2)
+                let dependencyContainer = parameters().0.firstDependencyContainer(containing: key)
+                return builder(dependencyContainer, parameters().1, parameters().2)
             }
         }
         
@@ -156,7 +142,8 @@ extension DependencyContainer {
             let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self)
             
             builders.set(scope: scope, for: key) { (parameters: () -> (DependencyContainer, P1, P2, P3)) -> S in
-                return builder(parameters().0, parameters().1, parameters().2, parameters().3)
+                let dependencyContainer = parameters().0.firstDependencyContainer(containing: key)
+                return builder(dependencyContainer, parameters().1, parameters().2, parameters().3)
             }
         }
         
@@ -164,8 +151,24 @@ extension DependencyContainer {
             let key = BuilderKey(for: serviceType, name: name, parameterTypes: P1.self, P2.self, P3.self, P4.self)
             
             builders.set(scope: scope, for: key) { (parameters: () -> (DependencyContainer, P1, P2, P3, P4)) -> S in
-                return builder(parameters().0, parameters().1, parameters().2, parameters().3, parameters().4)
+                let dependencyContainer = parameters().0.firstDependencyContainer(containing: key)
+                return builder(dependencyContainer, parameters().1, parameters().2, parameters().3, parameters().4)
             }
         }
+    }
+}
+
+// MARK: - Utils
+
+private extension DependencyContainer {
+    
+    func firstDependencyContainer(containing key: BuilderKey, isCalledFromAChild: Bool = false) -> DependencyContainer {
+        if builders.contains(key: key, isCalledFromAChild: isCalledFromAChild) {
+            return self
+        }
+        guard let dependencyContainer = parent?.value?.firstDependencyContainer(containing: key, isCalledFromAChild: true) else {
+            fatalError("Could not find key \((key)) in any parents.")
+        }
+        return dependencyContainer
     }
 }

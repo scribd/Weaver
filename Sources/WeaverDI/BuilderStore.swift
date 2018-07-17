@@ -11,6 +11,8 @@ import Foundation
 
 protocol BuilderStoring: AnyObject {
     
+    func contains(key: BuilderKey, isCalledFromAChild: Bool) -> Bool
+
     func get<I, P>(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder<I, P>?
 
     func set<I, P>(_ buidler: Builder<I, P>, for key: BuilderKey)
@@ -58,5 +60,13 @@ final class BuilderStore: BuilderStoring {
     
     func set<I, P>(_ builder: Builder<I, P>, for key: BuilderKey) {
         builders[key] = builder
+    }
+    
+    func contains(key: BuilderKey, isCalledFromAChild: Bool) -> Bool {
+        guard let builder = builders[key] else {
+            return false
+        }
+        
+        return (isCalledFromAChild && builder.scope.allowsAccessFromChildren) || !isCalledFromAChild
     }
 }

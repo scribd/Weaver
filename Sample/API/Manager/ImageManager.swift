@@ -29,7 +29,7 @@ public final class ImageManager: ImageManaging {
     // weaver: urlSession.scope = .container
     // weaver: urlSession.customRef = true
     
-    // weaver: movieAPI <- APIProtocol
+    // weaver: movieAPI = MovieAPI <- APIProtocol
     
     var imagesByUrl = [String: UIImage]()
     
