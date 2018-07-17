@@ -245,9 +245,9 @@ import WeaverDI
 // MARK: - MovieAPI
 final class MovieAPIDependencyContainer: DependencyContainer {
     let host: String
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, host: String) {
+    init(parent: Reference<DependencyContainer>? = nil, host: String) {
         self.host = host
-        super.init(parent, parentReferenceType: parentReferenceType)
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
@@ -258,8 +258,8 @@ protocol MovieAPIDependencyResolver {
 extension MovieAPIDependencyContainer: MovieAPIDependencyResolver {
 }
 extension MovieAPI {
-    static func makeMovieAPI(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, host: String) -> MovieAPI {
-        let dependencies = MovieAPIDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, host: host)
+    static func makeMovieAPI(injecting parentDependencies: DependencyContainer, host: String) -> MovieAPI {
+        let dependencies = MovieAPIDependencyContainer(parent: Reference(parentDependencies), host: host)
         return MovieAPI(injecting: dependencies)
     }
 }
@@ -398,9 +398,9 @@ import WeaverDI
 // MARK: - API
 final class APIDependencyContainer: DependencyContainer {
     let host: String
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, host: String) {
+    init(parent: Reference<DependencyContainer>? = nil, host: String) {
         self.host = host
-        super.init(parent, parentReferenceType: parentReferenceType)
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(Session.self, scope: .graph, name: "session", builder: { (dependencies) in
@@ -422,8 +422,8 @@ extension APIDependencyContainer: APIDependencyResolver {
     }
 }
 extension API {
-    static func makeAPI(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, host: String) -> API {
-        let dependencies = APIDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, host: host)
+    static func makeAPI(injecting parentDependencies: DependencyContainer, host: String) -> API {
+        let dependencies = APIDependencyContainer(parent: Reference(parentDependencies), host: host)
         return API(injecting: dependencies)
     }
 }
@@ -434,7 +434,7 @@ extension API: APIDependencyInjectable {}
 // MARK: - APIShim
 final class APIShimDependencyContainer: DependencyContainer {
     private lazy var internalDependencies: APIDependencyContainer = {
-        return APIDependencyContainer(parent: self, parentReferenceType: .weak, host: self.host)
+        return APIDependencyContainer(parent: Reference(self, type: .weak), host: self.host)
     }()
     let logger: Logger
     let host: String
@@ -501,9 +501,9 @@ import WeaverDI
 // MARK: - API
 final class APIDependencyContainer: DependencyContainer {
     let parameter: UInt
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, parameter: UInt) {
+    init(parent: Reference<DependencyContainer>? = nil, parameter: UInt) {
         self.parameter = parameter
-        super.init(parent, parentReferenceType: parentReferenceType)
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
@@ -514,8 +514,8 @@ protocol APIDependencyResolver {
 extension APIDependencyContainer: APIDependencyResolver {
 }
 extension API {
-    static func makeAPI(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, parameter: UInt) -> API {
-        let dependencies = APIDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, parameter: parameter)
+    static func makeAPI(injecting parentDependencies: DependencyContainer, parameter: UInt) -> API {
+        let dependencies = APIDependencyContainer(parent: Reference(parentDependencies), parameter: parameter)
         return API(injecting: dependencies)
     }
 }
@@ -559,9 +559,9 @@ import WeaverDI
 // MARK: - Logger
 final class LoggerDependencyContainer: DependencyContainer {
     let domain: String
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, domain: String) {
+    init(parent: Reference<DependencyContainer>? = nil, domain: String) {
         self.domain = domain
-        super.init(parent, parentReferenceType: parentReferenceType)
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
@@ -572,8 +572,8 @@ protocol LoggerDependencyResolver {
 extension LoggerDependencyContainer: LoggerDependencyResolver {
 }
 extension Logger {
-    static func makeLogger(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, domain: String) -> Logger {
-        let dependencies = LoggerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType, domain: domain)
+    static func makeLogger(injecting parentDependencies: DependencyContainer, domain: String) -> Logger {
+        let dependencies = LoggerDependencyContainer(parent: Reference(parentDependencies), domain: domain)
         return Logger(injecting: dependencies)
     }
 }
@@ -588,7 +588,7 @@ final class MovieManagerDependencyContainer: DependencyContainer {
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies, domain: String) in
-            return Logger.makeLogger(injecting: dependencies, referenceType: .weak, domain: domain)
+            return Logger.makeLogger(injecting: dependencies, domain: domain)
         })
     }
 }
@@ -603,7 +603,7 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
 // MARK: - MovieManagerShim
 final class MovieManagerShimDependencyContainer: DependencyContainer {
     private lazy var internalDependencies: MovieManagerDependencyContainer = {
-        return MovieManagerDependencyContainer(parent: self, parentReferenceType: .weak)
+        return MovieManagerDependencyContainer(parent: Reference(self, type: .weak))
     }()
     init() {
         super.init()
@@ -663,7 +663,7 @@ final class MovieManagerDependencyContainer: DependencyContainer {
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(Logger<String>.self, scope: .graph, name: "logger", builder: { (dependencies, domain: String) in
-            return Logger<String>.makeLogger(injecting: dependencies, referenceType: .weak, domain: domain)
+            return Logger<String>.makeLogger(injecting: dependencies, domain: domain)
         })
     }
 }
@@ -678,9 +678,9 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
 // MARK: - Logger
 final class LoggerDependencyContainer<T>: DependencyContainer {
     let domain: String
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType, domain: String) {
+    init(parent: Reference<DependencyContainer>? = nil, domain: String) {
         self.domain = domain
-        super.init(parent, parentReferenceType: parentReferenceType)
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
     }
@@ -692,8 +692,8 @@ protocol LoggerDependencyResolver {
 extension LoggerDependencyContainer: LoggerDependencyResolver {
 }
 extension Logger {
-    static func makeLogger(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType, domain: String) -> Logger<T> {
-        let dependencies = LoggerDependencyContainer<T>(parent: parentDependencies, parentReferenceType: referenceType, domain: domain)
+    static func makeLogger(injecting parentDependencies: DependencyContainer, domain: String) -> Logger<T> {
+        let dependencies = LoggerDependencyContainer<T>(parent: Reference(parentDependencies), domain: domain)
         return Logger(injecting: dependencies)
     }
 }

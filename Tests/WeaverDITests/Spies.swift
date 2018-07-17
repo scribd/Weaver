@@ -23,6 +23,8 @@ final class BuilderStoreSpy: BuilderStoring {
     
     var builderStubs = [BuilderKey: AnyBuilder]()
     
+    var containsStubs = [BuilderKey: Bool]()
+    
     weak var parent: BuilderStoring?
 
     func get<I, P>(for key: BuilderKey, isCalledFromAChild: Bool) -> Builder<I, P>? {
@@ -35,5 +37,11 @@ final class BuilderStoreSpy: BuilderStoring {
         builderRecords.append(builder)
         keyRecords.append(key)
         builderStubs[key] = builder
+    }
+    
+    func contains(key: BuilderKey, isCalledFromAChild: Bool) -> Bool {
+        keyRecords.append(key)
+        isCalledFromAChildRecords.append(isCalledFromAChild)
+        return containsStubs[key] ?? false
     }
 }

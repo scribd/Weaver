@@ -4,8 +4,8 @@ import Foundation
 import WeaverDI
 // MARK: - MovieAPI
 final class MovieAPIDependencyContainer: DependencyContainer {
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType) {
-        super.init(parent, parentReferenceType: parentReferenceType)
+    init(parent: Reference<DependencyContainer>? = nil) {
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
@@ -26,8 +26,8 @@ extension MovieAPIDependencyContainer: MovieAPIDependencyResolver {
     }
 }
 extension MovieAPI {
-    static func makeMovieAPI(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType) -> MovieAPI {
-        let dependencies = MovieAPIDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType)
+    static func makeMovieAPI(injecting parentDependencies: DependencyContainer) -> MovieAPI {
+        let dependencies = MovieAPIDependencyContainer(parent: Reference(parentDependencies))
         return MovieAPI(injecting: dependencies)
     }
 }
@@ -38,7 +38,7 @@ extension MovieAPI: MovieAPIDependencyInjectable {}
 // MARK: - MovieAPIShim
 final class MovieAPIShimDependencyContainer: DependencyContainer {
     private lazy var internalDependencies: MovieAPIDependencyContainer = {
-        return MovieAPIDependencyContainer(parent: self, parentReferenceType: .weak)
+        return MovieAPIDependencyContainer(parent: Reference(self, type: .weak))
     }()
     let urlSession: URLSession
     init(urlSession: URLSession) {
@@ -48,7 +48,7 @@ final class MovieAPIShimDependencyContainer: DependencyContainer {
     override func registerDependencies(in store: DependencyStore) {
         store.register(URLSession.self, scope: .weak, name: "urlSession", builder: { [weak self] _ in
             guard let strongSelf = self else {
-                fatalError("Container was released too early. If you see this happen, please file a bug.") 
+                fatalError("Container was released too early. If you see this happen, please file a bug.")
             }
             return strongSelf.urlSession
         })

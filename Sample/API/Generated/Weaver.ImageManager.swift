@@ -5,8 +5,8 @@ import UIKit
 import WeaverDI
 // MARK: - ImageManager
 final class ImageManagerDependencyContainer: DependencyContainer {
-    init(parent: DependencyContainer? = nil, parentReferenceType: DependencyContainer.ReferenceType) {
-        super.init(parent, parentReferenceType: parentReferenceType)
+    init(parent: Reference<DependencyContainer>? = nil) {
+        super.init(parent)
     }
     override func registerDependencies(in store: DependencyStore) {
         store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
@@ -35,8 +35,8 @@ extension ImageManagerDependencyContainer: ImageManagerDependencyResolver {
     }
 }
 extension ImageManager {
-    static func makeImageManager(injecting parentDependencies: DependencyContainer, referenceType: DependencyContainer.ReferenceType) -> ImageManager {
-        let dependencies = ImageManagerDependencyContainer(parent: parentDependencies, parentReferenceType: referenceType)
+    static func makeImageManager(injecting parentDependencies: DependencyContainer) -> ImageManager {
+        let dependencies = ImageManagerDependencyContainer(parent: Reference(parentDependencies))
         return ImageManager(injecting: dependencies)
     }
 }
@@ -47,7 +47,7 @@ extension ImageManager: ImageManagerDependencyInjectable {}
 // MARK: - ImageManagerShim
 final class ImageManagerShimDependencyContainer: DependencyContainer {
     private lazy var internalDependencies: ImageManagerDependencyContainer = {
-        return ImageManagerDependencyContainer(parent: self, parentReferenceType: .weak)
+        return ImageManagerDependencyContainer(parent: Reference(self, type: .weak))
     }()
     let movieAPI: APIProtocol
     init(movieAPI: APIProtocol) {
@@ -57,7 +57,7 @@ final class ImageManagerShimDependencyContainer: DependencyContainer {
     override func registerDependencies(in store: DependencyStore) {
         store.register(APIProtocol.self, scope: .weak, name: "movieAPI", builder: { [weak self] _ in
             guard let strongSelf = self else {
-                fatalError("Container was released too early. If you see this happen, please file a bug.") 
+                fatalError("Container was released too early. If you see this happen, please file a bug.")
             }
             return strongSelf.movieAPI
         })

@@ -13,7 +13,7 @@ final class AppDelegateDependencyContainer: DependencyContainer {
             return self.movieAPICustomRef()
         })
         store.register(UIViewController.self, scope: .container, name: "homeViewController", builder: { (dependencies) in
-            return HomeViewController.makeHomeViewController(injecting: dependencies, referenceType: .weak)
+            return HomeViewController.makeHomeViewController(injecting: dependencies)
         })
         store.register(MovieManaging.self, scope: .container, name: "movieManager", builder: { (dependencies) in
             return self.movieManagerCustomRef()
@@ -25,7 +25,7 @@ final class AppDelegateDependencyContainer: DependencyContainer {
             return self.urlSessionCustomRef()
         })
         store.register(ReviewManaging.self, scope: .container, name: "reviewManager", builder: { (dependencies) in
-            return ReviewManager.makeReviewManager(injecting: dependencies, referenceType: .weak)
+            return ReviewManager.makeReviewManager(injecting: dependencies)
         })
         store.register(ImageManaging.self, scope: .container, name: "imageManager", builder: { (dependencies) in
             return self.imageManagerCustomRef()

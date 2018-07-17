@@ -40,12 +40,13 @@ final class DependencyContainerTests: XCTestCase {
             return DependencyStub(dependencies: dependencies)
         }
         
+        let builderKey = BuilderKey(for: DependencyStub.self, name: "test")
+        builderStoreSpy.containsStubs[builderKey] = true
+
         _ = dependencyContainer.resolve(DependencyStub.self, name: "test")
         
-        let builderKey = BuilderKey(for: DependencyStub.self, name: "test")
-
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 3)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
         XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
@@ -59,12 +60,13 @@ final class DependencyContainerTests: XCTestCase {
             return DependencyStub(dependencies: dependencies, parameter1: parameter1)
         }
         
+        let builderKey = BuilderKey(for: DependencyStub.self, name: "test", parameterType: Int.self)
+        builderStoreSpy.containsStubs[builderKey] = true
+
         let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameter: 42)
         
-        let builderKey = BuilderKey(for: DependencyStub.self, name: "test", parameterType: Int.self)
-        
         XCTAssertEqual(builderCallCount, 1)
-        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 3)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
         XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     
@@ -79,16 +81,17 @@ final class DependencyContainerTests: XCTestCase {
             builderCallCount += 1
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2)
         }
-        
+
+        let builderKey = BuilderKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self)
+        builderStoreSpy.containsStubs[builderKey] = true
+
         let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43")
         
-        let builderKey = BuilderKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self)
-
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(dependency.parameter1, 42)
         XCTAssertEqual(dependency.parameter2, "43")
 
-        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 3)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
         XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
@@ -102,16 +105,17 @@ final class DependencyContainerTests: XCTestCase {
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3)
         }
         
-        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43", 44.0)
-        
         let builderKey = BuilderKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self)
+        builderStoreSpy.containsStubs[builderKey] = true
+
+        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43", 44.0)
         
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(dependency.parameter1, 42)
         XCTAssertEqual(dependency.parameter2, "43")
         XCTAssertEqual(dependency.parameter3, 44.0)
         
-        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 3)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
         XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
@@ -125,9 +129,10 @@ final class DependencyContainerTests: XCTestCase {
             return DependencyStub(dependencies: dependencies, parameter1: parameter1, parameter2: parameter2, parameter3: parameter3, parameter4: parameter4)
         }
         
-        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43", 44.0, 45 as Float)
-        
         let builderKey = BuilderKey(for: DependencyStub.self, name: "test", parameterTypes: Int.self, String.self, Double.self, Float.self)
+        builderStoreSpy.containsStubs[builderKey] = true
+
+        let dependency = dependencyContainer.resolve(DependencyStub.self, name: "test", parameters: 42, "43", 44.0, 45 as Float)
         
         XCTAssertEqual(builderCallCount, 1)
         XCTAssertEqual(dependency.parameter1, 42)
@@ -135,7 +140,7 @@ final class DependencyContainerTests: XCTestCase {
         XCTAssertEqual(dependency.parameter3, 44.0)
         XCTAssertEqual(dependency.parameter4, 45 as Float)
         
-        XCTAssertEqual(builderStoreSpy.keyRecords.count, 2)
+        XCTAssertEqual(builderStoreSpy.keyRecords.count, 3)
         XCTAssertEqual(builderStoreSpy.keyRecords.last, builderKey)
         XCTAssertEqual(builderStoreSpy.builderRecords.last?.scope, .graph)
     }
