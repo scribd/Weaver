@@ -27,8 +27,9 @@ public final class ImageManager: ImageManaging {
     
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
+    // weaver: urlSession.customRef = true
     
-    // weaver: movieAPI <- APIProtocol
+    // weaver: movieAPI = MovieAPI <- APIProtocol
     
     var imagesByUrl = [String: UIImage]()
     
@@ -54,5 +55,16 @@ public final class ImageManager: ImageManaging {
                 completion(.failure(.oops))
             }
         }
+    }
+}
+
+extension ImageManagerDependencyResolver {
+    
+    func urlSessionCustomRef() -> URLSession {
+        let configuration = URLSessionConfiguration.default
+        assert(configuration.urlCache != nil, "\(ImageManagerDependencyResolver.self): urlCache should not be nil.")
+        configuration.urlCache?.diskCapacity = 1024 * 1024 * 50
+        configuration.urlCache?.memoryCapacity = 1024 * 1024 * 5
+        return URLSession(configuration: configuration)
     }
 }
