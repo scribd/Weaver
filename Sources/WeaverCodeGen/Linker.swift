@@ -37,8 +37,9 @@ private extension Linker {
         // Insert dependency containers for which we know the type.
         for expr in ExprSequence(exprs: syntaxTrees) {
             switch expr {
-            case .file(_, let _file, _):
+            case .file(_, let _file, let imports):
                 file = _file
+                graph.insertImports(imports, for: _file)
 
             case .registerAnnotation(let token):
                 graph.insertDependencyContainer(with: token, file: file)
@@ -102,7 +103,6 @@ private extension Linker {
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
         var scopeAnnotations: [String: ScopeAnnotation] = [:]
         var configurationAnnotations: [ConfigurationAttributeTarget: [TokenBox<ConfigurationAnnotation>]] = [:]
-        var parameters = [Parameter]()
 
         for child in children {
             switch child {
@@ -135,7 +135,7 @@ private extension Linker {
                                           source: dependencyContainer,
                                           type: parameterAnnotation.value.type,
                                           fileLocation: FileLocation(line: parameterAnnotation.line, file: file))
-                parameters.append(parameter)
+                dependencyContainer.parameters.append(parameter)
                 
             case .file:
                 break

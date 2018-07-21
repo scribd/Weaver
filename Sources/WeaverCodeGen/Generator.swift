@@ -65,7 +65,7 @@ private struct RegistrationViewModel {
     let abstractType: Type
     let scope: String
     let customRef: Bool
-    let parameters: [Parameter]
+    let parameters: [DependencyViewModel]
     let hasBuilder: Bool
     
     init(_ dependency: Dependency, graph: Graph) {
@@ -79,7 +79,7 @@ private struct RegistrationViewModel {
         customRef = dependency.configuration.customRef
         
         if let dependencyContainer = graph.dependencyContainersByType[dependency.type.index] {
-            parameters = dependencyContainer.parameters
+            parameters = dependencyContainer.parameters.map { DependencyViewModel($0, graph: graph) }
             hasBuilder = !dependencyContainer.parameters.isEmpty || !dependencyContainer.references.orderedKeys.isEmpty
         } else {
             parameters = []
@@ -145,14 +145,14 @@ private struct DependencyContainerViewModel {
     
     init?(_ dependencyContainer: DependencyContainer, graph: Graph) {
 
-        guard let type = dependencyContainer.type else {
+        guard let type = dependencyContainer.type, dependencyContainer.hasDependencies else {
             return nil
         }
         targetType = type
-        registrations = dependencyContainer.orderedDependencies.map {
+        registrations = dependencyContainer.registrations.orderedValues.map {
             RegistrationViewModel($0, graph: graph)
         }
-        references = dependencyContainer.references.orderedValues.map {
+        references = dependencyContainer.orderedDependencies.map {
             DependencyViewModel($0, graph: graph)
         }
         parameters = dependencyContainer.parameters.map {
@@ -190,6 +190,13 @@ private extension String {
         return split(separator: "\n")
             .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
             .joined(separator: "\n")
+    }
+}
+
+private extension DependencyContainer {
+    
+    var hasDependencies: Bool {
+        return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.isEmpty
     }
 }
 

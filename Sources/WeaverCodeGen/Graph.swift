@@ -17,7 +17,9 @@ public final class Graph {
     private(set) var importsByFile = [String: [String]]()
     
     lazy var dependencyContainersByFile = dependencyContainersByType.orderedValues.reduce(OrderedDictionary<String, [DependencyContainer]>()) { (dependencyContainersByFile, dependencyContainer) in
-        guard let file = dependencyContainer.fileLocation.file else { return dependencyContainersByFile }
+        guard let file = dependencyContainer.fileLocation.file else {
+            return dependencyContainersByFile
+        }
         var dependencyContainersByFile = dependencyContainersByFile
         var dependencyContainers = dependencyContainersByFile[file] ?? []
         dependencyContainers.append(dependencyContainer)
@@ -68,10 +70,6 @@ extension Graph {
 
         let type = registerAnnotation.value.type
         dependencyContainersByType[type.index] = dependencyContainer
-        
-        if let file = file {
-            dependencyContainersByFile[file] = (dependencyContainersByFile[file] ?? []) + [dependencyContainer]
-        }
     }
     
     func insertDependencyContainer(with referenceAnnotation: ReferenceAnnotation) {
@@ -83,6 +81,12 @@ extension Graph {
             return
         }
         dependencyContainersByName[name] = DependencyContainer(referredType: type)
+    }
+    
+    func insertImports(_ imports: [String], for file: String) {
+        var fileImports = importsByFile[file] ?? []
+        fileImports.append(contentsOf: imports)
+        importsByFile[file] = fileImports
     }
 }
 
@@ -99,6 +103,7 @@ extension Graph {
             dependencyContainer.fileLocation = fileLocation
             dependencyContainer.accessLevel = accessLevel
             dependencyContainer.doesSupportObjc = doesSupportObjc
+            dependencyContainer.type = type
             return dependencyContainer
         }
         
@@ -165,7 +170,7 @@ extension Graph {
 
 final class DependencyContainer: Hashable {
 
-    let type: Type?
+    var type: Type?
     
     var accessLevel: AccessLevel
     
