@@ -11,13 +11,15 @@ import PathKit
 import WeaverDI
 
 public final class Generator {
+    
+    private let graph: Graph
 
     private let templateDirPath: Path
     private let templateName: String
     
-    private let graph: Graph
-    
-    public init(asts: [Expr], template path: Path? = nil) throws {
+    public init(graph: Graph, template path: Path? = nil) throws {
+        
+        self.graph = graph
 
         if let path = path {
             var components = path.components
@@ -30,8 +32,6 @@ public final class Generator {
             templateName = "Resources/dependency_resolver.stencil"
             templateDirPath = Path("/usr/local/share/weaver")
         }
-
-        graph = try Linker(syntaxTrees: asts).graph
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
