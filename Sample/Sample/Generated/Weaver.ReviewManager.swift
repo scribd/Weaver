@@ -4,35 +4,26 @@ import API
 import Foundation
 import WeaverDI
 // MARK: - ReviewManager
-final class ReviewManagerDependencyContainer: DependencyContainer {
-    init(parent: Reference<DependencyContainer>? = nil) {
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
-            return Logger()
-        })
-    }
-}
-protocol ReviewManagerDependencyResolver {
-    var logger: Logger { get }
+protocol ReviewManagerInputDependencyResolver {
     var movieAPI: APIProtocol { get }
 }
-extension ReviewManagerDependencyContainer: ReviewManagerDependencyResolver {
-    var logger: Logger {
-        return resolve(Logger.self, name: "logger")
-    }
-    var movieAPI: APIProtocol {
-        return resolve(APIProtocol.self, name: "movieAPI")
-    }
+protocol ReviewManagerDependencyResolver {
+    var movieAPI: APIProtocol { get }
+    var logger: Logger { get }
 }
-extension ReviewManager {
-    static func makeReviewManager(injecting parentDependencies: DependencyContainer) -> ReviewManager {
-        let dependencies = ReviewManagerDependencyContainer(parent: Reference(parentDependencies))
-        return ReviewManager(injecting: dependencies)
+final class ReviewManagerDependencyContainer: ReviewManagerDependencyResolver {
+    let movieAPI: APIProtocol
+    private var _logger: Logger?
+    var logger: Logger {
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
+    }
+    init(injecting dependencies: ReviewManagerInputDependencyResolver) {
+        self.movieAPI = dependencies.movieAPI
     }
 }
 protocol ReviewManagerDependencyInjectable {
     init(injecting dependencies: ReviewManagerDependencyResolver)
 }
-extension ReviewManager: ReviewManagerDependencyInjectable {}

@@ -5,42 +5,41 @@ import Foundation
 import UIKit
 import WeaverDI
 // MARK: - HomeViewController
-final class HomeViewControllerDependencyContainer: DependencyContainer {
-    init(parent: Reference<DependencyContainer>? = nil) {
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
-            return Logger()
-        })
-        store.register(UIViewController.self, scope: .transient, name: "movieController", builder: { (dependencies, movieID: UInt, title: String) in
-            return MovieViewController.makeMovieViewController(injecting: dependencies, movieID: movieID, title: title)
-        })
-    }
+protocol HomeViewControllerInputDependencyResolver {
+    var movieManager: MovieManaging { get }
+    var imageManager: ImageManaging { get }
+    var reviewManager: ReviewManaging { get }
 }
 protocol HomeViewControllerDependencyResolver {
+    var movieManager: MovieManaging { get }
+    var imageManager: ImageManaging { get }
+    var reviewManager: ReviewManaging { get }
     var logger: Logger { get }
     func movieController(movieID: UInt, title: String) -> UIViewController
-    var movieManager: MovieManaging { get }
 }
-extension HomeViewControllerDependencyContainer: HomeViewControllerDependencyResolver {
+final class HomeViewControllerDependencyContainer: HomeViewControllerDependencyResolver {
+    let movieManager: MovieManaging
+    let imageManager: ImageManaging
+    let reviewManager: ReviewManaging
+    private var _logger: Logger?
     var logger: Logger {
-        return resolve(Logger.self, name: "logger")
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
     }
     func movieController(movieID: UInt, title: String) -> UIViewController {
-        return resolve(UIViewController.self, name: "movieController", parameters: movieID, title)
+        let dependencies = MovieViewControllerDependencyContainer(injecting: self, movieID: movieID, title: title)
+        let value = MovieViewController(injecting: dependencies)
+        return value
     }
-    var movieManager: MovieManaging {
-        return resolve(MovieManaging.self, name: "movieManager")
-    }
-}
-extension HomeViewController {
-    static func makeHomeViewController(injecting parentDependencies: DependencyContainer) -> HomeViewController {
-        let dependencies = HomeViewControllerDependencyContainer(parent: Reference(parentDependencies))
-        return HomeViewController(injecting: dependencies)
+    init(injecting dependencies: HomeViewControllerInputDependencyResolver) {
+        self.movieManager = dependencies.movieManager
+        self.imageManager = dependencies.imageManager
+        self.reviewManager = dependencies.reviewManager
     }
 }
+extension HomeViewControllerDependencyContainer: MovieViewControllerInputDependencyResolver {}
 protocol HomeViewControllerDependencyInjectable {
     init(injecting dependencies: HomeViewControllerDependencyResolver)
 }
-extension HomeViewController: HomeViewControllerDependencyInjectable {}

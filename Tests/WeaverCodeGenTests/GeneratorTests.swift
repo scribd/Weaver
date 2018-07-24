@@ -720,6 +720,53 @@ extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
             XCTFail("Unexpected error \(error)")
         }
     }
+    
+    func test_generator_should_generate_a_valid_swift_code_with_injectable_class_with_indirect_references() {
+        
+        do {
+            let file = File(contents: """
+final class AppDelegate {
+    // weaver: movieManager = MovieManager
+    // weaver: movieManager.scope = .container
+
+    // weaver: homeViewController = HomeViewController
+}
+
+final class HomeViewController {
+    // weaver: movieViewController = MovieViewController
+    // weaver: movieViewController.scope = .transient
+}
+
+final class MovieViewController {
+    // weaver: reviewViewController = ReviewViewController
+    // weaver: reviewViewController.scope = .transient
+}
+
+final class ReviewViewController {
+    // weaver: movieManager <- MovieManager
+}
+""")
+            
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
+            
+            let generator = try Generator(graph: graph, template: templatePath)
+            let (_ , actual) = try generator.generate().first!
+            
+            let expected = """
+
+"""
+            
+            XCTAssertEqual(actual!, expected)
+            exportDiff(actual: actual!, expected: expected)
+            
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
 }
 
 // MARK: - Diff Tools

@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - OrderedDictionary
+
 final class OrderedDictionary<Key: Hashable, Value> {
     
     private(set) var dictionary = [Key: Value]()
@@ -40,5 +42,30 @@ final class OrderedDictionary<Key: Hashable, Value> {
             }
             dictionary[key] = newValue
         }
+    }
+}
+
+// MARK: - OrderedSet
+
+final class OrderedSet<Value: Hashable> {
+    
+    private var orderedDictionary = OrderedDictionary<Value, Value>()
+    
+    func insert(_ value: Value) {
+        orderedDictionary[value] = value
+    }
+    
+    func insert(_ values: [Value]) {
+        values.forEach {
+            insert($0)
+        }
+    }
+    
+    var orderedValues: [Value] {
+        return orderedDictionary.orderedValues
+    }
+    
+    func contains(_ value: Value) -> Bool {
+        return orderedDictionary[value] != nil
     }
 }

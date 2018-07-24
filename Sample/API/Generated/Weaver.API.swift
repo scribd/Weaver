@@ -3,65 +3,39 @@
 import Foundation
 import WeaverDI
 // MARK: - MovieAPI
-final class MovieAPIDependencyContainer: DependencyContainer {
-    init(parent: Reference<DependencyContainer>? = nil) {
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
-            return Logger()
-        })
-    }
-}
-protocol MovieAPIDependencyResolver {
-    var logger: Logger { get }
+protocol MovieAPIInputDependencyResolver {
     var urlSession: URLSession { get }
 }
-extension MovieAPIDependencyContainer: MovieAPIDependencyResolver {
-    var logger: Logger {
-        return resolve(Logger.self, name: "logger")
-    }
-    var urlSession: URLSession {
-        return resolve(URLSession.self, name: "urlSession")
-    }
+protocol MovieAPIDependencyResolver {
+    var urlSession: URLSession { get }
+    var logger: Logger { get }
 }
-extension MovieAPI {
-    static func makeMovieAPI(injecting parentDependencies: DependencyContainer) -> MovieAPI {
-        let dependencies = MovieAPIDependencyContainer(parent: Reference(parentDependencies))
-        return MovieAPI(injecting: dependencies)
+final class MovieAPIDependencyContainer: MovieAPIDependencyResolver {
+    let urlSession: URLSession
+    private var _logger: Logger?
+    var logger: Logger {
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
+    }
+    init(injecting dependencies: MovieAPIInputDependencyResolver) {
+        self.urlSession = dependencies.urlSession
     }
 }
 protocol MovieAPIDependencyInjectable {
     init(injecting dependencies: MovieAPIDependencyResolver)
 }
-extension MovieAPI: MovieAPIDependencyInjectable {}
-// MARK: - MovieAPIShim
-final class MovieAPIShimDependencyContainer: DependencyContainer {
-    private lazy var internalDependencies: MovieAPIDependencyContainer = {
-        return MovieAPIDependencyContainer(parent: Reference(self, type: .weak))
-    }()
+final class MovieAPIShimDependencyContainer: MovieAPIInputDependencyResolver {
     let urlSession: URLSession
     init(urlSession: URLSession) {
         self.urlSession = urlSession
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(URLSession.self, scope: .weak, name: "urlSession", builder: { [weak self] _ in
-            guard let strongSelf = self else {
-                fatalError("Container was released too early. If you see this happen, please file a bug.")
-            }
-            return strongSelf.urlSession
-        })
-    }
-}
-extension MovieAPIShimDependencyContainer: MovieAPIDependencyResolver {
-    var logger: Logger {
-        return internalDependencies.resolve(Logger.self, name: "logger")
     }
 }
 extension MovieAPI {
     public convenience init(urlSession: URLSession) {
         let shim = MovieAPIShimDependencyContainer(urlSession: urlSession)
-        self.init(injecting: shim)
+        let dependencies = MovieAPIDependencyContainer(injecting: shim)
+        self.init(injecting: dependencies)
     }
 }

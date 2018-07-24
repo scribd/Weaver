@@ -4,64 +4,42 @@ import Foundation
 import UIKit
 import WeaverDI
 // MARK: - ImageManager
-final class ImageManagerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
-            return Logger()
-        })
-        store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
-            return self.urlSessionCustomRef()
-        })
-        store.register(APIProtocol.self, scope: .graph, name: "movieAPI", builder: { (dependencies) in
-            return MovieAPI.makeMovieAPI(injecting: dependencies)
-        })
-    }
-}
 protocol ImageManagerDependencyResolver {
     var logger: Logger { get }
     var urlSession: URLSession { get }
-    var movieAPI: APIProtocol { get }
     func urlSessionCustomRef() -> URLSession
+    var movieAPI: APIProtocol { get }
 }
-extension ImageManagerDependencyContainer: ImageManagerDependencyResolver {
+final class ImageManagerDependencyContainer: ImageManagerDependencyResolver {
+    private var _logger: Logger?
     var logger: Logger {
-        return resolve(Logger.self, name: "logger")
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
     }
+    private var _urlSession: URLSession?
     var urlSession: URLSession {
-        return resolve(URLSession.self, name: "urlSession")
+        if let value = _urlSession { return value }
+        let value = urlSessionCustomRef()
+        _urlSession = value
+        return value
     }
+    private var _movieAPI: APIProtocol?
     var movieAPI: APIProtocol {
-        return resolve(APIProtocol.self, name: "movieAPI")
+        if let value = _movieAPI { return value }
+        let dependencies = MovieAPIDependencyContainer(injecting: self)
+        let value = MovieAPI(injecting: dependencies)
+        _movieAPI = value
+        return value
     }
-}
-// MARK: - ImageManagerShim
-final class ImageManagerShimDependencyContainer: DependencyContainer {
-    private lazy var internalDependencies: ImageManagerDependencyContainer = {
-        return ImageManagerDependencyContainer()
-    }()
     init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
     }
 }
-extension ImageManagerShimDependencyContainer: ImageManagerDependencyResolver {
-    var logger: Logger {
-        return internalDependencies.resolve(Logger.self, name: "logger")
-    }
-    var urlSession: URLSession {
-        return internalDependencies.resolve(URLSession.self, name: "urlSession")
-    }
-    var movieAPI: APIProtocol {
-        return internalDependencies.resolve(APIProtocol.self, name: "movieAPI")
-    }
-}
+extension ImageManagerDependencyContainer: MovieAPIInputDependencyResolver {}
 extension ImageManager {
     public convenience init() {
-        let shim = ImageManagerShimDependencyContainer()
-        self.init(injecting: shim)
+        let dependencies = ImageManagerDependencyContainer()
+        self.init(injecting: dependencies)
     }
 }

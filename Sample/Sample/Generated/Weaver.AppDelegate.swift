@@ -4,67 +4,73 @@ import API
 import UIKit
 import WeaverDI
 // MARK: - AppDelegate
-final class AppDelegateDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .container, name: "logger", builder: { (dependencies) in
-            return Logger()
-        })
-        store.register(URLSession.self, scope: .container, name: "urlSession", builder: { (dependencies) in
-            return self.urlSessionCustomRef()
-        })
-        store.register(APIProtocol.self, scope: .container, name: "movieAPI", builder: { (dependencies) in
-            return self.movieAPICustomRef()
-        })
-        store.register(ImageManaging.self, scope: .container, name: "imageManager", builder: { (dependencies) in
-            return self.imageManagerCustomRef()
-        })
-        store.register(MovieManaging.self, scope: .container, name: "movieManager", builder: { (dependencies) in
-            return self.movieManagerCustomRef()
-        })
-        store.register(UIViewController.self, scope: .container, name: "homeViewController", builder: { (dependencies) in
-            return HomeViewController.makeHomeViewController(injecting: dependencies)
-        })
-        store.register(ReviewManaging.self, scope: .container, name: "reviewManager", builder: { (dependencies) in
-            return ReviewManager.makeReviewManager(injecting: dependencies)
-        })
-    }
-}
 protocol AppDelegateDependencyResolver {
     var logger: Logger { get }
     var urlSession: URLSession { get }
+    func urlSessionCustomRef() -> URLSession
     var movieAPI: APIProtocol { get }
+    func movieAPICustomRef() -> APIProtocol
     var imageManager: ImageManaging { get }
+    func imageManagerCustomRef() -> ImageManaging
     var movieManager: MovieManaging { get }
+    func movieManagerCustomRef() -> MovieManaging
     var homeViewController: UIViewController { get }
     var reviewManager: ReviewManaging { get }
-    func urlSessionCustomRef() -> URLSession
-    func movieAPICustomRef() -> APIProtocol
-    func imageManagerCustomRef() -> ImageManaging
-    func movieManagerCustomRef() -> MovieManaging
 }
-extension AppDelegateDependencyContainer: AppDelegateDependencyResolver {
+final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
+    private var _logger: Logger?
     var logger: Logger {
-        return resolve(Logger.self, name: "logger")
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
     }
+    private var _urlSession: URLSession?
     var urlSession: URLSession {
-        return resolve(URLSession.self, name: "urlSession")
+        if let value = _urlSession { return value }
+        let value = urlSessionCustomRef()
+        _urlSession = value
+        return value
     }
+    private var _movieAPI: APIProtocol?
     var movieAPI: APIProtocol {
-        return resolve(APIProtocol.self, name: "movieAPI")
+        if let value = _movieAPI { return value }
+        let value = movieAPICustomRef()
+        _movieAPI = value
+        return value
     }
+    private var _imageManager: ImageManaging?
     var imageManager: ImageManaging {
-        return resolve(ImageManaging.self, name: "imageManager")
+        if let value = _imageManager { return value }
+        let value = imageManagerCustomRef()
+        _imageManager = value
+        return value
     }
+    private var _movieManager: MovieManaging?
     var movieManager: MovieManaging {
-        return resolve(MovieManaging.self, name: "movieManager")
+        if let value = _movieManager { return value }
+        let value = movieManagerCustomRef()
+        _movieManager = value
+        return value
     }
+    private var _homeViewController: UIViewController?
     var homeViewController: UIViewController {
-        return resolve(UIViewController.self, name: "homeViewController")
+        if let value = _homeViewController { return value }
+        let dependencies = HomeViewControllerDependencyContainer(injecting: self)
+        let value = HomeViewController(injecting: dependencies)
+        _homeViewController = value
+        return value
     }
+    private var _reviewManager: ReviewManaging?
     var reviewManager: ReviewManaging {
-        return resolve(ReviewManaging.self, name: "reviewManager")
+        if let value = _reviewManager { return value }
+        let dependencies = ReviewManagerDependencyContainer(injecting: self)
+        let value = ReviewManager(injecting: dependencies)
+        _reviewManager = value
+        return value
+    }
+    init() {
     }
 }
+extension AppDelegateDependencyContainer: HomeViewControllerInputDependencyResolver {}
+extension AppDelegateDependencyContainer: ReviewManagerInputDependencyResolver {}
