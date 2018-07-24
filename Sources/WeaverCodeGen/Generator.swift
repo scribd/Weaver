@@ -136,7 +136,6 @@ private struct DependencyContainerViewModel {
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
-    let isIsolated: Bool
     
     let injectableDependencies: [DependencyContainerViewModel]?
     
@@ -145,45 +144,16 @@ private struct DependencyContainerViewModel {
         guard let type = dependencyContainer.type, dependencyContainer.hasDependencies else {
             return nil
         }
+        
         targetType = type
-        
-        registrations = dependencyContainer.registrations.orderedValues.map {
-            RegistrationViewModel($0, graph: graph)
-        }
-        
-        references = dependencyContainer.collectAllReferences().map {
-            DependencyViewModel($0, graph: graph)
-        }
-        
-        parameters = dependencyContainer.parameters.map {
-            DependencyViewModel($0, graph: graph)
-        }
-        
+        registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, graph: graph) }
+        references = dependencyContainer.allReferences.map { DependencyViewModel($0, graph: graph) }
+        parameters = dependencyContainer.parameters.map { DependencyViewModel($0, graph: graph)}
         enclosingTypes = dependencyContainer.enclosingTypes
-        
-        let hasNonCustomReferences = dependencyContainer.references.orderedValues.contains {
-            !$0.configuration.customRef
-        }
-        let hasParameters = !dependencyContainer.parameters.isEmpty
-        isRoot = !hasNonCustomReferences && !hasParameters
-        
-        switch dependencyContainer.accessLevel {
-        case .internal:
-            isPublic = false
-        case .public:
-            isPublic = true
-        }
-        
+        isRoot = dependencyContainer.isRoot
+        isPublic = dependencyContainer.isPublic
         doesSupportObjc = dependencyContainer.doesSupportObjc
-        isIsolated = dependencyContainer.configuration.isIsolated
-        
-        if depth == 0 {
-            injectableDependencies = dependencyContainer.registrations.orderedValues.compactMap {
-                DependencyContainerViewModel($0.target, graph: graph, depth: depth + 1)
-            }
-        } else {
-            injectableDependencies = nil
-        }
+        injectableDependencies = dependencyContainer.injectableDependencies(graph: graph, depth: depth)
     }
 }
 
@@ -204,17 +174,17 @@ private extension DependencyContainer {
         return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.isEmpty
     }
     
-    func collectAllReferences() -> [Reference] {
+    var allReferences: [Reference] {
         var visitedDependencyContainters = Set<DependencyContainer>()
-        return collectIndirectReferences(&visitedDependencyContainters)
+        return collectAllReferences(&visitedDependencyContainters)
     }
     
-    private func collectIndirectReferences(_ visitedDependencyContainers: inout Set<DependencyContainer>) -> [Reference] {
+    private func collectAllReferences(_ visitedDependencyContainers: inout Set<DependencyContainer>) -> [Reference] {
         guard !visitedDependencyContainers.contains(self) else { return [] }
         visitedDependencyContainers.insert(self)
 
         let directReferences = references.orderedValues
-        let indirectReferences = registrations.orderedValues.flatMap { $0.target.collectIndirectReferences(&visitedDependencyContainers) }
+        let indirectReferences = registrations.orderedValues.flatMap { $0.target.collectAllReferences(&visitedDependencyContainers) }
 
         let referencesByName = OrderedDictionary<String, Reference>()
         (directReferences + indirectReferences).forEach {
@@ -224,6 +194,30 @@ private extension DependencyContainer {
         let registrationNames = Set(registrations.orderedValues.map { $0.dependencyName })
         return referencesByName.orderedValues.filter {
             !registrationNames.contains($0.dependencyName)
+        }
+    }
+    
+    var isRoot: Bool {
+        let hasNonCustomReferences = references.orderedValues.contains {
+            !$0.configuration.customRef
+        }
+        let hasParameters = !parameters.isEmpty
+        return !hasNonCustomReferences && !hasParameters
+    }
+    
+    var isPublic: Bool {
+        switch accessLevel {
+        case .internal:
+            return false
+        case .public:
+            return true
+        }
+    }
+    
+    func injectableDependencies(graph: Graph, depth: Int) -> [DependencyContainerViewModel]? {
+        guard depth == 0 else { return nil }
+        return registrations.orderedValues.compactMap {
+            DependencyContainerViewModel($0.target, graph: graph, depth: depth + 1)
         }
     }
 }

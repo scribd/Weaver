@@ -1,5 +1,5 @@
 PODS:
-  - WeaverDI (0.9.12)
+  - WeaverDI (0.9.13)
 
 DEPENDENCIES:
   - WeaverDI (from `../`)
@@ -9,7 +9,7 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  WeaverDI: 0ce156aec29e0e3c9d8540f7659cb0271b3bac88
+  WeaverDI: fe2a54650b36c52d35c3f6db9ea8f0f733669f59
 
 PODFILE CHECKSUM: e107949e1ead67a0e72e8d74de679dc5d2c018b0
 
