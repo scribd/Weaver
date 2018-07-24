@@ -33,11 +33,10 @@ final class MyService {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
-            let (_ , actual) = try generator.generate().first!
-
-            XCTAssertNil(actual)
+            let generator = try Generator(graph: graph, template: templatePath)
+            XCTAssertNil(try generator.generate().first)
             
         } catch {
             XCTFail("Unexpected error \(error)")
@@ -63,8 +62,9 @@ final class Manager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -137,8 +137,9 @@ final class PersonManager: PersonManaging {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -178,8 +179,9 @@ final class PersonManager: PersonManaging {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -234,8 +236,9 @@ final class PersonManager: PersonManaging {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -316,8 +319,9 @@ final class MyService {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -387,8 +391,10 @@ public final class API {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
+
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -490,8 +496,9 @@ class AnotherService {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -548,8 +555,9 @@ public final class MovieManager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -648,33 +656,15 @@ final class Logger<T> {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
+            let graph = try Linker(syntaxTrees: [ast]).graph
             
-            let generator = try Generator(asts: [ast], template: templatePath)
+            let generator = try Generator(graph: graph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
 /// This file is generated by Weaver 0.9.13
 /// DO NOT EDIT!
 import WeaverDI
-// MARK: - MovieManager
-final class MovieManagerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger<String>.self, scope: .graph, name: "logger", builder: { (dependencies, domain: String) in
-            return Logger<String>.makeLogger(injecting: dependencies, domain: domain)
-        })
-    }
-}
-protocol MovieManagerDependencyResolver {
-    func logger(domain: String) -> Logger<String>
-}
-extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
-    func logger(domain: String) -> Logger<String> {
-        return resolve(Logger<String>.self, name: "logger", parameter: domain)
-    }
-}
 // MARK: - Logger
 final class LoggerDependencyContainer<T>: DependencyContainer {
     let domain: String
@@ -702,6 +692,25 @@ protocol LoggerDependencyInjectable {
     init(injecting dependencies: LoggerDependencyContainer<T>)
 }
 extension Logger: LoggerDependencyInjectable {}
+// MARK: - MovieManager
+final class MovieManagerDependencyContainer: DependencyContainer {
+    init() {
+        super.init()
+    }
+    override func registerDependencies(in store: DependencyStore) {
+        store.register(Logger<String>.self, scope: .graph, name: "logger", builder: { (dependencies, domain: String) in
+            return Logger<String>.makeLogger(injecting: dependencies, domain: domain)
+        })
+    }
+}
+protocol MovieManagerDependencyResolver {
+    func logger(domain: String) -> Logger<String>
+}
+extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
+    func logger(domain: String) -> Logger<String> {
+        return resolve(Logger<String>.self, name: "logger", parameter: domain)
+    }
+}
 """
             
             XCTAssertEqual(actual!, expected)

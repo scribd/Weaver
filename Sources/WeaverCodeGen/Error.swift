@@ -72,6 +72,12 @@ struct FileLocation: AutoEquatable, Printable {
     let line: Int?
     let file: String?
     
+    init(line: Int? = nil,
+         file: String? = nil) {
+        self.line = line
+        self.file = file
+    }
+    
     var fileLocation: FileLocation {
         return self
     }

@@ -63,9 +63,9 @@ final class {{resolver.targetType.name}}DependencyContainer{{resolver.targetType
     {% for reference in resolver.references %}
 
     {% if reference.parameters %}
-    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.resolvedType}}
+    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.abstractType}}
     {% else %}{# reference.parameters #}
-    var {{reference.name}}: {{reference.resolvedType}} { get }
+    var {{reference.name}}: {{reference.abstractType}} { get }
     {% endif %}{# reference.parameters #}
 
     {% endfor %}{# resolver.references #}
@@ -86,14 +86,14 @@ extension {{resolver.targetType.name}}DependencyContainer: {{resolver.targetType
 
     {% if reference.parameters %}
 
-    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.resolvedType}} {
-        return resolve({{reference.resolvedType}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
+    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.abstractType}} {
+        return resolve({{reference.abstractType}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
     }
 
     {% else %}{# reference.paramters #}
 
-    var {{reference.name}}: {{reference.resolvedType}} {
-        return resolve({{reference.resolvedType}}.self, name: "{{reference.name}}")
+    var {{reference.name}}: {{reference.abstractType}} {
+        return resolve({{reference.abstractType}}.self, name: "{{reference.name}}")
     }
 
     {% endif %}{# reference.parameters #}
@@ -190,14 +190,14 @@ extension {{resolver.targetType.name}}ShimDependencyContainer: {{resolver.target
 
     {% if reference.parameters %}
 
-    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.resolvedType}} {
-        return internalDependencies.resolve({{reference.resolvedType.name}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
+    func {{reference.name}}({% for parameter in reference.parameters %}{{parameter.name}}: {{parameter.type}}{% if not forloop.last %}, {% endif %}{% endfor %}) -> {{reference.abstractType}} {
+        return internalDependencies.resolve({{reference.abstractType.name}}.self, name: "{{reference.name}}", parameter{% if reference.parameters.count > 1 %}s{% endif %}: {% for parameter in reference.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %})
     }
 
     {% else %}{# reference.parameters #}
 
-    var {{reference.name}}: {{reference.resolvedType}} {
-        return internalDependencies.resolve({{reference.resolvedType}}.self, name: "{{reference.name}}")
+    var {{reference.name}}: {{reference.abstractType}} {
+        return internalDependencies.resolve({{reference.abstractType}}.self, name: "{{reference.name}}")
     }
 
     {% endif %}{# reference.parameters #}

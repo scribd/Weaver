@@ -37,6 +37,13 @@ public func == (lhs: ConfigurationAnnotation, rhs: ConfigurationAnnotation) -> B
     guard lhs.target == rhs.target else { return false }
     return true
 }
+// MARK: - DependencyIndex AutoEquatable
+extension DependencyIndex: Equatable {}
+internal func == (lhs: DependencyIndex, rhs: DependencyIndex) -> Bool {
+    guard lhs.name == rhs.name else { return false }
+    guard compareOptionals(lhs: lhs.type, rhs: rhs.type, compare: ==) else { return false }
+    return true
+}
 // MARK: - EndOfAnyDeclaration AutoEquatable
 extension EndOfAnyDeclaration: Equatable {}
 public func == (lhs: EndOfAnyDeclaration, rhs: EndOfAnyDeclaration) -> Bool {
@@ -121,6 +128,12 @@ public func == (lhs: Type, rhs: Type) -> Bool {
     guard lhs.genericNames == rhs.genericNames else { return false }
     guard lhs.isOptional == rhs.isOptional else { return false }
     guard lhs.generics == rhs.generics else { return false }
+    return true
+}
+// MARK: - TypeIndex AutoEquatable
+extension TypeIndex: Equatable {}
+internal func == (lhs: TypeIndex, rhs: TypeIndex) -> Bool {
+    guard lhs.value == rhs.value else { return false }
     return true
 }
 

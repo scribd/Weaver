@@ -11,13 +11,15 @@ import PathKit
 import WeaverDI
 
 public final class Generator {
+    
+    private let graph: Graph
 
     private let templateDirPath: Path
     private let templateName: String
     
-    private let graph = Graph()
-    
-    public init(asts: [Expr], template path: Path? = nil) throws {
+    public init(graph: Graph, template path: Path? = nil) throws {
+        
+        self.graph = graph
 
         if let path = path {
             var components = path.components
@@ -30,23 +32,22 @@ public final class Generator {
             templateName = "Resources/dependency_resolver.stencil"
             templateDirPath = Path("/usr/local/share/weaver")
         }
-        
-        buildResolvers(asts: asts)
-        
-        link()
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
 
-        return try graph.resolversByFile.orderedKeyValues.map { (file, resolvers) in
+        return try graph.dependencyContainersByFile.orderedKeyValues.map { (file, dependencyContainers) in
+            
+            let dependencyContainers = dependencyContainers.compactMap { DependencyContainerViewModel($0, graph: graph) }
 
-            guard !resolvers.isEmpty else {
+            guard !dependencyContainers.isEmpty else {
                 return (file: file, data: nil)
             }
             
             let fileLoader = FileSystemLoader(paths: [templateDirPath])
             let environment = Environment(loader: fileLoader)
-            let context: [String: Any] = ["resolvers": resolvers,
+            
+            let context: [String: Any] = ["resolvers": dependencyContainers,
                                           "imports": graph.importsByFile[file] ?? []]
             let string = try environment.renderTemplate(name: templateName, context: context)
             
@@ -55,365 +56,129 @@ public final class Generator {
     }
 }
 
-// MAKR: - Graph
-
-private final class Graph {
-
-    private var resolversByType = OrderedDictionary<String, ResolverModel>()
-    private(set) var typesByName = [String: [Type]]()
-
-    var resolversByFile = OrderedDictionary<String, [ResolverModel]>()
-    var importsByFile = [String: [String]]()
-    
-    func insertResolver(_ resolver: ResolverModel) {
-        resolversByType[resolver.targetType.indexKey] = resolver
-    }
-    
-    func resolver(for type: Type) -> ResolverModel? {
-        return resolversByType[type.indexKey]
-    }
-    
-    func insertVariable(_ variable: VariableModel) {
-        var types = typesByName[variable.name] ?? []
-        types.append(variable.type)
-        variable.abstractType.flatMap { types.append($0) }
-        typesByName[variable.name] = types
-    }
-}
-
 // MARK: - Template Model
 
-private final class RegisterModel {
+private struct RegistrationViewModel {
+    
     let name: String
-    var type: Type
+    let type: Type
     let abstractType: Type
     let scope: String
     let customRef: Bool
-    var parameters: [VariableModel] = []
-    var hasBuilder: Bool = false
+    let parameters: [DependencyViewModel]
+    let hasBuilder: Bool
     
-    init(name: String,
-         type: Type,
-         abstractType: Type,
-         scope: String,
-         config: DependencyConfiguration) {
+    init(_ dependency: Dependency, graph: Graph) {
+        name = dependency.dependencyName
+        type = dependency.type
+        abstractType = dependency.abstractType
         
-        self.name = name
-        self.type = type
-        self.abstractType = abstractType
-        self.scope = scope
-
-        customRef = config.customRef
+        let scope = dependency.scope ?? .default
+        self.scope = scope.stringValue
+                
+        customRef = dependency.configuration.customRef
+        
+        if let dependencyContainer = graph.dependencyContainersByType[dependency.type.index] {
+            parameters = dependencyContainer.parameters.map { DependencyViewModel($0, graph: graph) }
+            hasBuilder = !dependencyContainer.parameters.isEmpty || !dependencyContainer.references.orderedKeys.isEmpty
+        } else {
+            parameters = []
+            hasBuilder = false
+        }
     }
 }
 
-private enum VariableModelType {
-    case registration
-    case reference
-    case parameter
-}
+private struct DependencyViewModel {
 
-private final class VariableModel {
     let name: String
     let type: Type
-    let abstractType: Type?
-
-    var parameters: [VariableModel] = []
-    let resolvedType: Type
-    let variableType: VariableModelType
-    
+    let abstractType: Type
     let isPublic: Bool
-    
-    init(name: String,
-         type: Type,
-         abstractType: Type?,
-         variableType: VariableModelType,
-         accessLevel: AccessLevel) {
+    let parameters: [DependencyViewModel]
+
+    init(_ dependency: Dependency, graph: Graph) {
         
-        self.name = name
-        self.type = type
-        self.abstractType = abstractType
-        self.variableType = variableType
+        name = dependency.dependencyName
+        type = dependency.type
+        abstractType = dependency.abstractType
         
-        switch accessLevel {
-        case .internal:
+        switch dependency {
+        case is Registration:
             isPublic = false
-        case .public:
+        case is Reference,
+             is Parameter:
             isPublic = true
+        default:
+            isPublic = false
         }
 
-        resolvedType = abstractType ?? type
+        let parameters = graph.dependencyContainersByType[dependency.type.index]?.parameters ?? []
+        if parameters.isEmpty, let types = graph.typesByName[name] {
+            var _parameters = [DependencyViewModel]()
+            for type in types {
+                if let parameters = graph.dependencyContainersByType[type.index]?.parameters {
+                    _parameters = parameters.map { DependencyViewModel($0, graph: graph) }
+                    break
+                }
+            }
+            self.parameters = _parameters
+        } else {
+            self.parameters = parameters.map { DependencyViewModel($0, graph: graph) }
+        }
     }
 }
 
-private final class ResolverModel {
-    var targetType: Type
-    let registrations: [RegisterModel]
-    let references: [VariableModel]
-    let parameters: [VariableModel]
+private struct DependencyContainerViewModel {
+
+    let targetType: Type?
+    let registrations: [RegistrationViewModel]
+    let references: [DependencyViewModel]
+    let parameters: [DependencyViewModel]
     let enclosingTypes: [Type]?
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
     let isIsolated: Bool
     
-    let publicReferences: [VariableModel]
-    let internalReferences: [VariableModel]
+    let publicReferences: [DependencyViewModel]
+    let internalReferences: [DependencyViewModel]
     
-    init(targetType: Type,
-         registrations: [RegisterModel],
-         references: [VariableModel],
-         parameters: [VariableModel],
-         enclosingTypes: [Type]?,
-         isRoot: Bool,
-         doesSupportObjc: Bool,
-         accessLevel: AccessLevel,
-         config: ResolverConfiguration) {
-        
-        self.targetType = targetType
-        self.registrations = registrations
-        self.references = references
-        self.parameters = parameters
-        self.enclosingTypes = enclosingTypes
-        self.isRoot = isRoot
-        self.doesSupportObjc = doesSupportObjc
-        
-        switch accessLevel {
-        case .`public`:
-            isPublic = true
-        case .`internal`:
-            isPublic = false
+    init?(_ dependencyContainer: DependencyContainer, graph: Graph) {
+
+        guard let type = dependencyContainer.type, dependencyContainer.hasDependencies else {
+            return nil
+        }
+        targetType = type
+        registrations = dependencyContainer.registrations.orderedValues.map {
+            RegistrationViewModel($0, graph: graph)
+        }
+        references = dependencyContainer.orderedDependencies.map {
+            DependencyViewModel($0, graph: graph)
+        }
+        parameters = dependencyContainer.parameters.map {
+            DependencyViewModel($0, graph: graph)
         }
         
-        self.isIsolated = config.isIsolated
+        enclosingTypes = dependencyContainer.enclosingTypes
+        
+        let hasNonCustomReferences = dependencyContainer.references.orderedValues.contains {
+            !$0.configuration.customRef
+        }
+        let hasParameters = !dependencyContainer.parameters.isEmpty
+        isRoot = !hasNonCustomReferences && !hasParameters
+        
+        switch dependencyContainer.accessLevel {
+        case .internal:
+            isPublic = false
+        case .public:
+            isPublic = true
+        }
+        
+        doesSupportObjc = dependencyContainer.doesSupportObjc
+        isIsolated = dependencyContainer.configuration.isIsolated
         
         publicReferences = references.filter { $0.isPublic }
         internalReferences = references.filter { !$0.isPublic }
-    }
-}
-
-// MARK: - Conversion
-
-extension RegisterModel {
-    
-    convenience init(registerAnnotation: RegisterAnnotation,
-                     scopeAnnotation: ScopeAnnotation?,
-                     configurationAnnotations: [ConfigurationAnnotation]) {
-       
-        let scope = scopeAnnotation?.scope ?? .`default`
-        let config = DependencyConfiguration(with: configurationAnnotations)
-        
-        self.init(name: registerAnnotation.name,
-                  type: registerAnnotation.type,
-                  abstractType: registerAnnotation.protocolType ?? registerAnnotation.type,
-                  scope: scope.stringValue,
-                  config: config)
-    }
-    
-    convenience init(referenceAnnotation: ReferenceAnnotation,
-                     scopeAnnotation: ScopeAnnotation?,
-                     configurationAnnotations: [ConfigurationAnnotation]) {
-        
-        let scope = scopeAnnotation?.scope ?? .`default`
-        let config = DependencyConfiguration(with: configurationAnnotations)
-
-        self.init(name: referenceAnnotation.name,
-                  type: referenceAnnotation.type,
-                  abstractType: referenceAnnotation.type,
-                  scope: scope.stringValue,
-                  config: config)
-    }
-}
-
-extension VariableModel {
-    
-    convenience init(referenceAnnotation: ReferenceAnnotation) {
-        
-        self.init(name: referenceAnnotation.name,
-                  type: referenceAnnotation.type,
-                  abstractType: nil,
-                  variableType: .reference,
-                  accessLevel: .public)
-    }
-    
-    convenience init(registerAnnotation: RegisterAnnotation) {
-        
-        self.init(name: registerAnnotation.name,
-                  type: registerAnnotation.type,
-                  abstractType: registerAnnotation.protocolType,
-                  variableType: .registration,
-                  accessLevel: .internal)
-    }
-    
-    convenience init(parameterAnnotation: ParameterAnnotation) {
-        
-        self.init(name: parameterAnnotation.name,
-                  type: parameterAnnotation.type,
-                  abstractType: nil,
-                  variableType: .parameter,
-                  accessLevel: .public)
-    }
-}
-
-// MARK: - Building
-
-extension ResolverModel {
-
-    convenience init?(expr: Expr, enclosingTypes: [Type], graph: Graph) {
-        
-        switch expr {
-        case .typeDeclaration(let typeToken, children: let children):
-            let targetType = typeToken.value.type
-            
-            var scopeAnnotations = [String: ScopeAnnotation]()
-            var registerAnnotations = [String: RegisterAnnotation]()
-            var referenceAnnotations = [String: ReferenceAnnotation]()
-            var configurationAnnotations = [ConfigurationAttributeTarget: [ConfigurationAnnotation]]()
-            var parameters = [VariableModel]()
-            
-            for child in children {
-                switch child {
-                case .scopeAnnotation(let annotation):
-                    scopeAnnotations[annotation.value.name] = annotation.value
-                
-                case .registerAnnotation(let annotation):
-                    registerAnnotations[annotation.value.name] = annotation.value
-
-                case .referenceAnnotation(let annotation):
-                    referenceAnnotations[annotation.value.name] = annotation.value
-                    
-                case .parameterAnnotation(let annotation):
-                    parameters.append(VariableModel(parameterAnnotation: annotation.value))
-                    
-                case .configurationAnnotation(let annotation):
-                    let target = annotation.value.target
-                    configurationAnnotations[target] = (configurationAnnotations[target] ?? []) + [annotation.value]
-                                        
-                case .file,
-                     .typeDeclaration:
-                    break
-                }
-            }
-            
-            let registrations = registerAnnotations.map {
-                RegisterModel(registerAnnotation: $0.value,
-                              scopeAnnotation: scopeAnnotations[$0.key],
-                              configurationAnnotations: configurationAnnotations[.dependency(name: $0.value.name)] ?? [])
-            } + referenceAnnotations.map {
-                RegisterModel(referenceAnnotation: $0.value,
-                              scopeAnnotation: scopeAnnotations[$0.key],
-                              configurationAnnotations: configurationAnnotations[.dependency(name: $0.value.name)] ?? [])
-            }.filter { $0.customRef }
-
-            let references = registerAnnotations.map {
-                VariableModel(registerAnnotation: $1)
-            } + referenceAnnotations.compactMap {
-                VariableModel(referenceAnnotation: $1)
-            }
-            
-            references.forEach(graph.insertVariable)
-            
-            let hasNonCustomReferences = referenceAnnotations.contains {
-                let configurationAnnotations = configurationAnnotations[.dependency(name: $0.value.name)]
-                let config = DependencyConfiguration(with: configurationAnnotations)
-                return !config.customRef
-            }
-            let hasParameters = !parameters.isEmpty
-
-            let isRoot = !hasNonCustomReferences && !hasParameters
-            let config = ResolverConfiguration(with: configurationAnnotations[.`self`])
-
-            self.init(targetType: targetType,
-                      registrations: registrations,
-                      references: references,
-                      parameters: parameters,
-                      enclosingTypes: enclosingTypes,
-                      isRoot: isRoot,
-                      doesSupportObjc: typeToken.value.doesSupportObjc,
-                      accessLevel: typeToken.value.accessLevel,
-                      config: config)
-            
-        case .file,
-             .registerAnnotation,
-             .scopeAnnotation,
-             .referenceAnnotation,
-             .parameterAnnotation,
-             .configurationAnnotation:
-            return nil
-        }
-    }
-}
-
-private extension Generator {
-    
-    func buildResolvers(asts: [Expr]) {
-        for ast in asts {
-            if let (file, imports, resolvers) = buildResolvers(ast: ast) {
-                graph.resolversByFile[file] = resolvers
-                graph.importsByFile[file] = imports
-            }
-        }
-    }
-    
-    private func buildResolvers(ast: Expr) -> (file: String, imports: [String], resolvers: [ResolverModel])? {
-        guard let file = ast.toFile() else {
-            return nil
-        }
-        let resolvers = buildResolvers(exprs: file.types)
-        return (file.name, file.imports, resolvers)
-    }
-    
-    private func buildResolvers(exprs: [Expr], enclosingTypes: [Type] = []) -> [ResolverModel] {
-
-        return exprs.flatMap { expr -> [ResolverModel] in
-            guard let (token, children) = expr.toTypeDeclaration(),
-                  let resolverModel = ResolverModel(expr: expr,
-                                                    enclosingTypes: enclosingTypes,
-                                                    graph: graph) else {
-                return []
-            }
-            graph.insertResolver(resolverModel)
-            let enclosingTypes = enclosingTypes + [token.value.type]
-            return [resolverModel] + buildResolvers(exprs: children, enclosingTypes: enclosingTypes)
-        }
-    }
-}
-
-// MARK: - Linking
-
-private extension Generator {
-    
-    func link() {
-        
-        let resolvers = graph.resolversByFile.orderedValues.flatMap { $0 }
-        let registrations = resolvers.flatMap { $0.registrations }
-        let references = resolvers.flatMap { $0.references }
-        
-        // link parameters to registrations
-        for registration in registrations {
-            if let resolver = graph.resolver(for: registration.type) {
-                registration.parameters = resolver.parameters
-                registration.hasBuilder = !resolver.parameters.isEmpty || !resolver.references.filter { $0.variableType == .reference }.isEmpty
-                registration.type = resolver.targetType
-            } else {
-                registration.parameters = []
-                registration.hasBuilder = false
-            }
-        }
-
-        // link parameters to references
-        for reference in references {
-            reference.parameters = graph.resolver(for: reference.type)?.parameters ?? []
-            
-            if reference.parameters.isEmpty, let types = graph.typesByName[reference.name] {
-                for type in types {
-                    if let parameters = graph.resolver(for: type)?.parameters {
-                        reference.parameters = parameters
-                        break
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -425,6 +190,13 @@ private extension String {
         return split(separator: "\n")
             .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
             .joined(separator: "\n")
+    }
+}
+
+private extension DependencyContainer {
+    
+    var hasDependencies: Bool {
+        return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.isEmpty
     }
 }
 

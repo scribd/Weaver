@@ -69,6 +69,18 @@ extension ConfigurationAnnotation: Hashable {
             0])
     }
 }
+// MARK: - DependencyIndex AutoHashable
+extension DependencyIndex: Hashable {
+    internal var hashValue: Int {
+        let nameHashValue = name.hashValue
+        let typeHashValue = type?.hashValue ?? 0
+
+        return combineHashes([
+            nameHashValue,
+            typeHashValue,
+            0])
+    }
+}
 // MARK: - Type AutoHashable
 extension Type: Hashable {
     public var hashValue: Int {
@@ -82,6 +94,16 @@ extension Type: Hashable {
             genericNamesHashValue,
             isOptionalHashValue,
             genericsHashValue,
+            0])
+    }
+}
+// MARK: - TypeIndex AutoHashable
+extension TypeIndex: Hashable {
+    internal var hashValue: Int {
+        let valueHashValue = value.hashValue
+
+        return combineHashes([
+            valueHashValue,
             0])
     }
 }

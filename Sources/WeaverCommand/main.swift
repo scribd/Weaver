@@ -35,9 +35,14 @@ let main = command(
             return try Parser(tokens, fileName: filePath.string).parse()
         }
 
+        // ---- Link ----
+        
+        let linker = try Linker(syntaxTrees: asts)
+        let graph = linker.graph
+        
         // ---- Generate ----
 
-        let generator = try Generator(asts: asts, template: templatePath.value)
+        let generator = try Generator(graph: graph, template: templatePath.value)
         let generatedData = try generator.generate()
         
         // ---- Collect ----
@@ -66,7 +71,7 @@ let main = command(
             Logger.log(.info, "")
             Logger.log(.info, "Checking dependency graph...")
             
-            let inspector = try Inspector(syntaxTrees: asts)
+            let inspector = Inspector(graph: graph)
             try inspector.validate()
         }
         

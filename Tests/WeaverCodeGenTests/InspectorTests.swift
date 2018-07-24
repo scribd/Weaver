@@ -51,7 +51,8 @@ final class App {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
 
             try inspector.validate()
         } catch {
@@ -75,8 +76,9 @@ final class App {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -119,8 +121,9 @@ final class SessionManager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -164,8 +167,9 @@ final class SessionManager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -185,8 +189,9 @@ final class API {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -206,8 +211,9 @@ final class API {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -236,8 +242,9 @@ final class ViewController {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -265,8 +272,9 @@ final class ViewController {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -312,8 +320,9 @@ final class Coordinator {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -345,8 +354,9 @@ final class Coordinator {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -411,8 +421,9 @@ final class MovieAPI: APIProtocol {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -467,8 +478,9 @@ final class MovieAPI: APIProtocol {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -524,8 +536,9 @@ final class MovieAPI: APIProtocol {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -563,8 +576,9 @@ final class MovieViewController: UIViewController {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -597,8 +611,9 @@ public final class MovieViewController: UIViewController {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -617,8 +632,9 @@ final class MovieViewController: UIViewController {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -648,8 +664,9 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -673,8 +690,9 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            let inspector = try Inspector(syntaxTrees: [syntaxTree])
-            
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(graph: linker.graph)
+
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
