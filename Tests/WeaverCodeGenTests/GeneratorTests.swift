@@ -72,43 +72,36 @@ final class Manager {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - Logger
-final class LoggerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(LogEngine.self, scope: .graph, name: "logEngine", builder: { (dependencies) in
-            return LogEngine()
-        })
-    }
-}
 protocol LoggerDependencyResolver {
     var logEngine: LogEngine { get }
 }
-extension LoggerDependencyContainer: LoggerDependencyResolver {
+final class LoggerDependencyContainer: LoggerDependencyResolver {
     var logEngine: LogEngine {
-        return resolve(LogEngine.self, name: "logEngine")
+        return logEngineRef.value
+    }
+    private lazy var logEngineRef = Instance<LogEngine>(scope: .graph) { [unowned self] in
+        return LogEngine()
+    }
+    init() {
+        _ = logEngineRef.value
     }
 }
 // MARK: - Manager
-final class ManagerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
-            return Logger()
-        })
-    }
-}
 protocol ManagerDependencyResolver {
     var logger: Logger { get }
 }
-extension ManagerDependencyContainer: ManagerDependencyResolver {
+final class ManagerDependencyContainer: ManagerDependencyResolver {
     var logger: Logger {
-        return resolve(Logger.self, name: "logger")
+        return loggerRef.value
+    }
+    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
+        return Logger()
+    }
+    init() {
+        _ = loggerRef.value
     }
 }
+extension ManagerDependencyContainer: LoggerInputDependencyResolver {}
 """
             
             XCTAssertEqual(actual!, expected)
@@ -147,14 +140,29 @@ final class PersonManager: PersonManaging {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - PersonManager
-protocol PersonManagerDependencyResolver {
-    var logger: Logger { get }
+protocol PersonManagerInputDependencyResolver {
     var movieAPI: APIProtocol { get }
+}
+protocol PersonManagerDependencyResolver {
+    var movieAPI: APIProtocol { get }
+    var logger: Logger { get }
+}
+final class PersonManagerDependencyContainer: PersonManagerDependencyResolver {
+    let movieAPI: APIProtocol
+    var logger: Logger {
+        return loggerRef.value
+    }
+    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
+        return Logger()
+    }
+    init(injecting dependencies: PersonManagerInputDependencyResolver) {
+        movieAPI = dependencies.movieAPI
+        _ = loggerRef.value
+    }
 }
 protocol PersonManagerDependencyInjectable {
     init(injecting dependencies: PersonManagerDependencyResolver)
 }
-extension PersonManager: PersonManagerDependencyInjectable {}
 """
             
             XCTAssertEqual(actual!, expected)
@@ -189,23 +197,19 @@ final class PersonManager: PersonManaging {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - PersonManager
-final class PersonManagerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(APIProtocol.self, scope: .graph, name: "movieAPI", builder: { (dependencies) in
-            return self.movieAPICustomRef()
-        })
-    }
-}
 protocol PersonManagerDependencyResolver {
     var movieAPI: APIProtocol { get }
     func movieAPICustomRef() -> APIProtocol
 }
-extension PersonManagerDependencyContainer: PersonManagerDependencyResolver {
+final class PersonManagerDependencyContainer: PersonManagerDependencyResolver {
     var movieAPI: APIProtocol {
-        return resolve(APIProtocol.self, name: "movieAPI")
+        return movieAPIRef.value
+    }
+    private lazy var movieAPIRef = Instance<APIProtocol>(scope: .graph) { [unowned self] in
+        return self.movieAPICustomRef()
+    }
+    init() {
+        _ = movieAPIRef.value
     }
 }
 """
@@ -246,50 +250,35 @@ final class PersonManager: PersonManaging {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - MovieAPI
-final class MovieAPIDependencyContainer: DependencyContainer {
-    let host: String
-    init(parent: Reference<DependencyContainer>? = nil, host: String) {
-        self.host = host
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-    }
-}
 protocol MovieAPIDependencyResolver {
     var host: String { get }
 }
-extension MovieAPIDependencyContainer: MovieAPIDependencyResolver {
-}
-extension MovieAPI {
-    static func makeMovieAPI(injecting parentDependencies: DependencyContainer, host: String) -> MovieAPI {
-        let dependencies = MovieAPIDependencyContainer(parent: Reference(parentDependencies), host: host)
-        return MovieAPI(injecting: dependencies)
+final class MovieAPIDependencyContainer: MovieAPIDependencyResolver {
+    let host: String
+    init(host: String) {
+        self.host = host
     }
 }
 protocol MovieAPIDependencyInjectable {
     init(injecting dependencies: MovieAPIDependencyResolver)
 }
-extension MovieAPI: MovieAPIDependencyInjectable {}
 // MARK: - PersonManager
-final class PersonManagerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(APIProtocol.self, scope: .graph, name: "movieAPI", builder: { (dependencies, host: String) in
-            return self.movieAPICustomRef(host: host)
-        })
-    }
-}
 protocol PersonManagerDependencyResolver {
-    func movieAPI(host: String) -> APIProtocol
-    func movieAPICustomRef(host: String) -> APIProtocol
+    var movieAPI: APIProtocol { get }
+    func movieAPICustomRef() -> APIProtocol
 }
-extension PersonManagerDependencyContainer: PersonManagerDependencyResolver {
-    func movieAPI(host: String) -> APIProtocol {
-        return resolve(APIProtocol.self, name: "movieAPI", parameter: host)
+final class PersonManagerDependencyContainer: PersonManagerDependencyResolver {
+    var movieAPI: APIProtocol {
+        return movieAPIRef.value
+    }
+    private lazy var movieAPIRef = Instance<APIProtocol>(scope: .graph) { [unowned self] in
+        return self.movieAPICustomRef()
+    }
+    init() {
+        _ = movieAPIRef.value
     }
 }
+extension PersonManagerDependencyContainer: MovieAPIInputDependencyResolver {}
 """
             
             XCTAssertEqual(actual!, expected)
@@ -329,41 +318,33 @@ final class MyService {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - MyService
-final class MyServiceDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Session.self, scope: .graph, name: "session", builder: { (dependencies) in
-            return Session()
-        })
-    }
-}
 protocol MyServiceDependencyResolver {
     var session: Session { get }
 }
-extension MyServiceDependencyContainer: MyServiceDependencyResolver {
+final class MyServiceDependencyContainer: MyServiceDependencyResolver {
     var session: Session {
-        return resolve(Session.self, name: "session")
+        return sessionRef.value
+    }
+    private lazy var sessionRef = Instance<Session>(scope: .graph) { [unowned self] in
+        return Session()
+    }
+    init() {
+        _ = sessionRef.value
     }
 }
 // MARK: - MyEmbeddedService
-final class MyEmbeddedServiceDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(SessionProtocol?.self, scope: .container, name: "session", builder: { (dependencies) in
-            return Session()
-        })
-    }
-}
 protocol MyEmbeddedServiceDependencyResolver {
     var session: SessionProtocol? { get }
 }
-extension MyEmbeddedServiceDependencyContainer: MyEmbeddedServiceDependencyResolver {
+final class MyEmbeddedServiceDependencyContainer: MyEmbeddedServiceDependencyResolver {
     var session: SessionProtocol? {
-        return resolve(SessionProtocol?.self, name: "session")
+        return sessionRef.value
+    }
+    private lazy var sessionRef = Instance<SessionProtocol?>(scope: .container) { [unowned self] in
+        return Session?()
+    }
+    init() {
+        _ = sessionRef.value
     }
 }
 """
@@ -402,71 +383,43 @@ public final class API {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - API
-final class APIDependencyContainer: DependencyContainer {
-    let host: String
-    init(parent: Reference<DependencyContainer>? = nil, host: String) {
-        self.host = host
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Session.self, scope: .graph, name: "session", builder: { (dependencies) in
-            return Session()
-        })
-    }
+protocol APIInputDependencyResolver {
+    var logger: Logger { get }
 }
 protocol APIDependencyResolver {
     var host: String { get }
-    var session: Session { get }
     var logger: Logger { get }
+    var session: Session { get }
 }
-extension APIDependencyContainer: APIDependencyResolver {
+final class APIDependencyContainer: APIDependencyResolver {
+    let host: String
+    let logger: Logger
     var session: Session {
-        return resolve(Session.self, name: "session")
+        return sessionRef.value
     }
-    var logger: Logger {
-        return resolve(Logger.self, name: "logger")
+    private lazy var sessionRef = Instance<Session>(scope: .graph) { [unowned self] in
+        return Session()
     }
-}
-extension API {
-    static func makeAPI(injecting parentDependencies: DependencyContainer, host: String) -> API {
-        let dependencies = APIDependencyContainer(parent: Reference(parentDependencies), host: host)
-        return API(injecting: dependencies)
+    init(injecting dependencies: APIInputDependencyResolver, host: String) {
+        self.host = host
+        logger = dependencies.logger
+        _ = sessionRef.value
     }
 }
 protocol APIDependencyInjectable {
     init(injecting dependencies: APIDependencyResolver)
 }
-extension API: APIDependencyInjectable {}
-// MARK: - APIShim
-final class APIShimDependencyContainer: DependencyContainer {
-    private lazy var internalDependencies: APIDependencyContainer = {
-        return APIDependencyContainer(parent: Reference(self, type: .weak), host: self.host)
-    }()
+final class APIShimDependencyContainer: APIInputDependencyResolver {
     let logger: Logger
-    let host: String
-    init(logger: Logger, host: String) {
+    init(logger: Logger) {
         self.logger = logger
-        self.host = host
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .weak, name: "logger", builder: { [weak self] _ in
-            guard let strongSelf = self else {
-                fatalError("Container was released too early. If you see this happen, please file a bug.")
-            }
-            return strongSelf.logger
-        })
-    }
-}
-extension APIShimDependencyContainer: APIDependencyResolver {
-    var session: Session {
-        return internalDependencies.resolve(Session.self, name: "session")
     }
 }
 extension API {
     public convenience init(logger: Logger, host: String) {
-        let shim = APIShimDependencyContainer(logger: logger, host: host)
-        self.init(injecting: shim)
+        let shim = APIShimDependencyContainer(logger: logger)
+        let dependencies = APIDependencyContainer(injecting: shim, host: host)
+        self.init(injecting: dependencies)
     }
 }
 """
@@ -506,30 +459,18 @@ class AnotherService {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - API
-final class APIDependencyContainer: DependencyContainer {
-    let parameter: UInt
-    init(parent: Reference<DependencyContainer>? = nil, parameter: UInt) {
-        self.parameter = parameter
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-    }
-}
 protocol APIDependencyResolver {
     var parameter: UInt { get }
 }
-extension APIDependencyContainer: APIDependencyResolver {
-}
-extension API {
-    static func makeAPI(injecting parentDependencies: DependencyContainer, parameter: UInt) -> API {
-        let dependencies = APIDependencyContainer(parent: Reference(parentDependencies), parameter: parameter)
-        return API(injecting: dependencies)
+final class APIDependencyContainer: APIDependencyResolver {
+    let parameter: UInt
+    init(parameter: UInt) {
+        self.parameter = parameter
     }
 }
 protocol APIDependencyInjectable {
     init(injecting dependencies: APIDependencyResolver)
 }
-extension API: APIDependencyInjectable {}
 """
             XCTAssertEqual(actual!, expected)
             exportDiff(actual: actual!, expected: expected)
@@ -565,69 +506,39 @@ public final class MovieManager {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - Logger
-final class LoggerDependencyContainer: DependencyContainer {
-    let domain: String
-    init(parent: Reference<DependencyContainer>? = nil, domain: String) {
-        self.domain = domain
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-    }
-}
 protocol LoggerDependencyResolver {
     var domain: String { get }
 }
-extension LoggerDependencyContainer: LoggerDependencyResolver {
-}
-extension Logger {
-    static func makeLogger(injecting parentDependencies: DependencyContainer, domain: String) -> Logger {
-        let dependencies = LoggerDependencyContainer(parent: Reference(parentDependencies), domain: domain)
-        return Logger(injecting: dependencies)
+final class LoggerDependencyContainer: LoggerDependencyResolver {
+    let domain: String
+    init(domain: String) {
+        self.domain = domain
     }
 }
 protocol LoggerDependencyInjectable {
     init(injecting dependencies: LoggerDependencyResolver)
 }
-extension Logger: LoggerDependencyInjectable {}
 // MARK: - MovieManager
-final class MovieManagerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies, domain: String) in
-            return Logger.makeLogger(injecting: dependencies, domain: domain)
-        })
-    }
-}
 protocol MovieManagerDependencyResolver {
     func logger(domain: String) -> Logger
 }
-extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
+final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     func logger(domain: String) -> Logger {
-        return resolve(Logger.self, name: "logger", parameter: domain)
+        return loggerRef(domain: domain).value
     }
-}
-// MARK: - MovieManagerShim
-final class MovieManagerShimDependencyContainer: DependencyContainer {
-    private lazy var internalDependencies: MovieManagerDependencyContainer = {
-        return MovieManagerDependencyContainer()
-    }()
+    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
+        let dependencies = LoggerDependencyContainer(injecting: self, domain: domain)
+        return Logger(injecting: dependencies)
+    }
     init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
+        _ = loggerRef.value
     }
 }
-extension MovieManagerShimDependencyContainer: MovieManagerDependencyResolver {
-    func logger(domain: String) -> Logger {
-        return internalDependencies.resolve(Logger.self, name: "logger", parameter: domain)
-    }
-}
+extension MovieManagerDependencyContainer: LoggerInputDependencyResolver {}
 extension MovieManager {
     public convenience init() {
-        let shim = MovieManagerShimDependencyContainer()
-        self.init(injecting: shim)
+        let dependencies = MovieManagerDependencyContainer()
+        self.init(injecting: dependencies)
     }
 }
 """
@@ -666,51 +577,36 @@ final class Logger<T> {
 /// DO NOT EDIT!
 import WeaverDI
 // MARK: - Logger
-final class LoggerDependencyContainer<T>: DependencyContainer {
-    let domain: String
-    init(parent: Reference<DependencyContainer>? = nil, domain: String) {
-        self.domain = domain
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-    }
-}
 protocol LoggerDependencyResolver {
-    associatedtype T
     var domain: String { get }
 }
-extension LoggerDependencyContainer: LoggerDependencyResolver {
-}
-extension Logger {
-    static func makeLogger(injecting parentDependencies: DependencyContainer, domain: String) -> Logger<T> {
-        let dependencies = LoggerDependencyContainer<T>(parent: Reference(parentDependencies), domain: domain)
-        return Logger(injecting: dependencies)
+final class LoggerDependencyContainer<T>: LoggerDependencyResolver {
+    let domain: String
+    init(domain: String) {
+        self.domain = domain
     }
 }
 protocol LoggerDependencyInjectable {
     associatedtype T
     init(injecting dependencies: LoggerDependencyContainer<T>)
 }
-extension Logger: LoggerDependencyInjectable {}
 // MARK: - MovieManager
-final class MovieManagerDependencyContainer: DependencyContainer {
-    init() {
-        super.init()
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger<String>.self, scope: .graph, name: "logger", builder: { (dependencies, domain: String) in
-            return Logger<String>.makeLogger(injecting: dependencies, domain: domain)
-        })
-    }
-}
 protocol MovieManagerDependencyResolver {
     func logger(domain: String) -> Logger<String>
 }
-extension MovieManagerDependencyContainer: MovieManagerDependencyResolver {
+final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     func logger(domain: String) -> Logger<String> {
-        return resolve(Logger<String>.self, name: "logger", parameter: domain)
+        return loggerRef(domain: domain).value
+    }
+    private lazy var loggerRef = Instance<Logger<String>>(scope: .graph) { [unowned self] in
+        let dependencies = LoggerDependencyContainer(injecting: self, domain: domain)
+        return Logger<String>(injecting: dependencies)
+    }
+    init() {
+        _ = loggerRef.value
     }
 }
+extension MovieManagerDependencyContainer: LoggerInputDependencyResolver {}
 """
             
             XCTAssertEqual(actual!, expected)
@@ -757,7 +653,86 @@ final class ReviewViewController {
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
-
+/// This file is generated by Weaver 0.9.13
+/// DO NOT EDIT!
+import WeaverDI
+// MARK: - HomeViewController
+protocol HomeViewControllerInputDependencyResolver {
+    var movieManager: MovieManager { get }
+}
+protocol HomeViewControllerDependencyResolver {
+    var movieManager: MovieManager { get }
+    var movieViewController: MovieViewController { get }
+}
+final class HomeViewControllerDependencyContainer: HomeViewControllerDependencyResolver {
+    let movieManager: MovieManager
+    var movieViewController: MovieViewController {
+        return MovieViewController()
+    }
+    init(injecting dependencies: HomeViewControllerInputDependencyResolver) {
+        movieManager = dependencies.movieManager
+    }
+}
+extension HomeViewControllerDependencyContainer: MovieViewControllerInputDependencyResolver {}
+// MARK: - MovieViewController
+protocol MovieViewControllerInputDependencyResolver {
+    var movieManager: MovieManager { get }
+}
+protocol MovieViewControllerDependencyResolver {
+    var movieManager: MovieManager { get }
+    var reviewViewController: ReviewViewController { get }
+}
+final class MovieViewControllerDependencyContainer: MovieViewControllerDependencyResolver {
+    let movieManager: MovieManager
+    var reviewViewController: ReviewViewController {
+        let dependencies = ReviewViewControllerDependencyContainer(injecting: self)
+        return ReviewViewController(injecting: dependencies)
+    }
+    init(injecting dependencies: MovieViewControllerInputDependencyResolver) {
+        movieManager = dependencies.movieManager
+    }
+}
+extension MovieViewControllerDependencyContainer: ReviewViewControllerInputDependencyResolver {}
+// MARK: - ReviewViewController
+protocol ReviewViewControllerInputDependencyResolver {
+    var movieManager: MovieManager { get }
+}
+protocol ReviewViewControllerDependencyResolver {
+    var movieManager: MovieManager { get }
+}
+final class ReviewViewControllerDependencyContainer: ReviewViewControllerDependencyResolver {
+    let movieManager: MovieManager
+    init(injecting dependencies: ReviewViewControllerInputDependencyResolver) {
+        movieManager = dependencies.movieManager
+    }
+}
+protocol ReviewViewControllerDependencyInjectable {
+    init(injecting dependencies: ReviewViewControllerDependencyResolver)
+}
+// MARK: - AppDelegate
+protocol AppDelegateDependencyResolver {
+    var movieManager: MovieManager { get }
+    var homeViewController: HomeViewController { get }
+}
+final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
+    var movieManager: MovieManager {
+        return movieManagerRef.value
+    }
+    private lazy var movieManagerRef = Instance<MovieManager>(scope: .container) { [unowned self] in
+        return MovieManager()
+    }
+    var homeViewController: HomeViewController {
+        return homeViewControllerRef.value
+    }
+    private lazy var homeViewControllerRef = Instance<HomeViewController>(scope: .graph) { [unowned self] in
+        return HomeViewController()
+    }
+    init() {
+        _ = movieManagerRef.value
+        _ = homeViewControllerRef.value
+    }
+}
+extension AppDelegateDependencyContainer: HomeViewControllerInputDependencyResolver {}
 """
             
             XCTAssertEqual(actual!, expected)

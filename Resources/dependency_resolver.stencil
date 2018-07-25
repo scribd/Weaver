@@ -42,14 +42,14 @@
         return {{dependency.name}}Ref({% call ParametersPassIn dependency.parameters %}).value
     }
     {% else %}
-    var {{dependency.name}}: {{dependency.abstractType}} { 
+    var {{dependency.name}}: {{dependency.abstractType}} {
         return {{dependency.name}}Ref.value
     }
     {% endif %}
 
     {% else %}{# not dependency.customRef #}
-    var {{dependency.name}}: {{dependency.abstractType}} { 
-        return {{dependency.name}}Ref.value        
+    var {{dependency.name}}: {{dependency.abstractType}} {
+        return {{dependency.name}}Ref.value
     }
     {% endif %}{# not dependency.customRef #}
 {% endmacro %}
