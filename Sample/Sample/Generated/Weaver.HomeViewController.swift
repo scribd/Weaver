@@ -21,22 +21,21 @@ final class HomeViewControllerDependencyContainer: HomeViewControllerDependencyR
     let movieManager: MovieManaging
     let imageManager: ImageManaging
     let reviewManager: ReviewManaging
-    private var _logger: Logger?
-    var logger: Logger {
-        if let value = _logger { return value }
-        let value = Logger()
-        _logger = value
-        return value
+    var logger: Logger { 
+        return loggerRef.value
+    }
+    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
+        return Logger()
     }
     func movieController(movieID: UInt, title: String) -> UIViewController {
         let dependencies = MovieViewControllerDependencyContainer(injecting: self, movieID: movieID, title: title)
-        let value = MovieViewController(injecting: dependencies)
-        return value
+        return MovieViewController(injecting: dependencies)
     }
     init(injecting dependencies: HomeViewControllerInputDependencyResolver) {
-        self.movieManager = dependencies.movieManager
-        self.imageManager = dependencies.imageManager
-        self.reviewManager = dependencies.reviewManager
+        movieManager = dependencies.movieManager
+        imageManager = dependencies.imageManager
+        reviewManager = dependencies.reviewManager
+        _ = loggerRef.value
     }
 }
 extension HomeViewControllerDependencyContainer: MovieViewControllerInputDependencyResolver {}

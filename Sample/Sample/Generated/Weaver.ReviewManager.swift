@@ -13,15 +13,15 @@ protocol ReviewManagerDependencyResolver {
 }
 final class ReviewManagerDependencyContainer: ReviewManagerDependencyResolver {
     let movieAPI: APIProtocol
-    private var _logger: Logger?
-    var logger: Logger {
-        if let value = _logger { return value }
-        let value = Logger()
-        _logger = value
-        return value
+    var logger: Logger { 
+        return loggerRef.value
+    }
+    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
+        return Logger()
     }
     init(injecting dependencies: ReviewManagerInputDependencyResolver) {
-        self.movieAPI = dependencies.movieAPI
+        movieAPI = dependencies.movieAPI
+        _ = loggerRef.value
     }
 }
 protocol ReviewManagerDependencyInjectable {

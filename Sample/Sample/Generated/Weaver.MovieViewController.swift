@@ -25,24 +25,23 @@ final class MovieViewControllerDependencyContainer: MovieViewControllerDependenc
     let movieManager: MovieManaging
     let imageManager: ImageManaging
     let reviewManager: ReviewManaging
-    private var _logger: Logger?
-    var logger: Logger {
-        if let value = _logger { return value }
-        let value = Logger()
-        _logger = value
-        return value
+    var logger: Logger { 
+        return loggerRef.value
+    }
+    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
+        return Logger()
     }
     func reviewController(movieID: UInt) -> WSReviewViewController {
         let dependencies = WSReviewViewControllerDependencyContainer(injecting: self, movieID: movieID)
-        let value = WSReviewViewController(injecting: dependencies)
-        return value
+        return WSReviewViewController(injecting: dependencies)
     }
     init(injecting dependencies: MovieViewControllerInputDependencyResolver, movieID: UInt, title: String) {
         self.movieID = movieID
         self.title = title
-        self.movieManager = dependencies.movieManager
-        self.imageManager = dependencies.imageManager
-        self.reviewManager = dependencies.reviewManager
+        movieManager = dependencies.movieManager
+        imageManager = dependencies.imageManager
+        reviewManager = dependencies.reviewManager
+        _ = loggerRef.value
     }
 }
 extension MovieViewControllerDependencyContainer: WSReviewViewControllerInputDependencyResolver {}

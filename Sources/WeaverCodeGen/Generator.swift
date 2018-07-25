@@ -50,7 +50,7 @@ public final class Generator {
     }
 }
 
-// MARK: - Template Model
+// MARK: - ViewModels
 
 private struct RegistrationViewModel {
     
@@ -61,7 +61,6 @@ private struct RegistrationViewModel {
     let customRef: Bool
     let parameters: [DependencyViewModel]
     let hasBuilder: Bool
-    
     let isTransient: Bool
     
     init(_ dependency: Dependency, graph: Graph) {
@@ -136,7 +135,6 @@ private struct DependencyContainerViewModel {
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
-    
     let injectableDependencies: [DependencyContainerViewModel]?
     
     init?(_ dependencyContainer: DependencyContainer, graph: Graph, depth: Int = 0) {

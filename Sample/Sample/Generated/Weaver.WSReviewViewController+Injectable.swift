@@ -15,7 +15,7 @@ final class WSReviewViewControllerDependencyContainer: NSObject, WSReviewViewCon
     let reviewManager: ReviewManaging
     init(injecting dependencies: WSReviewViewControllerInputDependencyResolver, movieID: UInt) {
         self.movieID = movieID
-        self.reviewManager = dependencies.reviewManager
+        reviewManager = dependencies.reviewManager
         super.init()
     }
 }

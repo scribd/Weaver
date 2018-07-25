@@ -194,7 +194,7 @@
 		OBJ_517 /* CYaml.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Yams::CYaml::Product" /* CYaml.framework */; };
 		OBJ_518 /* SWXMLHash.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "SWXMLHash::SWXMLHash::Product" /* SWXMLHash.framework */; };
 		OBJ_519 /* WeaverDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "WeaverDI::WeaverDI::Product" /* WeaverDI.framework */; };
-		OBJ_542 /* Reference.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* Reference.swift */; };
+		OBJ_542 /* Instance.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* Instance.swift */; };
 		OBJ_550 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
 		OBJ_568 /* WeaverDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "WeaverDI::WeaverDI::Product" /* WeaverDI.framework */; };
 		OBJ_574 /* Constructor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_182 /* Constructor.swift */; };
@@ -629,7 +629,7 @@
 		OBJ_31 /* Token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Token.swift; sourceTree = "<group>"; };
 		OBJ_32 /* Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Type.swift; sourceTree = "<group>"; };
 		OBJ_33 /* shim-swift-4.1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "shim-swift-4.1.swift"; sourceTree = "<group>"; };
-		OBJ_42 /* Reference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reference.swift; sourceTree = "<group>"; };
+		OBJ_42 /* Instance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instance.swift; sourceTree = "<group>"; };
 		OBJ_43 /* Scope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scope.swift; sourceTree = "<group>"; };
 		OBJ_46 /* ConfigurationAttributeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationAttributeTests.swift; sourceTree = "<group>"; };
 		OBJ_47 /* ErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorTests.swift; sourceTree = "<group>"; };
@@ -1090,7 +1090,7 @@
 		OBJ_34 /* WeaverDI */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_42 /* Reference.swift */,
+				OBJ_42 /* Instance.swift */,
 				OBJ_43 /* Scope.swift */,
 			);
 			name = WeaverDI;
@@ -1945,7 +1945,7 @@
 			buildActionMask = 0;
 			files = (
 				196398372107EAE900E818FD /* Scope.swift in Sources */,
-				OBJ_542 /* Reference.swift in Sources */,
+				OBJ_542 /* Instance.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

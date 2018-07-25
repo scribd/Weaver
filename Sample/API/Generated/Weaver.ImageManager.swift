@@ -11,29 +11,29 @@ protocol ImageManagerDependencyResolver {
     var movieAPI: APIProtocol { get }
 }
 final class ImageManagerDependencyContainer: ImageManagerDependencyResolver {
-    private var _logger: Logger?
-    var logger: Logger {
-        if let value = _logger { return value }
-        let value = Logger()
-        _logger = value
-        return value
+    var logger: Logger { 
+        return loggerRef.value
     }
-    private var _urlSession: URLSession?
-    var urlSession: URLSession {
-        if let value = _urlSession { return value }
-        let value = urlSessionCustomRef()
-        _urlSession = value
-        return value
+    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
+        return Logger()
     }
-    private var _movieAPI: APIProtocol?
-    var movieAPI: APIProtocol {
-        if let value = _movieAPI { return value }
+    var urlSession: URLSession { 
+        return urlSessionRef.value        
+    }
+    private lazy var urlSessionRef = Instance<URLSession>(scope: .container) { [unowned self] in
+        return self.urlSessionCustomRef()
+    }
+    var movieAPI: APIProtocol { 
+        return movieAPIRef.value
+    }
+    private lazy var movieAPIRef = Instance<APIProtocol>(scope: .graph) { [unowned self] in
         let dependencies = MovieAPIDependencyContainer(injecting: self)
-        let value = MovieAPI(injecting: dependencies)
-        _movieAPI = value
-        return value
+        return MovieAPI(injecting: dependencies)
     }
     init() {
+        _ = loggerRef.value
+        _ = urlSessionRef.value
+        _ = movieAPIRef.value
     }
 }
 extension ImageManagerDependencyContainer: MovieAPIInputDependencyResolver {}

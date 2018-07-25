@@ -16,24 +16,24 @@ protocol MovieManagerDependencyResolver {
 final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     let host: String?
     let logger: Logger
-    private var _urlSession: URLSession?
-    var urlSession: URLSession {
-        if let value = _urlSession { return value }
-        let value = urlSessionCustomRef()
-        _urlSession = value
-        return value
+    var urlSession: URLSession { 
+        return urlSessionRef.value        
     }
-    private var _movieAPI: APIProtocol?
-    var movieAPI: APIProtocol {
-        if let value = _movieAPI { return value }
+    private lazy var urlSessionRef = Instance<URLSession>(scope: .container) { [unowned self] in
+        return self.urlSessionCustomRef()
+    }
+    var movieAPI: APIProtocol { 
+        return movieAPIRef.value
+    }
+    private lazy var movieAPIRef = Instance<APIProtocol>(scope: .graph) { [unowned self] in
         let dependencies = MovieAPIDependencyContainer(injecting: self)
-        let value = MovieAPI(injecting: dependencies)
-        _movieAPI = value
-        return value
+        return MovieAPI(injecting: dependencies)
     }
     init(injecting dependencies: MovieManagerInputDependencyResolver, host: String?) {
         self.host = host
-        self.logger = dependencies.logger
+        logger = dependencies.logger
+        _ = urlSessionRef.value
+        _ = movieAPIRef.value
     }
 }
 extension MovieManagerDependencyContainer: MovieAPIInputDependencyResolver {}
