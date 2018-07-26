@@ -44,28 +44,3 @@ final class OrderedDictionary<Key: Hashable, Value> {
         }
     }
 }
-
-// MARK: - OrderedSet
-
-final class OrderedSet<Value: Hashable> {
-    
-    private var orderedDictionary = OrderedDictionary<Value, Value>()
-    
-    func insert(_ value: Value) {
-        orderedDictionary[value] = value
-    }
-    
-    func insert(_ values: [Value]) {
-        values.forEach {
-            insert($0)
-        }
-    }
-    
-    var orderedValues: [Value] {
-        return orderedDictionary.orderedValues
-    }
-    
-    func contains(_ value: Value) -> Bool {
-        return orderedDictionary[value] != nil
-    }
-}
