@@ -3,7 +3,6 @@
 import API
 import Foundation
 import UIKit
-import WeaverDI
 // MARK: - HomeViewController
 protocol HomeViewControllerInputDependencyResolver {
     var movieManager: MovieManaging { get }

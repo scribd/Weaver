@@ -2,7 +2,6 @@
 /// DO NOT EDIT!
 import API
 import Foundation
-import WeaverDI
 // MARK: - ReviewManager
 protocol ReviewManagerInputDependencyResolver {
     var movieAPI: APIProtocol { get }

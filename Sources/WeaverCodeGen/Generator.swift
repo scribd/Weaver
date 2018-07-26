@@ -9,7 +9,6 @@ import Foundation
 import Stencil
 import StencilSwiftKit
 import PathKit
-import WeaverDI
 
 public final class Generator {
     

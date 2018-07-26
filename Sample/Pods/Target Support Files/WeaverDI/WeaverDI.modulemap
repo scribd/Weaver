@@ -1,6 +1,0 @@
-framework module WeaverDI {
-  umbrella header "WeaverDI-umbrella.h"
-
-  export *
-  module * { export * }
-}

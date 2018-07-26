@@ -2,7 +2,6 @@
 /// DO NOT EDIT!
 import API
 import Foundation
-import WeaverDI
 // MARK: - PersonManager
 protocol PersonManagerInputDependencyResolver {
     var movieAPI: APIProtocol { get }

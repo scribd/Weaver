@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import WeaverDI
 import API
 
 @UIApplicationMain

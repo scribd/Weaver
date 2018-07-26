@@ -2,7 +2,6 @@
 /// DO NOT EDIT!
 import Foundation
 import UIKit
-import WeaverDI
 // MARK: - ImageManager
 protocol ImageManagerDependencyResolver {
     var logger: Logger { get }

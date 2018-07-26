@@ -2,7 +2,6 @@
 /// DO NOT EDIT!
 import API
 import UIKit
-import WeaverDI
 // MARK: - AppDelegate
 protocol AppDelegateDependencyResolver {
     var logger: Logger { get }
