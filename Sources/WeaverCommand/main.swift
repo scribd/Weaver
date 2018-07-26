@@ -98,4 +98,4 @@ let main = command(
     }
 }
 
-main.run("0.10.0")
+main.run("0.10.1")
