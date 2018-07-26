@@ -27,9 +27,9 @@ Dependencies were all lazily built. This behavior brought up a lot of retain cyc
 
 ### With v0.10.+:
 
-Dependencies are built upfront, which means that when a dependency container is initialized, it also initialize all its contained dependencies with it. When a class is then built with its dependency container, the dependencies are initialized and ready to use.
+**Dependencies are built upfront**, which means that when a dependency container is initialized, it also initializes all its contained dependencies with it. When a class is then built with its dependency container, the dependencies are already initialized and ready to use. This behavior mimics exactly how dependency injection is usually done manually.
 
-There are few exceptions:
+**There are few exceptions**:
 
-- Transient dependencies are never stored, which means they are build on demand.
-- Weak dependencies are stored weakly, which means they can't be built upfront, since they would get released straight away anyway if they did. They are still lazy loaded, which means the use of weak dependencies in the multi-threaded environment can lead to race conditions.
+- Transient dependencies are never stored, which means they are built on demand.
+- Weak dependencies are stored weakly, which means they can't be built upfront since they would get released right away anyway if they did. They are still lazy loaded, which means **the use of weak dependencies in a multi-threaded environment can lead to race conditions**.
