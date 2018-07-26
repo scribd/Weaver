@@ -11,5 +11,5 @@ $ git clone https://github.com/scribd/Weaver.git
 $ cd Weaver
 $ make install
 $ cd Sample
-$ open Sample.xcworkspace
+$ open Sample.xcodeproj
 ```
