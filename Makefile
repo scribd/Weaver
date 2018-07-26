@@ -25,7 +25,7 @@ package: build
 	cd ./build/package/ && zip -r ../../weaver-$(VERSION).zip ./weaver
 
 codecov: build
-	xcodebuild test -scheme Tests -enableCodeCoverage YES
+	xcodebuild test -scheme WeaverCodeGen -enableCodeCoverage YES
 	bash -c "bash <(curl -s https://codecov.io/bash) -J Weaver -t eaa7c4af-5ca2-4e08-8f07-38a44671e5e0"
 	rm *.coverage.txt
 
