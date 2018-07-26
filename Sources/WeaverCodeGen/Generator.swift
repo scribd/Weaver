@@ -62,6 +62,7 @@ private struct RegistrationViewModel {
     let parameters: [DependencyViewModel]
     let hasBuilder: Bool
     let isTransient: Bool
+    let isWeak: Bool
     
     init(_ dependency: Dependency, graph: Graph) {
         name = dependency.dependencyName
@@ -82,6 +83,7 @@ private struct RegistrationViewModel {
         }
         
         isTransient = dependency.scope == .transient
+        isWeak = dependency.scope == .weak
     }
 }
 

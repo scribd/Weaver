@@ -12,15 +12,16 @@ protocol MovieAPIDependencyResolver {
 }
 final class MovieAPIDependencyContainer: MovieAPIDependencyResolver {
     let urlSession: URLSession
-    var logger: Logger { 
-        return loggerRef.value
-    }
-    private lazy var loggerRef = Instance<Logger>(scope: .graph) { [unowned self] in
-        return Logger()
+    private var _logger: Logger?
+    var logger: Logger {
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
     }
     init(injecting dependencies: MovieAPIInputDependencyResolver) {
         urlSession = dependencies.urlSession
-        _ = loggerRef.value
+        _ = logger
     }
 }
 protocol MovieAPIDependencyInjectable {

@@ -23,7 +23,7 @@ final class HomeViewController: UIViewController {
     // weaver: movieManager <- MovieManaging
     
     // weaver: movieController = MovieViewController <- UIViewController
-    // weaver: movieController.scope = .transient
+    // weaver: movieController.scope = .weak
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()

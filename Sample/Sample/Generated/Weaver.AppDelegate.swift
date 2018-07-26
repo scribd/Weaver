@@ -18,58 +18,65 @@ protocol AppDelegateDependencyResolver {
     var reviewManager: ReviewManaging { get }
 }
 final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
-    var logger: Logger { 
-        return loggerRef.value
+    private var _logger: Logger?
+    var logger: Logger {
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
     }
-    private lazy var loggerRef = Instance<Logger>(scope: .container) { [unowned self] in
-        return Logger()
+    private var _urlSession: URLSession?
+    var urlSession: URLSession {
+        if let value = _urlSession { return value }
+        let value = urlSessionCustomRef()
+        _urlSession = value
+        return value
     }
-    var urlSession: URLSession { 
-        return urlSessionRef.value        
+    private var _movieAPI: APIProtocol?
+    var movieAPI: APIProtocol {
+        if let value = _movieAPI { return value }
+        let value = movieAPICustomRef()
+        _movieAPI = value
+        return value
     }
-    private lazy var urlSessionRef = Instance<URLSession>(scope: .container) { [unowned self] in
-        return self.urlSessionCustomRef()
+    private var _imageManager: ImageManaging?
+    var imageManager: ImageManaging {
+        if let value = _imageManager { return value }
+        let value = imageManagerCustomRef()
+        _imageManager = value
+        return value
     }
-    var movieAPI: APIProtocol { 
-        return movieAPIRef.value        
+    private var _movieManager: MovieManaging?
+    var movieManager: MovieManaging {
+        if let value = _movieManager { return value }
+        let value = movieManagerCustomRef()
+        _movieManager = value
+        return value
     }
-    private lazy var movieAPIRef = Instance<APIProtocol>(scope: .container) { [unowned self] in
-        return self.movieAPICustomRef()
-    }
-    var imageManager: ImageManaging { 
-        return imageManagerRef.value        
-    }
-    private lazy var imageManagerRef = Instance<ImageManaging>(scope: .container) { [unowned self] in
-        return self.imageManagerCustomRef()
-    }
-    var movieManager: MovieManaging { 
-        return movieManagerRef.value        
-    }
-    private lazy var movieManagerRef = Instance<MovieManaging>(scope: .container) { [unowned self] in
-        return self.movieManagerCustomRef()
-    }
-    var homeViewController: UIViewController { 
-        return homeViewControllerRef.value
-    }
-    private lazy var homeViewControllerRef = Instance<UIViewController>(scope: .container) { [unowned self] in
+    private var _homeViewController: UIViewController?
+    var homeViewController: UIViewController {
+        if let value = _homeViewController { return value }
         let dependencies = HomeViewControllerDependencyContainer(injecting: self)
-        return HomeViewController(injecting: dependencies)
+        let value = HomeViewController(injecting: dependencies)
+        _homeViewController = value
+        return value
     }
-    var reviewManager: ReviewManaging { 
-        return reviewManagerRef.value
-    }
-    private lazy var reviewManagerRef = Instance<ReviewManaging>(scope: .container) { [unowned self] in
+    private var _reviewManager: ReviewManaging?
+    var reviewManager: ReviewManaging {
+        if let value = _reviewManager { return value }
         let dependencies = ReviewManagerDependencyContainer(injecting: self)
-        return ReviewManager(injecting: dependencies)
+        let value = ReviewManager(injecting: dependencies)
+        _reviewManager = value
+        return value
     }
     init() {
-        _ = loggerRef.value
-        _ = urlSessionRef.value
-        _ = movieAPIRef.value
-        _ = imageManagerRef.value
-        _ = movieManagerRef.value
-        _ = homeViewControllerRef.value
-        _ = reviewManagerRef.value
+        _ = logger
+        _ = urlSession
+        _ = movieAPI
+        _ = imageManager
+        _ = movieManager
+        _ = homeViewController
+        _ = reviewManager
     }
 }
 extension AppDelegateDependencyContainer: HomeViewControllerInputDependencyResolver {}
