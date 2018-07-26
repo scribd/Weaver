@@ -3,54 +3,53 @@
 import API
 import Foundation
 import UIKit
-import WeaverDI
 // MARK: - MovieViewController
-final class MovieViewControllerDependencyContainer: DependencyContainer {
-    let movieID: UInt
-    let title: String
-    init(parent: Reference<DependencyContainer>? = nil, movieID: UInt, title: String) {
-        self.movieID = movieID
-        self.title = title
-        super.init(parent)
-    }
-    override func registerDependencies(in store: DependencyStore) {
-        store.register(Logger.self, scope: .graph, name: "logger", builder: { (dependencies) in
-            return Logger()
-        })
-        store.register(WSReviewViewController.self, scope: .transient, name: "reviewController", builder: { (dependencies, movieID: UInt) in
-            return WSReviewViewController.makeWSReviewViewController(injecting: dependencies, movieID: movieID)
-        })
-    }
+protocol MovieViewControllerInputDependencyResolver {
+    var movieManager: MovieManaging { get }
+    var imageManager: ImageManaging { get }
+    var reviewManager: ReviewManaging { get }
 }
 protocol MovieViewControllerDependencyResolver {
     var movieID: UInt { get }
     var title: String { get }
-    var logger: Logger { get }
-    func reviewController(movieID: UInt) -> WSReviewViewController
     var movieManager: MovieManaging { get }
     var imageManager: ImageManaging { get }
+    var reviewManager: ReviewManaging { get }
+    var logger: Logger { get }
+    func reviewController(movieID: UInt) -> WSReviewViewController
 }
-extension MovieViewControllerDependencyContainer: MovieViewControllerDependencyResolver {
+final class MovieViewControllerDependencyContainer: MovieViewControllerDependencyResolver {
+    let movieID: UInt
+    let title: String
+    let movieManager: MovieManaging
+    let imageManager: ImageManaging
+    let reviewManager: ReviewManaging
+    private var _logger: Logger?
     var logger: Logger {
-        return resolve(Logger.self, name: "logger")
+        if let value = _logger { return value }
+        let value = Logger()
+        _logger = value
+        return value
     }
+    private var _reviewController: WSReviewViewController?
     func reviewController(movieID: UInt) -> WSReviewViewController {
-        return resolve(WSReviewViewController.self, name: "reviewController", parameter: movieID)
+        if let value = _reviewController { return value }
+        let dependencies = WSReviewViewControllerDependencyContainer(injecting: self, movieID: movieID)
+        let value = WSReviewViewController(injecting: dependencies)
+        _reviewController = value
+        return value
     }
-    var movieManager: MovieManaging {
-        return resolve(MovieManaging.self, name: "movieManager")
-    }
-    var imageManager: ImageManaging {
-        return resolve(ImageManaging.self, name: "imageManager")
+    init(injecting dependencies: MovieViewControllerInputDependencyResolver, movieID: UInt, title: String) {
+        self.movieID = movieID
+        self.title = title
+        movieManager = dependencies.movieManager
+        imageManager = dependencies.imageManager
+        reviewManager = dependencies.reviewManager
+        _ = logger
+        _ = reviewController(movieID: movieID)
     }
 }
-extension MovieViewController {
-    static func makeMovieViewController(injecting parentDependencies: DependencyContainer, movieID: UInt, title: String) -> MovieViewController {
-        let dependencies = MovieViewControllerDependencyContainer(parent: Reference(parentDependencies), movieID: movieID, title: title)
-        return MovieViewController(injecting: dependencies)
-    }
-}
+extension MovieViewControllerDependencyContainer: WSReviewViewControllerInputDependencyResolver {}
 protocol MovieViewControllerDependencyInjectable {
     init(injecting dependencies: MovieViewControllerDependencyResolver)
 }
-extension MovieViewController: MovieViewControllerDependencyInjectable {}

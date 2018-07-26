@@ -1,4 +1,4 @@
-current_version=`/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" WeaverDI.xcodeproj/WeaverCodeGen_Info.plist`
+current_version=`/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Weaver.xcodeproj/WeaverCodeGen_Info.plist`
 
 next_version=$1
 if [ -z $next_version ]; then
@@ -8,9 +8,7 @@ fi
 echo $next_version
 
 sed -i '' "s/${current_version//./\\.}/$next_version/g" \
-WeaverDI.xcodeproj/WeaverDI_Info.plist \
-WeaverDI.xcodeproj/WeaverCodeGen_Info.plist \
-WeaverDI.podspec \
+Weaver.xcodeproj/WeaverCodeGen_Info.plist \
 Resources/dependency_resolver.stencil \
 Tests/WeaverCodeGenTests/GeneratorTests.swift \
 Sources/WeaverCommand/main.swift

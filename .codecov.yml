@@ -2,7 +2,6 @@ coverage:
   ignore:
     - Sources/WeaverCommand
     - "Sources/WeaverCodeGen/*.generated.swift"
-    - Sources/WeaverDI/Instance.swift
     - Tests
   status:
     patch: false

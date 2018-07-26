@@ -35,59 +35,30 @@ Weaver is a declarative, easy-to-use and safe Dependency Injection framework for
 
 - **Declarative** because it allows developers to **declare dependencies via annotations** directly in the Swift code.
 - **Easy-to-use** because it **generates the necessary boilerplate code** to inject dependencies into Swift types.
-- **Safe** because it **validates the dependency graph at compile time** and outputs a nice Xcode error when something's wrong.
+- **Safe** because **it's all happening at compile time**. If it compiles, it works.
 
 ## How does Weaver work?
 
-Even though Weaver makes dependency injection work out of the box, it's important to know what it does under the hood. There are two phases to be aware of; compile time and run time.
-
-### At compile time
-
 ```
-                                                    |-> link() -> dependency graph -> validate() -> valid/invalid 
-swift files -> scan() -> [Token] -> parse() -> AST -| 
-                                                    |-> generate() -> source code 
+                                                                         |-> validate() -> valid/invalid 
+swift files -> scan() -> [Token] -> parse() -> AST -> link() -> Graph -> | 
+                                                                         |-> generate() -> source code 
 
 ```
 
-Weaver's command line tool scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's [SourceKit](https://github.com/apple/swift/tree/master/tools/SourceKit), making this step pretty reliable.
+Weaver scans the Swift sources of the project, looking for annotations, and generates an AST (abstract syntax tree). It uses [SourceKitten](https://github.com/jpsim/SourceKitten) which is backed by Apple's [SourceKit](https://github.com/apple/swift/tree/master/tools/SourceKit), making this step pretty reliable.
 
-This AST is then used to generate a dependency graph on which a bunch of safety checks are performed in order to make sure the code won't crash at run time. It checks for unresolvable dependencies and unsolvable cyclic dependencies. If any issue is found, no code is being generated, which means that the project will fail to compile.
+Then this AST goes through a linking phase, which generates a dependency graph.
 
-The same AST is also used to generate the boilerplate code. It generates one dependency container per class/struct with injectable dependencies. It also generates a bunch of extensions and protocols in order to make the dependency injection almost transparent for the developer.
+A bunch of safety checks are then performed on the dependency graph. It checks for unresolvable dependencies and unsolvable cyclic dependencies. Issues are friendly reported in XCode to make their correction easier.
 
-### At run time
-
-Weaver implements a lightweight DI Container object which is able to register and resolve dependencies based on their scope, protocol or concrete type, name and parameters. Each container can have a parent, allowing to resolve dependencies throughout a hierarchy of containers.
-
-When an object registers a dependency, its associated DI Container stores a builder (and sometimes an instance). When another object declares a reference to this same dependency, its associated DI Container declares an accessor, which tries to resolve the dependency. Resolving a dependency basically means to look for a builder/instance while backtracking the hierarchy of containers. If no dependency is found or if this process gets trapped into an infinite recursion, it will crash at runtime, which is why checking the dependency graph at compile time is extremely important.
+Finally, the same dependency graph is used to generate the boilerplate code. It generates one dependency container per class/struct with injectable dependencies. It also generates a bunch of extensions and protocols in order to make the dependency injection almost transparent for the developer.
 
 ## Installation
 
-Weaver comes in 3 parts:
-1. A Swift framework to include into your project
-2. A command line tool to install on your machine
-3. A build phase to add to your project
+### (1) - Weaver command
 
-### (1) - Weaver framework installation
-
-Weaver's Swift framework is available with `CocoaPods`, `Carthage` and `Swift Package Manager`.
-
-#### CocoaPods
-
-Add `pod 'WeaverDI', '~> 0.9.12'` to the `Podfile`.
-
-#### Carthage
-
-Add `github "scribd/Weaver" ~> 0.9.12` to the `Cartfile`.
-
-#### SwiftPM
-
-Add `.package(url: "https://github.com/scribd/Weaver.git", from: "0.9.12")` to the dependencies section of the `Package.swift` file.
-
-### (2) - Weaver command line tool installation
-
-The Weaver command line tool can be installed using `Homebrew` or manually.
+The Weaver can be installed using `Homebrew` or manually.
 
 #### Binary form
 
@@ -126,10 +97,9 @@ Arguments:
 Options:
     --output_path [default: .] - Where the swift files will be generated.
     --template_path - Custom template path.
-    --unsafe [default: false]
 ```
 
-### (3) - Weaver build phase
+### (2) - Weaver build phase
 
 In Xcode, add the following command to a command line build phase: 
 
@@ -138,8 +108,6 @@ weaver --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT} -name '*.sw
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
-
-**Warning - Using `--unsafe` is not recommended. It will deactivate the graph validation, meaning the generated code could crash if the dependency graph is invalid.** Only set it to false if the graph validation prevents the project from compiling even though it should not. If you find yourself in that situation, please, feel free to file a bug.
 
 ## Basic Usage
 

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import WeaverDI
 
 // MARK: - Error
 

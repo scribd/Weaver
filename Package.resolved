@@ -29,15 +29,6 @@
         }
       },
       {
-        "package": "Differ",
-        "repositoryURL": "https://github.com/tonyarnold/Differ.git",
-        "state": {
-          "branch": null,
-          "revision": "a3252fbc44b6fbc2a87539dc555a8e014233fe20",
-          "version": "1.2.3"
-        }
-      },
-      {
         "package": "Nimble",
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
@@ -107,6 +98,15 @@
           "branch": null,
           "revision": "c2e25f25acfbe24442809c055141d8323af8f6cc",
           "version": "0.11.0"
+        }
+      },
+      {
+        "package": "StencilSwiftKit",
+        "repositoryURL": "https://github.com/SwiftGen/StencilSwiftKit.git",
+        "state": {
+          "branch": null,
+          "revision": "f15c445ec3c7c5ad44814285e828330bc255bda3",
+          "version": "2.5.0"
         }
       },
       {

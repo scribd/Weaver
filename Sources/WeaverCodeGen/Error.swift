@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import WeaverDI
 
 enum TokenError: Error, AutoEquatable {
     case invalidAnnotation(String)

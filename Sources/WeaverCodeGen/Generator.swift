@@ -7,31 +7,20 @@
 
 import Foundation
 import Stencil
+import StencilSwiftKit
 import PathKit
-import WeaverDI
 
 public final class Generator {
     
     private let graph: Graph
 
-    private let templateDirPath: Path
-    private let templateName: String
+    private let templatePath: Path
     
     public init(graph: Graph, template path: Path? = nil) throws {
-        
-        self.graph = graph
 
-        if let path = path {
-            var components = path.components
-            guard let templateName = components.popLast() else {
-                throw GeneratorError.invalidTemplatePath(path: path.description)
-            }
-            self.templateName = templateName
-            templateDirPath = Path(components: components)
-        } else {
-            templateName = "Resources/dependency_resolver.stencil"
-            templateDirPath = Path("/usr/local/share/weaver")
-        }
+        self.graph = graph
+        
+        templatePath = path ?? Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
@@ -43,20 +32,24 @@ public final class Generator {
             guard !dependencyContainers.isEmpty else {
                 return (file: file, data: nil)
             }
+
+            let templateString: String = try templatePath.read()
+            let environment = stencilSwiftEnvironment()
             
-            let fileLoader = FileSystemLoader(paths: [templateDirPath])
-            let environment = Environment(loader: fileLoader)
+            let templateClass = StencilSwiftTemplate(templateString: templateString,
+                                                     environment: environment,
+                                                     name: nil)
             
-            let context: [String: Any] = ["resolvers": dependencyContainers,
+            let context: [String: Any] = ["dependencyContainers": dependencyContainers,
                                           "imports": graph.importsByFile[file] ?? []]
-            let string = try environment.renderTemplate(name: templateName, context: context)
+            let string = try templateClass.render(context)
             
             return (file: file, data: string.compacted())
         }
     }
 }
 
-// MARK: - Template Model
+// MARK: - ViewModels
 
 private struct RegistrationViewModel {
     
@@ -67,6 +60,8 @@ private struct RegistrationViewModel {
     let customRef: Bool
     let parameters: [DependencyViewModel]
     let hasBuilder: Bool
+    let isTransient: Bool
+    let isWeak: Bool
     
     init(_ dependency: Dependency, graph: Graph) {
         name = dependency.dependencyName
@@ -85,6 +80,9 @@ private struct RegistrationViewModel {
             parameters = []
             hasBuilder = false
         }
+        
+        isTransient = dependency.scope == .transient
+        isWeak = dependency.scope == .weak
     }
 }
 
@@ -138,47 +136,23 @@ private struct DependencyContainerViewModel {
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
-    let isIsolated: Bool
+    let injectableDependencies: [DependencyContainerViewModel]?
     
-    let publicReferences: [DependencyViewModel]
-    let internalReferences: [DependencyViewModel]
-    
-    init?(_ dependencyContainer: DependencyContainer, graph: Graph) {
+    init?(_ dependencyContainer: DependencyContainer, graph: Graph, depth: Int = 0) {
 
         guard let type = dependencyContainer.type, dependencyContainer.hasDependencies else {
             return nil
         }
+        
         targetType = type
-        registrations = dependencyContainer.registrations.orderedValues.map {
-            RegistrationViewModel($0, graph: graph)
-        }
-        references = dependencyContainer.orderedDependencies.map {
-            DependencyViewModel($0, graph: graph)
-        }
-        parameters = dependencyContainer.parameters.map {
-            DependencyViewModel($0, graph: graph)
-        }
-        
+        registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, graph: graph) }
+        references = dependencyContainer.allReferences.map { DependencyViewModel($0, graph: graph) }
+        parameters = dependencyContainer.parameters.map { DependencyViewModel($0, graph: graph)}
         enclosingTypes = dependencyContainer.enclosingTypes
-        
-        let hasNonCustomReferences = dependencyContainer.references.orderedValues.contains {
-            !$0.configuration.customRef
-        }
-        let hasParameters = !dependencyContainer.parameters.isEmpty
-        isRoot = !hasNonCustomReferences && !hasParameters
-        
-        switch dependencyContainer.accessLevel {
-        case .internal:
-            isPublic = false
-        case .public:
-            isPublic = true
-        }
-        
+        isRoot = dependencyContainer.isRoot
+        isPublic = dependencyContainer.isPublic
         doesSupportObjc = dependencyContainer.doesSupportObjc
-        isIsolated = dependencyContainer.configuration.isIsolated
-        
-        publicReferences = references.filter { $0.isPublic }
-        internalReferences = references.filter { !$0.isPublic }
+        injectableDependencies = dependencyContainer.injectableDependencies(graph: graph, depth: depth)
     }
 }
 
@@ -197,6 +171,53 @@ private extension DependencyContainer {
     
     var hasDependencies: Bool {
         return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.isEmpty
+    }
+    
+    var allReferences: [Reference] {
+        var visitedDependencyContainters = Set<DependencyContainer>()
+        return collectAllReferences(&visitedDependencyContainters)
+    }
+    
+    private func collectAllReferences(_ visitedDependencyContainers: inout Set<DependencyContainer>) -> [Reference] {
+        guard !visitedDependencyContainers.contains(self) else { return [] }
+        visitedDependencyContainers.insert(self)
+
+        let directReferences = references.orderedValues
+        let indirectReferences = registrations.orderedValues.flatMap { $0.target.collectAllReferences(&visitedDependencyContainers) }
+
+        let referencesByName = OrderedDictionary<String, Reference>()
+        (directReferences + indirectReferences).forEach {
+            referencesByName[$0.dependencyName] = $0
+        }
+        
+        let registrationNames = Set(registrations.orderedValues.map { $0.dependencyName })
+        return referencesByName.orderedValues.filter {
+            !registrationNames.contains($0.dependencyName)
+        }
+    }
+    
+    var isRoot: Bool {
+        let hasNonCustomReferences = references.orderedValues.contains {
+            !$0.configuration.customRef
+        }
+        let hasParameters = !parameters.isEmpty
+        return !hasNonCustomReferences && !hasParameters
+    }
+    
+    var isPublic: Bool {
+        switch accessLevel {
+        case .internal:
+            return false
+        case .public:
+            return true
+        }
+    }
+    
+    func injectableDependencies(graph: Graph, depth: Int) -> [DependencyContainerViewModel]? {
+        guard depth == 0 else { return nil }
+        return registrations.orderedValues.compactMap {
+            DependencyContainerViewModel($0.target, graph: graph, depth: depth + 1)
+        }
     }
 }
 

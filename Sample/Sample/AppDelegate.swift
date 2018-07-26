@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import WeaverDI
 import API
 
 @UIApplicationMain
@@ -15,7 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    private let dependencies = AppDelegateDependencyContainer()
+    private let dependencies: AppDelegateDependencyResolver = AppDelegateDependencyContainer()
     
     // weaver: logger = Logger
     // weaver: logger.scope = .container
@@ -45,7 +44,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         window = UIWindow()
-
+        
         window?.rootViewController = UINavigationController(rootViewController: dependencies.homeViewController)
         window?.makeKeyAndVisible()
         

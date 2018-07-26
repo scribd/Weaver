@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import WeaverDI
 
 public final class Graph {
     
