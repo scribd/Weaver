@@ -29,29 +29,7 @@ enum Scope {
 
 extension Scope {
     
-    var isWeak: Bool {
-        switch self {
-        case .weak:
-            return true
-        case .transient,
-             .graph,
-             .container:
-            return false
-        }
-    }
-    
-    var isTransient: Bool {
-        switch self {
-        case .transient:
-            return true
-        case .graph,
-             .weak,
-             .container:
-            return false
-        }
-    }
-    
-    public var allowsAccessFromChildren: Bool {
+    var allowsAccessFromChildren: Bool {
         switch self {
         case .weak,
              .container:
