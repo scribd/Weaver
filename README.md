@@ -315,14 +315,14 @@ Example:
 ##### Configuration Attributes:
 - `isIsolated: Bool` (default: `false`): any object setting this to true is considered by Weaver as an object which isn't used in the project. An object flagged as isolated can only have isolated dependents. This attribute is useful to develop a feature wihout all the dependencies setup in the project.
 
+## Migration guides
+
+- [From weaver 0.9.+ to 0.10.+](./Documentation/Migration_from_0.9.+_to_0.10.+.md)
+
 ## More reading...
 
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
 - [Dependency Injection Demisifyied, James Shore, 03/22/2006](http://www.jamesshore.com/Blog/Dependency-Injection-Demystified.html) ¹
-
-## Credits
-
-The DI container features of Weaver are inspired by [Swinject](https://github.com/Swinject/Swinject).
 
 ## Contributing
 
