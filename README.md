@@ -4,8 +4,6 @@
 
 [![Build Status](https://travis-ci.com/scribd/Weaver.svg?branch=master)](https://travis-ci.com/scribd/Weaver)
 [![codecov](https://codecov.io/gh/scribd/Weaver/branch/master/graph/badge.svg)](https://codecov.io/gh/scribd/Weaver) 
-[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
-[![CocoaPods Version](https://img.shields.io/cocoapods/v/WeaverDI.svg?style=flat)](http://cocoapods.org/pods/WeaverDI)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/scribd-weaver/Lobby)
 
 ![demo](weaver.gif)
