@@ -370,7 +370,9 @@ public final class Linker {
 
 // MARK: - Graph
 
-/// Object the graph of dependencies.
+/// Representation of the dependency graph.
+///
+/// - Note: Indexes the dependency containers and dependencies.
 public final class DependencyGraph {
     
     /// `DependencyContainer`s grouped by name and iterable in order of appearance in the source code.
