@@ -33,9 +33,9 @@ final class MyService {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             XCTAssertNil(try generator.generate().first)
             
         } catch {
@@ -62,9 +62,9 @@ final class Manager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -131,9 +131,9 @@ final class PersonManager: PersonManaging {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -188,9 +188,9 @@ final class PersonManager: PersonManaging {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -241,9 +241,9 @@ final class PersonManager: PersonManaging {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -309,9 +309,9 @@ final class MyService {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -374,9 +374,9 @@ public final class API {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
 
             let (_ , actual) = try generator.generate().first!
             
@@ -451,9 +451,9 @@ class AnotherService {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -497,9 +497,9 @@ public final class MovieManager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -568,9 +568,9 @@ final class Logger<T> {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """
@@ -648,9 +648,9 @@ final class ReviewViewController {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let ast = try parser.parse()
-            let graph = try Linker(syntaxTrees: [ast]).graph
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
             
-            let generator = try Generator(graph: graph, template: templatePath)
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
             let (_ , actual) = try generator.generate().first!
             
             let expected = """

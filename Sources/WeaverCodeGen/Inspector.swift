@@ -11,17 +11,17 @@ import Foundation
 
 public final class Inspector {
 
-    private let graph: Graph
+    private let dependencyGraph: DependencyGraph
     
     private lazy var resolutionCache = Set<ResolutionCacheIndex>()
     private lazy var buildCache = Set<BuildCacheIndex>()
     
-    public init(graph: Graph) {
-        self.graph = graph
+    public init(dependencyGraph: DependencyGraph) {
+        self.dependencyGraph = dependencyGraph
     }
     
     public func validate() throws {
-        for dependency in graph.dependencies {
+        for dependency in dependencyGraph.dependencies {
             try dependency.resolve(with: &resolutionCache)
             try dependency.build(with: &buildCache)
         }
@@ -35,9 +35,9 @@ private extension ResolvableDependency {
     func resolve(with cache: inout Set<ResolutionCacheIndex>) throws {
         
         if source.accessLevel == .public && source.sources.isEmpty {
-            guard target.referredTypes.count <= 1 else {
+            guard target.referencedTypes.count <= 1 else {
                 let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [])
-                throw InspectorError.invalidGraph(printableDependency, underlyingError: underlyingError)
+                throw InspectorError.invalidDependencyGraph(printableDependency, underlyingError: underlyingError)
             }
             return
         }
@@ -58,7 +58,7 @@ private extension ResolvableDependency {
             }
             
         } catch let error as InspectorAnalysisError {
-            throw InspectorError.invalidGraph(printableDependency, underlyingError: error)
+            throw InspectorError.invalidDependencyGraph(printableDependency, underlyingError: error)
         }
     }
 }
@@ -182,7 +182,7 @@ private extension DependencyContainer {
                            history: [InspectorAnalysisHistoryRecord]) throws {
 
         if visitedDependencyContainers.contains(self) {
-            throw InspectorError.invalidGraph(sourceDependency.printableDependency,
+            throw InspectorError.invalidDependencyGraph(sourceDependency.printableDependency,
                                               underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
         }
         visitedDependencyContainers.insert(self)

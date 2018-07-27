@@ -14,7 +14,7 @@ import SourceKittenFramework
 final class LexerTests: XCTestCase {
     
     func test_tokenizer_should_generate_a_valid_token_list_with_a_type_declaration() {
-
+        
         let file = File(contents: """
 
 final class MyService {
@@ -23,7 +23,7 @@ final class MyService {
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
-
+            
             if tokens.count == 2 {
                 XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
                     value: InjectableType(type: Type(name: "MyService")),
@@ -179,7 +179,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                         name: "api",
                         type: Type(name: "API"),
                         protocolType: Type(name: "APIProtocol")
-                    ), offset: 1, length: 35, line: 1)
+                ), offset: 1, length: 35, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -205,7 +205,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                         name: "api",
                         type: Type(name: "API"),
                         protocolType: nil
-                    ), offset: 1, length: 20, line: 1)
+                ), offset: 1, length: 20, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -231,7 +231,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                         name: "api",
                         type: Type(name: "API", isOptional: true),
                         protocolType: Type(name: "APIProtocol", isOptional: true)
-                    ), offset: 1, length: 37, line: 1)
+                ), offset: 1, length: 37, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -257,7 +257,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                         name: "request",
                         type: Type(name: "Request", genericNames: ["T", "P"]),
                         protocolType: Type(name: "APIRequest", genericNames: ["T", "P"])
-                    ), offset: 1, length: 54, line: 1)
+                ), offset: 1, length: 54, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -283,7 +283,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                         name: "request",
                         type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true),
                         protocolType: Type(name: "APIRequest", genericNames: ["T", "P"], isOptional: true)
-                    ), offset: 1, length: 56, line: 1)
+                ), offset: 1, length: 56, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -379,7 +379,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                     value: ReferenceAnnotation(
                         name: "request",
                         type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true)
-                    ), offset: 1, length: 36, line: 1)
+                ), offset: 1, length: 36, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -473,7 +473,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                     value: ParameterAnnotation(
                         name: "request",
                         type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true)
-                    ), offset: 1, length: 36, line: 1)
+                ), offset: 1, length: 36, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
@@ -490,7 +490,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
 // weaver: api.scope = .graph
 """)
         let lexer = Lexer(file, fileName: "test.swift")
-
+        
         do {
             let tokens = try lexer.tokenize()
             
@@ -649,7 +649,7 @@ func ignoredFunc() {
 }
 """)
         let lexer = Lexer(file, fileName: "test.swift")
-
+        
         do {
             let tokens = try lexer.tokenize()
             XCTAssertTrue(tokens.isEmpty)
@@ -703,7 +703,7 @@ final class MyService {
 }
 """)
         let lexer = Lexer(file, fileName: "test.swift")
-
+        
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
@@ -741,7 +741,7 @@ final class MyService {
 }
 """)
         let lexer = Lexer(file, fileName: "test.swift")
-
+        
         do {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")

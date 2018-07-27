@@ -22,31 +22,31 @@ public indirect enum Expr: AutoEquatable {
 // MARK: - Sequence
 
 struct ExprSequence: Sequence, IteratorProtocol {
-    
+
     private var stack: [[Expr]]
-    
+
     init(exprs: [Expr]) {
         self.stack = [exprs]
     }
-    
+
     mutating func next() -> Expr? {
         guard let exprs = stack.popLast() else {
             return nil
         }
-        
+
         guard let expr = exprs.first else {
             return next()
         }
-        
+
         var mutableExprs = exprs
         mutableExprs.removeFirst()
         stack.append(mutableExprs)
-        
+
         switch expr {
         case .file(let exprs, _, _),
              .typeDeclaration(_, let exprs):
             stack.append(exprs)
-            
+
         case .referenceAnnotation,
              .registerAnnotation,
              .scopeAnnotation,
@@ -54,7 +54,7 @@ struct ExprSequence: Sequence, IteratorProtocol {
              .configurationAnnotation:
             break
         }
-        
+
         return expr
     }
 }

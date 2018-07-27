@@ -13,7 +13,7 @@ import SourceKittenFramework
 
 final class InspectorTests: XCTestCase {
     
-    func test_inspector_should_build_a_valid_graph() {
+    func test_inspector_should_build_a_valid_dependency_graph() {
         
         let file = File(contents: """
 final class API {
@@ -52,15 +52,15 @@ final class App {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_because_of_an_unresolvable_dependency() {
+    func test_inspector_should_build_an_invalid_dependency_graph_because_of_an_unresolvable_dependency() {
         let file = File(contents: """
 final class API {
   // weaver: sessionManager <- SessionManagerProtocol
@@ -77,25 +77,25 @@ final class App {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                  name: "sessionManager",
-                                                                                  type: nil),
-                                                              underlyingError: .unresolvableDependency(history: [
-                                                                InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 4, file: "test.swift"),
-                                                                                                                                      name: "sessionManager",
-                                                                                                                                      type: Type(name: "App")))
-                                                                ])))
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
+                                                                                            name: "sessionManager",
+                                                                                            type: nil),
+                                                                        underlyingError: .unresolvableDependency(history: [
+                                                                            InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 4, file: "test.swift"),
+                                                                                                                                                  name: "sessionManager",
+                                                                                                                                                  type: Type(name: "App")))
+                                                                            ])))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_because_of_a_cyclic_dependency() {
+    func test_inspector_should_build_an_invalid_dependency_graph_because_of_a_cyclic_dependency() {
         let file = File(contents: """
 final class API {
     // weaver: session = Session <- SessionProtocol
@@ -122,8 +122,8 @@ final class SessionManager {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -131,17 +131,17 @@ final class SessionManager {
                 InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 13, file: "test.swift"), type: Type(name: "SessionManager")), stepCount: 0),
                 InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 0, file: "test.swift"), type: Type(name: "API")), stepCount: 1),
                 InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 5, file: "test.swift"), type: Type(name: "Session")), stepCount: 2)
-            ])
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 9, file: "test.swift"),
-                                                                                  name: "sessionManager1",
-                                                                                  type: Type(name: "SessionManager")),
-                                                              underlyingError: underlyingError))
+                ])
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 9, file: "test.swift"),
+                                                                                            name: "sessionManager1",
+                                                                                            type: Type(name: "SessionManager")),
+                                                                        underlyingError: underlyingError))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
-
-    func test_inspector_should_build_a_valid_graph_with_a_lazy_loaded_dependency_cycle() {
+    
+    func test_inspector_should_build_a_valid_dependency_graph_with_a_lazy_loaded_dependency_cycle() {
         let file = File(contents: """
 final class API {
     // weaver: session = Session <- SessionProtocol
@@ -168,15 +168,15 @@ final class SessionManager {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_an_unresolvable_ref_with_custom_ref_set_to_true() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_an_unresolvable_ref_with_custom_ref_set_to_true() {
         let file = File(contents: """
 final class API {
     // weaver: api <- APIProtocol
@@ -190,15 +190,15 @@ final class API {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_an_unbuildable_dependency_with_custom_ref_set_to_true() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_an_unbuildable_dependency_with_custom_ref_set_to_true() {
         let file = File(contents: """
 final class API {
     // weaver: api = API <- APIProtocol
@@ -212,15 +212,15 @@ final class API {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_a_more_complex_custom_ref_resolution() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_a_more_complex_custom_ref_resolution() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: appDelegate = AppDelegateProtocol
@@ -243,15 +243,15 @@ final class ViewController {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_because_of_a_custom_ref_not_shared_with_children() {
+    func test_inspector_should_build_an_invalid_dependency_graph_because_of_a_custom_ref_not_shared_with_children() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: appDelegate <- AppDelegateProtocol
@@ -273,8 +273,8 @@ final class ViewController {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -282,17 +282,17 @@ final class ViewController {
                 InspectorAnalysisHistoryRecord.foundUnaccessibleDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
                                                                                                name: "appDelegate",
                                                                                                type: nil))
-            ])
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 10, file: "test.swift"),
-                                                                                  name: "appDelegate",
-                                                                                  type: nil),
-                                                              underlyingError: underlyingError))
+                ])
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 10, file: "test.swift"),
+                                                                                            name: "appDelegate",
+                                                                                            type: nil),
+                                                                        underlyingError: underlyingError))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_two_references_of_the_same_type() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_two_references_of_the_same_type() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: viewController1 = ViewController1 <- UIViewController
@@ -321,15 +321,15 @@ final class Coordinator {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_because_of_an_incorrectly_named_reference() {
+    func test_inspector_should_build_an_invalid_dependency_graph_because_of_an_incorrectly_named_reference() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: viewController1 = ViewController1 <- UIViewController
@@ -355,8 +355,8 @@ final class Coordinator {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -364,17 +364,17 @@ final class Coordinator {
                 InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 0, file: "test.swift"),
                                                                                       name: "viewController3",
                                                                                       type: Type(name: "AppDelegate")))
-            ])
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 14, file: "test.swift"),
-                                                                                  name: "viewController3",
-                                                                                  type: nil),
-                                                              underlyingError: underlyingError))
+                ])
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 14, file: "test.swift"),
+                                                                                            name: "viewController3",
+                                                                                            type: nil),
+                                                                        underlyingError: underlyingError))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_references_on_several_levels() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_references_on_several_levels() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: urlSession = URLSession
@@ -422,15 +422,15 @@ final class MovieAPI: APIProtocol {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_two_isolated_objects() {
+    func test_inspector_should_build_a_valid_dependencyGraph_with_two_isolated_objects() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: urlSession = URLSession
@@ -479,15 +479,15 @@ final class MovieAPI: APIProtocol {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_with_an_object_flagged_as_isolated_with_a_non_isolated_dependent() {
+    func test_inspector_should_build_an_invalid_dependency_graph_with_an_object_flagged_as_isolated_with_a_non_isolated_dependent() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: urlSession = URLSession
@@ -537,24 +537,24 @@ final class MovieAPI: APIProtocol {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
             let underlyingError = InspectorAnalysisError.isolatedResolverCannotHaveReferents(type: Type(name: "HomeViewController"), referents: [
                 PrintableResolver(fileLocation: FileLocation(line: 0, file: "test.swift"), type: Type(name: "AppDelegate"))
-            ])
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 34, file: "test.swift"),
-                                                                                  name: "movieAPI",
-                                                                                  type: Type(name: "MovieAPI")),
-                                                              underlyingError: underlyingError))
+                ])
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 34, file: "test.swift"),
+                                                                                            name: "movieAPI",
+                                                                                            type: Type(name: "MovieAPI")),
+                                                                        underlyingError: underlyingError))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_with_an_unresolvable_dependency_on_two_levels() {
+    func test_inspector_should_build_an_invalid_dependency_graph_with_an_unresolvable_dependency_on_two_levels() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: homeViewController = HomeViewController <- UIViewController
@@ -577,8 +577,8 @@ final class MovieViewController: UIViewController {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
@@ -589,17 +589,17 @@ final class MovieViewController: UIViewController {
                 InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 0, file: "test.swift"),
                                                                                       name: "urlSession",
                                                                                       type: Type(name: "AppDelegate")))
-            ])
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 11, file: "test.swift"),
-                                                                                  name: "urlSession",
-                                                                                  type: nil),
-                                                              underlyingError: underlyingError))
+                ])
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 11, file: "test.swift"),
+                                                                                            name: "urlSession",
+                                                                                            type: nil),
+                                                                        underlyingError: underlyingError))
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_a_public_type_with_no_dependents() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_a_public_type_with_no_dependents() {
         let file = File(contents: """
 public final class MovieViewController: UIViewController {
     // weaver: movieManager <- MovieManaging
@@ -612,15 +612,15 @@ public final class MovieViewController: UIViewController {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_with_an_internal_type_with_no_dependents() {
+    func test_inspector_should_build_an_invalid_dependency_graph_with_an_internal_type_with_no_dependents() {
         let file = File(contents: """
 final class MovieViewController: UIViewController {
     // weaver: movieManager <- MovieManaging
@@ -633,21 +633,21 @@ final class MovieViewController: UIViewController {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                  name: "movieManager",
-                                                                                  type: nil),
-                                                              underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
+                                                                                            name: "movieManager",
+                                                                                            type: nil),
+                                                                        underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_a_valid_graph_with_an_internal_type_accessing_to_a_public_reference() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_an_internal_type_accessing_to_a_public_reference() {
         let file = File(contents: """
 public final class MovieViewController: UIViewController {
     // weaver: logger <- Logger<String>
@@ -665,15 +665,15 @@ final class MovieManager {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_an_invalid_graph_with_an_internal_type_accessing_to_a_public_reference_with_the_wrong_type() {
+    func test_inspector_should_build_an_invalid_dependency_graph_with_an_internal_type_accessing_to_a_public_reference_with_the_wrong_type() {
         let file = File(contents: """
 public final class MovieViewController: UIViewController {
     // weaver: logger <- Logger<Int>
@@ -691,15 +691,15 @@ final class MovieManager {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(graph: linker.graph)
-
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                  name: "logger",
-                                                                                  type: nil),
-                                                              underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
+                                                                                            name: "logger",
+                                                                                            type: nil),
+                                                                        underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

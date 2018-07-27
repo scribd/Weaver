@@ -12,22 +12,22 @@ import PathKit
 
 public final class Generator {
     
-    private let graph: Graph
+    private let dependencyGraph: DependencyGraph
 
     private let templatePath: Path
     
-    public init(graph: Graph, template path: Path? = nil) throws {
+    public init(dependencyGraph: DependencyGraph, template path: Path? = nil) throws {
 
-        self.graph = graph
+        self.dependencyGraph = dependencyGraph
         
         templatePath = path ?? Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
 
-        return try graph.dependencyContainersByFile.orderedKeyValues.map { (file, dependencyContainers) in
+        return try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { (file, dependencyContainers) in
             
-            let dependencyContainers = dependencyContainers.compactMap { DependencyContainerViewModel($0, graph: graph) }
+            let dependencyContainers = dependencyContainers.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
 
             guard !dependencyContainers.isEmpty else {
                 return (file: file, data: nil)
@@ -41,7 +41,7 @@ public final class Generator {
                                                      name: nil)
             
             let context: [String: Any] = ["dependencyContainers": dependencyContainers,
-                                          "imports": graph.importsByFile[file] ?? []]
+                                          "imports": dependencyGraph.importsByFile[file] ?? []]
             let string = try templateClass.render(context)
             
             return (file: file, data: string.compacted())
@@ -63,7 +63,7 @@ private struct RegistrationViewModel {
     let isTransient: Bool
     let isWeak: Bool
     
-    init(_ dependency: Dependency, graph: Graph) {
+    init(_ dependency: Dependency, dependencyGraph: DependencyGraph) {
         name = dependency.dependencyName
         type = dependency.type
         abstractType = dependency.abstractType
@@ -73,8 +73,8 @@ private struct RegistrationViewModel {
                 
         customRef = dependency.configuration.customRef
         
-        if let dependencyContainer = graph.dependencyContainersByType[dependency.type.index] {
-            parameters = dependencyContainer.parameters.map { DependencyViewModel($0, graph: graph) }
+        if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {
+            parameters = dependencyContainer.parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
             hasBuilder = !dependencyContainer.parameters.isEmpty || !dependencyContainer.references.orderedKeys.isEmpty
         } else {
             parameters = []
@@ -91,37 +91,26 @@ private struct DependencyViewModel {
     let name: String
     let type: Type
     let abstractType: Type
-    let isPublic: Bool
     let parameters: [DependencyViewModel]
 
-    init(_ dependency: Dependency, graph: Graph) {
+    init(_ dependency: Dependency, dependencyGraph: DependencyGraph) {
         
         name = dependency.dependencyName
         type = dependency.type
         abstractType = dependency.abstractType
         
-        switch dependency {
-        case is Registration:
-            isPublic = false
-        case is Reference,
-             is Parameter:
-            isPublic = true
-        default:
-            isPublic = false
-        }
-
-        let parameters = graph.dependencyContainersByType[dependency.type.index]?.parameters ?? []
-        if parameters.isEmpty, let types = graph.typesByName[name] {
+        let parameters = dependencyGraph.dependencyContainersByType[dependency.type.index]?.parameters ?? []
+        if parameters.isEmpty, let types = dependencyGraph.typesByName[name] {
             var _parameters = [DependencyViewModel]()
             for type in types {
-                if let parameters = graph.dependencyContainersByType[type.index]?.parameters {
-                    _parameters = parameters.map { DependencyViewModel($0, graph: graph) }
+                if let parameters = dependencyGraph.dependencyContainersByType[type.index]?.parameters {
+                    _parameters = parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
                     break
                 }
             }
             self.parameters = _parameters
         } else {
-            self.parameters = parameters.map { DependencyViewModel($0, graph: graph) }
+            self.parameters = parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
         }
     }
 }
@@ -132,27 +121,27 @@ private struct DependencyContainerViewModel {
     let registrations: [RegistrationViewModel]
     let references: [DependencyViewModel]
     let parameters: [DependencyViewModel]
-    let enclosingTypes: [Type]?
+    let embeddingTypes: [Type]?
     let isRoot: Bool
     let isPublic: Bool
     let doesSupportObjc: Bool
     let injectableDependencies: [DependencyContainerViewModel]?
     
-    init?(_ dependencyContainer: DependencyContainer, graph: Graph, depth: Int = 0) {
+    init?(_ dependencyContainer: DependencyContainer, dependencyGraph: DependencyGraph, depth: Int = 0) {
 
         guard let type = dependencyContainer.type, dependencyContainer.hasDependencies else {
             return nil
         }
         
         targetType = type
-        registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, graph: graph) }
-        references = dependencyContainer.allReferences.map { DependencyViewModel($0, graph: graph) }
-        parameters = dependencyContainer.parameters.map { DependencyViewModel($0, graph: graph)}
-        enclosingTypes = dependencyContainer.enclosingTypes
+        registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, dependencyGraph: dependencyGraph) }
+        references = dependencyContainer.allReferences.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+        parameters = dependencyContainer.parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph)}
+        embeddingTypes = dependencyContainer.embeddingTypes
         isRoot = dependencyContainer.isRoot
         isPublic = dependencyContainer.isPublic
         doesSupportObjc = dependencyContainer.doesSupportObjc
-        injectableDependencies = dependencyContainer.injectableDependencies(graph: graph, depth: depth)
+        injectableDependencies = dependencyContainer.injectableDependencies(dependencyGraph: dependencyGraph, depth: depth)
     }
 }
 
@@ -173,19 +162,19 @@ private extension DependencyContainer {
         return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.isEmpty
     }
     
-    var allReferences: [Reference] {
+    var allReferences: [ResolvableDependency] {
         var visitedDependencyContainters = Set<DependencyContainer>()
         return collectAllReferences(&visitedDependencyContainters)
     }
     
-    private func collectAllReferences(_ visitedDependencyContainers: inout Set<DependencyContainer>) -> [Reference] {
+    private func collectAllReferences(_ visitedDependencyContainers: inout Set<DependencyContainer>) -> [ResolvableDependency] {
         guard !visitedDependencyContainers.contains(self) else { return [] }
         visitedDependencyContainers.insert(self)
 
         let directReferences = references.orderedValues
         let indirectReferences = registrations.orderedValues.flatMap { $0.target.collectAllReferences(&visitedDependencyContainers) }
 
-        let referencesByName = OrderedDictionary<String, Reference>()
+        let referencesByName = OrderedDictionary<String, ResolvableDependency>()
         (directReferences + indirectReferences).forEach {
             referencesByName[$0.dependencyName] = $0
         }
@@ -213,10 +202,10 @@ private extension DependencyContainer {
         }
     }
     
-    func injectableDependencies(graph: Graph, depth: Int) -> [DependencyContainerViewModel]? {
+    func injectableDependencies(dependencyGraph: DependencyGraph, depth: Int) -> [DependencyContainerViewModel]? {
         guard depth == 0 else { return nil }
         return registrations.orderedValues.compactMap {
-            DependencyContainerViewModel($0.target, graph: graph, depth: depth + 1)
+            DependencyContainerViewModel($0.target, dependencyGraph: dependencyGraph, depth: depth + 1)
         }
     }
 }

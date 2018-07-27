@@ -11,7 +11,7 @@ import XCTest
 @testable import WeaverCodeGen
 
 final class ErrorTests: XCTestCase {
-
+    
     private var errorDescription: String!
     
     private var expectedDescription: String!
@@ -65,8 +65,8 @@ final class ErrorTests: XCTestCase {
     func test_parserError_dependencyDoubleDeclaration_description() {
         
         errorDescription = ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation:  FileLocation(line: 42, file: "fake_file.swift"),
-                                                                                      name: "fake_dependency",
-                                                                                      type: nil)).description
+                                                                                       name: "fake_dependency",
+                                                                                       type: nil)).description
         expectedDescription = "fake_file.swift:43: error: Double dependency declaration: 'fake_dependency'."
         
         XCTAssertEqual(errorDescription, expectedDescription)
@@ -120,41 +120,41 @@ final class ErrorTests: XCTestCase {
     // MARK: - InspectorError
     
     func test_inspectorError_invalidAST_description() {
-    
+        
         let unexpectedExpr = Expr.scopeAnnotation(TokenBox<ScopeAnnotation>(value: ScopeAnnotation(name: "fake_dependency", scope: .graph),
                                                                             offset: 42,
                                                                             length: 24,
                                                                             line: 1))
         errorDescription = InspectorError.invalidAST(FileLocation(line: nil, file: "fake_file.swift"), unexpectedExpr: unexpectedExpr).description
-
+        
         expectedDescription = "fake_file.swift:1: error: Invalid AST because of token: Scope - fake_dependency.scope = graph - 42[24] - at line: 1."
         
         XCTAssertEqual(errorDescription, expectedDescription)
     }
     
-    func test_inspectorError_invalidGraph_description() {
+    func test_inspectorError_invalidDependencyGraph_description() {
         
-        errorDescription = InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
-                                                                           name: "fake_dependency",
-                                                                           type: Type(name: "fake_type")),
-                                                       underlyingError: .cyclicDependency(history: [])).description
+        errorDescription = InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
+                                                                                     name: "fake_dependency",
+                                                                                     type: Type(name: "fake_type")),
+                                                                 underlyingError: .cyclicDependency(history: [])).description
         
         expectedDescription = "fake_file.swift:43: error: Detected invalid dependency graph starting with 'fake_dependency: fake_type'. Detected a cyclic dependency."
         
         XCTAssertEqual(errorDescription, expectedDescription)
     }
     
-    func test_inspectorError_invalidGraph_unresolvableDependency_description() {
-
+    func test_inspectorError_invalidDependencyGraph_unresolvableDependency_description() {
+        
         let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [
             InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
                                                                                   name: "fake_dependecy",
                                                                                   type: Type(name: "fake_type")))
-        ])
-        errorDescription = InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
-                                                                           name: "fake_dependency",
-                                                                           type: Type(name: "fake_type")),
-                                                       underlyingError: underlyingError).description
+            ])
+        errorDescription = InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
+                                                                                     name: "fake_dependency",
+                                                                                     type: Type(name: "fake_type")),
+                                                                 underlyingError: underlyingError).description
         
         expectedDescription = """
         fake_file.swift:43: error: Detected invalid dependency graph starting with 'fake_dependency: fake_type'. Dependency cannot be resolved.
@@ -164,15 +164,15 @@ final class ErrorTests: XCTestCase {
         XCTAssertEqual(errorDescription!, expectedDescription!)
     }
     
-    func test_inspectorError_invalidGraph_isolatedResolverCannotHaveReferents_description() {
+    func test_inspectorError_invalidDependencyGraph_isolatedResolverCannotHaveReferents_description() {
         
         let underlyingError = InspectorAnalysisError.isolatedResolverCannotHaveReferents(type: Type(name: "fake_type"), referents: [
             PrintableResolver(fileLocation: FileLocation(line: 42, file: "fake_file.swift"), type: Type(name: "fake_type"))
-        ])
-        errorDescription = InspectorError.invalidGraph(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
-                                                                           name: "fake_dependency",
-                                                                           type: Type(name: "fake_type")),
-                                                       underlyingError: underlyingError).description
+            ])
+        errorDescription = InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
+                                                                                     name: "fake_dependency",
+                                                                                     type: Type(name: "fake_type")),
+                                                                 underlyingError: underlyingError).description
         
         expectedDescription = """
         fake_file.swift:43: error: Detected invalid dependency graph starting with 'fake_dependency: fake_type'. This type is flagged as isolated. It cannot have any connected referent.
@@ -215,7 +215,7 @@ final class ErrorTests: XCTestCase {
         errorDescription = InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
                                                                                                  name: "fake_dependency",
                                                                                                  type: Type(name: "fake_type"))).description
-
+        
         expectedDescription = "fake_file.swift:43: warning: Could not find the dependency 'fake_dependency' in 'fake_type'. You may want to register it here to solve this issue."
         
         XCTAssertEqual(errorDescription, expectedDescription)
@@ -226,7 +226,7 @@ final class ErrorTests: XCTestCase {
         errorDescription = InspectorAnalysisHistoryRecord.foundUnaccessibleDependency(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
                                                                                                           name: "fake_dependency",
                                                                                                           type: Type(name: "fake_type"))).description
-
+        
         expectedDescription = "fake_file.swift:43: warning: Found unaccessible dependency 'fake_dependency' in 'fake_type'. You may want to set its scope to '.container' or '.weak' to solve this issue."
         
         XCTAssertEqual(errorDescription, expectedDescription)

@@ -139,7 +139,6 @@
 		OBJ_413 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_15 /* Error.swift */; };
 		OBJ_414 /* Expr.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* Expr.swift */; };
 		OBJ_415 /* Generator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* Generator.swift */; };
-		OBJ_416 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_18 /* Graph.swift */; };
 		OBJ_417 /* Inspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* Inspector.swift */; };
 		OBJ_418 /* Lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* Lexer.swift */; };
 		OBJ_419 /* Linker.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_21 /* Linker.swift */; };
@@ -552,7 +551,6 @@
 		OBJ_177 /* Resolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resolver.swift; sourceTree = "<group>"; };
 		OBJ_178 /* String+Yams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Yams.swift"; sourceTree = "<group>"; };
 		OBJ_179 /* Tag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tag.swift; sourceTree = "<group>"; };
-		OBJ_18 /* Graph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
 		OBJ_180 /* YamlError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YamlError.swift; sourceTree = "<group>"; };
 		OBJ_181 /* shim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = shim.swift; sourceTree = "<group>"; };
 		OBJ_182 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = Package.swift; path = "/Users/theophanerupin/Projects/Scribd/Weaver/.build/checkouts/Yams.git-8068124914099325722/Package.swift"; sourceTree = "<group>"; };
@@ -1006,7 +1004,7 @@
 			name = Dependencies;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -1020,7 +1018,6 @@
 				OBJ_49 /* Dependencies */,
 				OBJ_188 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_50 /* StencilSwiftKit 2.5.0 */ = {
@@ -1100,7 +1097,6 @@
 				OBJ_15 /* Error.swift */,
 				OBJ_16 /* Expr.swift */,
 				OBJ_17 /* Generator.swift */,
-				OBJ_18 /* Graph.swift */,
 				OBJ_19 /* Inspector.swift */,
 				OBJ_20 /* Lexer.swift */,
 				OBJ_21 /* Linker.swift */,
@@ -1525,7 +1521,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_188 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1776,7 +1772,6 @@
 				OBJ_413 /* Error.swift in Sources */,
 				OBJ_414 /* Expr.swift in Sources */,
 				OBJ_415 /* Generator.swift in Sources */,
-				OBJ_416 /* Graph.swift in Sources */,
 				OBJ_417 /* Inspector.swift in Sources */,
 				OBJ_418 /* Lexer.swift in Sources */,
 				OBJ_419 /* Linker.swift in Sources */,

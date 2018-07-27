@@ -236,7 +236,7 @@ internal func == (lhs: InspectorError, rhs: InspectorError) -> Bool {
         if lhs.0 != rhs.0 { return false }
         if lhs.unexpectedExpr != rhs.unexpectedExpr { return false }
         return true
-    case (.invalidGraph(let lhs), .invalidGraph(let rhs)):
+    case (.invalidDependencyGraph(let lhs), .invalidDependencyGraph(let rhs)):
         if lhs.0 != rhs.0 { return false }
         if lhs.underlyingError != rhs.underlyingError { return false }
         return true

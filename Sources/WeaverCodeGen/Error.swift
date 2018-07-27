@@ -34,7 +34,7 @@ enum GeneratorError: Error, AutoEquatable {
 
 enum InspectorError: Error, AutoEquatable {
     case invalidAST(FileLocation, unexpectedExpr: Expr)
-    case invalidGraph(PrintableDependency, underlyingError: InspectorAnalysisError)
+    case invalidDependencyGraph(PrintableDependency, underlyingError: InspectorAnalysisError)
 }
 
 enum InspectorAnalysisError: Error, AutoEquatable {
@@ -154,7 +154,7 @@ extension InspectorError: CustomStringConvertible {
         switch self {
         case .invalidAST(let location, let token):
             return location.xcodeLogString(.error, "Invalid AST because of token: \(token)")
-        case .invalidGraph(let dependency, let underlyingIssue):
+        case .invalidDependencyGraph(let dependency, let underlyingIssue):
             var description = dependency.xcodeLogString(.error, "Detected invalid dependency graph starting with '\(dependency.name): \(dependency.type?.description ?? "_")'. \(underlyingIssue)")
             if let notes = underlyingIssue.notes {
                 description = ([description] + notes.map { $0.description }).joined(separator: "\n")

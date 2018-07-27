@@ -38,11 +38,11 @@ let main = command(
         // ---- Link ----
         
         let linker = try Linker(syntaxTrees: asts)
-        let graph = linker.graph
+        let dependencyGraph = linker.dependencyGraph
         
         // ---- Generate ----
 
-        let generator = try Generator(graph: graph, template: templatePath.value)
+        let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath.value)
         let generatedData = try generator.generate()
         
         // ---- Collect ----
@@ -71,7 +71,7 @@ let main = command(
             Logger.log(.info, "")
             Logger.log(.info, "Checking dependency graph...")
             
-            let inspector = Inspector(graph: graph)
+            let inspector = Inspector(dependencyGraph: dependencyGraph)
             try inspector.validate()
         }
         
