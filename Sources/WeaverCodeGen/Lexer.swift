@@ -52,7 +52,7 @@ private extension Lexer {
         while currentLine < lines.endIndex && !lines[currentLine].range.contains(offset) {
             currentLine = lines.index(after: currentLine)
         }
-        guard line != lines.endIndex else {
+        guard currentLine < lines.endIndex else {
             return nil
         }
         return currentLine
