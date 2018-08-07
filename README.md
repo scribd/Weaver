@@ -48,7 +48,7 @@ Weaver scans the Swift sources of the project, looking for annotations, and gene
 
 Then this AST goes through a linking phase, which generates a dependency graph.
 
-A bunch of safety checks are then performed on the dependency graph. It checks for unresolvable dependencies and unsolvable cyclic dependencies. Issues are friendly reported in XCode to make their correction easier.
+A bunch of safety checks are then performed on the dependency graph. It checks for unresolvable dependencies and unsolvable cyclic dependencies. Issues are friendly reported in Xcode to make their correction easier.
 
 Finally, the same dependency graph is used to generate the boilerplate code. It generates one dependency container per class/struct with injectable dependencies. It also generates a bunch of extensions and protocols in order to make the dependency injection almost transparent for the developer.
 
