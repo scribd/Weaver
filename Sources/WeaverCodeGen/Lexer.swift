@@ -71,7 +71,7 @@ private extension Lexer {
                 line = nextLine
                 if let _typeDeclaration = SourceKitDeclaration(sourceKitAST, lineString: lines[line].content) {
                     startToken = _typeDeclaration.toToken
-                }
+                } 
                 startToken.line = line
             } else {
                 return tokens
@@ -89,12 +89,8 @@ private extension Lexer {
         if let typeDeclaration = typeDeclaration, let endToken = typeDeclaration.endToken {
             var mutableEndToken = endToken
             
-            if let nextLine = findNextLine(after: line, containing: endToken.offset) {
-                line = nextLine
-                mutableEndToken.line = line
-            } else {
-                return tokens
-            }
+            line = findNextLine(after: line, containing: endToken.offset) ?? lines.count - 1
+            mutableEndToken.line = line
             
             tokens += [mutableEndToken]
         }
