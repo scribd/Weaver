@@ -64,10 +64,7 @@ Download the latest release with the prebuilt binary from [release tab](https://
 
 #### [Homebrew](https://brew.sh)
 
-Until it gets added to the [main Homebrew repository](https://github.com/Homebrew/homebrew-core/pull/28520), Weaver can be installed like so:
-
 ```bash
-$ brew tap trupin/homebrew-core
 $ brew install weaver
 ```
 
