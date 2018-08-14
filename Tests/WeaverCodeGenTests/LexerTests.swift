@@ -495,8 +495,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ScopeAnnotation>, TokenBox(
-                    value: ScopeAnnotation(name: "api", scope: .graph),
+                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
+                    value: ConfigurationAnnotation(attribute: .scope(value: .graph), target: .dependency(name: "api")),
                     offset: 1, length: 29, line: 1)
                 )
             } else {

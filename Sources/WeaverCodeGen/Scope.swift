@@ -1,6 +1,6 @@
 //
 //  Scope.swift
-//  Weaver
+//  WeaverCodeGen
 //
 //  Created by Théophane Rupin on 2/20/18.
 //
@@ -70,5 +70,14 @@ extension Scope {
         case .container:
             return "container"
         }
+    }
+    
+    static var values: [Scope] {
+        return [
+            .transient,
+            .graph,
+            .weak,
+            .container
+        ]
     }
 }

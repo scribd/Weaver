@@ -118,6 +118,8 @@ extension ConfigurationAttribute: Hashable {
             return combineHashes([1, data.hashValue])
         case .customRef(let data):
             return combineHashes([2, data.hashValue])
+        case .scope(let data):
+            return combineHashes([3, data.hashValue])
         }
     }
 }

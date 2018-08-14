@@ -1,5 +1,5 @@
 project:
-  file: WeaverDI.xcodeproj
+  file: Weaver.xcodeproj
   target:
     name: WeaverCodeGen
 templates:

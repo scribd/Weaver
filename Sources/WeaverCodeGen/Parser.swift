@@ -122,16 +122,7 @@ private extension Parser {
                 try checkDoubleDeclaration(name, annotation.line)
                 parameterNames.insert(name)
                 children.append(.parameterAnnotation(annotation))
-                
-            case is TokenBox<ScopeAnnotation>:
-                let annotation = try parseSimpleExpr(ScopeAnnotation.self)
-                guard registrationNames.contains(annotation.value.name) else {
-                    let dependency = printableDependency(line: annotation.line,
-                                                         name: annotation.value.name)
-                    throw ParserError.unknownDependency(dependency)
-                }
-                children.append(.scopeAnnotation(annotation))
-            
+                            
             case is TokenBox<ConfigurationAnnotation>:
                 let annotation = try parseSimpleExpr(ConfigurationAnnotation.self)
                 guard configurationAnnotations[annotation.value.target] == nil else {

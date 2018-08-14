@@ -121,13 +121,13 @@ final class ErrorTests: XCTestCase {
     
     func test_inspectorError_invalidAST_description() {
         
-        let unexpectedExpr = Expr.scopeAnnotation(TokenBox<ScopeAnnotation>(value: ScopeAnnotation(name: "fake_dependency", scope: .graph),
-                                                                            offset: 42,
-                                                                            length: 24,
-                                                                            line: 1))
+        let unexpectedExpr = Expr.configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .scope(value: .graph), target: .dependency(name: "fake_dependency")),
+                                                                   offset: 42,
+                                                                   length: 24,
+                                                                   line: 1))
         errorDescription = InspectorError.invalidAST(FileLocation(line: nil, file: "fake_file.swift"), unexpectedExpr: unexpectedExpr).description
         
-        expectedDescription = "fake_file.swift:1: error: Invalid AST because of token: Scope - fake_dependency.scope = graph - 42[24] - at line: 1."
+        expectedDescription = "fake_file.swift:1: error: Invalid AST because of token: Configuration Attr - scope = graph - 42[24] - at line: 1."
         
         XCTAssertEqual(errorDescription, expectedDescription)
     }

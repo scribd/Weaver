@@ -114,13 +114,6 @@ public func == (lhs: RegisterAnnotation, rhs: RegisterAnnotation) -> Bool {
     guard compareOptionals(lhs: lhs.protocolType, rhs: rhs.protocolType, compare: ==) else { return false }
     return true
 }
-// MARK: - ScopeAnnotation AutoEquatable
-extension ScopeAnnotation: Equatable {}
-public func == (lhs: ScopeAnnotation, rhs: ScopeAnnotation) -> Bool {
-    guard lhs.name == rhs.name else { return false }
-    guard lhs.scope == rhs.scope else { return false }
-    return true
-}
 // MARK: - Type AutoEquatable
 extension Type: Equatable {}
 public func == (lhs: Type, rhs: Type) -> Bool {
@@ -145,6 +138,8 @@ internal func == (lhs: ConfigurationAttribute, rhs: ConfigurationAttribute) -> B
     case (.isIsolated(let lhs), .isIsolated(let rhs)):
         return lhs == rhs
     case (.customRef(let lhs), .customRef(let rhs)):
+        return lhs == rhs
+    case (.scope(let lhs), .scope(let rhs)):
         return lhs == rhs
     default: return false
     }
@@ -174,8 +169,6 @@ public func == (lhs: Expr, rhs: Expr) -> Bool {
         if lhs.children != rhs.children { return false }
         return true
     case (.registerAnnotation(let lhs), .registerAnnotation(let rhs)):
-        return lhs == rhs
-    case (.scopeAnnotation(let lhs), .scopeAnnotation(let rhs)):
         return lhs == rhs
     case (.referenceAnnotation(let lhs), .referenceAnnotation(let rhs)):
         return lhs == rhs

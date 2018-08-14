@@ -75,28 +75,6 @@ public struct RegisterAnnotation: Token, AutoEquatable {
     }
 }
 
-public struct ScopeAnnotation: Token, AutoEquatable {
-
-    let name: String
-    let scope: Scope
-    
-    public static func create(_ string: String) throws -> ScopeAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.scope).matches(in: string) else {
-            return nil
-        }
-        
-        guard let scope = Scope(matches[1]) else {
-            throw TokenError.invalidScope(matches[1])
-        }
-        
-        return ScopeAnnotation(name: matches[0], scope: scope)
-    }
-    
-    public var description: String {
-        return "\(name).scope = \(scope)"
-    }
-}
-
 public struct ReferenceAnnotation: Token, AutoEquatable {
     
     let name: String
@@ -238,9 +216,6 @@ enum TokenBuilder {
             return makeTokenBox(token)
         }
         if let token = try ReferenceAnnotation.create(body) {
-            return makeTokenBox(token)
-        }
-        if let token = try ScopeAnnotation.create(body) {
             return makeTokenBox(token)
         }
         if let token = try ParameterAnnotation.create(body) {

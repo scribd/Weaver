@@ -39,8 +39,11 @@ struct DependencyConfiguration: Configuration {
     
     let customRef: Bool
     
+    let scope: Scope
+    
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
         customRef = attributes?[.customRef]?.boolValue ?? false
+        scope = attributes?[.scope]?.scopeValue ?? .default
     }
 }
 

@@ -38,6 +38,6 @@ enum Patterns {
     static let reference = "^(\(name))\(arrow)(\(typeName))\(spaces)$"
     static let parameter = "^(\(name))\(spaces)<=\(spaces)(\(typeName))\(spaces)$"
     static let scope = "^(\(name))\\.scope\(equal)\\.(\(name))\(spaces)$"
-    static let configuration = "^(\(name))\\.(\(name))\(equal)(\(name)\\??)\(spaces)$"
+    static let configuration = "^(\(name))\\.(\(name))\(equal)(.*)\(spaces)$"
     static let `import` = "^import\\s+(\(name))\(spaces)$"
 }

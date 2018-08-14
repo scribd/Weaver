@@ -13,7 +13,6 @@ public indirect enum Expr: AutoEquatable {
     case file(types: [Expr], name: String, imports: [String])
     case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)
-    case scopeAnnotation(TokenBox<ScopeAnnotation>)
     case referenceAnnotation(TokenBox<ReferenceAnnotation>)
     case parameterAnnotation(TokenBox<ParameterAnnotation>)
     case configurationAnnotation(TokenBox<ConfigurationAnnotation>)
@@ -49,7 +48,6 @@ struct ExprSequence: Sequence, IteratorProtocol {
 
         case .referenceAnnotation,
              .registerAnnotation,
-             .scopeAnnotation,
              .parameterAnnotation,
              .configurationAnnotation:
             break
@@ -71,8 +69,6 @@ extension Expr: CustomStringConvertible {
             """
         case .registerAnnotation(let token):
             return "Register - \(token)"
-        case .scopeAnnotation(let token):
-            return "Scope - \(token)"
         case .typeDeclaration(let type, let children):
             return """
             \(type)
