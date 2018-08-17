@@ -13,3 +13,7 @@ $ make install
 $ cd Sample
 $ open Sample.xcodeproj
 ```
+
+## Demo
+
+![Demo](demo.gif)
