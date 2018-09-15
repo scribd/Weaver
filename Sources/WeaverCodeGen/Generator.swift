@@ -67,10 +67,7 @@ private struct RegistrationViewModel {
         name = dependency.dependencyName
         type = dependency.type
         abstractType = dependency.abstractType
-        
-        let scope = dependency.scope ?? .default
-        self.scope = scope.stringValue
-                
+        scope = dependency.configuration.scope.stringValue
         customRef = dependency.configuration.customRef
         
         if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {

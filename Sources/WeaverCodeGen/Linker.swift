@@ -185,11 +185,15 @@ extension Dependency {
     }
     
     var scope: Scope? {
-        return nil
+        return !isReference ? configuration.scope : nil
     }
     
     var configuration: DependencyConfiguration {
         return .empty
+    }
+    
+    var isReference: Bool {
+        return self is Reference
     }
 }
 
@@ -240,8 +244,6 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
     
     let abstractType: Type
     
-    let scope: Scope?
-    
     var configuration: DependencyConfiguration
     
     let target: DependencyContainer
@@ -253,7 +255,6 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
     init(dependencyName: String,
          type: Type,
          abstractType: Type,
-         scope: Scope? = nil,
          configuration: DependencyConfiguration = .empty,
          target: DependencyContainer,
          source: DependencyContainer,
@@ -262,7 +263,6 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
         self.dependencyName = dependencyName
         self.type = type
         self.abstractType = abstractType
-        self.scope = scope
         self.configuration = configuration
         self.target = target
         self.source = source
