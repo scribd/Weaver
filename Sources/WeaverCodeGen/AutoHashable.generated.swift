@@ -57,6 +57,16 @@ fileprivate func hashDictionary<T: Hashable, U: Hashable>(_ dictionary: [T: U]?)
 
 
 // MARK: - AutoHashable for classes, protocols, structs
+// MARK: - AnyDeclaration AutoHashable
+extension AnyDeclaration: Hashable {
+    public var hashValue: Int {
+        let descriptionHashValue = description.hashValue
+
+        return combineHashes([
+            descriptionHashValue,
+            0])
+    }
+}
 // MARK: - ConfigurationAnnotation AutoHashable
 extension ConfigurationAnnotation: Hashable {
     public var hashValue: Int {
@@ -65,6 +75,18 @@ extension ConfigurationAnnotation: Hashable {
 
         return combineHashes([
             attributeHashValue,
+            targetHashValue,
+            0])
+    }
+}
+// MARK: - ConfigurationAnnotation.UniqueIdentifier AutoHashable
+extension ConfigurationAnnotation.UniqueIdentifier: Hashable {
+    internal var hashValue: Int {
+        let nameHashValue = name.hashValue
+        let targetHashValue = target.hashValue
+
+        return combineHashes([
+            nameHashValue,
             targetHashValue,
             0])
     }
@@ -78,6 +100,88 @@ extension DependencyIndex: Hashable {
         return combineHashes([
             nameHashValue,
             typeHashValue,
+            0])
+    }
+}
+// MARK: - EndOfAnyDeclaration AutoHashable
+extension EndOfAnyDeclaration: Hashable {
+    public var hashValue: Int {
+        let descriptionHashValue = description.hashValue
+
+        return combineHashes([
+            descriptionHashValue,
+            0])
+    }
+}
+// MARK: - EndOfInjectableType AutoHashable
+extension EndOfInjectableType: Hashable {
+    public var hashValue: Int {
+        let descriptionHashValue = description.hashValue
+
+        return combineHashes([
+            descriptionHashValue,
+            0])
+    }
+}
+// MARK: - ImportDeclaration AutoHashable
+extension ImportDeclaration: Hashable {
+    public var hashValue: Int {
+        let moduleNameHashValue = moduleName.hashValue
+
+        return combineHashes([
+            moduleNameHashValue,
+            0])
+    }
+}
+// MARK: - InjectableType AutoHashable
+extension InjectableType: Hashable {
+    public var hashValue: Int {
+        let typeHashValue = type.hashValue
+        let accessLevelHashValue = accessLevel.hashValue
+        let doesSupportObjcHashValue = doesSupportObjc.hashValue
+
+        return combineHashes([
+            typeHashValue,
+            accessLevelHashValue,
+            doesSupportObjcHashValue,
+            0])
+    }
+}
+// MARK: - ParameterAnnotation AutoHashable
+extension ParameterAnnotation: Hashable {
+    public var hashValue: Int {
+        let nameHashValue = name.hashValue
+        let typeHashValue = type.hashValue
+
+        return combineHashes([
+            nameHashValue,
+            typeHashValue,
+            0])
+    }
+}
+// MARK: - ReferenceAnnotation AutoHashable
+extension ReferenceAnnotation: Hashable {
+    public var hashValue: Int {
+        let nameHashValue = name.hashValue
+        let typeHashValue = type.hashValue
+
+        return combineHashes([
+            nameHashValue,
+            typeHashValue,
+            0])
+    }
+}
+// MARK: - RegisterAnnotation AutoHashable
+extension RegisterAnnotation: Hashable {
+    public var hashValue: Int {
+        let nameHashValue = name.hashValue
+        let typeHashValue = type.hashValue
+        let protocolTypeHashValue = protocolType?.hashValue ?? 0
+
+        return combineHashes([
+            nameHashValue,
+            typeHashValue,
+            protocolTypeHashValue,
             0])
     }
 }
@@ -118,6 +222,8 @@ extension ConfigurationAttribute: Hashable {
             return combineHashes([1, data.hashValue])
         case .customRef(let data):
             return combineHashes([2, data.hashValue])
+        case .scope(let data):
+            return combineHashes([3, data.hashValue])
         }
     }
 }

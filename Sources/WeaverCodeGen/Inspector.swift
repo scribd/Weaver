@@ -199,15 +199,6 @@ private extension DependencyContainer {
     }
 }
 
-// MARK: - Utils
-
-private extension Dependency {
-    
-    var isReference: Bool {
-        return scope == nil
-    }
-}
-
 // MARK: - Conversions
 
 extension TokenBox where T == RegisterAnnotation {

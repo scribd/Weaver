@@ -12,18 +12,27 @@ import Foundation
 enum ConfigurationAttributeName: String {
     case isIsolated
     case customRef
+    case scope
 }
 
 enum ConfigurationAttribute: AutoEquatable, AutoHashable {
     case isIsolated(value: Bool)
     case customRef(value: Bool)
+    case scope(value: Scope)
 }
 
-// MARK: - Targets
+// MARK: - Target
 
 enum ConfigurationAttributeTarget: AutoEquatable, AutoHashable {
     case `self`
     case dependency(name: String)
+}
+
+// MARK: - DependencyKind
+
+enum ConfigurationAttributeDependencyKind {
+    case reference
+    case registration
 }
 
 // MARK: - Description
@@ -33,9 +42,11 @@ extension ConfigurationAttribute: CustomStringConvertible {
     var description: String {
         switch self {
         case .isIsolated(let value):
-            return "Config Attr - self.isIsolated = \(value)"
+            return "Config Attr - isIsolated = \(value)"
         case .customRef(let value):
-            return "Config Attr - dependency.customRef = \(value)"
+            return "Config Attr - customRef = \(value)"
+        case .scope(let value):
+            return "Config Attr - scope = \(value)"
         }
     }
     
@@ -45,6 +56,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return .isIsolated
         case .customRef:
             return .customRef
+        case .scope:
+            return .scope
         }
     }
 }
@@ -68,11 +81,30 @@ extension ConfigurationAnnotation {
     static func validate(configurationAttribute: ConfigurationAttribute, with target: ConfigurationAttributeTarget) -> Bool {
         switch (configurationAttribute, target) {
         case (.isIsolated, .`self`),
-             (.customRef, .dependency):
+             (.customRef, .dependency),
+             (.scope, .dependency):
             return true
             
         case (.isIsolated, _),
+             (.customRef, _),
+             (.scope, _):
+            return false
+        }
+    }
+}
+
+// MARK: - Parser Validation
+
+extension ConfigurationAnnotation {
+    
+    static func validate(configurationAttribute: ConfigurationAttribute, with dependencyKind: ConfigurationAttributeDependencyKind) -> Bool {
+        switch (configurationAttribute, dependencyKind) {
+        case (.scope, .registration),
              (.customRef, _):
+            
+            return true
+        case (.isIsolated, _),
+             (.scope, _):
             return false
         }
     }
@@ -83,21 +115,34 @@ extension ConfigurationAnnotation {
 extension ConfigurationAttribute {
     
     init(name: String, valueString: String) throws {
-
-        guard let value = Bool(valueString) else {
-            throw TokenError.invalidConfigurationAttributeValue(value: valueString, expected: "true|false")
-        }
-
-        switch name {
-        case ConfigurationAttributeName.isIsolated.rawValue:
-            self = .isIsolated(value: value)
+        switch ConfigurationAttributeName(rawValue: name) {
+        case .isIsolated?:
+            self = .isIsolated(value: try ConfigurationAttribute.boolValue(from: valueString))
             
-        case ConfigurationAttributeName.customRef.rawValue:
-            self = .customRef(value: value)
+        case .customRef?:
+            self = .customRef(value: try ConfigurationAttribute.boolValue(from: valueString))
             
-        default:
+        case .scope?:
+            self = .scope(value: try ConfigurationAttribute.scopeValue(from: valueString))
+            
+        case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
+    }
+    
+    private static func boolValue(from string: String) throws -> Bool {
+        guard let value = Bool(string) else {
+            throw TokenError.invalidConfigurationAttributeValue(value: string, expected: "true|false")
+        }
+        return value
+    }
+    
+    private static func scopeValue(from string: String) throws -> Scope {
+        guard string.first == ".", let value = Scope(string.replacingOccurrences(of: ".", with: "")) else {
+            let expected = Scope.values.map { $0.stringValue }.joined(separator: "|")
+            throw TokenError.invalidConfigurationAttributeValue(value: string, expected: expected)
+        }
+        return value
     }
 }
 
@@ -117,11 +162,25 @@ extension ConfigurationAttributeTarget {
 
 extension ConfigurationAttribute {
 
-    var boolValue: Bool {
+    var boolValue: Bool? {
         switch self {
         case .customRef(let value),
              .isIsolated(let value):
             return value
+
+        case .scope:
+            return nil
+        }
+    }
+    
+    var scopeValue: Scope? {
+        switch self {
+        case .scope(let value):
+            return value
+            
+        case .customRef,
+             .isIsolated:
+            return nil
         }
     }
 }

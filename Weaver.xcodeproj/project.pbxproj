@@ -1388,6 +1388,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = OBJ_403 /* Build configuration list for PBXNativeTarget "WeaverCodeGen" */;
 			buildPhases = (
+				191681D4212283E8001ED392 /* Sourcery */,
 				OBJ_406 /* Sources */,
 				OBJ_428 /* Frameworks */,
 			);
@@ -1551,6 +1552,23 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		191681D4212283E8001ED392 /* Sourcery */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Sourcery;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make generate_sources";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		OBJ_205 /* Sources */ = {

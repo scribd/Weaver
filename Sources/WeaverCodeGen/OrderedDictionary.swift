@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK: - OrderedDictionary
+// MARK: - Dictionary
 
 final class OrderedDictionary<Key: Hashable, Value> {
     

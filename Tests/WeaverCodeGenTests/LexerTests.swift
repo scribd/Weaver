@@ -495,8 +495,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ScopeAnnotation>, TokenBox(
-                    value: ScopeAnnotation(name: "api", scope: .graph),
+                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
+                    value: ConfigurationAnnotation(attribute: .scope(value: .graph), target: .dependency(name: "api")),
                     offset: 1, length: 29, line: 1)
                 )
             } else {
@@ -746,7 +746,7 @@ final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidScope("thisScopeDoesNotExists")
+            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: ".thisScopeDoesNotExists", expected: "transient|graph|weak|container")
             XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 5, file: "test.swift"), underlyingError: underlyingError))
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")

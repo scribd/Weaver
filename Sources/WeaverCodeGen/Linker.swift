@@ -185,11 +185,15 @@ extension Dependency {
     }
     
     var scope: Scope? {
-        return nil
+        return !isReference ? configuration.scope : nil
     }
     
     var configuration: DependencyConfiguration {
         return .empty
+    }
+    
+    var isReference: Bool {
+        return self is Reference
     }
 }
 
@@ -240,8 +244,6 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
     
     let abstractType: Type
     
-    let scope: Scope?
-    
     var configuration: DependencyConfiguration
     
     let target: DependencyContainer
@@ -253,7 +255,6 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
     init(dependencyName: String,
          type: Type,
          abstractType: Type,
-         scope: Scope? = nil,
          configuration: DependencyConfiguration = .empty,
          target: DependencyContainer,
          source: DependencyContainer,
@@ -262,7 +263,6 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
         self.dependencyName = dependencyName
         self.type = type
         self.abstractType = abstractType
-        self.scope = scope
         self.configuration = configuration
         self.target = target
         self.source = source
@@ -491,7 +491,6 @@ private extension DependencyGraph {
     
     func registration(source: DependencyContainer,
                       registerAnnotation: TokenBox<RegisterAnnotation>,
-                      scopeAnnotation: ScopeAnnotation?,
                       configuration: [TokenBox<ConfigurationAnnotation>],
                       file: String) throws -> Registration {
         
@@ -508,7 +507,6 @@ private extension DependencyGraph {
         return Registration(dependencyName: name,
                             type: type,
                             abstractType: registerAnnotation.value.protocolType ?? type,
-                            scope: scopeAnnotation?.scope ?? .default,
                             configuration: configuration,
                             target: target,
                             source: source,
@@ -569,7 +567,6 @@ private extension Linker {
                 dependencyGraph.insertDependencyContainer(with: token, file: file)
                 
             case .typeDeclaration,
-                 .scopeAnnotation,
                  .referenceAnnotation,
                  .parameterAnnotation,
                  .configurationAnnotation:
@@ -625,7 +622,6 @@ private extension Linker {
         
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
         var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
-        var scopeAnnotations: [String: ScopeAnnotation] = [:]
         var configurationAnnotations: [ConfigurationAttributeTarget: [TokenBox<ConfigurationAnnotation>]] = [:]
         
         for child in children {
@@ -646,9 +642,6 @@ private extension Linker {
                 
             case .referenceAnnotation(let referenceAnnotation):
                 referenceAnnotations.append(referenceAnnotation)
-                
-            case .scopeAnnotation(let scopeAnnotation):
-                scopeAnnotations[scopeAnnotation.value.name] = scopeAnnotation.value
                 
             case .configurationAnnotation(let configurationAnnotation):
                 let target = configurationAnnotation.value.target
@@ -676,7 +669,6 @@ private extension Linker {
             let name = registerAnnotation.value.name
             let registration = try dependencyGraph.registration(source: dependencyContainer,
                                                                 registerAnnotation: registerAnnotation,
-                                                                scopeAnnotation: scopeAnnotations[name],
                                                                 configuration: configurationAnnotations[.dependency(name: name)] ?? [],
                                                                 file: file)
             let index = DependencyIndex(name: name, type: registration.target.type)

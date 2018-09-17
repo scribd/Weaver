@@ -83,7 +83,7 @@ private extension Parser {
         let type = try parseSimpleExpr(InjectableType.self)
         
         var children = [Expr]()
-        var configurationAnnotations = [ConfigurationAttributeTarget: TokenBox<ConfigurationAnnotation>]()
+        var configurationAnnotations = [ConfigurationAttributeTarget: [ConfigurationAnnotation.UniqueIdentifier: TokenBox<ConfigurationAnnotation>]]()
         var registrationNames = Set<String>()
         var referenceNames = Set<String>()
         var parameterNames = Set<String>()
@@ -122,23 +122,16 @@ private extension Parser {
                 try checkDoubleDeclaration(name, annotation.line)
                 parameterNames.insert(name)
                 children.append(.parameterAnnotation(annotation))
-                
-            case is TokenBox<ScopeAnnotation>:
-                let annotation = try parseSimpleExpr(ScopeAnnotation.self)
-                guard registrationNames.contains(annotation.value.name) else {
-                    let dependency = printableDependency(line: annotation.line,
-                                                         name: annotation.value.name)
-                    throw ParserError.unknownDependency(dependency)
-                }
-                children.append(.scopeAnnotation(annotation))
-            
+                            
             case is TokenBox<ConfigurationAnnotation>:
                 let annotation = try parseSimpleExpr(ConfigurationAnnotation.self)
-                guard configurationAnnotations[annotation.value.target] == nil else {
+                var annotations = configurationAnnotations[annotation.value.target] ?? [:]
+                guard annotations[annotation.value.uniqueIdentifier] == nil else {
                     throw ParserError.configurationAttributeDoubleAssignation(fileLocation(line: annotation.line),
                                                                               attribute: annotation.value.attribute)
                 }
-                configurationAnnotations[annotation.value.target] = annotation
+                annotations[annotation.value.uniqueIdentifier] = annotation
+                configurationAnnotations[annotation.value.target] = annotations
                 children.append(.configurationAnnotation(annotation))
                 
             case is TokenBox<InjectableType>:
@@ -161,18 +154,32 @@ private extension Parser {
                 throw ParserError.unexpectedToken(fileLocation(line: token.line))
             }
             
-            for configurationAnnotation in configurationAnnotations.values {
-                switch configurationAnnotation.value.target {
-                case .dependency(let name) where !referenceNames.contains(name) && !registrationNames.contains(name):
-                    throw ParserError.unknownDependency(printableDependency(line: configurationAnnotation.line, name: name))
-                    
-                case .dependency,
-                     .`self`:
-                    break
-                }
+            for configurationAnnotation in configurationAnnotations.values.flatMap({ $0.values }) {
+                try validate(configurationAnnotation, referenceNames: referenceNames, registrationNames: registrationNames)
             }
             
             parseAnyDeclarations()
+        }
+    }
+    
+    func validate(_ configurationAnnotation: TokenBox<ConfigurationAnnotation>, referenceNames: Set<String>, registrationNames: Set<String>) throws {
+        switch configurationAnnotation.value.target {
+        case .dependency(let name):
+            let _dependencyKind: ConfigurationAttributeDependencyKind? = referenceNames.contains(name) ?
+                .reference : registrationNames.contains(name) ?
+                    .registration : nil
+            let error = ParserError.unknownDependency(printableDependency(line: configurationAnnotation.line, name: name))
+            if let dependencyKind = _dependencyKind {
+                if !ConfigurationAnnotation.validate(configurationAttribute: configurationAnnotation.value.attribute,
+                                                     with: dependencyKind) {
+                    throw error
+                }
+            } else {
+                throw error
+            }
+            
+        case .`self`:
+            break
         }
     }
     

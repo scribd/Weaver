@@ -16,7 +16,7 @@ public protocol AnyTokenBox {
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token & Equatable>: AnyTokenBox, Equatable, CustomStringConvertible {
+public struct TokenBox<T: Token & Equatable & Hashable>: AnyTokenBox, Equatable, Hashable, CustomStringConvertible {
     let value: T
     public let offset: Int
     public let length: Int
@@ -30,6 +30,10 @@ public struct TokenBox<T: Token & Equatable>: AnyTokenBox, Equatable, CustomStri
         return true
     }
     
+    public var hashValue: Int {
+        return value.hashValue ^ offset.hashValue ^ length.hashValue ^ line.hashValue
+    }
+    
     public var description: String {
         return "\(value) - \(offset)[\(length)] - at line: \(line)"
     }
@@ -41,7 +45,7 @@ public protocol Token: CustomStringConvertible {
 
 // MARK: - Token Types
 
-public struct RegisterAnnotation: Token, AutoEquatable {
+public struct RegisterAnnotation: Token, AutoHashable, AutoEquatable {
     let name: String
     let type: Type
     let protocolType: Type?
@@ -75,29 +79,7 @@ public struct RegisterAnnotation: Token, AutoEquatable {
     }
 }
 
-public struct ScopeAnnotation: Token, AutoEquatable {
-
-    let name: String
-    let scope: Scope
-    
-    public static func create(_ string: String) throws -> ScopeAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.scope).matches(in: string) else {
-            return nil
-        }
-        
-        guard let scope = Scope(matches[1]) else {
-            throw TokenError.invalidScope(matches[1])
-        }
-        
-        return ScopeAnnotation(name: matches[0], scope: scope)
-    }
-    
-    public var description: String {
-        return "\(name).scope = \(scope)"
-    }
-}
-
-public struct ReferenceAnnotation: Token, AutoEquatable {
+public struct ReferenceAnnotation: Token, AutoHashable, AutoEquatable {
     
     let name: String
     let type: Type
@@ -117,7 +99,7 @@ public struct ReferenceAnnotation: Token, AutoEquatable {
     }
 }
 
-public struct ParameterAnnotation: Token, AutoEquatable {
+public struct ParameterAnnotation: Token, AutoHashable, AutoEquatable {
     
     let name: String
     let type: Type
@@ -143,6 +125,15 @@ public struct ConfigurationAnnotation: Token, AutoHashable, AutoEquatable {
     
     let target: ConfigurationAttributeTarget
     
+    struct UniqueIdentifier: AutoHashable, AutoEquatable {
+        let name: ConfigurationAttributeName
+        let target: ConfigurationAttributeTarget
+    }
+
+    var uniqueIdentifier: UniqueIdentifier {
+        return UniqueIdentifier(name: attribute.name, target: target)
+    }
+    
     public static func create(_ string: String) throws -> ConfigurationAnnotation? {
         guard let matches = try NSRegularExpression(pattern: Patterns.configuration).matches(in: string) else {
             return nil
@@ -163,7 +154,7 @@ public struct ConfigurationAnnotation: Token, AutoHashable, AutoEquatable {
     }
 }
 
-public struct ImportDeclaration: Token, AutoEquatable {
+public struct ImportDeclaration: Token, AutoHashable, AutoEquatable {
     
     let moduleName: String
     
@@ -180,7 +171,7 @@ public struct ImportDeclaration: Token, AutoEquatable {
     }
 }
 
-public struct InjectableType: Token, AutoEquatable {
+public struct InjectableType: Token, AutoHashable, AutoEquatable {
     let type: Type
     let accessLevel: AccessLevel
     let doesSupportObjc: Bool
@@ -198,15 +189,15 @@ public struct InjectableType: Token, AutoEquatable {
     }
 }
 
-public struct EndOfInjectableType: Token, AutoEquatable {
+public struct EndOfInjectableType: Token, AutoHashable, AutoEquatable {
     public let description = "_ }"
 }
 
-public struct AnyDeclaration: Token, AutoEquatable {
+public struct AnyDeclaration: Token, AutoHashable, AutoEquatable {
     public let description = "{"
 }
 
-public struct EndOfAnyDeclaration: Token, AutoEquatable {
+public struct EndOfAnyDeclaration: Token, AutoHashable, AutoEquatable {
     public let description = "}"
 }
 
@@ -227,7 +218,7 @@ enum TokenBuilder {
             return nil
         }
 
-        func makeTokenBox<T: Token & Equatable>(_ token: T) -> AnyTokenBox {
+        func makeTokenBox<T: Token & Equatable & Hashable>(_ token: T) -> AnyTokenBox {
             return TokenBox(value: token, offset: offset, length: length, line: line)
         }
         
@@ -238,9 +229,6 @@ enum TokenBuilder {
             return makeTokenBox(token)
         }
         if let token = try ReferenceAnnotation.create(body) {
-            return makeTokenBox(token)
-        }
-        if let token = try ScopeAnnotation.create(body) {
             return makeTokenBox(token)
         }
         if let token = try ParameterAnnotation.create(body) {
