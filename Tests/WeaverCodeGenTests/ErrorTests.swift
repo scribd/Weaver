@@ -127,7 +127,7 @@ final class ErrorTests: XCTestCase {
                                                                    line: 1))
         errorDescription = InspectorError.invalidAST(FileLocation(line: nil, file: "fake_file.swift"), unexpectedExpr: unexpectedExpr).description
         
-        expectedDescription = "fake_file.swift:1: error: Invalid AST because of token: Configuration Attr - scope = graph - 42[24] - at line: 1."
+        expectedDescription = "fake_file.swift:1: error: Invalid AST because of token: Configuration - fake_dependency.Config Attr - scope = graph - 42[24] - at line: 1."
         
         XCTAssertEqual(errorDescription, expectedDescription)
     }

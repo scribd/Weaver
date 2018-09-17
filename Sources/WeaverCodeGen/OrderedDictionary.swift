@@ -7,6 +7,8 @@
 
 import Foundation
 
+// MARK: - Dictionary
+
 final class OrderedDictionary<Key: Hashable, Value> {
     
     private(set) var dictionary = [Key: Value]()

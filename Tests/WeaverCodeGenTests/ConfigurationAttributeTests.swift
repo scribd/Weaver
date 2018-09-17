@@ -40,13 +40,13 @@ final class ConfigurationAttributeTargetTests: XCTestCase {
     
     // MARK: - Description
     
-    func test_self_description_should_be_valie() {
+    func test_self_description_should_be_valid() {
         let target = ConfigurationAttributeTarget.`self`
         
         XCTAssertEqual(target.description, "self")
     }
     
-    func test_dependency_description_should_be_valie() {
+    func test_dependency_description_should_be_valid() {
         let target = ConfigurationAttributeTarget.dependency(name: "test")
         
         XCTAssertEqual(target.description, "test")

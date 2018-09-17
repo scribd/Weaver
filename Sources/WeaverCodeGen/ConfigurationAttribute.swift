@@ -21,11 +21,18 @@ enum ConfigurationAttribute: AutoEquatable, AutoHashable {
     case scope(value: Scope)
 }
 
-// MARK: - Targets
+// MARK: - Target
 
 enum ConfigurationAttributeTarget: AutoEquatable, AutoHashable {
     case `self`
     case dependency(name: String)
+}
+
+// MARK: - DependencyKind
+
+enum ConfigurationAttributeDependencyKind {
+    case reference
+    case registration
 }
 
 // MARK: - Description
@@ -80,6 +87,23 @@ extension ConfigurationAnnotation {
             
         case (.isIsolated, _),
              (.customRef, _),
+             (.scope, _):
+            return false
+        }
+    }
+}
+
+// MARK: - Parser Validation
+
+extension ConfigurationAnnotation {
+    
+    static func validate(configurationAttribute: ConfigurationAttribute, with dependencyKind: ConfigurationAttributeDependencyKind) -> Bool {
+        switch (configurationAttribute, dependencyKind) {
+        case (.scope, .registration),
+             (.customRef, _):
+            
+            return true
+        case (.isIsolated, _),
              (.scope, _):
             return false
         }

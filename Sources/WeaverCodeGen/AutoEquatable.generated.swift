@@ -37,6 +37,13 @@ public func == (lhs: ConfigurationAnnotation, rhs: ConfigurationAnnotation) -> B
     guard lhs.target == rhs.target else { return false }
     return true
 }
+// MARK: - ConfigurationAnnotation.UniqueIdentifier AutoEquatable
+extension ConfigurationAnnotation.UniqueIdentifier: Equatable {}
+internal func == (lhs: ConfigurationAnnotation.UniqueIdentifier, rhs: ConfigurationAnnotation.UniqueIdentifier) -> Bool {
+    guard lhs.name == rhs.name else { return false }
+    guard lhs.target == rhs.target else { return false }
+    return true
+}
 // MARK: - DependencyIndex AutoEquatable
 extension DependencyIndex: Equatable {}
 internal func == (lhs: DependencyIndex, rhs: DependencyIndex) -> Bool {
