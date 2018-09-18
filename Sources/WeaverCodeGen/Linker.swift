@@ -185,7 +185,7 @@ extension Dependency {
     }
     
     var scope: Scope? {
-        return !isReference ? configuration.scope : nil
+        return nil
     }
     
     var configuration: DependencyConfiguration {
@@ -194,6 +194,17 @@ extension Dependency {
     
     var isReference: Bool {
         return self is Reference
+    }
+    
+    private var isRegistration: Bool {
+        return self is Registration
+    }
+}
+
+extension Dependency where Self: Registration {
+
+    var scope: Scope? {
+        return configuration.scope
     }
 }
 
