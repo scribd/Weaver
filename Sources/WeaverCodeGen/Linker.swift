@@ -195,10 +195,6 @@ extension Dependency {
     var isReference: Bool {
         return self is Reference
     }
-    
-    private var isRegistration: Bool {
-        return self is Registration
-    }
 }
 
 extension Dependency where Self: Registration {
