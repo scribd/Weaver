@@ -43,6 +43,3 @@ final class HomeViewControllerDependencyContainer: HomeViewControllerDependencyR
     }
 }
 extension HomeViewControllerDependencyContainer: MovieViewControllerInputDependencyResolver {}
-protocol HomeViewControllerDependencyInjectable {
-    init(injecting dependencies: HomeViewControllerDependencyResolver)
-}

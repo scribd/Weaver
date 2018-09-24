@@ -18,6 +18,4 @@ final class WSReviewViewControllerDependencyContainer: NSObject, WSReviewViewCon
         super.init()
     }
 }
-protocol WSReviewViewControllerObjCDependencyInjectable {
-    init(injecting dependencies: WSReviewViewControllerDependencyResolver)
-}
+protocol WSReviewViewControllerObjCDependencyInjectable {}

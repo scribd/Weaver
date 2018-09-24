@@ -38,9 +38,6 @@ final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     }
 }
 extension MovieManagerDependencyContainer: MovieAPIInputDependencyResolver {}
-protocol MovieManagerDependencyInjectable {
-    init(injecting dependencies: MovieManagerDependencyResolver)
-}
 final class MovieManagerShimDependencyContainer: MovieManagerInputDependencyResolver {
     let logger: Logger
     init(logger: Logger) {

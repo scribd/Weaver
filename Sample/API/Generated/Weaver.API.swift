@@ -23,9 +23,6 @@ final class MovieAPIDependencyContainer: MovieAPIDependencyResolver {
         _ = logger
     }
 }
-protocol MovieAPIDependencyInjectable {
-    init(injecting dependencies: MovieAPIDependencyResolver)
-}
 final class MovieAPIShimDependencyContainer: MovieAPIInputDependencyResolver {
     let urlSession: URLSession
     init(urlSession: URLSession) {
