@@ -24,6 +24,3 @@ final class ReviewManagerDependencyContainer: ReviewManagerDependencyResolver {
         _ = logger
     }
 }
-protocol ReviewManagerDependencyInjectable {
-    init(injecting dependencies: ReviewManagerDependencyResolver)
-}

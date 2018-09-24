@@ -59,7 +59,9 @@ private struct RegistrationViewModel {
     let scope: String
     let customRef: Bool
     let parameters: [DependencyViewModel]
+    let hasReferences: Bool
     let hasBuilder: Bool
+    let hasDependencyContainer: Bool
     let isTransient: Bool
     let isWeak: Bool
     
@@ -72,12 +74,16 @@ private struct RegistrationViewModel {
         
         if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {
             parameters = dependencyContainer.parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
-            hasBuilder = !dependencyContainer.parameters.isEmpty || !dependencyContainer.references.orderedKeys.isEmpty
+            hasReferences = !dependencyContainer.allReferences.isEmpty
+            hasBuilder = dependencyContainer.hasBuilder
+            hasDependencyContainer = dependencyContainer.hasDependencies
         } else {
             parameters = []
+            hasReferences = false
             hasBuilder = false
+            hasDependencyContainer = false
         }
-        
+
         isTransient = dependency.scope == .transient
         isWeak = dependency.scope == .weak
     }
@@ -183,11 +189,11 @@ private extension DependencyContainer {
     }
     
     var isRoot: Bool {
-        let hasNonCustomReferences = references.orderedValues.contains {
-            !$0.configuration.customRef
-        }
-        let hasParameters = !parameters.isEmpty
-        return !hasNonCustomReferences && !hasParameters
+        return sources.isEmpty
+    }
+    
+    var hasBuilder: Bool {
+        return !parameters.isEmpty || !allReferences.isEmpty
     }
     
     var isPublic: Bool {

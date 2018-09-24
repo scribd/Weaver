@@ -94,7 +94,7 @@ final class ManagerDependencyContainer: ManagerDependencyResolver {
     private var _logger: Logger?
     var logger: Logger {
         if let value = _logger { return value }
-        let value = Logger()
+        let value = Logger(injecting: LoggerDependencyContainer())
         _logger = value
         return value
     }
@@ -102,7 +102,6 @@ final class ManagerDependencyContainer: ManagerDependencyResolver {
         _ = logger
     }
 }
-extension ManagerDependencyContainer: LoggerInputDependencyResolver {}
 """
             
             XCTAssertEqual(actual!, expected)
@@ -160,9 +159,6 @@ final class PersonManagerDependencyContainer: PersonManagerDependencyResolver {
         movieAPI = dependencies.movieAPI
         _ = logger
     }
-}
-protocol PersonManagerDependencyInjectable {
-    init(injecting dependencies: PersonManagerDependencyResolver)
 }
 """
             
@@ -259,9 +255,6 @@ final class MovieAPIDependencyContainer: MovieAPIDependencyResolver {
         self.host = host
     }
 }
-protocol MovieAPIDependencyInjectable {
-    init(injecting dependencies: MovieAPIDependencyResolver)
-}
 // MARK: - PersonManager
 protocol PersonManagerDependencyResolver {
     var movieAPI: APIProtocol { get }
@@ -279,7 +272,6 @@ final class PersonManagerDependencyContainer: PersonManagerDependencyResolver {
         _ = movieAPI(host: host)
     }
 }
-extension PersonManagerDependencyContainer: MovieAPIInputDependencyResolver {}
 """
             
             XCTAssertEqual(actual!, expected)
@@ -298,7 +290,6 @@ final class MyService {
   // weaver: session = Session
 
   final class MyEmbeddedService {
-
     // weaver: session = Session? <- SessionProtocol?
     // weaver: session.scope = .container
   }
@@ -408,9 +399,6 @@ final class APIDependencyContainer: APIDependencyResolver {
         _ = session
     }
 }
-protocol APIDependencyInjectable {
-    init(injecting dependencies: APIDependencyResolver)
-}
 final class APIShimDependencyContainer: APIInputDependencyResolver {
     let logger: Logger
     init(logger: Logger) {
@@ -469,9 +457,6 @@ final class APIDependencyContainer: APIDependencyResolver {
         self.parameter = parameter
     }
 }
-protocol APIDependencyInjectable {
-    init(injecting dependencies: APIDependencyResolver)
-}
 """
             XCTAssertEqual(actual!, expected)
             exportDiff(actual: actual!, expected: expected)
@@ -515,9 +500,6 @@ final class LoggerDependencyContainer: LoggerDependencyResolver {
         self.domain = domain
     }
 }
-protocol LoggerDependencyInjectable {
-    init(injecting dependencies: LoggerDependencyResolver)
-}
 // MARK: - MovieManager
 protocol MovieManagerDependencyResolver {
     func logger(domain: String) -> Logger
@@ -526,7 +508,7 @@ final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     private var _logger: Logger?
     func logger(domain: String) -> Logger {
         if let value = _logger { return value }
-        let dependencies = LoggerDependencyContainer(injecting: self, domain: domain)
+        let dependencies = LoggerDependencyContainer(domain: domain)
         let value = Logger(injecting: dependencies)
         _logger = value
         return value
@@ -535,7 +517,6 @@ final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
         _ = logger(domain: domain)
     }
 }
-extension MovieManagerDependencyContainer: LoggerInputDependencyResolver {}
 extension MovieManager {
     public convenience init() {
         let dependencies = MovieManagerDependencyContainer()
@@ -586,10 +567,6 @@ final class LoggerDependencyContainer<T>: LoggerDependencyResolver {
         self.domain = domain
     }
 }
-protocol LoggerDependencyInjectable {
-    associatedtype T
-    init(injecting dependencies: LoggerDependencyContainer<T>)
-}
 // MARK: - MovieManager
 protocol MovieManagerDependencyResolver {
     func logger(domain: String) -> Logger<String>
@@ -598,7 +575,7 @@ final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     private var _logger: Logger<String>?
     func logger(domain: String) -> Logger<String> {
         if let value = _logger { return value }
-        let dependencies = LoggerDependencyContainer(injecting: self, domain: domain)
+        let dependencies = LoggerDependencyContainer(domain: domain)
         let value = Logger<String>(injecting: dependencies)
         _logger = value
         return value
@@ -607,7 +584,6 @@ final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
         _ = logger(domain: domain)
     }
 }
-extension MovieManagerDependencyContainer: LoggerInputDependencyResolver {}
 """
             
             XCTAssertEqual(actual!, expected)
@@ -667,7 +643,8 @@ protocol HomeViewControllerDependencyResolver {
 final class HomeViewControllerDependencyContainer: HomeViewControllerDependencyResolver {
     let movieManager: MovieManager
     var movieViewController: MovieViewController {
-        let value = MovieViewController()
+        let dependencies = MovieViewControllerDependencyContainer(injecting: self)
+        let value = MovieViewController(injecting: dependencies)
         return value
     }
     init(injecting dependencies: HomeViewControllerInputDependencyResolver) {
@@ -708,9 +685,6 @@ final class ReviewViewControllerDependencyContainer: ReviewViewControllerDepende
         movieManager = dependencies.movieManager
     }
 }
-protocol ReviewViewControllerDependencyInjectable {
-    init(injecting dependencies: ReviewViewControllerDependencyResolver)
-}
 // MARK: - AppDelegate
 protocol AppDelegateDependencyResolver {
     var movieManager: MovieManager { get }
@@ -727,7 +701,8 @@ final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
     private var _homeViewController: HomeViewController?
     var homeViewController: HomeViewController {
         if let value = _homeViewController { return value }
-        let value = HomeViewController()
+        let dependencies = HomeViewControllerDependencyContainer(injecting: self)
+        let value = HomeViewController(injecting: dependencies)
         _homeViewController = value
         return value
     }
@@ -737,6 +712,122 @@ final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
     }
 }
 extension AppDelegateDependencyContainer: HomeViewControllerInputDependencyResolver {}
+"""
+            
+            XCTAssertEqual(actual!, expected)
+            exportDiff(actual: actual!, expected: expected)
+            
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
+    func test_generator_should_generate_a_valid_swift_file_when_a_dependency_container_takes_no_parameters() {
+        
+        do {
+            let file = File(contents: """
+final class HomeViewController {
+    // weaver: movieManager = MovieManager
+}
+
+final class AppDelegate {
+    // weaver: homeViewController = HomeViewController
+    // weaver: homeViewController.scope = .container
+}
+""")
+            
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let ast = try parser.parse()
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
+            
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
+            let (_ , actual) = try generator.generate().first!
+            
+            let expected = """
+/// This file is generated by Weaver 0.10.1
+/// DO NOT EDIT!
+// MARK: - HomeViewController
+protocol HomeViewControllerDependencyResolver {
+    var movieManager: MovieManager { get }
+}
+final class HomeViewControllerDependencyContainer: HomeViewControllerDependencyResolver {
+    private var _movieManager: MovieManager?
+    var movieManager: MovieManager {
+        if let value = _movieManager { return value }
+        let value = MovieManager()
+        _movieManager = value
+        return value
+    }
+    init() {
+        _ = movieManager
+    }
+}
+// MARK: - AppDelegate
+protocol AppDelegateDependencyResolver {
+    var homeViewController: HomeViewController { get }
+}
+final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
+    private var _homeViewController: HomeViewController?
+    var homeViewController: HomeViewController {
+        if let value = _homeViewController { return value }
+        let value = HomeViewController(injecting: HomeViewControllerDependencyContainer())
+        _homeViewController = value
+        return value
+    }
+    init() {
+        _ = homeViewController
+    }
+}
+"""
+            
+            XCTAssertEqual(actual!, expected)
+            exportDiff(actual: actual!, expected: expected)
+            
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
+    func test_generator_should_generate_a_valid_swift_file_when_a_dependency_has_no_container() {
+        
+        do {
+            let file = File(contents: """
+final class AppDelegate {
+    // weaver: homeViewController = HomeViewController
+    // weaver: homeViewController.scope = .container
+}
+""")
+            
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let ast = try parser.parse()
+            let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
+            
+            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
+            let (_ , actual) = try generator.generate().first!
+            
+            let expected = """
+/// This file is generated by Weaver 0.10.1
+/// DO NOT EDIT!
+// MARK: - AppDelegate
+protocol AppDelegateDependencyResolver {
+    var homeViewController: HomeViewController { get }
+}
+final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
+    private var _homeViewController: HomeViewController?
+    var homeViewController: HomeViewController {
+        if let value = _homeViewController { return value }
+        let value = HomeViewController()
+        _homeViewController = value
+        return value
+    }
+    init() {
+        _ = homeViewController
+    }
+}
 """
             
             XCTAssertEqual(actual!, expected)

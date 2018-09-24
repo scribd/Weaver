@@ -50,6 +50,3 @@ final class MovieViewControllerDependencyContainer: MovieViewControllerDependenc
     }
 }
 extension MovieViewControllerDependencyContainer: WSReviewViewControllerInputDependencyResolver {}
-protocol MovieViewControllerDependencyInjectable {
-    init(injecting dependencies: MovieViewControllerDependencyResolver)
-}

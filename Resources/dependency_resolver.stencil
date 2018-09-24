@@ -11,8 +11,6 @@
         {% endfor %}
 {% endmacro %}
 
-{% macro DependencyContainerBuilder dependency %}{{dependency.type.name}}DependencyContainer(injecting: self{% call ParametersPassInWithSeparator dependency.parameters %}){% endmacro %}
-
 {% macro AttributesDecl dependencies %}
 {% for dependency in dependencies %}
     let {{dependency.name}}: {{dependency.abstractType}}
@@ -89,10 +87,10 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
         {% if not registration.customRef %}
 
         {% if registration.hasBuilder %}
-        let dependencies = {% call DependencyContainerBuilder registration %}
+        let dependencies = {{registration.type.name}}DependencyContainer({% if registration.hasReferences %}injecting: self{% if registration.parameters %}, {% endif %}{% endif %}{% call ParametersPassIn registration.parameters %})
         let value = {{registration.type}}(injecting: dependencies)
         {% else %}{# registration.hasBuilder #}
-        let value = {{registration.type}}()
+        let value = {{registration.type}}({% if registration.hasDependencyContainer %}injecting: {{registration.type.name}}DependencyContainer{{registration.type.generics}}(){% endif %})
         {% endif %}{# registration.hasBuilder #}
 
         {% else %}{# not registration.customRef #}
@@ -138,21 +136,13 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
 }
 
 {% for injectableDependency in dependencyContainer.injectableDependencies %}
+{% if injectableDependency.references %}
 extension {{dependencyContainer.targetType.name}}DependencyContainer: {{injectableDependency.targetType.name}}InputDependencyResolver {}
+{% endif %}
 {% endfor %}
 
-{% if not dependencyContainer.isRoot %}
-protocol {{dependencyContainer.targetType.name}}{% if dependencyContainer.doesSupportObjc %}ObjC{% endif %}DependencyInjectable {
-    {% for genericName in dependencyContainer.targetType.genericNames %}
-    associatedtype {{genericName}}
-    {% endfor %}
-
-    {% if dependencyContainer.targetType.genericNames %}
-    init(injecting dependencies: {{dependencyContainer.targetType.name}}DependencyContainer{{dependencyContainer.targetType.generics}})
-    {% else %}
-    init(injecting dependencies: {{dependencyContainer.targetType.name}}DependencyResolver)
-    {% endif %}
-}
+{% if dependencyContainer.doesSupportObjc %}
+protocol {{dependencyContainer.targetType.name}}ObjCDependencyInjectable {}
 {% endif %}
 
 {% if dependencyContainer.isPublic %}

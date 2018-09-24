@@ -24,6 +24,3 @@ final class PersonManagerDependencyContainer: PersonManagerDependencyResolver {
         _ = logger
     }
 }
-protocol PersonManagerDependencyInjectable {
-    init(injecting dependencies: PersonManagerDependencyResolver)
-}
