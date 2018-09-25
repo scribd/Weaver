@@ -21,6 +21,15 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1978BCA821599E2600FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCA621599E1100FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift */; };
+		1978BCA921599E2900FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCA421599DA500FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift */; };
+		1978BCAD2159B1E700FDF1F7 /* test_generator_should_return_nil_when_no_annotation_is_detected.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCAC2159B1E700FDF1F7 /* test_generator_should_return_nil_when_no_annotation_is_detected.swift */; };
+		1978BCB02159B45B00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCAF2159B45B00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift */; };
+		1978BCB22159B67800FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCB12159B67800FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift */; };
+		1978BCB42159B6DA00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCB32159B6DA00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift */; };
+		1978BCB62159B6EE00FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCB52159B6EE00FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift */; };
+		1978BCBE215A8D2C00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCBD215A8D2C00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift */; };
+		1978BCC2215A8E2400FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCC1215A8E2400FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift */; };
 		OBJ_206 /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_155 /* api.c */; };
 		OBJ_207 /* emitter.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_156 /* emitter.c */; };
 		OBJ_208 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_157 /* parser.c */; };
@@ -472,6 +481,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1978BCA421599DA500FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift; sourceTree = "<group>"; };
+		1978BCA621599E1100FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Weaver.test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift; sourceTree = "<group>"; };
+		1978BCAC2159B1E700FDF1F7 /* test_generator_should_return_nil_when_no_annotation_is_detected.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_generator_should_return_nil_when_no_annotation_is_detected.swift; sourceTree = "<group>"; };
+		1978BCAF2159B45B00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift; sourceTree = "<group>"; };
+		1978BCB12159B67800FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift; sourceTree = "<group>"; };
+		1978BCB32159B6DA00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift; sourceTree = "<group>"; };
+		1978BCB52159B6EE00FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift; sourceTree = "<group>"; };
+		1978BCBD215A8D2C00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift; sourceTree = "<group>"; };
+		1978BCC1215A8E2400FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* AutoEquatable.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoEquatable.generated.swift; sourceTree = "<group>"; };
 		OBJ_102 /* Case.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Case.swift; sourceTree = "<group>"; };
@@ -638,7 +656,7 @@
 		"Stencil::Stencil::Product" /* Stencil.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Stencil.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"StencilSwiftKit::StencilSwiftKit::Product" /* StencilSwiftKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = StencilSwiftKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Weaver::WeaverCodeGen::Product" /* WeaverCodeGen.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = WeaverCodeGen.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		"Weaver::WeaverCodeGenTests::Product" /* WeaverCodeGenTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = WeaverCodeGenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"Weaver::WeaverCodeGenTests::Product" /* WeaverCodeGenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = WeaverCodeGenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Weaver::WeaverCommand::Product" /* WeaverCommand */ = {isa = PBXFileReference; lastKnownFileType = text; path = WeaverCommand; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Yams::CYaml::Product" /* CYaml.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CYaml.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Yams::Yams::Product" /* Yams.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Yams.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -768,6 +786,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1978BCA121599D2200FDF1F7 /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				1978BCAC2159B1E700FDF1F7 /* test_generator_should_return_nil_when_no_annotation_is_detected.swift */,
+				1978BCA421599DA500FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift */,
+				1978BCAF2159B45B00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift */,
+				1978BCB32159B6DA00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift */,
+				1978BCBD215A8D2C00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		1978BCA221599D6400FDF1F7 /* Output */ = {
+			isa = PBXGroup;
+			children = (
+				1978BCA621599E1100FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift */,
+				1978BCB12159B67800FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift */,
+				1978BCB52159B6EE00FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift */,
+				1978BCC1215A8E2400FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift */,
+			);
+			path = Output;
+			sourceTree = "<group>";
+		};
 		OBJ_100 /* Spectre 0.8.0 */ = {
 			isa = PBXGroup;
 			children = (
@@ -976,6 +1017,8 @@
 		OBJ_35 /* WeaverCodeGenTests */ = {
 			isa = PBXGroup;
 			children = (
+				1978BCA221599D6400FDF1F7 /* Output */,
+				1978BCA121599D2200FDF1F7 /* Input */,
 				OBJ_36 /* ConfigurationAttributeTests.swift */,
 				OBJ_37 /* ErrorTests.swift */,
 				OBJ_38 /* GeneratorTests.swift */,
@@ -1514,6 +1557,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 9999;
+				TargetAttributes = {
+					"Yams::CYaml" = {
+						LastSwiftMigration = 0940;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "Weaver" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1808,13 +1856,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				1978BCA821599E2600FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift in Sources */,
 				OBJ_450 /* ConfigurationAttributeTests.swift in Sources */,
+				1978BCAD2159B1E700FDF1F7 /* test_generator_should_return_nil_when_no_annotation_is_detected.swift in Sources */,
 				OBJ_451 /* ErrorTests.swift in Sources */,
 				OBJ_452 /* GeneratorTests.swift in Sources */,
+				1978BCB62159B6EE00FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift in Sources */,
 				OBJ_453 /* InspectorTests.swift in Sources */,
 				OBJ_454 /* LexerTests.swift in Sources */,
 				OBJ_455 /* ParserTests.swift in Sources */,
+				1978BCB22159B67800FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift in Sources */,
+				1978BCC2215A8E2400FDF1F7 /* Weaver.test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift in Sources */,
 				OBJ_456 /* SourceKitDeclarationTests.swift in Sources */,
+				1978BCA921599E2900FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_empty_type_gets_registered.swift in Sources */,
+				1978BCBE215A8D2C00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_embedded_injectable_types.swift in Sources */,
+				1978BCB02159B45B00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_when_an_isolated_type_gets_registered.swift in Sources */,
+				1978BCB42159B6DA00FDF1F7 /* test_generator_should_generate_a_valid_swift_code_with_a_customRef.swift in Sources */,
 				OBJ_457 /* TypeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2062,7 +2119,8 @@
 		OBJ_203 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEFINES_MODULE = NO;
+				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2081,6 +2139,8 @@
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				TARGET_NAME = CYaml;
 			};
 			name = Debug;
@@ -2088,7 +2148,8 @@
 		OBJ_204 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEFINES_MODULE = NO;
+				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2107,6 +2168,7 @@
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 				TARGET_NAME = CYaml;
 			};
 			name = Release;
