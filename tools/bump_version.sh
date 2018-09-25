@@ -10,7 +10,7 @@ echo $next_version
 sed -i '' "s/${current_version//./\\.}/$next_version/g" \
 Weaver.xcodeproj/WeaverCodeGen_Info.plist \
 Resources/dependency_resolver.stencil \
-Tests/WeaverCodeGenTests/GeneratorTests.swift \
+Tests/WeaverCodeGenTests/Generator/Output/*.swift \
 Sources/WeaverCommand/main.swift
 
 release_tar="https://github.com/scribd/Weaver/archive/$current_version.tar.gz"
