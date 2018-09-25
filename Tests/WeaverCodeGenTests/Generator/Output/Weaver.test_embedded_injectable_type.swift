@@ -18,13 +18,13 @@ final class FooTest5DependencyContainer: FooTest5DependencyResolver {
 }
 // MARK: - FuuTest5
 protocol FuuTest5DependencyResolver {
-    var fii: FiiProtocolTest5? { get }
+    var fii: FiiProtocolTest5 { get }
 }
 final class FuuTest5DependencyContainer: FuuTest5DependencyResolver {
-    private var _fii: FiiProtocolTest5??
-    var fii: FiiProtocolTest5? {
+    private var _fii: FiiProtocolTest5?
+    var fii: FiiProtocolTest5 {
         if let value = _fii { return value }
-        let value = FiiTest5?()
+        let value = FiiTest5()
         _fii = value
         return value
     }
