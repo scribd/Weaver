@@ -88,9 +88,9 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
 
         {% if registration.hasBuilder %}
         let dependencies = {{registration.type.name}}DependencyContainer({% if registration.hasReferences %}injecting: self{% if registration.parameters %}, {% endif %}{% endif %}{% call ParametersPassIn registration.parameters %})
-        let value = {{registration.type}}(injecting: dependencies)
+        let value = {{registration.type.name}}{{registration.type.generics}}(injecting: dependencies)
         {% else %}{# registration.hasBuilder #}
-        let value = {{registration.type}}({% if registration.hasDependencyContainer %}injecting: {{registration.type.name}}DependencyContainer{{registration.type.generics}}(){% endif %})
+        let value = {{registration.type.name}}{{registration.type.generics}}({% if registration.hasDependencyContainer %}injecting: {{registration.type.name}}DependencyContainer{{registration.type.generics}}(){% endif %})
         {% endif %}{# registration.hasBuilder #}
 
         {% else %}{# not registration.customRef #}

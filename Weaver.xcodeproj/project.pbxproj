@@ -21,6 +21,31 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1978BCA821599E2600FDF1F7 /* Weaver.test_empty_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCA621599E1100FDF1F7 /* Weaver.test_empty_type_registration.swift */; };
+		1978BCA921599E2900FDF1F7 /* test_empty_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCA421599DA500FDF1F7 /* test_empty_type_registration.swift */; };
+		1978BCAD2159B1E700FDF1F7 /* test_no_annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCAC2159B1E700FDF1F7 /* test_no_annotation.swift */; };
+		1978BCB02159B45B00FDF1F7 /* test_isolated_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCAF2159B45B00FDF1F7 /* test_isolated_type_registration.swift */; };
+		1978BCB22159B67800FDF1F7 /* Weaver.test_isolated_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCB12159B67800FDF1F7 /* Weaver.test_isolated_type_registration.swift */; };
+		1978BCB42159B6DA00FDF1F7 /* test_customRef_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCB32159B6DA00FDF1F7 /* test_customRef_registration.swift */; };
+		1978BCB62159B6EE00FDF1F7 /* Weaver.test_customRef_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCB52159B6EE00FDF1F7 /* Weaver.test_customRef_registration.swift */; };
+		1978BCBE215A8D2C00FDF1F7 /* test_embedded_injectable_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCBD215A8D2C00FDF1F7 /* test_embedded_injectable_type.swift */; };
+		1978BCC4215A8F4E00FDF1F7 /* Weaver.test_embedded_injectable_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCC3215A8F4D00FDF1F7 /* Weaver.test_embedded_injectable_type.swift */; };
+		1978BCC6215A925800FDF1F7 /* test_optional_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCC5215A925800FDF1F7 /* test_optional_type_registration.swift */; };
+		1978BCC8215A92BD00FDF1F7 /* Weaver.test_optional_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCC7215A92BD00FDF1F7 /* Weaver.test_optional_type_registration.swift */; };
+		1978BCCA215A95A000FDF1F7 /* test_public_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCC9215A95A000FDF1F7 /* test_public_type.swift */; };
+		1978BCCC215A960900FDF1F7 /* Weaver.test_public_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCCB215A960900FDF1F7 /* Weaver.test_public_type.swift */; };
+		1978BCCE215A973900FDF1F7 /* test_ignored_types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCCD215A973900FDF1F7 /* test_ignored_types.swift */; };
+		1978BCD0215A977400FDF1F7 /* Weaver.test_ignored_types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCCF215A977300FDF1F7 /* Weaver.test_ignored_types.swift */; };
+		1978BCD2215A97D600FDF1F7 /* test_internal_registration_in_public_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCD1215A97D600FDF1F7 /* test_internal_registration_in_public_type.swift */; };
+		1978BCD6215A989500FDF1F7 /* Weaver.test_internal_registration_in_public_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCD5215A989500FDF1F7 /* Weaver.test_internal_registration_in_public_type.swift */; };
+		1978BCD8215A994000FDF1F7 /* test_generic_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCD7215A994000FDF1F7 /* test_generic_type_registration.swift */; };
+		1978BCDE215A9ABD00FDF1F7 /* Weaver.test_generic_type_registration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCDD215A9ABC00FDF1F7 /* Weaver.test_generic_type_registration.swift */; };
+		1978BCE0215A9C3900FDF1F7 /* test_injectable_type_with_indirect_references.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCDF215A9C3900FDF1F7 /* test_injectable_type_with_indirect_references.swift */; };
+		1978BCE2215A9CF400FDF1F7 /* Weaver.test_injectable_type_with_indirect_references.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCE1215A9CF400FDF1F7 /* Weaver.test_injectable_type_with_indirect_references.swift */; };
+		1978BCE4215A9D7000FDF1F7 /* test_registrations_only.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCE3215A9D7000FDF1F7 /* test_registrations_only.swift */; };
+		1978BCE6215A9DBF00FDF1F7 /* Weaver.test_registrations_only.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCE5215A9DBF00FDF1F7 /* Weaver.test_registrations_only.swift */; };
+		1978BCE8215A9E2800FDF1F7 /* test_root_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCE7215A9E2800FDF1F7 /* test_root_type.swift */; };
+		1978BCEA215A9E6A00FDF1F7 /* Weaver.test_root_type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978BCE9215A9E6900FDF1F7 /* Weaver.test_root_type.swift */; };
 		OBJ_206 /* api.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_155 /* api.c */; };
 		OBJ_207 /* emitter.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_156 /* emitter.c */; };
 		OBJ_208 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_157 /* parser.c */; };
@@ -472,6 +497,31 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1978BCA421599DA500FDF1F7 /* test_empty_type_registration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_empty_type_registration.swift; sourceTree = "<group>"; };
+		1978BCA621599E1100FDF1F7 /* Weaver.test_empty_type_registration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Weaver.test_empty_type_registration.swift; sourceTree = "<group>"; };
+		1978BCAC2159B1E700FDF1F7 /* test_no_annotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_no_annotation.swift; sourceTree = "<group>"; };
+		1978BCAF2159B45B00FDF1F7 /* test_isolated_type_registration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = test_isolated_type_registration.swift; sourceTree = "<group>"; };
+		1978BCB12159B67800FDF1F7 /* Weaver.test_isolated_type_registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_isolated_type_registration.swift; sourceTree = "<group>"; };
+		1978BCB32159B6DA00FDF1F7 /* test_customRef_registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_customRef_registration.swift; sourceTree = "<group>"; };
+		1978BCB52159B6EE00FDF1F7 /* Weaver.test_customRef_registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_customRef_registration.swift; sourceTree = "<group>"; };
+		1978BCBD215A8D2C00FDF1F7 /* test_embedded_injectable_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_embedded_injectable_type.swift; sourceTree = "<group>"; };
+		1978BCC3215A8F4D00FDF1F7 /* Weaver.test_embedded_injectable_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_embedded_injectable_type.swift; sourceTree = "<group>"; };
+		1978BCC5215A925800FDF1F7 /* test_optional_type_registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_optional_type_registration.swift; sourceTree = "<group>"; };
+		1978BCC7215A92BD00FDF1F7 /* Weaver.test_optional_type_registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_optional_type_registration.swift; sourceTree = "<group>"; };
+		1978BCC9215A95A000FDF1F7 /* test_public_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_public_type.swift; sourceTree = "<group>"; };
+		1978BCCB215A960900FDF1F7 /* Weaver.test_public_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_public_type.swift; sourceTree = "<group>"; };
+		1978BCCD215A973900FDF1F7 /* test_ignored_types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_ignored_types.swift; sourceTree = "<group>"; };
+		1978BCCF215A977300FDF1F7 /* Weaver.test_ignored_types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_ignored_types.swift; sourceTree = "<group>"; };
+		1978BCD1215A97D600FDF1F7 /* test_internal_registration_in_public_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_internal_registration_in_public_type.swift; sourceTree = "<group>"; };
+		1978BCD5215A989500FDF1F7 /* Weaver.test_internal_registration_in_public_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_internal_registration_in_public_type.swift; sourceTree = "<group>"; };
+		1978BCD7215A994000FDF1F7 /* test_generic_type_registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_generic_type_registration.swift; sourceTree = "<group>"; };
+		1978BCDD215A9ABC00FDF1F7 /* Weaver.test_generic_type_registration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_generic_type_registration.swift; sourceTree = "<group>"; };
+		1978BCDF215A9C3900FDF1F7 /* test_injectable_type_with_indirect_references.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_injectable_type_with_indirect_references.swift; sourceTree = "<group>"; };
+		1978BCE1215A9CF400FDF1F7 /* Weaver.test_injectable_type_with_indirect_references.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_injectable_type_with_indirect_references.swift; sourceTree = "<group>"; };
+		1978BCE3215A9D7000FDF1F7 /* test_registrations_only.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_registrations_only.swift; sourceTree = "<group>"; };
+		1978BCE5215A9DBF00FDF1F7 /* Weaver.test_registrations_only.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_registrations_only.swift; sourceTree = "<group>"; };
+		1978BCE7215A9E2800FDF1F7 /* test_root_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = test_root_type.swift; sourceTree = "<group>"; };
+		1978BCE9215A9E6900FDF1F7 /* Weaver.test_root_type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.test_root_type.swift; sourceTree = "<group>"; };
 		"Commander::Commander::Product" /* Commander.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Commander.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* AutoEquatable.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoEquatable.generated.swift; sourceTree = "<group>"; };
 		OBJ_102 /* Case.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Case.swift; sourceTree = "<group>"; };
@@ -638,7 +688,7 @@
 		"Stencil::Stencil::Product" /* Stencil.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Stencil.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"StencilSwiftKit::StencilSwiftKit::Product" /* StencilSwiftKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = StencilSwiftKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Weaver::WeaverCodeGen::Product" /* WeaverCodeGen.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = WeaverCodeGen.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		"Weaver::WeaverCodeGenTests::Product" /* WeaverCodeGenTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = WeaverCodeGenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"Weaver::WeaverCodeGenTests::Product" /* WeaverCodeGenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = WeaverCodeGenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Weaver::WeaverCommand::Product" /* WeaverCommand */ = {isa = PBXFileReference; lastKnownFileType = text; path = WeaverCommand; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Yams::CYaml::Product" /* CYaml.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CYaml.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Yams::Yams::Product" /* Yams.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Yams.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -768,6 +818,55 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1978BCA121599D2200FDF1F7 /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				1978BCAC2159B1E700FDF1F7 /* test_no_annotation.swift */,
+				1978BCA421599DA500FDF1F7 /* test_empty_type_registration.swift */,
+				1978BCAF2159B45B00FDF1F7 /* test_isolated_type_registration.swift */,
+				1978BCB32159B6DA00FDF1F7 /* test_customRef_registration.swift */,
+				1978BCBD215A8D2C00FDF1F7 /* test_embedded_injectable_type.swift */,
+				1978BCC5215A925800FDF1F7 /* test_optional_type_registration.swift */,
+				1978BCC9215A95A000FDF1F7 /* test_public_type.swift */,
+				1978BCCD215A973900FDF1F7 /* test_ignored_types.swift */,
+				1978BCD1215A97D600FDF1F7 /* test_internal_registration_in_public_type.swift */,
+				1978BCD7215A994000FDF1F7 /* test_generic_type_registration.swift */,
+				1978BCDF215A9C3900FDF1F7 /* test_injectable_type_with_indirect_references.swift */,
+				1978BCE3215A9D7000FDF1F7 /* test_registrations_only.swift */,
+				1978BCE7215A9E2800FDF1F7 /* test_root_type.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		1978BCA221599D6400FDF1F7 /* Output */ = {
+			isa = PBXGroup;
+			children = (
+				1978BCA621599E1100FDF1F7 /* Weaver.test_empty_type_registration.swift */,
+				1978BCB12159B67800FDF1F7 /* Weaver.test_isolated_type_registration.swift */,
+				1978BCB52159B6EE00FDF1F7 /* Weaver.test_customRef_registration.swift */,
+				1978BCC3215A8F4D00FDF1F7 /* Weaver.test_embedded_injectable_type.swift */,
+				1978BCC7215A92BD00FDF1F7 /* Weaver.test_optional_type_registration.swift */,
+				1978BCCB215A960900FDF1F7 /* Weaver.test_public_type.swift */,
+				1978BCCF215A977300FDF1F7 /* Weaver.test_ignored_types.swift */,
+				1978BCD5215A989500FDF1F7 /* Weaver.test_internal_registration_in_public_type.swift */,
+				1978BCDD215A9ABC00FDF1F7 /* Weaver.test_generic_type_registration.swift */,
+				1978BCE1215A9CF400FDF1F7 /* Weaver.test_injectable_type_with_indirect_references.swift */,
+				1978BCE5215A9DBF00FDF1F7 /* Weaver.test_registrations_only.swift */,
+				1978BCE9215A9E6900FDF1F7 /* Weaver.test_root_type.swift */,
+			);
+			path = Output;
+			sourceTree = "<group>";
+		};
+		1978BCEB215A9E8F00FDF1F7 /* Generator */ = {
+			isa = PBXGroup;
+			children = (
+				1978BCA221599D6400FDF1F7 /* Output */,
+				1978BCA121599D2200FDF1F7 /* Input */,
+				OBJ_38 /* GeneratorTests.swift */,
+			);
+			path = Generator;
+			sourceTree = "<group>";
+		};
 		OBJ_100 /* Spectre 0.8.0 */ = {
 			isa = PBXGroup;
 			children = (
@@ -976,9 +1075,9 @@
 		OBJ_35 /* WeaverCodeGenTests */ = {
 			isa = PBXGroup;
 			children = (
+				1978BCEB215A9E8F00FDF1F7 /* Generator */,
 				OBJ_36 /* ConfigurationAttributeTests.swift */,
 				OBJ_37 /* ErrorTests.swift */,
-				OBJ_38 /* GeneratorTests.swift */,
 				OBJ_39 /* InspectorTests.swift */,
 				OBJ_40 /* LexerTests.swift */,
 				OBJ_41 /* ParserTests.swift */,
@@ -1514,6 +1613,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 9999;
+				TargetAttributes = {
+					"Yams::CYaml" = {
+						LastSwiftMigration = 0940;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "Weaver" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1808,13 +1912,38 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				1978BCE0215A9C3900FDF1F7 /* test_injectable_type_with_indirect_references.swift in Sources */,
+				1978BCC6215A925800FDF1F7 /* test_optional_type_registration.swift in Sources */,
+				1978BCA821599E2600FDF1F7 /* Weaver.test_empty_type_registration.swift in Sources */,
 				OBJ_450 /* ConfigurationAttributeTests.swift in Sources */,
+				1978BCAD2159B1E700FDF1F7 /* test_no_annotation.swift in Sources */,
+				1978BCC8215A92BD00FDF1F7 /* Weaver.test_optional_type_registration.swift in Sources */,
+				1978BCE4215A9D7000FDF1F7 /* test_registrations_only.swift in Sources */,
 				OBJ_451 /* ErrorTests.swift in Sources */,
 				OBJ_452 /* GeneratorTests.swift in Sources */,
+				1978BCB62159B6EE00FDF1F7 /* Weaver.test_customRef_registration.swift in Sources */,
+				1978BCCE215A973900FDF1F7 /* test_ignored_types.swift in Sources */,
 				OBJ_453 /* InspectorTests.swift in Sources */,
 				OBJ_454 /* LexerTests.swift in Sources */,
 				OBJ_455 /* ParserTests.swift in Sources */,
+				1978BCB22159B67800FDF1F7 /* Weaver.test_isolated_type_registration.swift in Sources */,
+				1978BCE2215A9CF400FDF1F7 /* Weaver.test_injectable_type_with_indirect_references.swift in Sources */,
+				1978BCEA215A9E6A00FDF1F7 /* Weaver.test_root_type.swift in Sources */,
+				1978BCCA215A95A000FDF1F7 /* test_public_type.swift in Sources */,
+				1978BCC4215A8F4E00FDF1F7 /* Weaver.test_embedded_injectable_type.swift in Sources */,
 				OBJ_456 /* SourceKitDeclarationTests.swift in Sources */,
+				1978BCE8215A9E2800FDF1F7 /* test_root_type.swift in Sources */,
+				1978BCA921599E2900FDF1F7 /* test_empty_type_registration.swift in Sources */,
+				1978BCBE215A8D2C00FDF1F7 /* test_embedded_injectable_type.swift in Sources */,
+				1978BCDE215A9ABD00FDF1F7 /* Weaver.test_generic_type_registration.swift in Sources */,
+				1978BCD6215A989500FDF1F7 /* Weaver.test_internal_registration_in_public_type.swift in Sources */,
+				1978BCCC215A960900FDF1F7 /* Weaver.test_public_type.swift in Sources */,
+				1978BCD8215A994000FDF1F7 /* test_generic_type_registration.swift in Sources */,
+				1978BCB02159B45B00FDF1F7 /* test_isolated_type_registration.swift in Sources */,
+				1978BCB42159B6DA00FDF1F7 /* test_customRef_registration.swift in Sources */,
+				1978BCE6215A9DBF00FDF1F7 /* Weaver.test_registrations_only.swift in Sources */,
+				1978BCD2215A97D600FDF1F7 /* test_internal_registration_in_public_type.swift in Sources */,
+				1978BCD0215A977400FDF1F7 /* Weaver.test_ignored_types.swift in Sources */,
 				OBJ_457 /* TypeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2062,7 +2191,8 @@
 		OBJ_203 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEFINES_MODULE = NO;
+				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2081,6 +2211,8 @@
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				TARGET_NAME = CYaml;
 			};
 			name = Debug;
@@ -2088,7 +2220,8 @@
 		OBJ_204 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEFINES_MODULE = NO;
+				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2107,6 +2240,7 @@
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
 				TARGET_NAME = CYaml;
 			};
 			name = Release;
