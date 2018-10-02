@@ -242,40 +242,12 @@ private extension DependencyContainer {
 
 // MARK: - Indexes
 
-private struct ResolutionCacheIndex {
+private struct ResolutionCacheIndex: Hashable, Equatable {
     let dependencyContainer: DependencyContainer
     let dependencyIndex: DependencyIndex
 }
 
-private struct BuildCacheIndex {
+private struct BuildCacheIndex: Hashable, Equatable {
     let dependencyContainer: DependencyContainer
     let scope: Scope?
-}
-
-// MARK: - Hashable
-
-extension ResolutionCacheIndex: Hashable {
-
-    var hashValue: Int {
-        return dependencyContainer.hashValue ^ dependencyIndex.hashValue
-    }
-    
-    static func ==(lhs: ResolutionCacheIndex, rhs: ResolutionCacheIndex) -> Bool {
-        guard lhs.dependencyContainer == rhs.dependencyContainer else { return false }
-        guard lhs.dependencyIndex == rhs.dependencyIndex else { return false }
-        return true
-    }
-}
-
-extension BuildCacheIndex: Hashable {
-    
-    var hashValue: Int {
-        return dependencyContainer.hashValue ^ (scope?.hashValue ?? 0)
-    }
-    
-    static func ==(lhs: BuildCacheIndex, rhs: BuildCacheIndex) -> Bool {
-        guard lhs.dependencyContainer == rhs.dependencyContainer else { return false }
-        guard lhs.scope == rhs.scope else { return false }
-        return true
-    }
 }

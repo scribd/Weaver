@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum TokenError: Error, AutoEquatable {
+enum TokenError: Error, Equatable {
     case invalidAnnotation(String)
     case invalidScope(String)
     case invalidConfigurationAttributeValue(value: String, expected: String)
@@ -15,11 +15,11 @@ enum TokenError: Error, AutoEquatable {
     case unknownConfigurationAttribute(name: String)
 }
 
-enum LexerError: Error, AutoEquatable {
+enum LexerError: Error, Equatable {
     case invalidAnnotation(FileLocation, underlyingError: TokenError)
 }
 
-enum ParserError: Error, AutoEquatable {
+enum ParserError: Error, Equatable {
     case unexpectedToken(FileLocation)
     case unexpectedEOF(FileLocation)
     
@@ -28,22 +28,22 @@ enum ParserError: Error, AutoEquatable {
     case configurationAttributeDoubleAssignation(FileLocation, attribute: ConfigurationAttribute)
 }
 
-enum GeneratorError: Error, AutoEquatable {
+enum GeneratorError: Error, Equatable {
     case invalidTemplatePath(path: String)
 }
 
-enum InspectorError: Error, AutoEquatable {
+enum InspectorError: Error, Equatable {
     case invalidAST(FileLocation, unexpectedExpr: Expr)
     case invalidDependencyGraph(PrintableDependency, underlyingError: InspectorAnalysisError)
 }
 
-enum InspectorAnalysisError: Error, AutoEquatable {
+enum InspectorAnalysisError: Error, Equatable {
     case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
     case isolatedResolverCannotHaveReferents(type: Type?, referents: [PrintableResolver])
 }
 
-enum InspectorAnalysisHistoryRecord: AutoEquatable {
+enum InspectorAnalysisHistoryRecord: Equatable {
     case foundUnaccessibleDependency(PrintableDependency)
     case dependencyNotFound(PrintableDependency)
     case triedToBuildType(PrintableResolver, stepCount: Int)
@@ -56,18 +56,18 @@ protocol Printable {
     var fileLocation: FileLocation { get }
 }
 
-struct PrintableResolver: AutoEquatable, Printable {
+struct PrintableResolver: Equatable, Printable {
     let fileLocation: FileLocation
     let type: Type?
 }
 
-struct PrintableDependency: AutoEquatable, Printable {
+struct PrintableDependency: Equatable, Printable {
     let fileLocation: FileLocation
     let name: String
     let type: Type?
 }
 
-struct FileLocation: AutoEquatable, Printable {
+struct FileLocation: Equatable, Printable {
     let line: Int?
     let file: String?
     

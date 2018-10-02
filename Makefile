@@ -2,13 +2,10 @@ VERSION := $(shell /bin/cat .version)
 PREFIX=/usr/local
 SWIFT_BUILD_FLAGS=--configuration release
 
-.PHONY: clean build install package generate_sources codecov
+.PHONY: clean build install package codecov
 
 build:
 	@swift build --disable-sandbox $(SWIFT_BUILD_FLAGS)
-
-generate_sources:
-	bash -c "(command -v sourcery && sourcery) || echo 'warning: Sourcery is not installed'"
 
 clean:
 	rm -rf .build

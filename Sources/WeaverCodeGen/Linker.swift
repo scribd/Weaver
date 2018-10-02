@@ -354,7 +354,7 @@ fileprivate final class Parameter: Dependency {
 
 // MARK: - Indexes
 
-struct DependencyIndex: AutoHashable, AutoEquatable {
+struct DependencyIndex: Hashable, Equatable {
     let name: String
     let type: Type?
 }

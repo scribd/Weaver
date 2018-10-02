@@ -15,7 +15,7 @@ enum ConfigurationAttributeName: String {
     case scope
 }
 
-enum ConfigurationAttribute: AutoEquatable, AutoHashable {
+enum ConfigurationAttribute: Equatable, Hashable {
     case isIsolated(value: Bool)
     case customRef(value: Bool)
     case scope(value: Scope)
@@ -23,7 +23,7 @@ enum ConfigurationAttribute: AutoEquatable, AutoHashable {
 
 // MARK: - Target
 
-enum ConfigurationAttributeTarget: AutoEquatable, AutoHashable {
+enum ConfigurationAttributeTarget: Equatable, Hashable {
     case `self`
     case dependency(name: String)
 }

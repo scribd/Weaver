@@ -8,7 +8,7 @@
 import Foundation
 
 /// Representation of any Swift type
-public struct Type: AutoHashable, AutoEquatable {
+public struct Type: Hashable, Equatable {
 
     /// Type name
     public let name: String
@@ -56,7 +56,7 @@ public struct Type: AutoHashable, AutoEquatable {
 
 // MARK: - Index
 
-struct TypeIndex: AutoHashable, AutoEquatable {
+struct TypeIndex: Hashable, Equatable {
 
     let value: String
     
