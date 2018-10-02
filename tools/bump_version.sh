@@ -6,7 +6,7 @@ if [ -z $next_version ]; then
 fi
 
 echo $next_version
-echo $next_version > ../.version
+echo $next_version > .version
 
 sed -i '' "s/${current_version//./\\.}/$next_version/g" \
 Resources/dependency_resolver.stencil \
