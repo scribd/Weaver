@@ -39,7 +39,7 @@ import API
         return label
     }()
     
-    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         backgroundColor = .clear
@@ -50,14 +50,14 @@ import API
         contentLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            authorLabel.topAnchor.constraintEqualToSystemSpacingBelow(contentView.topAnchor, multiplier: 1),
-            authorLabel.leadingAnchor.constraintEqualToSystemSpacingAfter(contentView.leadingAnchor, multiplier: 1),
-            contentView.trailingAnchor.constraintEqualToSystemSpacingAfter(authorLabel.trailingAnchor, multiplier: 1),
+            authorLabel.topAnchor.constraint(equalToSystemSpacingBelow: contentView.topAnchor, multiplier: 1),
+            authorLabel.leadingAnchor.constraint(equalToSystemSpacingAfter: contentView.leadingAnchor, multiplier: 1),
+            contentView.trailingAnchor.constraint(equalToSystemSpacingAfter: authorLabel.trailingAnchor, multiplier: 1),
 
-            contentLabel.topAnchor.constraintEqualToSystemSpacingBelow(authorLabel.bottomAnchor, multiplier: 1),
-            contentView.bottomAnchor.constraintEqualToSystemSpacingBelow(contentLabel.bottomAnchor, multiplier: 1),
-            contentLabel.leadingAnchor.constraintEqualToSystemSpacingAfter(contentView.leadingAnchor, multiplier: 1),
-            contentView.trailingAnchor.constraintEqualToSystemSpacingAfter(contentLabel.trailingAnchor, multiplier: 1)
+            contentLabel.topAnchor.constraint(equalToSystemSpacingBelow: authorLabel.bottomAnchor, multiplier: 1),
+            contentView.bottomAnchor.constraint(equalToSystemSpacingBelow: contentLabel.bottomAnchor, multiplier: 1),
+            contentLabel.leadingAnchor.constraint(equalToSystemSpacingAfter: contentView.leadingAnchor, multiplier: 1),
+            contentView.trailingAnchor.constraint(equalToSystemSpacingAfter: contentLabel.trailingAnchor, multiplier: 1)
         ])
     }
     

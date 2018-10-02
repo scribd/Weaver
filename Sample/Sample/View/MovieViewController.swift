@@ -91,15 +91,15 @@ final class MovieViewController: UIViewController {
         overviewLabel.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            thumbnailImageView.topAnchor.constraintEqualToSystemSpacingBelow(view.topAnchor, multiplier: 2),
+            thumbnailImageView.topAnchor.constraint(equalToSystemSpacingBelow: view.topAnchor, multiplier: 2),
             thumbnailImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             thumbnailImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             thumbnailImageView.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1),
             
-            overviewLabel.topAnchor.constraintEqualToSystemSpacingBelow(thumbnailImageView.bottomAnchor, multiplier: 2),
-            overviewLabel.leadingAnchor.constraintEqualToSystemSpacingAfter(view.leadingAnchor, multiplier: 2),
-            view.trailingAnchor.constraintEqualToSystemSpacingAfter(overviewLabel.trailingAnchor, multiplier: 2),
-            view.bottomAnchor.constraintGreaterThanOrEqualToSystemSpacingBelow(overviewLabel.bottomAnchor, multiplier: 2)
+            overviewLabel.topAnchor.constraint(equalToSystemSpacingBelow: thumbnailImageView.bottomAnchor, multiplier: 2),
+            overviewLabel.leadingAnchor.constraint(equalToSystemSpacingAfter: view.leadingAnchor, multiplier: 2),
+            view.trailingAnchor.constraint(equalToSystemSpacingAfter: overviewLabel.trailingAnchor, multiplier: 2),
+            view.bottomAnchor.constraint(greaterThanOrEqualToSystemSpacingBelow: overviewLabel.bottomAnchor, multiplier: 2)
         ])
         
         loadData { viewModel in
