@@ -93,16 +93,13 @@ public struct ParameterAnnotation: Token, Hashable, Equatable {
     let type: Type
     
     public static func create(_ string: String) throws -> ParameterAnnotation? {
-        if let matches = try NSRegularExpression(pattern: Patterns.parameter()).matches(in: string), let type = try Type(matches[1]) {
-            return ParameterAnnotation(name: matches[0], type: type)
+        guard let matches = try NSRegularExpression(pattern: Patterns.parameter).matches(in: string) else {
+            return nil
         }
-        if let matches = try NSRegularExpression(pattern: Patterns.parameter(typeName: Patterns.arrayType)).matches(in: string), let type = try Type(matches[1]) {
-            return ParameterAnnotation(name: matches[0], type: type)
+        guard let type = try Type(matches[1]) else {
+            return nil
         }
-        if let matches = try NSRegularExpression(pattern: Patterns.parameter(typeName: Patterns.dictType)).matches(in: string), let type = try Type(matches[1]) {
-            return ParameterAnnotation(name: matches[0], type: type)
-        }
-        return nil
+        return ParameterAnnotation(name: matches[0], type: type)
     }
     
     public var description: String {

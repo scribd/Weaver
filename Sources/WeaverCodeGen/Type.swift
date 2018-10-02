@@ -21,7 +21,7 @@ public struct Type: Hashable, Equatable {
     public let generics: String
     
     init?(_ string: String) throws {
-        if let matches = try NSRegularExpression(pattern: "^(\(Patterns.typeName))$").matches(in: string) {
+        if let matches = try NSRegularExpression(pattern: "^(\(Patterns.genericType))$").matches(in: string) {
             let name = matches[1]
             
             let isOptional = matches[0].hasSuffix("?")
