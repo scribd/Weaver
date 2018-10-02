@@ -34,9 +34,11 @@ enum Patterns {
     private static let name = "\\w+"
     
     static let typeName = "(\(name))(<\(name)(\(spaces),\(spaces)\(name))*>)?\\??"
+    static let arrayType = "\\[(\(name)\\??)\\]\\??"
+    static let dictType = "\\[(\(name)\\??)\(spaces):\(spaces)(\(name)\\??)\\]\\??"
     static let register = "^(\(name))\(equal)(\(typeName))\(spaces)(<-\(spaces)(\(typeName))\(spaces))?$"
     static let reference = "^(\(name))\(arrow)(\(typeName))\(spaces)$"
-    static let parameter = "^(\(name))\(spaces)<=\(spaces)(\(typeName))\(spaces)$"
+    static func parameter(typeName: String = Patterns.typeName) -> String { return "^(\(name))\(spaces)<=\(spaces)(\(typeName))\(spaces)$" }
     static let scope = "^(\(name))\\.scope\(equal)\\.(\(name))\(spaces)$"
     static let configuration = "^(\(name))\\.(\(name))\(equal)(.*)\(spaces)$"
     static let `import` = "^import\\s+(\(name))\(spaces)$"

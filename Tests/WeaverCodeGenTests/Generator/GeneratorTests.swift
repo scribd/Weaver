@@ -128,6 +128,14 @@ final class GeneratorTests: XCTestCase {
             XCTFail("Unexpected error \(error)")
         }
     }
+    
+    func test_multi_generics_type_registration() {
+        do {
+            try performTest()
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
 }
 
 // MARK: - Utils
@@ -168,7 +176,7 @@ private extension GeneratorTests {
         let fileName = function.replacingOccurrences(of: "()", with: "")
         let path = Path(#file).parent() + Path("Output/Weaver.\(fileName).swift")
         
-        if let actual = actual, !path.exists {
+        if let actual = actual, try (!path.exists || (path.read() as String).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
             try path.write(actual)
         }
         

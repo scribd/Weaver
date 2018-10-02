@@ -22,18 +22,6 @@ public struct TokenBox<T: Token & Equatable & Hashable>: AnyTokenBox, Equatable,
     public let length: Int
     public var line: Int
     
-    public static func ==(lhs: TokenBox<T>, rhs: TokenBox<T>) -> Bool {
-        guard lhs.value == rhs.value else { return false }
-        guard lhs.offset == rhs.offset else { return false }
-        guard lhs.length == rhs.length else { return false }
-        guard lhs.line == rhs.line else { return false }
-        return true
-    }
-    
-    public var hashValue: Int {
-        return value.hashValue ^ offset.hashValue ^ length.hashValue ^ line.hashValue
-    }
-    
     public var description: String {
         return "\(value) - \(offset)[\(length)] - at line: \(line)"
     }
@@ -105,13 +93,16 @@ public struct ParameterAnnotation: Token, Hashable, Equatable {
     let type: Type
     
     public static func create(_ string: String) throws -> ParameterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.parameter).matches(in: string) else {
-            return nil
+        if let matches = try NSRegularExpression(pattern: Patterns.parameter()).matches(in: string), let type = try Type(matches[1]) {
+            return ParameterAnnotation(name: matches[0], type: type)
         }
-        guard let type = try Type(matches[1]) else {
-            return nil
+        if let matches = try NSRegularExpression(pattern: Patterns.parameter(typeName: Patterns.arrayType)).matches(in: string), let type = try Type(matches[1]) {
+            return ParameterAnnotation(name: matches[0], type: type)
         }
-        return ParameterAnnotation(name: matches[0], type: type)
+        if let matches = try NSRegularExpression(pattern: Patterns.parameter(typeName: Patterns.dictType)).matches(in: string), let type = try Type(matches[1]) {
+            return ParameterAnnotation(name: matches[0], type: type)
+        }
+        return nil
     }
     
     public var description: String {
