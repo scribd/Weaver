@@ -184,6 +184,7 @@ private extension GeneratorTests {
         let actualFilePath = dirPath + Path("\(function)_actual.swift")
         let expectedFilePath = dirPath + Path("\(function)_expected.swift")
 
+        try dirPath.mkpath()
         try actualFilePath.write(actual)
         try expectedFilePath.write(expected)
         
@@ -197,7 +198,7 @@ private extension GeneratorTests {
         let actual = try actualOutput(function)
         let expected = try expectedOutput(actual: actual, function)
         
-        XCTAssertEqual(actual, expected)
+        XCTAssertEqual(actual!, expected)
         try actual.flatMap { try exportDiff(actual: $0, expected: expected, function) }
     }
 }

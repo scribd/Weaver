@@ -73,7 +73,9 @@ private struct RegistrationViewModel {
         customRef = dependency.configuration.customRef
         
         if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {
-            parameters = dependencyContainer.parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+            parameters = dependencyContainer.parameters.orderedValues.map {
+                DependencyViewModel($0, context: dependency.source, dependencyGraph: dependencyGraph)
+            }
             hasReferences = !dependencyContainer.allReferences.isEmpty
             hasBuilder = dependencyContainer.hasBuilder
             hasDependencyContainer = dependencyContainer.hasDependencies
@@ -96,24 +98,24 @@ private struct DependencyViewModel {
     let abstractType: Type
     let parameters: [DependencyViewModel]
 
-    init(_ dependency: Dependency, dependencyGraph: DependencyGraph) {
+    init(_ dependency: Dependency, context: DependencyContainer? = nil, dependencyGraph: DependencyGraph) {
         
         name = dependency.dependencyName
-        type = dependency.type
-        abstractType = dependency.abstractType
+        type = context?.parameters[dependency.dependencyName]?.type ?? dependency.type
+        abstractType = context?.parameters[dependency.dependencyName]?.abstractType ?? dependency.abstractType
         
-        let parameters = dependencyGraph.dependencyContainersByType[dependency.type.index]?.parameters ?? []
-        if parameters.isEmpty, let types = dependencyGraph.typesByName[name] {
+        let parameters = dependencyGraph.dependencyContainersByType[dependency.type.index]?.parameters ?? OrderedDictionary()
+        if parameters.orderedValues.isEmpty, let types = dependencyGraph.typesByName[name] {
             var _parameters = [DependencyViewModel]()
             for type in types {
                 if let parameters = dependencyGraph.dependencyContainersByType[type.index]?.parameters {
-                    _parameters = parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+                    _parameters = parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
                     break
                 }
             }
             self.parameters = _parameters
         } else {
-            self.parameters = parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+            self.parameters = parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
         }
     }
 }
@@ -139,7 +141,7 @@ private struct DependencyContainerViewModel {
         targetType = type
         registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, dependencyGraph: dependencyGraph) }
         references = dependencyContainer.allReferences.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
-        parameters = dependencyContainer.parameters.map { DependencyViewModel($0, dependencyGraph: dependencyGraph)}
+        parameters = dependencyContainer.parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph)}
         embeddingTypes = dependencyContainer.embeddingTypes
         isRoot = dependencyContainer.isRoot
         isPublic = dependencyContainer.isPublic
@@ -162,7 +164,7 @@ private extension String {
 private extension DependencyContainer {
     
     var hasDependencies: Bool {
-        return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.isEmpty
+        return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.orderedValues.isEmpty
     }
     
     var allReferences: [ResolvableDependency] {
@@ -193,7 +195,7 @@ private extension DependencyContainer {
     }
     
     var hasBuilder: Bool {
-        return !parameters.isEmpty || !allReferences.isEmpty
+        return !parameters.orderedValues.isEmpty || !allReferences.isEmpty
     }
     
     var isPublic: Bool {

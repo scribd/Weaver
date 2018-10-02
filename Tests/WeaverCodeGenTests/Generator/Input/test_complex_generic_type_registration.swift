@@ -7,6 +7,9 @@ final class FooTest14 {
 final class FuuTest14<T> {
     // weaver: fii <= T
     
-    init(injecting _: FuuTest14DependencyResolver<T>) {
+    let resolver: FuuTest14DependencyContainer<T>
+    
+    init(injecting resolver: FuuTest14DependencyContainer<T>) {
+        self.resolver = resolver
     }
 }
