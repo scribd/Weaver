@@ -829,4 +829,108 @@ final class Logger<T> {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_array_type_token_declaration() {
+        
+        let file = File(contents: """
+
+final class MovieManager {
+    // weaver: array = [String]
+}
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
+                    value: RegisterAnnotation(name: "array", type: Type(name: "Array", genericNames: ["String"], isOptional: false), protocolType: nil),
+                    offset: 32, length: 28, line: 2
+                ))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_optional_array_type_token_declaration() {
+        
+        let file = File(contents: """
+
+final class MovieManager {
+    // weaver: array = [ String? ]?
+}
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
+                    value: RegisterAnnotation(name: "array", type: Type(name: "Array", genericNames: ["String?"], isOptional: true), protocolType: nil),
+                    offset: 32, length: 32, line: 2
+                ))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_dict_type_token_declaration() {
+        
+        let file = File(contents: """
+
+final class MovieManager {
+    // weaver: dict = [ String : Int ]
+}
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
+                    value: RegisterAnnotation(name: "dict", type: Type(name: "Dictionary", genericNames: ["String", "Int"], isOptional: false), protocolType: nil),
+                    offset: 32, length: 35, line: 2
+                ))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_optional_dict_type_token_declaration() {
+        
+        let file = File(contents: """
+
+final class MovieManager {
+    // weaver: dict = [String?:Int?]?
+}
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
+                    value: RegisterAnnotation(name: "dict", type: Type(name: "Dictionary", genericNames: ["String?", "Int?"], isOptional: true), protocolType: nil),
+                    offset: 32, length: 34, line: 2
+                ))
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }

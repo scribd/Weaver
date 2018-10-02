@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: Expressions
 
-public indirect enum Expr: AutoEquatable {
+public indirect enum Expr: Equatable {
     case file(types: [Expr], name: String, imports: [String])
     case typeDeclaration(TokenBox<InjectableType>, children: [Expr])
     case registerAnnotation(TokenBox<RegisterAnnotation>)

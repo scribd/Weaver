@@ -53,6 +53,7 @@ protocol {{dependencyContainer.targetType.name}}InputDependencyResolver {
 }
 {% endif %}
 
+{% if not dependencyContainer.targetType.generics %}
 {% if dependencyContainer.doesSupportObjc %}@objc {% endif %}protocol {{dependencyContainer.targetType.name}}DependencyResolver {
 
     {% call DependencyResolverDecl dependencyContainer.parameters %}
@@ -61,8 +62,9 @@ protocol {{dependencyContainer.targetType.name}}InputDependencyResolver {
 
     {% call DependencyResolverDecl dependencyContainer.registrations %}
 }
+{% endif %}
 
-final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependencyContainer.targetType.generics}}: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver {
+final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependencyContainer.targetType.generics}}{% if not dependencyContainer.targetType.generics %}: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver{% endif %} {
     
     {% call AttributesDecl dependencyContainer.parameters %}
 

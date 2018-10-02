@@ -54,7 +54,7 @@ final class DependencyContainer: Hashable {
     fileprivate(set) var references = OrderedDictionary<DependencyIndex, ResolvableDependency>()
     
     /// Parameters listed in order of appearance in the source code.
-    fileprivate(set) var parameters = [Dependency]()
+    fileprivate(set) var parameters = OrderedDictionary<ParameterName, Dependency>()
     
     /// Dependency containers from which this dependency container's associated type is being registered.
     fileprivate(set) var sources = [DependencyContainer]()
@@ -354,10 +354,12 @@ fileprivate final class Parameter: Dependency {
 
 // MARK: - Indexes
 
-struct DependencyIndex: AutoHashable, AutoEquatable {
+struct DependencyIndex: Hashable, Equatable {
     let name: String
     let type: Type?
 }
+
+typealias ParameterName = String
 
 /// Object in charge of going through the AST for each file, and link dependency containers
 /// together to produce the dependency graph.
@@ -659,7 +661,7 @@ private extension Linker {
                                           source: dependencyContainer,
                                           type: parameterAnnotation.value.type,
                                           fileLocation: FileLocation(line: parameterAnnotation.line, file: file))
-                dependencyContainer.parameters.append(parameter)
+                dependencyContainer.parameters[parameter.dependencyName] = parameter
                 
             case .file:
                 break

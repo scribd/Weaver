@@ -8,7 +8,7 @@
 import Foundation
 
 /// Representation of any Swift type
-public struct Type: AutoHashable, AutoEquatable {
+public struct Type: Hashable, Equatable {
 
     /// Type name
     public let name: String
@@ -21,25 +21,35 @@ public struct Type: AutoHashable, AutoEquatable {
     public let generics: String
     
     init?(_ string: String) throws {
-        guard let matches = try NSRegularExpression(pattern: "^(\(Patterns.typeName))$").matches(in: string) else {
+        if let matches = try NSRegularExpression(pattern: "^(\(Patterns.genericType))$").matches(in: string) {
+            let name = matches[1]
+            
+            let isOptional = matches[0].hasSuffix("?")
+            
+            let genericNames: [String]
+            if matches.count > 2 {
+                let characterSet = CharacterSet.whitespaces.union(CharacterSet(charactersIn: "<>,"))
+                genericNames = matches[2]
+                    .split(separator: ",")
+                    .map { $0.trimmingCharacters(in: characterSet) }
+            } else {
+                genericNames = []
+            }
+            
+            self.init(name: name, genericNames: genericNames, isOptional: isOptional)
+        } else if let matches = try NSRegularExpression(pattern: "^(\(Patterns.arrayType))$").matches(in: string) {
+            let name = "Array"
+            let isOptional = matches[0].hasSuffix("?")
+            let genericNames = [matches[1]]
+            self.init(name: name, genericNames: genericNames, isOptional: isOptional)
+        } else if let matches = try NSRegularExpression(pattern: "^(\(Patterns.dictType))$").matches(in: string) {
+            let name = "Dictionary"
+            let isOptional = matches[0].hasSuffix("?")
+            let genericNames = [matches[1], matches[2]]
+            self.init(name: name, genericNames: genericNames, isOptional: isOptional)
+        } else {
             return nil
         }
-
-        let name = matches[1]
-
-        let isOptional = matches[0].hasSuffix("?")
-        
-        let genericNames: [String]
-        if matches.count > 2 {
-            let characterSet = CharacterSet.whitespaces.union(CharacterSet(charactersIn: "<>,"))
-            genericNames = matches[2]
-                .split(separator: ",")
-                .map { $0.trimmingCharacters(in: characterSet) }
-        } else {
-            genericNames = []
-        }
-        
-        self.init(name: name, genericNames: genericNames, isOptional: isOptional)
     }
     
     init(name: String,
@@ -56,7 +66,7 @@ public struct Type: AutoHashable, AutoEquatable {
 
 // MARK: - Index
 
-struct TypeIndex: AutoHashable, AutoEquatable {
+struct TypeIndex: Hashable, Equatable {
 
     let value: String
     

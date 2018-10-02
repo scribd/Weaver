@@ -97,6 +97,14 @@ final class GeneratorTests: XCTestCase {
         }
     }
     
+    func test_complex_generic_type_registration() {
+        do {
+            try performTest()
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
     func test_injectable_type_with_indirect_references() {
         do {
             try performTest()
@@ -114,6 +122,14 @@ final class GeneratorTests: XCTestCase {
     }
     
     func test_root_type() {
+        do {
+            try performTest()
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
+    func test_multi_generics_type_registration() {
         do {
             try performTest()
         } catch {
@@ -160,7 +176,7 @@ private extension GeneratorTests {
         let fileName = function.replacingOccurrences(of: "()", with: "")
         let path = Path(#file).parent() + Path("Output/Weaver.\(fileName).swift")
         
-        if let actual = actual, !path.exists {
+        if let actual = actual, try (!path.exists || (path.read() as String).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
             try path.write(actual)
         }
         
@@ -176,6 +192,7 @@ private extension GeneratorTests {
         let actualFilePath = dirPath + Path("\(function)_actual.swift")
         let expectedFilePath = dirPath + Path("\(function)_expected.swift")
 
+        try dirPath.mkpath()
         try actualFilePath.write(actual)
         try expectedFilePath.write(expected)
         
@@ -189,7 +206,7 @@ private extension GeneratorTests {
         let actual = try actualOutput(function)
         let expected = try expectedOutput(actual: actual, function)
         
-        XCTAssertEqual(actual, expected)
+        XCTAssertEqual(actual!, expected)
         try actual.flatMap { try exportDiff(actual: $0, expected: expected, function) }
     }
 }

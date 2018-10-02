@@ -22,18 +22,6 @@ public struct TokenBox<T: Token & Equatable & Hashable>: AnyTokenBox, Equatable,
     public let length: Int
     public var line: Int
     
-    public static func ==(lhs: TokenBox<T>, rhs: TokenBox<T>) -> Bool {
-        guard lhs.value == rhs.value else { return false }
-        guard lhs.offset == rhs.offset else { return false }
-        guard lhs.length == rhs.length else { return false }
-        guard lhs.line == rhs.line else { return false }
-        return true
-    }
-    
-    public var hashValue: Int {
-        return value.hashValue ^ offset.hashValue ^ length.hashValue ^ line.hashValue
-    }
-    
     public var description: String {
         return "\(value) - \(offset)[\(length)] - at line: \(line)"
     }
@@ -45,7 +33,7 @@ public protocol Token: CustomStringConvertible {
 
 // MARK: - Token Types
 
-public struct RegisterAnnotation: Token, AutoHashable, AutoEquatable {
+public struct RegisterAnnotation: Token, Hashable, Equatable {
     let name: String
     let type: Type
     let protocolType: Type?
@@ -79,7 +67,7 @@ public struct RegisterAnnotation: Token, AutoHashable, AutoEquatable {
     }
 }
 
-public struct ReferenceAnnotation: Token, AutoHashable, AutoEquatable {
+public struct ReferenceAnnotation: Token, Hashable, Equatable {
     
     let name: String
     let type: Type
@@ -99,7 +87,7 @@ public struct ReferenceAnnotation: Token, AutoHashable, AutoEquatable {
     }
 }
 
-public struct ParameterAnnotation: Token, AutoHashable, AutoEquatable {
+public struct ParameterAnnotation: Token, Hashable, Equatable {
     
     let name: String
     let type: Type
@@ -119,13 +107,13 @@ public struct ParameterAnnotation: Token, AutoHashable, AutoEquatable {
     }
 }
 
-public struct ConfigurationAnnotation: Token, AutoHashable, AutoEquatable {
+public struct ConfigurationAnnotation: Token, Hashable, Equatable {
     
     let attribute: ConfigurationAttribute
     
     let target: ConfigurationAttributeTarget
     
-    struct UniqueIdentifier: AutoHashable, AutoEquatable {
+    struct UniqueIdentifier: Hashable, Equatable {
         let name: ConfigurationAttributeName
         let target: ConfigurationAttributeTarget
     }
@@ -154,7 +142,7 @@ public struct ConfigurationAnnotation: Token, AutoHashable, AutoEquatable {
     }
 }
 
-public struct ImportDeclaration: Token, AutoHashable, AutoEquatable {
+public struct ImportDeclaration: Token, Hashable, Equatable {
     
     let moduleName: String
     
@@ -171,7 +159,7 @@ public struct ImportDeclaration: Token, AutoHashable, AutoEquatable {
     }
 }
 
-public struct InjectableType: Token, AutoHashable, AutoEquatable {
+public struct InjectableType: Token, Hashable, Equatable {
     let type: Type
     let accessLevel: AccessLevel
     let doesSupportObjc: Bool
@@ -189,15 +177,15 @@ public struct InjectableType: Token, AutoHashable, AutoEquatable {
     }
 }
 
-public struct EndOfInjectableType: Token, AutoHashable, AutoEquatable {
+public struct EndOfInjectableType: Token, Hashable, Equatable {
     public let description = "_ }"
 }
 
-public struct AnyDeclaration: Token, AutoHashable, AutoEquatable {
+public struct AnyDeclaration: Token, Hashable, Equatable {
     public let description = "{"
 }
 
-public struct EndOfAnyDeclaration: Token, AutoHashable, AutoEquatable {
+public struct EndOfAnyDeclaration: Token, Hashable, Equatable {
     public let description = "}"
 }
 
