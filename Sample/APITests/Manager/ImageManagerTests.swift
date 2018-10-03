@@ -32,7 +32,7 @@ final class ImageManagerTests: XCTestCase {
     
     func test_getImage_should_retrive_an_image() {
         
-        let imageData = UIImagePNGRepresentation(.from(color: .black))!
+        let imageData = UIImage.from(color: .black).pngData()!
 
         let movieAPISpy = imageManagerDependencyResolverSpy.movieAPISpy
         movieAPISpy.sendDataRequestResultStub = .success(imageData)
@@ -41,7 +41,7 @@ final class ImageManagerTests: XCTestCase {
         imageManager.getImage(with: "image") { result in
             switch result {
             case .success(let image):
-                XCTAssertEqual(UIImagePNGRepresentation(image), imageData)
+                XCTAssertEqual(image.pngData(), imageData)
                 XCTAssertEqual(movieAPISpy.dataRequestConfigRecord.first?.path, "image")
                 XCTAssertEqual(movieAPISpy.dataRequestConfigRecord.count, 1)
                 
