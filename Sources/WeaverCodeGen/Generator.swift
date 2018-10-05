@@ -25,26 +25,26 @@ public final class Generator {
     
     public func generate() throws -> [(file: String, data: String?)] {
 
-        return try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { (file, dependencyContainers) in
+        let templateString: String = try templatePath.read()
+        let environment = stencilSwiftEnvironment()
+        
+        let templateClass = StencilSwiftTemplate(templateString: templateString,
+                                                 environment: environment,
+                                                 name: nil)
+
+        return try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { item in
             
-            let dependencyContainers = dependencyContainers.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
+            let dependencyContainers = item.value.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
 
             guard !dependencyContainers.isEmpty else {
-                return (file: file, data: nil)
+                return (file: item.key, data: nil)
             }
-
-            let templateString: String = try templatePath.read()
-            let environment = stencilSwiftEnvironment()
-            
-            let templateClass = StencilSwiftTemplate(templateString: templateString,
-                                                     environment: environment,
-                                                     name: nil)
             
             let context: [String: Any] = ["dependencyContainers": dependencyContainers,
-                                          "imports": dependencyGraph.importsByFile[file] ?? []]
+                                          "imports": dependencyGraph.importsByFile[item.key] ?? []]
             let string = try templateClass.render(context)
             
-            return (file: file, data: string.compacted())
+            return (file: item.key, data: string.compacted())
         }
     }
 }
@@ -69,7 +69,7 @@ private struct RegistrationViewModel {
         name = dependency.dependencyName
         type = dependency.type
         abstractType = dependency.abstractType
-        scope = dependency.configuration.scope.stringValue
+        scope = dependency.configuration.scope.rawValue
         customRef = dependency.configuration.customRef
         
         if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {

@@ -79,11 +79,11 @@ In the project directory, run `brew update && brew bundle && make install` to bu
 Run the following to check if Weaver has been installed correctly.
 
 ```bash
-$ weaver --help
+$ weaver generate --help
 
 Usage:
 
-    $ weaver <input_paths>
+    $ weaver generate <input_paths>
 
 Arguments:
 
@@ -92,6 +92,7 @@ Arguments:
 Options:
     --output_path [default: .] - Where the swift files will be generated.
     --template_path - Custom template path.
+    --unsafe [default: false]
 ```
 
 ### (2) - Weaver build phase
@@ -99,7 +100,7 @@ Options:
 In Xcode, add the following command to a command line build phase: 
 
 ```
-weaver --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT} -name '*.swift' | xargs -0`
+weaver generate --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT} -name '*.swift' | xargs -0`
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
@@ -311,6 +312,27 @@ Example:
 
 ##### Configuration Attributes:
 - `isIsolated: Bool` (default: `false`): any object setting this to true is considered by Weaver as an object which isn't used in the project. An object flagged as isolated can only have isolated dependents. This attribute is useful to develop a feature wihout all the dependencies setup in the project.
+
+## Export Dependency Graph
+
+Weaver can ouput a JSON representation of the dependency graph of a project.
+
+```bash
+$ weaver export --help
+
+Usage:
+
+    $ weaver export <input_paths>
+
+Arguments:
+
+    input_paths - Swift files to parse.
+
+Options:
+    --pretty [default: false]
+```
+
+For an output example, please check this [Gist](https://gist.github.com/trupin/9438713f8fae0a5a7f424eca1976f42b).
 
 ## Migration guides
 

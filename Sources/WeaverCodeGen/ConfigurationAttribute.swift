@@ -138,8 +138,8 @@ extension ConfigurationAttribute {
     }
     
     private static func scopeValue(from string: String) throws -> Scope {
-        guard string.first == ".", let value = Scope(string.replacingOccurrences(of: ".", with: "")) else {
-            let expected = Scope.values.map { $0.stringValue }.joined(separator: "|")
+        guard string.first == ".", let value = Scope(rawValue: string.replacingOccurrences(of: ".", with: "")) else {
+            let expected = Scope.allCases.map { $0.rawValue }.joined(separator: "|")
             throw TokenError.invalidConfigurationAttributeValue(value: string, expected: expected)
         }
         return value
