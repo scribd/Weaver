@@ -435,6 +435,10 @@ public final class DependencyGraph {
             return typesByName
         }
     }()
+    
+    public var injectableTypesCount: Int {
+        return dependencyContainersByFile.orderedValues.count
+    }
 }
 
 // MARK: - Insertions

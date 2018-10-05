@@ -63,6 +63,9 @@ let main = Group {
             let linker = try Linker(inputPaths.values.map { $0.string })
             let dependencyGraph = linker.dependencyGraph
             
+            Logger.log(.info, "")
+            Logger.log(.info, "Found \(dependencyGraph.injectableTypesCount) injectable types.")
+            
             // ---- Generate ----
 
             Logger.log(.info, "")
