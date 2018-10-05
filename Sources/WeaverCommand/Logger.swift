@@ -8,6 +8,8 @@
 import Foundation
 import Darwin
 
+// MARK: - Level
+
 enum LogLevel {
     case info
     case error
@@ -34,15 +36,19 @@ extension LogLevel: CustomStringConvertible {
     }
 }
 
+// MARK: - Benchmark
+
+enum Benchmark {
+    case start(String)
+    case end(String)
+    case none
+    
+    fileprivate static var lastMessageDatesByID: [String: Date] = [:]
+}
+
+// MARK: - Logger
+
 enum Logger {
-    
-    private static var lastMessageDatesByID: [String: Date] = [:]
-    
-    enum Benchmark {
-        case start(String)
-        case end(String)
-        case none
-    }
     
     static func log(_ level: LogLevel,
                     _ message: String,
@@ -58,13 +64,13 @@ enum Logger {
         
         switch benchmark {
         case .start(let identifier):
-            Logger.lastMessageDatesByID[identifier] = Date()
+            Benchmark.lastMessageDatesByID[identifier] = Date()
 
         case .end(let identifier):
-            if let lastMessageDate = Logger.lastMessageDatesByID[identifier] {
-                s += " - Executed in \(String(format: "%.4f", abs(lastMessageDate.timeIntervalSinceNow)))s."
+            if let lastMessageDate = Benchmark.lastMessageDatesByID[identifier] {
+                s += " - " + "Executed in \(String(format: "%.4f", abs(lastMessageDate.timeIntervalSinceNow)))s.".lightBlack
             }
-            Logger.lastMessageDatesByID.removeValue(forKey: identifier)
+            Benchmark.lastMessageDatesByID.removeValue(forKey: identifier)
             
         case .none:
             break

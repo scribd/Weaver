@@ -11,6 +11,7 @@ import WeaverCodeGen
 import SourceKittenFramework
 import Darwin
 import PathKit
+import Rainbow
 
 // MARK: - Linker
 
@@ -20,27 +21,30 @@ private extension Linker {
 
         // ---- Parse ----
 
-        if shouldLog { Logger.log(.info, "Parsing...", benchmark: .start("parsing")) }
+        if shouldLog {
+            Logger.log(.info, "")
+            Logger.log(.info, "Parsing...".yellow, benchmark: .start("parsing"))
+        }
         let asts: [Expr] = try inputPaths.compactMap { filePath in
             guard let file = File(path: filePath) else {
                 return nil
             }
             
-            if shouldLog { Logger.log(.info, "<- '\(filePath)'") }
+            if shouldLog { Logger.log(.info, "<- '\(filePath)'".yellow) }
             let tokens = try Lexer(file, fileName: filePath).tokenize()
             return try Parser(tokens, fileName: filePath).parse()
         }
-        if shouldLog { Logger.log(.info, "Done", benchmark: .end("parsing")) }
+        if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("parsing")) }
 
         // ---- Link ----
         
         
         if shouldLog {
             Logger.log(.info, "")
-            Logger.log(.info, "Linking...", benchmark: .start("linking"))
+            Logger.log(.info, "Linking...".lightGreen, benchmark: .start("linking"))
         }
         try self.init(syntaxTrees: asts)
-        if shouldLog { Logger.log(.info, "Done", benchmark: .end("linking")) }
+        if shouldLog { Logger.log(.info, "Done".lightGreen, benchmark: .end("linking")) }
     }
 }
 
@@ -57,7 +61,7 @@ let main = Group {
 
         do {
             
-            Logger.log(.info, "Let the injection begin...", benchmark: .start("all"))
+            Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
             // ---- Link ----
 
@@ -67,10 +71,10 @@ let main = Group {
             // ---- Generate ----
 
             Logger.log(.info, "")
-            Logger.log(.info, "Generating boilerplate code...", benchmark: .start("generating"))
+            Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
             let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath.value)
             let generatedData = try generator.generate()
-            Logger.log(.info, "Done", benchmark: .end("generating"))
+            Logger.log(.info, "Done".lightBlue, benchmark: .end("generating"))
             
             // ---- Collect ----
             
@@ -79,13 +83,13 @@ let main = Group {
                 let filePath = Path(file)
 
                 guard let fileName = filePath.components.last else {
-                    Logger.log(.error, "Could not retrieve file name from path '\(filePath)'")
+                    Logger.log(.error, "Could not retrieve file name from path '\(filePath)'".red)
                     return nil
                 }
                 let generatedFilePath = Path(outputPath) + "Weaver.\(fileName)"
                 
                 guard let data = data else {
-                    Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.")
+                    Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.".red)
                     return (path: generatedFilePath, data: nil)
                 }
 
@@ -96,34 +100,34 @@ let main = Group {
 
             if !unsafeFlag {
                 Logger.log(.info, "")
-                Logger.log(.info, "Checking dependency graph...", benchmark: .start("checking"))
+                Logger.log(.info, "Checking dependency graph...".magenta, benchmark: .start("checking"))
                 
                 let inspector = Inspector(dependencyGraph: dependencyGraph)
                 try inspector.validate()
                 
-                Logger.log(.info, "Done", benchmark: .end("checking"))
+                Logger.log(.info, "Done".magenta, benchmark: .end("checking"))
             }
             
             // ---- Write ----
             
             Logger.log(.info, "")
-            Logger.log(.info, "Writing...", benchmark: .start("writing"))
+            Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
             
             for (path, data) in dataToWrite {
                 if let data = data {
                     try path.write(data)
-                    Logger.log(.info, "-> '\(path)'")
+                    Logger.log(.info, "-> '\(path)'".lightMagenta)
                 } else if path.isFile && path.isDeletable {
                     try path.delete()
-                    Logger.log(.info, " X '\(path)'")
+                    Logger.log(.info, " X '\(path)'".lightMagenta)
                 }
             }
-            Logger.log(.info, "Done", benchmark: .end("writing"))
+            Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
             Logger.log(.info, "")
-            Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types", benchmark: .end("all"))
+            Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
 
         } catch {
-            Logger.log(.error, "\(error)")
+            Logger.log(.error, "\(error)".red)
             exit(1)
         }
     }
