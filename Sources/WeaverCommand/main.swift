@@ -64,9 +64,6 @@ let main = Group {
             let linker = try Linker(inputPaths.values.map { $0.string })
             let dependencyGraph = linker.dependencyGraph
             
-            Logger.log(.info, "")
-            Logger.log(.info, "Found \(dependencyGraph.injectableTypesCount) injectable types.")
-            
             // ---- Generate ----
 
             Logger.log(.info, "")
@@ -122,8 +119,8 @@ let main = Group {
                 }
             }
             Logger.log(.info, "Done", benchmark: .end("writing"))
-
-            Logger.log(.info, "Finished", benchmark: .end("all"))
+            Logger.log(.info, "")
+            Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types", benchmark: .end("all"))
 
         } catch {
             Logger.log(.error, "\(error)")
