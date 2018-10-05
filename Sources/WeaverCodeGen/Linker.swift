@@ -764,7 +764,21 @@ extension Dependency {
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: DependencyCodingKeys.self)
-        try container.encode("\(Dependency.self)", forKey: .objectType)
+
+        let objectType: String
+        switch self {
+        case is Registration:
+            objectType = "\(Registration.self)"
+        case is Reference:
+            objectType = "\(Reference.self)"
+        case is Parameter:
+            objectType = "\(Parameter.self)"
+        default:
+            let cause = "Unknown dependency type."
+            throw EncodingError.invalidValue(self, EncodingError.Context(codingPath: [DependencyCodingKeys.objectType], debugDescription: cause))
+        }
+        
+        try container.encode(objectType, forKey: .objectType)
         try container.encode(dependencyName, forKey: .name)
         try container.encode(type, forKey: .type)
         if abstractType != type {
