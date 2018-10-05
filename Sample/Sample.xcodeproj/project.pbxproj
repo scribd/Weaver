@@ -481,7 +481,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "weaver --output_path ${SOURCE_ROOT}/Sample/Generated/ `find ${SOURCE_ROOT}/Sample -name '*.swift' | xargs -0`";
+			shellScript = "weaver generate --output_path ${SOURCE_ROOT}/Sample/Generated/ `find ${SOURCE_ROOT}/Sample -name '*.swift' | xargs -0`\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -149,7 +149,7 @@ final class DependencyContainer: Hashable {
     - `scope` = .transient
     - `source` = `FooDependencyContainer`
  */
-protocol Dependency: AnyObject {
+protocol Dependency: AnyObject, Encodable {
 
     /// Name which was used to declare the dependency.
     var dependencyName: String { get }
@@ -583,7 +583,7 @@ private extension Linker {
             }
         }
         
-        // Insert depndency containers for which we don't know the type
+        // Insert dependency containers for which we don't know the type
         for token in ExprSequence(exprs: syntaxTrees).referenceAnnotations {
             dependencyGraph.insertDependencyContainer(with: token.value)
         }
@@ -694,6 +694,100 @@ private extension Linker {
             let index = DependencyIndex(name: name, type: reference.target.type)
             dependencyContainer.references[index] = reference
             reference.target.sources.append(dependencyContainer)
+        }
+    }
+}
+
+// MARK: - Encodable
+
+extension DependencyGraph: Encodable {
+    
+    enum CodingKeys: String, CodingKey {
+        case objectType = "object_type"
+        case dependencyContainersByName = "dependency_containers"
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode("\(DependencyGraph.self)", forKey: .objectType)
+        try container.encode(dependencyContainersByName.orderedValues, forKey: .dependencyContainersByName)
+    }
+}
+
+extension DependencyContainer: Encodable {
+    
+    enum CodingKeys: String, CodingKey {
+        case objectType = "object_type"
+        case type
+        case sources
+        case dependencies
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode("\(DependencyContainer.self)", forKey: .objectType)
+        try container.encode(type, forKey: .type)
+
+        var sourcesContainer = container.nestedUnkeyedContainer(forKey: .sources)
+        for source in sources {
+            try sourcesContainer.encode(source.type)
+        }
+        
+        if !orderedDependencies.isEmpty {
+            var dependenciesContainer = container.nestedUnkeyedContainer(forKey: .dependencies)
+            for dependency in orderedDependencies {
+                switch dependency {
+                case let registration as Registration:
+                    try dependenciesContainer.encode(registration)
+                case let parameter as Parameter:
+                    try dependenciesContainer.encode(parameter)
+                case let reference as Reference:
+                    try dependenciesContainer.encode(reference)
+                default:
+                    let cause = "Unknown dependency type."
+                    throw EncodingError.invalidValue(dependency, EncodingError.Context(codingPath: [CodingKeys.dependencies], debugDescription: cause))
+                }
+            }
+        }
+    }
+}
+
+private enum DependencyCodingKeys: String, CodingKey {
+    case objectType = "object_type"
+    case name
+    case type
+    case abstractType
+    case scope
+}
+
+extension Dependency {
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: DependencyCodingKeys.self)
+        try container.encode("\(Dependency.self)", forKey: .objectType)
+        try container.encode(dependencyName, forKey: .name)
+        try container.encode(type, forKey: .type)
+        if abstractType != type {
+            try container.encode(abstractType, forKey: .abstractType)
+        }
+        try container.encode(configuration.scope, forKey: .scope)
+    }
+}
+
+extension Type: Encodable {
+    
+    enum CodingKeys: String, CodingKey {
+        case objectType = "object_type"
+        case name
+        case generics
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode("\(Type.self)", forKey: .objectType)
+        try container.encode(name, forKey: .name)
+        if !genericNames.isEmpty {
+            try container.encode(genericNames, forKey: .generics)
         }
     }
 }

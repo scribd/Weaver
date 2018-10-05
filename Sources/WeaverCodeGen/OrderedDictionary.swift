@@ -15,10 +15,15 @@ final class OrderedDictionary<Key: Hashable, Value> {
     
     private(set) var orderedKeys = [Key]()
     
-    var orderedKeyValues: [(key: Key, value: Value)] {
-        var result = [(key: Key, value: Value)]()
+    struct KeyValue {
+        let key: Key
+        let value: Value
+    }
+    
+    var orderedKeyValues: [KeyValue] {
+        var result = [KeyValue]()
         for key in orderedKeys {
-            dictionary[key].flatMap { result.append((key, $0)) }
+            dictionary[key].flatMap { result.append(KeyValue(key: key, value: $0)) }
         }
         return result
     }
