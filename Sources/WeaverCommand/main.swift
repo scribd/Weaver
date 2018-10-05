@@ -12,14 +12,15 @@ import SourceKittenFramework
 import Darwin
 import PathKit
 
+// MARK: - Linker
+
 private extension Linker {
 
     convenience init(_ inputPaths: [String], shouldLog: Bool = true) throws {
 
         // ---- Parse ----
 
-        if shouldLog { Logger.log(.info, "Parsing...") }
-        
+        if shouldLog { Logger.log(.info, "Parsing...", benchmark: .start("parsing")) }
         let asts: [Expr] = try inputPaths.compactMap { filePath in
             guard let file = File(path: filePath) else {
                 return nil
@@ -29,12 +30,21 @@ private extension Linker {
             let tokens = try Lexer(file, fileName: filePath).tokenize()
             return try Parser(tokens, fileName: filePath).parse()
         }
-        
+        if shouldLog { Logger.log(.info, "Done", benchmark: .end("parsing")) }
+
         // ---- Link ----
         
+        
+        if shouldLog {
+            Logger.log(.info, "")
+            Logger.log(.info, "Linking...", benchmark: .start("linking"))
+        }
         try self.init(syntaxTrees: asts)
+        if shouldLog { Logger.log(.info, "Done", benchmark: .end("linking")) }
     }
 }
+
+// MARK: - Commands
 
 let main = Group {
     $0.command("generate",
@@ -46,6 +56,8 @@ let main = Group {
 
         do {
             
+            Logger.log(.info, "Let the injection begin...", benchmark: .start("all"))
+
             // ---- Link ----
 
             let linker = try Linker(inputPaths.values.map { $0.string })
@@ -53,8 +65,11 @@ let main = Group {
             
             // ---- Generate ----
 
+            Logger.log(.info, "")
+            Logger.log(.info, "Generating boilerplate code...", benchmark: .start("generating"))
             let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath.value)
             let generatedData = try generator.generate()
+            Logger.log(.info, "Done", benchmark: .end("generating"))
             
             // ---- Collect ----
             
@@ -80,16 +95,18 @@ let main = Group {
 
             if !unsafeFlag {
                 Logger.log(.info, "")
-                Logger.log(.info, "Checking dependency graph...")
+                Logger.log(.info, "Checking dependency graph...", benchmark: .start("checking"))
                 
                 let inspector = Inspector(dependencyGraph: dependencyGraph)
                 try inspector.validate()
+                
+                Logger.log(.info, "Done", benchmark: .end("checking"))
             }
             
             // ---- Write ----
             
             Logger.log(.info, "")
-            Logger.log(.info, "Writing...")
+            Logger.log(.info, "Writing...", benchmark: .start("writing"))
             
             for (path, data) in dataToWrite {
                 if let data = data {
@@ -100,9 +117,10 @@ let main = Group {
                     Logger.log(.info, " X '\(path)'")
                 }
             }
+            Logger.log(.info, "Done", benchmark: .end("writing"))
 
-            Logger.log(.info, "")
-            Logger.log(.info, "Done.")
+            Logger.log(.info, "Finished", benchmark: .end("all"))
+
         } catch {
             Logger.log(.error, "\(error)")
             exit(1)
