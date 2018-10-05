@@ -47,7 +47,8 @@ private extension Linker {
 // MARK: - Commands
 
 let main = Group {
-    $0.command("generate",
+    $0.command(
+        "generate",
         Option<String>("output_path", default: ".", description: "Where the swift files will be generated."),
         Option<TemplatePathArgument>("template_path", default: TemplatePathArgument(), description: "Custom template path."),
         Flag("unsafe", default: false),

@@ -25,6 +25,13 @@ public final class Generator {
     
     public func generate() throws -> [(file: String, data: String?)] {
 
+        let templateString: String = try templatePath.read()
+        let environment = stencilSwiftEnvironment()
+        
+        let templateClass = StencilSwiftTemplate(templateString: templateString,
+                                                 environment: environment,
+                                                 name: nil)
+
         return try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { item in
             
             let dependencyContainers = item.value.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
@@ -32,13 +39,6 @@ public final class Generator {
             guard !dependencyContainers.isEmpty else {
                 return (file: item.key, data: nil)
             }
-
-            let templateString: String = try templatePath.read()
-            let environment = stencilSwiftEnvironment()
-            
-            let templateClass = StencilSwiftTemplate(templateString: templateString,
-                                                     environment: environment,
-                                                     name: nil)
             
             let context: [String: Any] = ["dependencyContainers": dependencyContainers,
                                           "imports": dependencyGraph.importsByFile[item.key] ?? []]
