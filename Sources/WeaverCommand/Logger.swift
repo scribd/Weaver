@@ -79,4 +79,22 @@ enum Logger {
         s += "\n"
         fputs(s, level.output)
     }
+    
+    static func log<MessageType: Encodable>(_ level: LogLevel,
+                                            _ message: MessageType,
+                                            pretty: Bool,
+                                            function: StaticString = #function,
+                                            line: Int = #line) throws {
+        
+        let encoder = JSONEncoder()
+        if pretty {
+            encoder.outputFormatting = .prettyPrinted
+        }
+        let jsonData = try encoder.encode(message)
+        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+            Logger.log(.error, "Could not generate json from data.")
+            exit(1)
+        }
+        Logger.log(level, jsonString, function: function, line: line)
+    }
 }

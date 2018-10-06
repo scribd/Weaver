@@ -33,7 +33,7 @@ import Foundation
     `DooDependencyContainer` -- source --> `FooDependencyContainer`
  
 */
-final class DependencyContainer: Hashable {
+public final class DependencyContainer: Hashable {
 
     /// Type representation of the associated type.
     fileprivate(set) var type: Type?
@@ -114,11 +114,11 @@ final class DependencyContainer: Hashable {
         return registrations[index] ?? references[index] ?? nil
     }
     
-    var hashValue: Int {
+    public var hashValue: Int {
         return ObjectIdentifier(self).hashValue
     }
     
-    static func ==(lhs: DependencyContainer, rhs: DependencyContainer) -> Bool {
+    public static func ==(lhs: DependencyContainer, rhs: DependencyContainer) -> Bool {
         return lhs === rhs
     }
 }
@@ -727,7 +727,7 @@ extension DependencyContainer: Encodable {
         case dependencies
     }
     
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode("\(DependencyContainer.self)", forKey: .objectType)
         try container.encode(type, forKey: .type)

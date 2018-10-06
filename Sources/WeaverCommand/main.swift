@@ -51,6 +51,9 @@ private extension Linker {
 // MARK: - Commands
 
 let main = Group {
+    
+    // MARK: - Generate
+    
     $0.command(
         "generate",
         Option<String>("output_path", default: ".", description: "Where the swift files will be generated."),
@@ -132,6 +135,8 @@ let main = Group {
         }
     }
     
+    // MARK: - Export
+    
     $0.command(
         "export",
         Flag("pretty", default: false),
@@ -145,19 +150,38 @@ let main = Group {
 
             // ---- Export ----
             
-            let encoder = JSONEncoder()
-            if pretty {
-                encoder.outputFormatting = .prettyPrinted
-            }
-            let jsonData = try encoder.encode(dependencyGraph)
-            guard let jsonString = String(data: jsonData, encoding: .utf8) else {
-                Logger.log(.error, "Could not generate json from data.")
-                exit(1)
-            }
-            Logger.log(.info, jsonString)
+            try Logger.log(.info, dependencyGraph, pretty: pretty)
         } catch {
             Logger.log(.error, "\(error)")
             exit(1)
+        }
+    }
+    
+    // MARK: - Query
+    
+    $0.command(
+        "query",
+        Flag("pretty", default: false),
+        Argument<String>("name", description: "Dependency name to filter on."),
+        Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
+    ) { pretty, name, inputPaths in
+        
+        do {
+            // ---- Link ----
+            
+            let linker = try Linker(inputPaths.values.map { $0.string }, shouldLog: false)
+            let dependencyGraph = linker.dependencyGraph
+            
+            // ---- Query ----
+         
+            guard let info = Query(dependencyGraph).information(forDependency: name) else {
+                Logger.log(.error, "Could not find dependency named: '\(name)'")
+                exit(1)
+            }
+            
+            // --- Print ----
+
+            try Logger.log(.info, info, pretty: pretty)
         }
     }
 }
