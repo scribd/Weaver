@@ -706,15 +706,9 @@ private extension Linker {
 
 extension DependencyGraph: Encodable {
     
-    enum CodingKeys: String, CodingKey {
-        case objectType = "object_type"
-        case dependencyContainersByName = "dependency_containers"
-    }
-    
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode("\(DependencyGraph.self)", forKey: .objectType)
-        try container.encode(dependencyContainersByName.orderedValues, forKey: .dependencyContainersByName)
+        var container = encoder.unkeyedContainer()
+        try container.encode(dependencyContainersByName.orderedValues)
     }
 }
 
