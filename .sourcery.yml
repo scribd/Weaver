@@ -1,9 +1,0 @@
-project:
-  file: Weaver.xcodeproj
-  target:
-    name: WeaverCodeGen
-templates:
-  - .sourcery/Templates/AutoEquatable.stencil
-  - .sourcery/Templates/AutoHashable.stencil
-output:
-  path: Sources/WeaverCodeGen
