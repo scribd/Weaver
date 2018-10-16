@@ -125,6 +125,7 @@ private struct DependencyContainerViewModel {
     let targetType: Type?
     let registrations: [RegistrationViewModel]
     let references: [DependencyViewModel]
+    let directReferences: [DependencyViewModel]
     let parameters: [DependencyViewModel]
     let embeddingTypes: [Type]?
     let isRoot: Bool
@@ -140,6 +141,7 @@ private struct DependencyContainerViewModel {
         
         targetType = type
         registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, dependencyGraph: dependencyGraph) }
+        directReferences = dependencyContainer.references.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
         references = dependencyContainer.allReferences.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
         parameters = dependencyContainer.parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph)}
         embeddingTypes = dependencyContainer.embeddingTypes

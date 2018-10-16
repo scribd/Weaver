@@ -14,7 +14,6 @@ protocol MovieViewControllerDependencyResolver {
     var title: String { get }
     var movieManager: MovieManaging { get }
     var imageManager: ImageManaging { get }
-    var reviewManager: ReviewManaging { get }
     var logger: Logger { get }
     func reviewController(movieID: UInt) -> WSReviewViewController
 }
