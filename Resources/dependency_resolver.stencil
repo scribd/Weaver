@@ -58,7 +58,7 @@ protocol {{dependencyContainer.targetType.name}}InputDependencyResolver {
 
     {% call DependencyResolverDecl dependencyContainer.parameters %}
 
-    {% call DependencyResolverDecl dependencyContainer.references %}
+    {% call DependencyResolverDecl dependencyContainer.directReferences %}
 
     {% call DependencyResolverDecl dependencyContainer.registrations %}
 }

@@ -11,8 +11,6 @@ protocol HomeViewControllerInputDependencyResolver {
 }
 protocol HomeViewControllerDependencyResolver {
     var movieManager: MovieManaging { get }
-    var imageManager: ImageManaging { get }
-    var reviewManager: ReviewManaging { get }
     var logger: Logger { get }
     func movieController(movieID: UInt, title: String) -> UIViewController
 }

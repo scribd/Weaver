@@ -5,7 +5,6 @@ protocol FaaTest11InputDependencyResolver {
     var fuu: FuuTest11 { get }
 }
 protocol FaaTest11DependencyResolver {
-    var fuu: FuuTest11 { get }
     var fee: FeeTest11 { get }
 }
 final class FaaTest11DependencyContainer: FaaTest11DependencyResolver {
@@ -25,7 +24,6 @@ protocol FeeTest11InputDependencyResolver {
     var fuu: FuuTest11 { get }
 }
 protocol FeeTest11DependencyResolver {
-    var fuu: FuuTest11 { get }
     var fii: FiiTest11 { get }
 }
 final class FeeTest11DependencyContainer: FeeTest11DependencyResolver {
