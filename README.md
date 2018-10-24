@@ -340,6 +340,7 @@ For an output example, please check this [Gist](https://gist.github.com/trupin/9
 
 ## More reading...
 
+- [Dependency Injection Tutorial With Weaver (Part 1)](https://medium.com/scribd-data-science-engineering/dependency-injection-tutorial-with-weaver-on-ios-part-1-78265548dd00)
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
 - [Dependency Injection Demisifyied, James Shore, 03/22/2006](http://www.jamesshore.com/Blog/Dependency-Injection-Demystified.html) ¹
 
