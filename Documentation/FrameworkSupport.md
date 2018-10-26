@@ -15,7 +15,3 @@ For an example, checkout these files from the sample:
 - [MovieManager](../Sample/API/Manager/MovieManager.swift)
 - [Weaver.MovieManager](../Sample/API/Generated/Weaver.MovieManager.swift)
 - [AppDelegate](../Sample/Sample/AppDelegate.swift)
-
-## Known limitations
-
-A public injected type taking parameters cannot be used both internally and externally of the framework.
