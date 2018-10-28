@@ -288,7 +288,7 @@ Example:
 // weaver: dependencyName.builder = ADependency.make
 ```
 
-`ADependency.make`: Code overriding the dependency's initialization code taking the `ADependencyDependencyResolver` object as a parameter (e.g. make prototype could be `static func make(_ dependencies: ADependencyDependencyResolver)`).
+`ADependency.make`: Code overriding the dependency's initialization code taking the `ADependencyDependencyResolver` object as a parameter (e.g. `make`'s prototype could be `static func make(_ dependencies: ADependencyDependencyResolver)`).
 
 **Warning - Make sure you don't do anything unsafe with the `DependencyResolver` parameter passed down in this method since it won't be caught by the dependency graph validator.**
 
