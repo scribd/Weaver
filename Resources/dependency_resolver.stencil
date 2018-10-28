@@ -20,7 +20,7 @@
 {% macro DependencyResolverDecl dependencies %}
 {% for dependency in dependencies %}
 
-    {% if not dependency.customRef %}
+    {% if not dependency.customBuilder %}
 
     {% if dependency.parameters %}
     func {{dependency.name}}({% call ParametersDecl dependency.parameters %}) -> {{dependency.abstractType}}
@@ -28,10 +28,9 @@
     var {{dependency.name}}: {{dependency.abstractType}} { get }
     {% endif %}
 
-    {% else %}{# not dependency.customRef #}
+    {% else %}{# not dependency.customBuilder #}
     var {{dependency.name}}: {{dependency.abstractType}} { get }
-    func {{dependency.name}}CustomRef() -> {{dependency.abstractType}}
-    {% endif %}{# not dependency.customRef #}
+    {% endif %}{# not dependency.customBuilder #}
 
 {% endfor %}
 {% endmacro %}
@@ -86,7 +85,7 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
         if let value = _{{registration.name}} { return value }
         {% endif %}
 
-        {% if not registration.customRef %}
+        {% if not registration.customBuilder %}
 
         {% if registration.hasBuilder %}
         let dependencies = {{registration.type.name}}DependencyContainer({% if registration.hasReferences %}injecting: self{% if registration.parameters %}, {% endif %}{% endif %}{% call ParametersPassIn registration.parameters %})
@@ -95,9 +94,9 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
         let value = {{registration.type.name}}{{registration.type.generics}}({% if registration.hasDependencyContainer %}injecting: {{registration.type.name}}DependencyContainer{{registration.type.generics}}(){% endif %})
         {% endif %}{# registration.hasBuilder #}
 
-        {% else %}{# not registration.customRef #}
-        let value = {{registration.name}}CustomRef()
-        {% endif %}{# not registration.customRef #}
+        {% else %}{# not registration.customBuilder #}
+        let value = {{registration.customBuilder}}(self)
+        {% endif %}{# not registration.customBuilder #}
 
         {% if not registration.isTransient %}
         _{{registration.name}} = value

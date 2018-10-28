@@ -42,7 +42,7 @@ private extension ResolvableDependency {
             return
         }
         
-        guard isReference && !configuration.customRef else {
+        guard isReference && configuration.customBuilder == nil else {
             return
         }
 
@@ -96,7 +96,7 @@ private extension DependencyContainer {
             if dependency.isReference && accessLevel == .public {
                 return
             }
-            if let scope = dependency.scope, (dependency.configuration.customRef && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
+            if let scope = dependency.scope, (dependency.configuration.customBuilder != nil && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
                 return
             }
             history.append(.foundUnaccessibleDependency(dependency.printableDependency))
@@ -160,7 +160,7 @@ private extension ResolvableDependency {
         }
         buildCache.insert(buildCacheIndex)
         
-        guard !isReference && !configuration.customRef else {
+        guard !isReference && configuration.customBuilder == nil else {
             return
         }
         

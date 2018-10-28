@@ -185,10 +185,10 @@ final class MyService {
         }
     }
     
-    func test_parser_should_generate_a_syntax_error_when_trying_to_set_custom_ref_on_an_unknown_reference() {
+    func test_parser_should_generate_a_syntax_error_when_trying_to_set_custom_builder_on_an_unknown_reference() {
         let file = File(contents: """
 final class MyService {
-  // weaver: api.customRef = true
+  // weaver: api.builder = MyService.make
 }
 """)
         
@@ -207,11 +207,11 @@ final class MyService {
         }
     }
     
-    func test_parser_should_generate_a_valid_syntax_tree_with_a_dependency_reference_with_custom_ref_set_to_true() {
+    func test_parser_should_generate_a_valid_syntax_tree_with_a_dependency_reference_with_a_custom_builder() {
         let file = File(contents: """
 final class MyService {
   // weaver: api <- APIProtocol
-  // weaver: api.customRef = true
+  // weaver: api.builder = MyService.make
 }
 """)
         
@@ -221,9 +221,9 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 85, line: 0),
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 93, line: 0),
                                                               children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")), offset: 58, length: 32, line: 2))])],
+                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "MyService.make"), target: .dependency(name: "api")), offset: 58, length: 40, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -233,11 +233,11 @@ final class MyService {
         }
     }
     
-    func test_parser_should_generate_a_valid_syntax_tree_with_a_dependency_registration_with_custom_ref_set_to_true() {
+    func test_parser_should_generate_a_valid_syntax_tree_with_a_dependency_registration_with_custom_a_builder() {
         let file = File(contents: """
 final class MyService {
   // weaver: api = API <- APIProtocol
-  // weaver: api.customRef = true
+  // weaver: api.builder = API.make
 }
 """)
         
@@ -247,9 +247,9 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 91, line: 0),
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 93, line: 0),
                                                               children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol")), offset: 26, length: 36, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")), offset: 64, length: 32, line: 2))])],
+                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "API.make"), target: .dependency(name: "api")), offset: 64, length: 34, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
             

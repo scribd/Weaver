@@ -3,13 +3,12 @@
 // MARK: - FooTest4
 protocol FooTest4DependencyResolver {
     var fuu: FuuProtocolTest4 { get }
-    func fuuCustomRef() -> FuuProtocolTest4
 }
 final class FooTest4DependencyContainer: FooTest4DependencyResolver {
     private var _fuu: FuuProtocolTest4?
     var fuu: FuuProtocolTest4 {
         if let value = _fuu { return value }
-        let value = fuuCustomRef()
+        let value = FuuTest4.make(self)
         _fuu = value
         return value
     }

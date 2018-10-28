@@ -31,7 +31,7 @@ public final class MovieManager: MovieManaging {
     
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
-    // weaver: urlSession.customRef = true
+    // weaver: urlSession.builder = { _ in URLSession.shared }
     
     // weaver: movieAPI = MovieAPI <- APIProtocol
     
@@ -69,11 +69,5 @@ public final class MovieManager: MovieManaging {
                 completion(.failure(.oops))
             }
         }
-    }
-}
-
-extension MovieManagerDependencyResolver {
-    func urlSessionCustomRef() -> URLSession {
-        return .shared
     }
 }

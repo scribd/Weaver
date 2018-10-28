@@ -9,7 +9,6 @@ protocol MovieManagerDependencyResolver {
     var host: String? { get }
     var logger: Logger { get }
     var urlSession: URLSession { get }
-    func urlSessionCustomRef() -> URLSession
     var movieAPI: APIProtocol { get }
 }
 final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
@@ -18,7 +17,7 @@ final class MovieManagerDependencyContainer: MovieManagerDependencyResolver {
     private var _urlSession: URLSession?
     var urlSession: URLSession {
         if let value = _urlSession { return value }
-        let value = urlSessionCustomRef()
+        let value = { _ in URLSession.shared }(self)
         _urlSession = value
         return value
     }

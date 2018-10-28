@@ -37,12 +37,12 @@ extension Configuration {
 
 struct DependencyConfiguration: Configuration {
     
-    let customRef: Bool
+    let customBuilder: String?
     
     let scope: Scope
     
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
-        customRef = attributes?[.customRef]?.boolValue ?? false
+        customBuilder = attributes?[.customBuilder]?.stringValue
         scope = attributes?[.scope]?.scopeValue ?? .default
     }
 }

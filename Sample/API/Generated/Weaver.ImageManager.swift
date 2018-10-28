@@ -6,7 +6,6 @@ import UIKit
 protocol ImageManagerDependencyResolver {
     var logger: Logger { get }
     var urlSession: URLSession { get }
-    func urlSessionCustomRef() -> URLSession
     var movieAPI: APIProtocol { get }
 }
 final class ImageManagerDependencyContainer: ImageManagerDependencyResolver {
@@ -20,7 +19,7 @@ final class ImageManagerDependencyContainer: ImageManagerDependencyResolver {
     private var _urlSession: URLSession?
     var urlSession: URLSession {
         if let value = _urlSession { return value }
-        let value = urlSessionCustomRef()
+        let value = ImageManager.makeURLSession(self)
         _urlSession = value
         return value
     }
