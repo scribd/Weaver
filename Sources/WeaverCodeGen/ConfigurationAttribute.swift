@@ -11,13 +11,13 @@ import Foundation
 
 enum ConfigurationAttributeName: String {
     case isIsolated
-    case customRef
+    case customBuilder = "builder"
     case scope
 }
 
 enum ConfigurationAttribute: Equatable, Hashable {
     case isIsolated(value: Bool)
-    case customRef(value: Bool)
+    case customBuilder(value: String)
     case scope(value: Scope)
 }
 
@@ -43,8 +43,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
         switch self {
         case .isIsolated(let value):
             return "Config Attr - isIsolated = \(value)"
-        case .customRef(let value):
-            return "Config Attr - customRef = \(value)"
+        case .customBuilder(let value):
+            return "Config Attr - builder = \(value)"
         case .scope(let value):
             return "Config Attr - scope = \(value)"
         }
@@ -54,8 +54,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
         switch self {
         case .isIsolated:
             return .isIsolated
-        case .customRef:
-            return .customRef
+        case .customBuilder:
+            return .customBuilder
         case .scope:
             return .scope
         }
@@ -81,12 +81,12 @@ extension ConfigurationAnnotation {
     static func validate(configurationAttribute: ConfigurationAttribute, with target: ConfigurationAttributeTarget) -> Bool {
         switch (configurationAttribute, target) {
         case (.isIsolated, .`self`),
-             (.customRef, .dependency),
+             (.customBuilder, .dependency),
              (.scope, .dependency):
             return true
             
         case (.isIsolated, _),
-             (.customRef, _),
+             (.customBuilder, _),
              (.scope, _):
             return false
         }
@@ -100,7 +100,7 @@ extension ConfigurationAnnotation {
     static func validate(configurationAttribute: ConfigurationAttribute, with dependencyKind: ConfigurationAttributeDependencyKind) -> Bool {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
-             (.customRef, _):
+             (.customBuilder, _):
             
             return true
         case (.isIsolated, _),
@@ -119,8 +119,8 @@ extension ConfigurationAttribute {
         case .isIsolated?:
             self = .isIsolated(value: try ConfigurationAttribute.boolValue(from: valueString))
             
-        case .customRef?:
-            self = .customRef(value: try ConfigurationAttribute.boolValue(from: valueString))
+        case .customBuilder?:
+            self = .customBuilder(value: valueString)
             
         case .scope?:
             self = .scope(value: try ConfigurationAttribute.scopeValue(from: valueString))
@@ -164,11 +164,11 @@ extension ConfigurationAttribute {
 
     var boolValue: Bool? {
         switch self {
-        case .customRef(let value),
-             .isIsolated(let value):
+        case .isIsolated(let value):
             return value
 
-        case .scope:
+        case .scope,
+             .customBuilder:
             return nil
         }
     }
@@ -178,7 +178,18 @@ extension ConfigurationAttribute {
         case .scope(let value):
             return value
             
-        case .customRef,
+        case .customBuilder,
+             .isIsolated:
+            return nil
+        }
+    }
+    
+    var stringValue: String? {
+        switch self {
+        case .customBuilder(let value):
+            return value
+            
+        case .scope,
              .isIsolated:
             return nil
         }

@@ -41,7 +41,7 @@ final class GeneratorTests: XCTestCase {
         }
     }
     
-    func test_customRef_registration() {
+    func test_custom_builder_registration() {
         do {
             try performTest()
         } catch {

@@ -6,13 +6,9 @@ import UIKit
 protocol AppDelegateDependencyResolver {
     var logger: Logger { get }
     var urlSession: URLSession { get }
-    func urlSessionCustomRef() -> URLSession
     var movieAPI: APIProtocol { get }
-    func movieAPICustomRef() -> APIProtocol
     var imageManager: ImageManaging { get }
-    func imageManagerCustomRef() -> ImageManaging
     var movieManager: MovieManaging { get }
-    func movieManagerCustomRef() -> MovieManaging
     var homeViewController: UIViewController { get }
     var reviewManager: ReviewManaging { get }
 }
@@ -27,28 +23,28 @@ final class AppDelegateDependencyContainer: AppDelegateDependencyResolver {
     private var _urlSession: URLSession?
     var urlSession: URLSession {
         if let value = _urlSession { return value }
-        let value = urlSessionCustomRef()
+        let value = { _ in URLSession.shared }(self)
         _urlSession = value
         return value
     }
     private var _movieAPI: APIProtocol?
     var movieAPI: APIProtocol {
         if let value = _movieAPI { return value }
-        let value = movieAPICustomRef()
+        let value = AppDelegate.makeMovieAPI(self)
         _movieAPI = value
         return value
     }
     private var _imageManager: ImageManaging?
     var imageManager: ImageManaging {
         if let value = _imageManager { return value }
-        let value = imageManagerCustomRef()
+        let value = ImageManager()
         _imageManager = value
         return value
     }
     private var _movieManager: MovieManaging?
     var movieManager: MovieManaging {
         if let value = _movieManager { return value }
-        let value = movieManagerCustomRef()
+        let value = AppDelegate.makeMovieManager(self)
         _movieManager = value
         return value
     }

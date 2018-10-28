@@ -21,11 +21,11 @@ final class ConfigurationAttributeTests: XCTestCase {
         XCTAssertEqual(attribute.description, "Config Attr - isIsolated = true")
     }
     
-    func test_customRef_description_should_be_valid() {
+    func test_customBuilder_description_should_be_valid() {
         
-        let attribute = ConfigurationAttribute.customRef(value: true)
+        let attribute = ConfigurationAttribute.customBuilder(value: "make")
         
-        XCTAssertEqual(attribute.description, "Config Attr - customRef = true")
+        XCTAssertEqual(attribute.description, "Config Attr - builder = make")
     }
     
     func test_scope_description_should_be_valid() {

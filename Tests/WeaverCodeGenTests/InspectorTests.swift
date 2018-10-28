@@ -176,11 +176,11 @@ final class SessionManager {
         }
     }
     
-    func test_inspector_should_build_a_valid_dependency_graph_with_an_unresolvable_ref_with_custom_ref_set_to_true() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_an_unresolvable_ref_with_custom_builder_set_to_true() {
         let file = File(contents: """
 final class API {
     // weaver: api <- APIProtocol
-    // weaver: api.customRef = true
+    // weaver: api.builder = API.make
 }
 """)
         
@@ -198,11 +198,11 @@ final class API {
         }
     }
     
-    func test_inspector_should_build_a_valid_dependency_graph_with_an_unbuildable_dependency_with_custom_ref_set_to_true() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_an_unbuildable_dependency_with_custom_builder_set_to_true() {
         let file = File(contents: """
 final class API {
     // weaver: api = API <- APIProtocol
-    // weaver: api.customRef = true
+    // weaver: api.builder = API.make
 }
 """)
         
@@ -220,16 +220,16 @@ final class API {
         }
     }
     
-    func test_inspector_should_build_a_valid_dependency_graph_with_a_more_complex_custom_ref_resolution() {
+    func test_inspector_should_build_a_valid_dependency_graph_with_a_more_complex_custom_builder_resolution() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: appDelegate = AppDelegateProtocol
     // weaver: appDelegate.scope = .container
-    // weaver: appDelegate.customRef = true
+    // weaver: appDelegate.builder = AppDelegate.make
     
     // weaver: viewController = ViewController
     // weaver: viewController.scope = .container
-    // weaver: viewController.customRef = true
+    // weaver: viewController.builder = ViewController.make
 }
 
 final class ViewController {
@@ -251,15 +251,15 @@ final class ViewController {
         }
     }
     
-    func test_inspector_should_build_an_invalid_dependency_graph_because_of_a_custom_ref_not_shared_with_children() {
+    func test_inspector_should_build_an_invalid_dependency_graph_because_of_a_custom_builder_not_shared_with_children() {
         let file = File(contents: """
 final class AppDelegate {
     // weaver: appDelegate <- AppDelegateProtocol
-    // weaver: appDelegate.customRef = true
+    // weaver: appDelegate.builder = AppDelegate.make
     
     // weaver: viewController = ViewController
     // weaver: viewController.scope = .container
-    // weaver: viewController.customRef = true
+    // weaver: viewController.builder = ViewController.make
 }
 
 final class ViewController {
@@ -379,7 +379,7 @@ final class Coordinator {
 final class AppDelegate {
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
-    // weaver: urlSession.customRef = true
+    // weaver: urlSession.builder = URLSession.shared
     
     // weaver: movieAPI = MovieAPI <- APIProtocol
     // weaver: movieAPI.scope = .container
@@ -435,7 +435,7 @@ final class MovieAPI: APIProtocol {
 final class AppDelegate {
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
-    // weaver: urlSession.customRef = true
+    // weaver: urlSession.builder = URLSession.shared
     
     // weaver: movieAPI = MovieAPI <- APIProtocol
     // weaver: movieAPI.scope = .container
@@ -492,7 +492,7 @@ final class MovieAPI: APIProtocol {
 final class AppDelegate {
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
-    // weaver: urlSession.customRef = true
+    // weaver: urlSession.builder = URLSession.shared
     
     // weaver: movieAPI = MovieAPI <- APIProtocol
     // weaver: movieAPI.scope = .container

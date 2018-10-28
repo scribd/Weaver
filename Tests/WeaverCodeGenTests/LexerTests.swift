@@ -507,70 +507,27 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_custom_ref_annotation() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_custom_builder_annotation() {
         
         let file = File(contents: """
 
-// weaver: api.customRef = true
-// weaver: api.customRef = false
+// weaver: api.builder = make
 """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
             let tokens = try lexer.tokenize()
             
-            if tokens.count == 2 {
+            if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .customRef(value: true), target: .dependency(name: "api")),
-                    offset: 1, length: 32, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .customRef(value: false), target: .dependency(name: "api")),
-                    offset: 33, length: 32, line: 2)
+                    value: ConfigurationAnnotation(attribute: .customBuilder(value: "make"), target: .dependency(name: "api")),
+                    offset: 1, length: 29, line: 1)
                 )
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
         } catch {
             XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
-    func test_tokenizer_should_throw_an_error_with_an_invalid_custom_ref_annotation() {
-        
-        let file = File(contents: """
-
-// weaver: api.customRef = ok
-""")
-        let lexer = Lexer(file, fileName: "test.swift")
-        
-        do {
-            _ = try lexer.tokenize()
-            XCTAssertTrue(false, "Haven't thrown any error.")
-        } catch let error as LexerError {
-            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: "ok", expected: "true|false")
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
-        } catch {
-            XCTAssertTrue(false, "Unexpected error: \(error).")
-        }
-    }
-    
-    func test_tokenizer_should_throw_an_error_with_a_custom_ref_annotation_with_the_wrong_target() {
-        
-        let file = File(contents: """
-
-// weaver: self.customRef = true
-""")
-        let lexer = Lexer(file, fileName: "test.swift")
-        
-        do {
-            _ = try lexer.tokenize()
-            XCTAssertTrue(false, "Haven't thrown any error.")
-        } catch let error as LexerError {
-            let underlyingError = TokenError.invalidConfigurationAttributeTarget(name: "customRef", target: .`self`)
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
-        } catch {
-            XCTAssertTrue(false, "Unexpected error: \(error).")
         }
     }
     

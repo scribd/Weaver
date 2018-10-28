@@ -57,7 +57,7 @@ private struct RegistrationViewModel {
     let type: Type
     let abstractType: Type
     let scope: String
-    let customRef: Bool
+    let customBuilder: String?
     let parameters: [DependencyViewModel]
     let hasReferences: Bool
     let hasBuilder: Bool
@@ -70,7 +70,7 @@ private struct RegistrationViewModel {
         type = dependency.type
         abstractType = dependency.abstractType
         scope = dependency.configuration.scope.rawValue
-        customRef = dependency.configuration.customRef
+        customBuilder = dependency.configuration.customBuilder
         
         if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {
             parameters = dependencyContainer.parameters.orderedValues.map {

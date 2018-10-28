@@ -14,26 +14,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    private let dependencies: AppDelegateDependencyResolver = AppDelegateDependencyContainer()
+    fileprivate let dependencies: AppDelegateDependencyResolver = AppDelegateDependencyContainer()
     
     // weaver: logger = Logger
     // weaver: logger.scope = .container
     
     // weaver: urlSession = URLSession
     // weaver: urlSession.scope = .container
-    // weaver: urlSession.customRef = true
+    // weaver: urlSession.builder = { _ in URLSession.shared }
     
     // weaver: movieAPI = MovieAPI <- APIProtocol
     // weaver: movieAPI.scope = .container
-    // weaver: movieAPI.customRef = true
+    // weaver: movieAPI.builder = AppDelegate.makeMovieAPI
 
     // weaver: imageManager = ImageManager <- ImageManaging
     // weaver: imageManager.scope = .container
-    // weaver: imageManager.customRef = true
     
     // weaver: movieManager = MovieManager <- MovieManaging
     // weaver: movieManager.scope = .container
-    // weaver: movieManager.customRef = true
+    // weaver: movieManager.builder = AppDelegate.makeMovieManager
     
     // weaver: homeViewController = HomeViewController <- UIViewController
     // weaver: homeViewController.scope = .container
@@ -50,21 +49,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-extension AppDelegateDependencyResolver {
+extension AppDelegate {
 
-    func urlSessionCustomRef() -> URLSession {
-        return .shared
+    static func makeMovieAPI(_ dependencies: AppDelegateDependencyResolver) -> APIProtocol {
+        return MovieAPI(urlSession: dependencies.urlSession)
     }
     
-    func movieAPICustomRef() -> APIProtocol {
-        return MovieAPI(urlSession: urlSession)
-    }
-    
-    func imageManagerCustomRef() -> ImageManaging {
-        return ImageManager()
-    }
-    
-    func movieManagerCustomRef() -> MovieManaging {
-        return MovieManager(logger: logger, host: "https://api.themoviedb.org/3")
+    static func makeMovieManager(_ dependencies: AppDelegateDependencyResolver) -> MovieManaging {
+        return MovieManager(logger: dependencies.logger, host: "https://api.themoviedb.org/3")
     }
 }
