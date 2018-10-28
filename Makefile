@@ -4,6 +4,9 @@ SWIFT_BUILD_FLAGS=--configuration release
 
 .PHONY: clean build install package codecov
 
+init:
+	@swift package generate-xcodeproj
+
 build:
 	@swift build --disable-sandbox $(SWIFT_BUILD_FLAGS)
 

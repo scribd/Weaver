@@ -2,13 +2,13 @@
 /// DO NOT EDIT!
 // MARK: - FooTest13
 protocol FooTest13DependencyResolver {
-    var fuu: FuuTest12 { get }
+    var fuu: FuuTest13 { get }
 }
 final class FooTest13DependencyContainer: FooTest13DependencyResolver {
-    private var _fuu: FuuTest12?
-    var fuu: FuuTest12 {
+    private var _fuu: FuuTest13?
+    var fuu: FuuTest13 {
         if let value = _fuu { return value }
-        let value = FuuTest12()
+        let value = FuuTest13()
         _fuu = value
         return value
     }

@@ -107,7 +107,7 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
     }
     {% endfor %}{# dependencyContainer.registrations #}
 
-    init({% if dependencyContainer.references %}injecting dependencies: {{dependencyContainer.targetType.name}}InputDependencyResolver{% if dependencyContainer.parameters %}, {% endif %}{% endif %}{% call ParametersDecl dependencyContainer.parameters %}) {
+    {% if dependencyContainer.doesSupportObjc %}{% if not dependencyContainer.references %}{% if not dependencyContainer.parameters %}override {% endif %}{% endif %}{% endif %}init({% if dependencyContainer.references %}injecting dependencies: {{dependencyContainer.targetType.name}}InputDependencyResolver{% if dependencyContainer.parameters %}, {% endif %}{% endif %}{% call ParametersDecl dependencyContainer.parameters %}) {
 
         {% call ParameterAssign dependencyContainer.parameters %}
 

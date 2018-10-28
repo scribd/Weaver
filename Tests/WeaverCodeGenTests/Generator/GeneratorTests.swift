@@ -136,6 +136,14 @@ final class GeneratorTests: XCTestCase {
             XCTFail("Unexpected error \(error)")
         }
     }
+
+    func test_objc_compatible_container() {
+        do {
+            try performTest()
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
 }
 
 // MARK: - Utils
