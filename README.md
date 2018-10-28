@@ -277,20 +277,20 @@ Example:
 
 `DependencyType`: Either the concrete or abstract type of the dependency. This also defines the type the dependency's accessor returns.
 
-#### - Custom Reference Annotation
+#### - Custom Builder Annotation
 
-Adds the method `dependencyNameCustomRef(_ dependencyContainer:)` to the container's resolver `protocol`. The default value being `false`. This method is left unimplemented by Weaver, meaning you'll need to implement it yourself and resolve/build the dependency manually.
+Overrides a dependency's default initialization code.
 
-Works along with registration and reference annotations.
+Works for registration annotations only.
 
 **Warning - Make sure you don't do anything unsafe with the `dependencyContainer` parameter passed down in this method since it won't be caught by the dependency graph validator.**
 
 Example:
 ```swift
-// weaver: dependencyName.customRef = aBoolean
+// weaver: dependencyName.builder = ADependency.make
 ```
 
-`aBoolean`: Boolean defining if the dependency should have a custom reference or not. Can take the value `true` or `false`.
+`ADependency.make`: Code overriding the dependency's initialization code taking the `ADependencyDependencyResolver` object as a parameter (e.g. make prototype could be `static func make(_ dependencies: ADependencyDependencyResolver)`).
 
 #### - Parameter Annotation
 
