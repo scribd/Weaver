@@ -21,6 +21,13 @@
 - [x] DI Container hierarchy
 - [x] Thread safety
 
+## Tutorials
+
+If you're looking for a step by step tutorial, check out these links.
+* [Part 1 - Basics](https://medium.com/scribd-data-science-engineering/dependency-injection-tutorial-with-weaver-on-ios-part-1-78265548dd00)
+* Part 2 - Unit Testing (coming soon)
+* Part 3 - Multi target application (coming soon)
+
 ## Dependency Injection
 
 Dependency Injection basically means "giving an object its instance variables" [¹](#more-reading). It seems like it's not such a big deal, but as soon as a project gets bigger, it gets tricky. Initializers become too complex, passing down dependencies through several layers becomes time consuming and just figuring out where to get a dependency from can be hard enough to give up and finally use a singleton.
@@ -340,7 +347,6 @@ For an output example, please check this [Gist](https://gist.github.com/trupin/9
 
 ## More reading...
 
-- [Dependency Injection Tutorial With Weaver (Part 1)](https://medium.com/scribd-data-science-engineering/dependency-injection-tutorial-with-weaver-on-ios-part-1-78265548dd00)
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
 - [Dependency Injection Demisifyied, James Shore, 03/22/2006](http://www.jamesshore.com/Blog/Dependency-Injection-Demystified.html) ¹
 
