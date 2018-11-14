@@ -162,4 +162,4 @@ let main = Group {
     }
 }
 
-main.run("0.11.0")
+main.run("0.11.1")
