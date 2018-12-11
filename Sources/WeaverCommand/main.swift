@@ -56,9 +56,10 @@ let main = Group {
         Option<String>("output_path", default: ".", description: "Where the swift files will be generated."),
         Option<TemplatePathArgument>("template_path", default: TemplatePathArgument(), description: "Custom template path."),
         Flag("unsafe", default: false),
+        Flag("single_output", default: false),
         Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
-    ) { outputPath, templatePath, unsafeFlag, inputPaths in
-
+    ) { outputPath, templatePath, unsafeFlag, singleOutput, inputPaths in
+        
         do {
             
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
@@ -86,7 +87,7 @@ let main = Group {
                     Logger.log(.error, "Could not retrieve file name from path '\(filePath)'".red)
                     return nil
                 }
-                let generatedFilePath = Path(outputPath) + "Weaver.\(fileName)"
+                let generatedFilePath = Path(outputPath) + "Weaver.\(singleOutput ? "swift" : fileName)"
                 
                 guard let data = data else {
                     Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.".red)
@@ -113,13 +114,23 @@ let main = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
             
-            for (path, data) in dataToWrite {
-                if let data = data {
+            if singleOutput {
+                let (path, data) = dataToWrite.reduce((nil, nil)) {
+                    ($1.0, "\($0.1 ?? String())\n\n// --------------------------------------------\n\n\($1.1 ?? String())")
+                }
+                if let path = path, let data = data {
                     try path.write(data)
                     Logger.log(.info, "-> '\(path)'".lightMagenta)
-                } else if path.isFile && path.isDeletable {
-                    try path.delete()
-                    Logger.log(.info, " X '\(path)'".lightMagenta)
+                }
+            } else {
+                for (path, data) in dataToWrite {
+                    if let data = data {
+                        try path.write(data)
+                        Logger.log(.info, "-> '\(path)'".lightMagenta)
+                    } else if path.isFile && path.isDeletable {
+                        try path.delete()
+                        Logger.log(.info, " X '\(path)'".lightMagenta)
+                    }
                 }
             }
             Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
