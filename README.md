@@ -87,7 +87,6 @@ Run the following to check if Weaver has been installed correctly.
 
 ```bash
 $ weaver generate --help
-
 Usage:
 
     $ weaver generate <input_paths>
@@ -100,6 +99,7 @@ Options:
     --output_path [default: .] - Where the swift files will be generated.
     --template_path - Custom template path.
     --unsafe [default: false]
+    --single_output [default: false]
 ```
 
 ### (2) - Weaver build phase
