@@ -173,4 +173,4 @@ let main = Group {
     }
 }
 
-main.run("0.11.1")
+main.run("0.11.2")
