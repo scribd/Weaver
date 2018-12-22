@@ -436,6 +436,9 @@ public final class DependencyGraph {
         }
     }()
     
+    /// Ordered unique imports.
+    lazy var orderedImports: [String] = Set(importsByFile.values.flatMap { $0 }).sorted()
+    
     public var injectableTypesCount: Int {
         return dependencyContainersByFile.orderedValues.count
     }

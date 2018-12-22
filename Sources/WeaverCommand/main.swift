@@ -74,7 +74,15 @@ let main = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
             let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath.value)
-            let generatedData = try generator.generate()
+
+            let generatedData: [(file: String, data: String?)] = try {
+                if singleOutput {
+                    return [(file: "swift", data: try generator.generate())]
+                } else {
+                    return try generator.generate()
+                }
+            }()
+            
             Logger.log(.info, "Done".lightBlue, benchmark: .end("generating"))
             
             // ---- Collect ----
@@ -87,7 +95,7 @@ let main = Group {
                     Logger.log(.error, "Could not retrieve file name from path '\(filePath)'".red)
                     return nil
                 }
-                let generatedFilePath = Path(outputPath) + "Weaver.\(singleOutput ? "swift" : fileName)"
+                let generatedFilePath = Path(outputPath) + "Weaver.\(fileName)"
                 
                 guard let data = data else {
                     Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.".red)
@@ -114,23 +122,13 @@ let main = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
             
-            if singleOutput {
-                let (path, data) = dataToWrite.reduce((nil, nil)) {
-                    ($1.0, "\($0.1 ?? String())\n\n// --------------------------------------------\n\n\($1.1 ?? String())")
-                }
-                if let path = path, let data = data {
+            for (path, data) in dataToWrite {
+                if let data = data {
                     try path.write(data)
                     Logger.log(.info, "-> '\(path)'".lightMagenta)
-                }
-            } else {
-                for (path, data) in dataToWrite {
-                    if let data = data {
-                        try path.write(data)
-                        Logger.log(.info, "-> '\(path)'".lightMagenta)
-                    } else if path.isFile && path.isDeletable {
-                        try path.delete()
-                        Logger.log(.info, " X '\(path)'".lightMagenta)
-                    }
+                } else if path.isFile && path.isDeletable {
+                    try path.delete()
+                    Logger.log(.info, " X '\(path)'".lightMagenta)
                 }
             }
             Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))

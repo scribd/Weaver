@@ -13,24 +13,22 @@ import PathKit
 public final class Generator {
     
     private let dependencyGraph: DependencyGraph
-
-    private let templatePath: Path
+    
+    private let template: StencilSwiftTemplate
     
     public init(dependencyGraph: DependencyGraph, template path: Path? = nil) throws {
 
         self.dependencyGraph = dependencyGraph
-        
-        templatePath = path ?? Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
+
+        let templatePath = path ?? Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
+        let templateString: String = try templatePath.read()
+        let environment = stencilSwiftEnvironment()
+        template = StencilSwiftTemplate(templateString: templateString,
+                                        environment: environment,
+                                        name: nil)
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
-
-        let templateString: String = try templatePath.read()
-        let environment = stencilSwiftEnvironment()
-        
-        let templateClass = StencilSwiftTemplate(templateString: templateString,
-                                                 environment: environment,
-                                                 name: nil)
 
         return try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { item in
             
@@ -42,10 +40,24 @@ public final class Generator {
             
             let context: [String: Any] = ["dependencyContainers": dependencyContainers,
                                           "imports": dependencyGraph.importsByFile[item.key] ?? []]
-            let string = try templateClass.render(context)
+            let string = try template.render(context)
             
             return (file: item.key, data: string.compacted())
         }
+    }
+    
+    public func generate() throws -> String? {
+        let dependencyContainers = dependencyGraph.dependencyContainersByFile.orderedValues.flatMap { dependencyContainer in
+            return dependencyContainer.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
+        }
+
+        let context: [String: Any] = ["dependencyContainers": dependencyContainers,
+                                      "imports": dependencyGraph.orderedImports]
+        let string = try template.render(context).compacted()
+
+        guard !string.isEmpty else { return nil }
+        
+        return string
     }
 }
 
