@@ -7,7 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		193A55A22097E38600319C18 /* Weaver.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */; };
+		19273AE221CED0FA006E18E7 /* Weaver.PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADC21CED0FA006E18E7 /* Weaver.PersonManager.swift */; };
+		19273AE321CED0FA006E18E7 /* Weaver.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADD21CED0FA006E18E7 /* Weaver.AppDelegate.swift */; };
+		19273AE421CED0FA006E18E7 /* Weaver.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADE21CED0FA006E18E7 /* Weaver.HomeViewController.swift */; };
+		19273AE521CED0FA006E18E7 /* Weaver.WSReviewViewController+Injectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADF21CED0FA006E18E7 /* Weaver.WSReviewViewController+Injectable.swift */; };
+		19273AE621CED0FA006E18E7 /* Weaver.ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273AE021CED0FA006E18E7 /* Weaver.ReviewManager.swift */; };
+		19273AE721CED0FA006E18E7 /* Weaver.MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273AE121CED0FA006E18E7 /* Weaver.MovieViewController.swift */; };
 		194F90E220CFB78B00F594F5 /* API.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 194F90D920CFB78B00F594F5 /* API.framework */; };
 		194F90EB20CFB78B00F594F5 /* API.h in Headers */ = {isa = PBXBuildFile; fileRef = 194F90DB20CFB78B00F594F5 /* API.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		194F90EE20CFB78B00F594F5 /* API.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 194F90D920CFB78B00F594F5 /* API.framework */; };
@@ -29,15 +34,11 @@
 		19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF4206B4F0A00751B70 /* AppDelegate.swift */; };
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
-		19C298D620B1272800094218 /* Weaver.PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C298D520B1272800094218 /* Weaver.PersonManager.swift */; };
 		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E555222076A156004C44FC /* MovieTableViewCell.swift */; };
 		19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473620A69F7F006F40DF /* WSReviewViewController.m */; };
 		19F5473920A69F96006F40DF /* WSReviewViewController+Injectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473820A69F96006F40DF /* WSReviewViewController+Injectable.swift */; };
-		19F5474320A75085006F40DF /* Weaver.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474120A75085006F40DF /* Weaver.HomeViewController.swift */; };
 		19F5474520A79BCD006F40DF /* MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474420A79BCC006F40DF /* MovieViewController.swift */; };
-		19F5474B20A7D9E8006F40DF /* Weaver.ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474A20A7D9E8006F40DF /* Weaver.ReviewManager.swift */; };
-		19F5474F20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474E20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift */; };
 		19F5475120A888D3006F40DF /* ReviewTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475020A888D3006F40DF /* ReviewTableViewCell.swift */; };
 		19FCF53D20D337FF00AB142E /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF8A2076911D00BFE706 /* Page.swift */; };
 		19FCF54020D3384300AB142E /* PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475220A8EFA6006F40DF /* PersonManager.swift */; };
@@ -45,7 +46,6 @@
 		19FCF54320D3388F00AB142E /* Weaver.ImageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FCF54220D3388F00AB142E /* Weaver.ImageManager.swift */; };
 		19FCF54420D339EB00AB142E /* MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193EEF88207690C300BFE706 /* MovieManager.swift */; };
 		19FCF54520D33A0300AB142E /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5475620A8F001006F40DF /* Movie.swift */; };
-		19FCF54720D33A4A00AB142E /* Weaver.MovieViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */; };
 		19FCF54A20D33D2400AB142E /* Weaver.MovieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FCF54920D33D2300AB142E /* Weaver.MovieManager.swift */; };
 /* End PBXBuildFile section */
 
@@ -88,7 +88,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.AppDelegate.swift; sourceTree = "<group>"; };
+		19273ADC21CED0FA006E18E7 /* Weaver.PersonManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.PersonManager.swift; sourceTree = "<group>"; };
+		19273ADD21CED0FA006E18E7 /* Weaver.AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.AppDelegate.swift; sourceTree = "<group>"; };
+		19273ADE21CED0FA006E18E7 /* Weaver.HomeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.HomeViewController.swift; sourceTree = "<group>"; };
+		19273ADF21CED0FA006E18E7 /* Weaver.WSReviewViewController+Injectable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Weaver.WSReviewViewController+Injectable.swift"; sourceTree = "<group>"; };
+		19273AE021CED0FA006E18E7 /* Weaver.ReviewManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.ReviewManager.swift; sourceTree = "<group>"; };
+		19273AE121CED0FA006E18E7 /* Weaver.MovieViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.MovieViewController.swift; sourceTree = "<group>"; };
 		193EEF88207690C300BFE706 /* MovieManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieManager.swift; sourceTree = "<group>"; };
 		193EEF8A2076911D00BFE706 /* Page.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
 		194F90D920CFB78B00F594F5 /* API.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = API.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -106,7 +111,6 @@
 		19956DFB206B4F0A00751B70 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		19956DFE206B4F0A00751B70 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		19956E00206B4F0A00751B70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		19C298D520B1272800094218 /* Weaver.PersonManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.PersonManager.swift; sourceTree = "<group>"; };
 		19DE26A4207AADD30011DF93 /* ImageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManager.swift; sourceTree = "<group>"; };
 		19DE26A8207BBD9D0011DF93 /* ManagerMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerMocks.swift; sourceTree = "<group>"; };
 		19DE26AA207BC21E0011DF93 /* ResolverMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverMocks.swift; sourceTree = "<group>"; };
@@ -120,13 +124,9 @@
 		19F5473520A69F7F006F40DF /* WSReviewViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WSReviewViewController.h; sourceTree = "<group>"; };
 		19F5473620A69F7F006F40DF /* WSReviewViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WSReviewViewController.m; sourceTree = "<group>"; };
 		19F5473820A69F96006F40DF /* WSReviewViewController+Injectable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WSReviewViewController+Injectable.swift"; sourceTree = "<group>"; };
-		19F5474120A75085006F40DF /* Weaver.HomeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.HomeViewController.swift; sourceTree = "<group>"; };
 		19F5474420A79BCC006F40DF /* MovieViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MovieViewController.swift; sourceTree = "<group>"; };
-		19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.MovieViewController.swift; sourceTree = "<group>"; };
 		19F5474820A7D67E006F40DF /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewManager.swift; sourceTree = "<group>"; };
-		19F5474A20A7D9E8006F40DF /* Weaver.ReviewManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Weaver.ReviewManager.swift; sourceTree = "<group>"; };
 		19F5474C20A7DCB6006F40DF /* Review.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Review.swift; sourceTree = "<group>"; };
-		19F5474E20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Weaver.WSReviewViewController+Injectable.swift"; sourceTree = "<group>"; };
 		19F5475020A888D3006F40DF /* ReviewTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewTableViewCell.swift; sourceTree = "<group>"; };
 		19F5475220A8EFA6006F40DF /* PersonManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonManager.swift; sourceTree = "<group>"; };
 		19F5475420A8EFF0006F40DF /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
@@ -233,12 +233,12 @@
 		19956E18206B51FF00751B70 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
-				19C298D520B1272800094218 /* Weaver.PersonManager.swift */,
-				19F5474620A79BE8006F40DF /* Weaver.MovieViewController.swift */,
-				19F5474E20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift */,
-				19F5474A20A7D9E8006F40DF /* Weaver.ReviewManager.swift */,
-				19F5474120A75085006F40DF /* Weaver.HomeViewController.swift */,
-				193A559C2097E38600319C18 /* Weaver.AppDelegate.swift */,
+				19273ADD21CED0FA006E18E7 /* Weaver.AppDelegate.swift */,
+				19273ADE21CED0FA006E18E7 /* Weaver.HomeViewController.swift */,
+				19273AE121CED0FA006E18E7 /* Weaver.MovieViewController.swift */,
+				19273ADC21CED0FA006E18E7 /* Weaver.PersonManager.swift */,
+				19273AE021CED0FA006E18E7 /* Weaver.ReviewManager.swift */,
+				19273ADF21CED0FA006E18E7 /* Weaver.WSReviewViewController+Injectable.swift */,
 			);
 			path = Generated;
 			sourceTree = "<group>";
@@ -523,20 +523,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				19C298D620B1272800094218 /* Weaver.PersonManager.swift in Sources */,
+				19273AE321CED0FA006E18E7 /* Weaver.AppDelegate.swift in Sources */,
 				19FCF54020D3384300AB142E /* PersonManager.swift in Sources */,
-				19F5474B20A7D9E8006F40DF /* Weaver.ReviewManager.swift in Sources */,
+				19273AE421CED0FA006E18E7 /* Weaver.HomeViewController.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
 				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
 				19F5474520A79BCD006F40DF /* MovieViewController.swift in Sources */,
 				195848D320D4426100BB1F09 /* ReviewManager.swift in Sources */,
-				19F5474320A75085006F40DF /* Weaver.HomeViewController.swift in Sources */,
-				19FCF54720D33A4A00AB142E /* Weaver.MovieViewController.swift in Sources */,
 				19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */,
-				193A55A22097E38600319C18 /* Weaver.AppDelegate.swift in Sources */,
+				19273AE621CED0FA006E18E7 /* Weaver.ReviewManager.swift in Sources */,
 				19F5475120A888D3006F40DF /* ReviewTableViewCell.swift in Sources */,
+				19273AE721CED0FA006E18E7 /* Weaver.MovieViewController.swift in Sources */,
+				19273AE521CED0FA006E18E7 /* Weaver.WSReviewViewController+Injectable.swift in Sources */,
+				19273AE221CED0FA006E18E7 /* Weaver.PersonManager.swift in Sources */,
 				19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */,
-				19F5474F20A7E5A7006F40DF /* Weaver.WSReviewViewController+Injectable.swift in Sources */,
 				19F5473920A69F96006F40DF /* WSReviewViewController+Injectable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
