@@ -63,7 +63,7 @@ Finally, the same dependency graph is used to generate the boilerplate code. It 
 
 ### (1) - Weaver command
 
-The Weaver can be installed using `Homebrew` or manually.
+Weaver can be installed using `Homebrew` or manually.
 
 #### Binary form
 
