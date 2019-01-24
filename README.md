@@ -344,6 +344,7 @@ For an output example, please check this [Gist](https://gist.github.com/trupin/9
 ## Migration guides
 
 - [From weaver 0.9.+ to 0.10.+](./Documentation/Migration_from_0.9.+_to_0.10.+.md)
+- [From weaver 0.10.+ to 0.11.+](./Documentation/Migration_from_0.10.+_to_0.11.+.md)
 
 ## More content...
 
