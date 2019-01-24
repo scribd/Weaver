@@ -353,7 +353,7 @@ For an output example, please check this [Gist](https://gist.github.com/trupin/9
 - [Dependency Injection Demisifyied, James Shore, 03/22/2006](http://www.jamesshore.com/Blog/Dependency-Injection-Demystified.html) ¹
 
 ### Talks
-- [SF SLUG meet-up @Lyft: Maintaining a dependency graph with Weaver](https://www.youtube.com/watch?v=h3CMMbgozG0&t=569s)
+- [SF SLUG meet-up @Lyft: Maintaining a dependency graph with Weaver](https://www.youtube.com/watch?v=h3CMMbgozG0)
 
 ## Contributing
 
