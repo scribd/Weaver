@@ -21,6 +21,9 @@
 - [x] DI Container hierarchy
 - [x] Thread safety
 
+## Talks
+- [SF SLUG meet-up @Lyft: Maintaining a dependency graph with Weaver](https://www.youtube.com/watch?v=h3CMMbgozG0)
+
 ## Tutorials
 
 If you're looking for a step by step tutorial, check out these links.
@@ -347,13 +350,9 @@ For an output example, please check this [Gist](https://gist.github.com/trupin/9
 - [From weaver 0.10.+ to 0.11.+](./Documentation/Migration_from_0.10.+_to_0.11.+.md)
 
 ## More content...
-
-### Posts
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
 - [Dependency Injection Demisifyied, James Shore, 03/22/2006](http://www.jamesshore.com/Blog/Dependency-Injection-Demystified.html) ¹
 
-### Talks
-- [SF SLUG meet-up @Lyft: Maintaining a dependency graph with Weaver](https://www.youtube.com/watch?v=h3CMMbgozG0)
 
 ## Contributing
 
