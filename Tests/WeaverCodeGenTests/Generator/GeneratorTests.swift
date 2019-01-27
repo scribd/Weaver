@@ -73,6 +73,14 @@ final class GeneratorTests: XCTestCase {
         }
     }
     
+    func test_open_type() {
+        do {
+            try performTest()
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
     func test_ignored_types() {
         do {
             try performTest()

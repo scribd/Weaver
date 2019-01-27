@@ -107,6 +107,34 @@ public final class MyService {
         }
     }
     
+    func test_tokenizer_should_generate_a_valid_token_list_with_an_open_type_declaration() {
+        
+        let file = File(contents: """
+
+open final class MyService {
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 2 {
+                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
+                    value: InjectableType(type: Type(name: "MyService"), accessLevel: .open),
+                    offset: 12, length: 19, line: 1)
+                )
+                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
+                    value: EndOfInjectableType(),
+                    offset: 30, length: 1, line: 2)
+                )
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
     func test_tokenizer_should_generate_a_valid_token_list_with_an_internal_type_declaration() {
         
         let file = File(contents: """
