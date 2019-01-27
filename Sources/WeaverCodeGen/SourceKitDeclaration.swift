@@ -128,6 +128,8 @@ private extension AccessLevel {
             self = .internal
         case "source.lang.swift.accessibility.public":
             self = .public
+        case "source.lang.swift.accessibility.open":
+            self = .open
         default:
             self = .default
         }

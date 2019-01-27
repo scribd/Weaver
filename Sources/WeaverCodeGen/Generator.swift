@@ -216,7 +216,8 @@ private extension DependencyContainer {
         switch accessLevel {
         case .internal:
             return false
-        case .public:
+        case .public,
+             .open:
             return true
         }
     }
