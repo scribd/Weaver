@@ -28,7 +28,7 @@
 
 If you're looking for a step by step tutorial, check out these links.
 * [Part 1 - Basics](https://medium.com/scribd-data-science-engineering/dependency-injection-tutorial-with-weaver-on-ios-part-1-78265548dd00)
-* Part 2 - Unit Testing (coming soon)
+* [Part 2 - Unit Testing](https://medium.com/scribd-data-science-engineering/dependency-injection-tutorial-with-weaver-on-ios-part-2-5212c716691b)
 * Part 3 - Multi target application (coming soon)
 
 ## Dependency Injection
