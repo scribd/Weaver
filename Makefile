@@ -1,6 +1,6 @@
 VERSION := $(shell /bin/cat .version)
 PREFIX=/usr/local
-SWIFT_BUILD_FLAGS=--configuration release
+SWIFT_BUILD_FLAGS=--configuration release --static-swift-stdlib
 
 .PHONY: clean build install package codecov
 
