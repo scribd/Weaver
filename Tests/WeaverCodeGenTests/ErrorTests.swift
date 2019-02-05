@@ -107,11 +107,11 @@ final class ErrorTests: XCTestCase {
         XCTAssertEqual(errorDescription, expectedDescription)
     }
     
-    // MARK: - GeneratorError
+    // MARK: - SwiftGeneratorError
     
     func test_generatorError_invalidTemplatePath_description() {
         
-        errorDescription = GeneratorError.invalidTemplatePath(path: "fake_file.swift").description
+        errorDescription = SwiftGeneratorError.invalidTemplatePath(path: "fake_file.swift").description
         expectedDescription = "Invalid template path: fake_file.swift."
         
         XCTAssertEqual(errorDescription, expectedDescription)

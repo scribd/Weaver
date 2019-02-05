@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		190988B821FF86780086F5D2 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19273AE221CED0FA006E18E7 /* Weaver.PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADC21CED0FA006E18E7 /* Weaver.PersonManager.swift */; };
 		19273AE321CED0FA006E18E7 /* Weaver.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADD21CED0FA006E18E7 /* Weaver.AppDelegate.swift */; };
 		19273AE421CED0FA006E18E7 /* Weaver.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADE21CED0FA006E18E7 /* Weaver.HomeViewController.swift */; };
@@ -34,7 +35,6 @@
 		19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF4206B4F0A00751B70 /* AppDelegate.swift */; };
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
-		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E555222076A156004C44FC /* MovieTableViewCell.swift */; };
 		19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473620A69F7F006F40DF /* WSReviewViewController.m */; };
 		19F5473920A69F96006F40DF /* WSReviewViewController+Injectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473820A69F96006F40DF /* WSReviewViewController+Injectable.swift */; };
@@ -460,9 +460,13 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
+			inputFileListPaths = (
+			);
 			inputPaths = (
 			);
 			name = Weaver;
+			outputFileListPaths = (
+			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -474,9 +478,15 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
+			inputFileListPaths = (
+				"$(SRCROOT)/Sample/Generated/WeaverInput.xcfilelist",
+			);
 			inputPaths = (
 			);
 			name = Weaver;
+			outputFileListPaths = (
+				"$(SRCROOT)/Sample/Generated/WeaverOutput.xcfilelist",
+			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -527,8 +537,8 @@
 				19FCF54020D3384300AB142E /* PersonManager.swift in Sources */,
 				19273AE421CED0FA006E18E7 /* Weaver.HomeViewController.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
-				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
 				19F5474520A79BCD006F40DF /* MovieViewController.swift in Sources */,
+				190988B821FF86780086F5D2 /* HomeViewController.swift in Sources */,
 				195848D320D4426100BB1F09 /* ReviewManager.swift in Sources */,
 				19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */,
 				19273AE621CED0FA006E18E7 /* Weaver.ReviewManager.swift in Sources */,
@@ -590,7 +600,11 @@
 				INFOPLIST_FILE = API/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scribd.beaverdi.API;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -619,7 +633,11 @@
 				INFOPLIST_FILE = API/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scribd.beaverdi.API;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -640,7 +658,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = APITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scribd.beaverdi.APITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -659,7 +681,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = APITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scribd.beaverdi.APITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -774,7 +800,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -787,7 +814,10 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Sample/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scribd.beaverdi.Sample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Sample/Sample-Bridging-Header.h";
@@ -805,7 +835,10 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Sample/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scribd.beaverdi.Sample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Sample/Sample-Bridging-Header.h";

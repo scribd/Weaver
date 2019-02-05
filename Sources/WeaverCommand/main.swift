@@ -13,6 +13,8 @@ import Darwin
 import PathKit
 import Rainbow
 
+private let version = "0.11.2"
+
 // MARK: - Linker
 
 private extension Linker {
@@ -60,6 +62,8 @@ let main = Group {
         Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
     ) { outputPath, templatePath, unsafeFlag, singleOutput, inputPaths in
         
+        let outputPath = Path(outputPath)
+        
         do {
             
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
@@ -73,7 +77,10 @@ let main = Group {
 
             Logger.log(.info, "")
             Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
-            let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath.value)
+
+            let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
+                                               version: version,
+                                               template: templatePath.value)
 
             let generatedData: [(file: String, data: String?)] = try {
                 if singleOutput {
@@ -95,7 +102,7 @@ let main = Group {
                     Logger.log(.error, "Could not retrieve file name from path '\(filePath)'".red)
                     return nil
                 }
-                let generatedFilePath = Path(outputPath) + "Weaver.\(fileName)"
+                let generatedFilePath = outputPath + "Weaver.\(fileName)"
                 
                 guard let data = data else {
                     Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.".red)
@@ -118,7 +125,7 @@ let main = Group {
             }
             
             // ---- Write ----
-            
+
             Logger.log(.info, "")
             Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
             
@@ -131,6 +138,7 @@ let main = Group {
                     Logger.log(.info, " X '\(path)'".lightMagenta)
                 }
             }
+            
             Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
             Logger.log(.info, "")
             Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
@@ -169,6 +177,49 @@ let main = Group {
             exit(1)
         }
     }
+    
+    $0.command(
+        "xcfilelist",
+        Option<String>("output_path", default: ".", description: "Where the swift files will be generated."),
+        Option<String>("project_path", default: ".", description: "Project's directory"),
+        Flag("single_output", default: false),
+        Argument<InputPathsArgument>("input_paths", description: "Swift files to parse.")
+    ) { outputPath, projectPath, singleOutput, inputPaths in
+        
+        let outputPath = Path(outputPath)
+        let projectPath = Path(projectPath)
+
+        // ---- Link ----
+        
+        let linker = try Linker(inputPaths.values.map { $0.string })
+        let dependencyGraph = linker.dependencyGraph
+
+        // ---- Write ----
+        
+        Logger.log(.info, "")
+        Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
+
+        let generator = XCFilelistGenerator(dependencyGraph: dependencyGraph,
+                                            projectPath: projectPath,
+                                            outputPath: outputPath,
+                                            singleOutput: singleOutput,
+                                            version: version)
+        
+        let filelists = generator.generate()
+        
+        let inputFilelistPath = outputPath + "WeaverInput.xcfilelist"
+        try inputFilelistPath.parent().mkpath()
+        try inputFilelistPath.write(filelists.input)
+        Logger.log(.info, "-> \(inputFilelistPath)".lightMagenta)
+        
+        let outputFilelistPath = outputPath + "WeaverOutput.xcfilelist"
+        try outputFilelistPath.parent().mkpath()
+        try outputFilelistPath.write(filelists.output)
+        Logger.log(.info, "-> \(outputFilelistPath)".lightMagenta)
+        
+        Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
+        Logger.log(.info, "")
+    }
 }
 
-main.run("0.11.2")
+main.run(version)

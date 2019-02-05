@@ -1,5 +1,5 @@
 //
-//  Generator.swift
+//  SwiftGenerator.swift
 //  WeaverCodeGen
 //
 //  Created by Théophane Rupin on 3/2/18.
@@ -10,15 +10,18 @@ import Stencil
 import StencilSwiftKit
 import PathKit
 
-public final class Generator {
+public final class SwiftGenerator {
     
     private let dependencyGraph: DependencyGraph
     
     private let template: StencilSwiftTemplate
     
-    public init(dependencyGraph: DependencyGraph, template path: Path? = nil) throws {
+    private let version: String
+    
+    public init(dependencyGraph: DependencyGraph, version: String, template path: Path? = nil) throws {
 
         self.dependencyGraph = dependencyGraph
+        self.version = version
 
         let templatePath = path ?? Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
         let templateString: String = try templatePath.read()
@@ -38,9 +41,8 @@ public final class Generator {
                 return (file: item.key, data: nil)
             }
             
-            let context: [String: Any] = ["dependencyContainers": dependencyContainers,
-                                          "imports": dependencyGraph.importsByFile[item.key] ?? []]
-            let string = try template.render(context)
+            let string = try renderTemplate(with: dependencyContainers,
+                                            imports: dependencyGraph.importsByFile[item.key] ?? [])
             
             return (file: item.key, data: string.compacted())
         }
@@ -51,13 +53,22 @@ public final class Generator {
             return dependencyContainer.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
         }
 
-        let context: [String: Any] = ["dependencyContainers": dependencyContainers,
-                                      "imports": dependencyGraph.orderedImports]
-        let string = try template.render(context).compacted()
+        let string = try renderTemplate(with: dependencyContainers,
+                                        imports: dependencyGraph.orderedImports)
 
-        guard !string.isEmpty else { return nil }
-        
-        return string
+        return !string.isEmpty ? nil : string
+    }
+}
+
+// MARK: - Utils
+
+private extension SwiftGenerator {
+    
+    func renderTemplate(with dependencyContainers: [DependencyContainerViewModel], imports: [String]) throws -> String {
+        let context: [String: Any] = ["version": version,
+                                      "dependencyContainers": dependencyContainers,
+                                      "imports": imports]
+        return try template.render(context)
     }
 }
 
@@ -229,4 +240,3 @@ private extension DependencyContainer {
         }
     }
 }
-
