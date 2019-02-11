@@ -69,7 +69,7 @@ struct Configuration {
         }
         
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
-        self.ignoredPathStrings = (ignoredPathStrings ?? configuration.ignoredPathStrings) + ["\(configuration.outputPath.string)/*"]
+        self.ignoredPathStrings = ignoredPathStrings ?? configuration.ignoredPathStrings
         self.projectPath = projectPath
         self.unsafe = unsafe ?? configuration.unsafe
         self.singleOutput = singleOutput ?? configuration.singleOutput

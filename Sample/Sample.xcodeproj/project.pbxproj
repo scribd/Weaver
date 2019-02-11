@@ -471,7 +471,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "weaver generate --config_path .api.weaver.yaml\n";
+			shellScript = "weaver generate --config-path .api.weaver.yaml\n";
 		};
 		19956E1F206BFAFD00751B70 /* Weaver */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -489,7 +489,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "weaver generate --config_path .sample.weaver.yaml\n";
+			shellScript = "weaver generate --config-path .sample.weaver.yaml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

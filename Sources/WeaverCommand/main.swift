@@ -53,14 +53,14 @@ private extension Linker {
 // MARK: - Parameters
 
 private enum Parameters {
-    static let projectPath = Option<Path?>("project_path", default: nil, description: "Project's directory.")
-    static let configPath = Option<Path?>("config_path", default: nil, description: "Configuration path.")
-    static let outputPath = Option<Path?>("output_path", default: nil, description: "Where the swift files will be generated.")
-    static let templatePath = Option<Path?>("template_path", default: nil, description: "Custom template path.")
+    static let projectPath = Option<Path?>("project-path", default: nil, description: "Project's directory.")
+    static let configPath = Option<Path?>("config-path", default: nil, description: "Configuration path.")
+    static let outputPath = Option<Path?>("output-path", default: nil, description: "Where the swift files will be generated.")
+    static let templatePath = Option<Path?>("template-path", default: nil, description: "Custom template path.")
     static let unsafe = OptionalFlag("unsafe", disabledName: "safe")
-    static let singleOutput = OptionalFlag("single_output", disabledName: "multi_outputs")
-    static let inputPath = VariadicOption<String>("input_path", default: [], description: "Paths to input files.")
-    static let ignoredPath = VariadicOption<String>("ignored_path", default: [], description: "Paths to ignore.")
+    static let singleOutput = OptionalFlag("single-output", disabledName: "multi_outputs")
+    static let inputPath = VariadicOption<String>("input-path", default: [], description: "Paths to input files.")
+    static let ignoredPath = VariadicOption<String>("ignored-path", default: [], description: "Paths to ignore.")
     static let pretty = Flag("pretty", default: false)
 }
 
