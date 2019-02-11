@@ -39,6 +39,7 @@ playground.xcworkspace
 # Package.pins
 .build/
 Weaver.xcodeproj
+Weaver.xcworkspace
 
 # CocoaPods
 #

@@ -18,12 +18,11 @@ public final class SwiftGenerator {
     
     private let version: String
     
-    public init(dependencyGraph: DependencyGraph, version: String, template path: Path? = nil) throws {
+    public init(dependencyGraph: DependencyGraph, version: String, template templatePath: Path) throws {
 
         self.dependencyGraph = dependencyGraph
         self.version = version
 
-        let templatePath = path ?? Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
         let templateString: String = try templatePath.read()
         let environment = stencilSwiftEnvironment()
         template = StencilSwiftTemplate(templateString: templateString,
