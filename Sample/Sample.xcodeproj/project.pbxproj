@@ -471,7 +471,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# weaver generate --output_path ${SOURCE_ROOT}/API/Generated/ `find ${SOURCE_ROOT}/API -name '*.swift' | xargs`\n";
+			shellScript = "weaver generate --config_path .api.weaver.yaml\n";
 		};
 		19956E1F206BFAFD00751B70 /* Weaver */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -489,7 +489,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# weaver generate\n";
+			shellScript = "weaver generate --config_path .sample.weaver.yaml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
