@@ -89,20 +89,21 @@ In the project directory, run `brew update && brew bundle && make install` to bu
 Run the following to check if Weaver has been installed correctly.
 
 ```bash
-$ weaver generate --help
+$ weaver swift --help
+
 Usage:
 
-    $ weaver generate <input_paths>
-
-Arguments:
-
-    input_paths - Swift files to parse.
+    $ weaver swift
 
 Options:
-    --output_path [default: .] - Where the swift files will be generated.
-    --template_path - Custom template path.
-    --unsafe [default: false]
-    --single_output [default: false]
+    --project-path - Project's directory.
+    --config-path - Configuration path.
+    --output-path - Where the swift files will be generated.
+    --template-path - Custom template path.
+    --unsafe
+    --single-output
+    --input-path - Paths to input files.
+    --ignored-path - Paths to ignore.
 ```
 
 ### (2) - Weaver build phase
@@ -328,21 +329,41 @@ Example:
 Weaver can ouput a JSON representation of the dependency graph of a project.
 
 ```bash
-$ weaver export --help
+$ weaver json --help
 
 Usage:
 
-    $ weaver export <input_paths>
-
-Arguments:
-
-    input_paths - Swift files to parse.
+    $ weaver json
 
 Options:
+    --project-path - Project's directory.
+    --config-path - Configuration path.
     --pretty [default: false]
+    --input-path - Paths to input files.
+    --ignored-path - Paths to ignore.
 ```
 
 For an output example, please check this [Gist](https://gist.github.com/trupin/9438713f8fae0a5a7f424eca1976f42b).
+
+## Generate `xcfilelist` Files
+
+Weaver can output the input/output `xcfilelist` files which can then be added to a code generation build phase in Xcode.
+
+```bash
+$ weaver xcfilelist --help
+
+Usage:
+
+    $ weaver xcfilelist
+
+Options:
+    --config-path - Configuration path.
+    --output-path - Where the swift files will be generated.
+    --project-path - Project's directory.
+    --single-output
+    --input-path - Paths to input files.
+    --ignored-path - Paths to ignore.
+```
 
 ## Migration guides
 
