@@ -82,12 +82,12 @@ final class DependencyContainer: Hashable {
     /// Location of the associated type declaration in the source code file.
     fileprivate(set) var fileLocation: FileLocation
     
-    fileprivate init(type: Type? = nil,
-                     accessLevel: AccessLevel = .default,
-                     doesSupportObjc: Bool = false,
-                     configuration: DependencyContainerConfiguration = .empty,
-                     referencedType: Type? = nil,
-                     fileLocation: FileLocation = FileLocation()) {
+    init(type: Type? = nil,
+         accessLevel: AccessLevel = .default,
+         doesSupportObjc: Bool = false,
+         configuration: DependencyContainerConfiguration = .empty,
+         referencedType: Type? = nil,
+         fileLocation: FileLocation = FileLocation()) {
         
         self.type = type
         self.accessLevel = accessLevel
@@ -385,13 +385,13 @@ public final class Linker {
 public final class DependencyGraph {
     
     /// `DependencyContainer`s grouped by name and iterable in order of appearance in the source code.
-    private(set) var dependencyContainersByName = OrderedDictionary<String, DependencyContainer>()
+    private(set) var dependencyContainersByName: OrderedDictionary<String, DependencyContainer>
     
     /// `DependencyContainer`s grouped by type and iterable in order of appearance in the source code.
-    private(set) var dependencyContainersByType = OrderedDictionary<TypeIndex, DependencyContainer>()
+    private(set) var dependencyContainersByType: OrderedDictionary<TypeIndex, DependencyContainer>
     
     /// Imported module names grouped by file name.
-    private(set) var importsByFile = [String: [String]]()
+    private(set) var importsByFile: [String: [String]]
     
     /// `DependencyContainer`s grouped by file name and iterable in order of appearance in the source code.
     lazy var dependencyContainersByFile: OrderedDictionary<String, [DependencyContainer]> = {
@@ -438,6 +438,16 @@ public final class DependencyGraph {
     
     /// Ordered unique imports.
     lazy var orderedImports: [String] = Set(importsByFile.values.flatMap { $0 }).sorted()
+    
+    init(_ dependencyContainersByName: OrderedDictionary<String, DependencyContainer> = OrderedDictionary(),
+         importsByFile: [String: [String]] = [:]) {
+        self.dependencyContainersByName = dependencyContainersByName
+        self.importsByFile = importsByFile
+        self.dependencyContainersByType = dependencyContainersByName.orderedValues.reduce(into: OrderedDictionary()) {
+            guard let type = $1.type else { return }
+            $0[TypeIndex(type: type)] = $1
+        }
+    }
     
     public var injectableTypesCount: Int {
         return dependencyContainersByFile.orderedValues.count

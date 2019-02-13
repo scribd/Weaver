@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		190988B821FF86780086F5D2 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19273AE221CED0FA006E18E7 /* Weaver.PersonManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADC21CED0FA006E18E7 /* Weaver.PersonManager.swift */; };
 		19273AE321CED0FA006E18E7 /* Weaver.AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADD21CED0FA006E18E7 /* Weaver.AppDelegate.swift */; };
 		19273AE421CED0FA006E18E7 /* Weaver.HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19273ADE21CED0FA006E18E7 /* Weaver.HomeViewController.swift */; };
@@ -34,7 +35,6 @@
 		19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19956DF4206B4F0A00751B70 /* AppDelegate.swift */; };
 		19956DFC206B4F0A00751B70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFB206B4F0A00751B70 /* Assets.xcassets */; };
 		19956DFF206B4F0A00751B70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 19956DFD206B4F0A00751B70 /* LaunchScreen.storyboard */; };
-		19E5551F20769572004C44FC /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5551E20769572004C44FC /* HomeViewController.swift */; };
 		19E555232076A156004C44FC /* MovieTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E555222076A156004C44FC /* MovieTableViewCell.swift */; };
 		19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473620A69F7F006F40DF /* WSReviewViewController.m */; };
 		19F5473920A69F96006F40DF /* WSReviewViewController+Injectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F5473820A69F96006F40DF /* WSReviewViewController+Injectable.swift */; };
@@ -460,28 +460,36 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
+			inputFileListPaths = (
+			);
 			inputPaths = (
 			);
 			name = Weaver;
+			outputFileListPaths = (
+			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "weaver generate --output_path ${SOURCE_ROOT}/API/Generated/ `find ${SOURCE_ROOT}/API -name '*.swift' | xargs`\n";
+			shellScript = "weaver swift --config-path .api.weaver.yaml\n";
 		};
 		19956E1F206BFAFD00751B70 /* Weaver */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
+			inputFileListPaths = (
+			);
 			inputPaths = (
 			);
 			name = Weaver;
+			outputFileListPaths = (
+			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "weaver generate --output_path ${SOURCE_ROOT}/Sample/Generated/ `find ${SOURCE_ROOT}/Sample -name '*.swift' | xargs -0`\n";
+			shellScript = "weaver swift --config-path .sample.weaver.yaml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -527,8 +535,8 @@
 				19FCF54020D3384300AB142E /* PersonManager.swift in Sources */,
 				19273AE421CED0FA006E18E7 /* Weaver.HomeViewController.swift in Sources */,
 				19956DF5206B4F0A00751B70 /* AppDelegate.swift in Sources */,
-				19E5551F20769572004C44FC /* HomeViewController.swift in Sources */,
 				19F5474520A79BCD006F40DF /* MovieViewController.swift in Sources */,
+				190988B821FF86780086F5D2 /* HomeViewController.swift in Sources */,
 				195848D320D4426100BB1F09 /* ReviewManager.swift in Sources */,
 				19F5473720A69F7F006F40DF /* WSReviewViewController.m in Sources */,
 				19273AE621CED0FA006E18E7 /* Weaver.ReviewManager.swift in Sources */,

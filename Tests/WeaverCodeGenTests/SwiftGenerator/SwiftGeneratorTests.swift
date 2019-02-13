@@ -1,5 +1,5 @@
 //
-//  GeneratorTests.swift
+//  SwiftGeneratorTests.swift
 //  WeaverCodeGenTests
 //
 //  Created by Théophane Rupin on 3/4/18.
@@ -12,10 +12,8 @@ import PathKit
 
 @testable import WeaverCodeGen
 
-final class GeneratorTests: XCTestCase {
+final class SwiftGeneratorTests: XCTestCase {
     
-    let templatePath = Path(#file).parent() + Path("../../Resources/dependency_resolver.stencil")
-
     func test_no_annotation() {
         do {
             let actual = try actualOutput()
@@ -156,7 +154,9 @@ final class GeneratorTests: XCTestCase {
 
 // MARK: - Utils
 
-private extension GeneratorTests {
+private extension SwiftGeneratorTests {
+    
+    var version: String { return "0.11.2" }
     
     func actualOutput(_ function: StringLiteralType = #function) throws -> String? {
         let fileName = function.replacingOccurrences(of: "()", with: "")
@@ -179,7 +179,7 @@ private extension GeneratorTests {
         let ast = try parser.parse()
         let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
         
-        let generator = try Generator(dependencyGraph: dependencyGraph, template: templatePath)
+        let generator = try SwiftGenerator(dependencyGraph: dependencyGraph, version: version, template: templatePath)
 
         guard let (_ , actual) = try generator.generate().first else {
             return nil
@@ -203,7 +203,7 @@ private extension GeneratorTests {
         
         guard actual != expected else { return }
 
-        let dirPath = Path("/tmp/weaver_tests/\(GeneratorTests.self)")
+        let dirPath = Path("/tmp/weaver_tests/\(SwiftGeneratorTests.self)")
         let function = function.replacingOccurrences(of: "()", with: "")
         let actualFilePath = dirPath + Path("\(function)_actual.swift")
         let expectedFilePath = dirPath + Path("\(function)_expected.swift")

@@ -28,7 +28,7 @@ enum ParserError: Error, Equatable {
     case configurationAttributeDoubleAssignation(FileLocation, attribute: ConfigurationAttribute)
 }
 
-enum GeneratorError: Error, Equatable {
+enum SwiftGeneratorError: Error, Equatable {
     case invalidTemplatePath(path: String)
 }
 
@@ -138,7 +138,7 @@ extension ParserError: CustomStringConvertible {
     }
 }
 
-extension GeneratorError: CustomStringConvertible {
+extension SwiftGeneratorError: CustomStringConvertible {
     
     var description: String {
         switch self {
