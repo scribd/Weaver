@@ -111,7 +111,7 @@ Options:
 In Xcode, add the following command to a command line build phase: 
 
 ```
-weaver generate --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT} -name '*.swift' | xargs -0`
+weaver swift --input-path "$SOURCE_ROOT/*.swift" --input-path "$SOURCE_ROOT/**/*.swift" --output-path $SOURCE_ROOT/Generated
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
@@ -323,6 +323,23 @@ Example:
 
 ##### Configuration Attributes:
 - `isIsolated: Bool` (default: `false`): any object setting this to true is considered by Weaver as an object which isn't used in the project. An object flagged as isolated can only have isolated dependents. This attribute is useful to develop a feature wihout all the dependencies setup in the project.
+
+## Weaver configuration file
+
+Weaver can read a configuration file rather than getting its parameters from the command line. It supports both `json` and `yaml` formats.
+
+To configure Weaver with a file, write a file named `.weaver.yaml` or `.weaver.json` at the root of your project.
+
+For example, the [sample project configuration](https://github.com/scribd/Weaver/blob/master/Sample/.sample.weaver.yaml) looks like:
+
+```yaml
+output_path: "Sample/Generated"
+input_paths:
+  - "Sample/*.swift"
+  - "Sample/**/*.swift"
+ignored_paths:
+  - "Sample/Generated/*"
+```
 
 ## Export Dependency Graph
 
