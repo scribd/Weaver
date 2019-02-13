@@ -70,7 +70,7 @@ struct TypeIndex: Hashable, Equatable {
 
     let value: String
     
-    fileprivate init(type: Type) {
+    init(type: Type) {
         value = "\(type.name)\(type.isOptional ? "?" : "")"
     }
 }

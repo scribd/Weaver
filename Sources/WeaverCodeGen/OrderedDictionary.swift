@@ -20,6 +20,11 @@ final class OrderedDictionary<Key: Hashable, Value> {
         let value: Value
     }
     
+    init(_ keyValues: [(Key, Value)] = []) {
+        dictionary = keyValues.reduce(into: [:]) { $0[$1.0] = $1.1 }
+        orderedKeys = keyValues.map { $0.0 }
+    }
+    
     var orderedKeyValues: [KeyValue] {
         var result = [KeyValue]()
         for key in orderedKeys {
