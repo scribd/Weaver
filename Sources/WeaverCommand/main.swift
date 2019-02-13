@@ -69,7 +69,7 @@ private enum Parameters {
 let main = Group {
     
     $0.command(
-        "generate",
+        "swift",
         Parameters.projectPath,
         Parameters.configPath,
         Parameters.outputPath,
@@ -171,7 +171,7 @@ let main = Group {
     }
     
     $0.command(
-        "export",
+        "json",
         Parameters.projectPath,
         Parameters.configPath,
         Parameters.pretty,
