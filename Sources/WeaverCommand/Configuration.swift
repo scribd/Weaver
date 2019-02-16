@@ -78,7 +78,8 @@ struct Configuration {
         self.outputPath = outputPath.isRelative ? projectPath + configuration.outputPath : outputPath
 
         let templatePath = templatePath ?? configuration.templatePath
-        self.templatePath = templatePath.isRelative ? projectPath + templatePath : templatePath
+        let shouldUseProjectPath = templatePath.isRelative && templatePath != Defaults.templatePath
+        self.templatePath = shouldUseProjectPath ? projectPath + templatePath : templatePath
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -102,11 +103,25 @@ extension Configuration {
         static let configPath = Path(".")
         static let configYAMLFile = Path(".weaver.yaml")
         static let configJSONFile = Path(".weaver.json")
-        static let projectPath = Path(".")
         static let outputPath = Path(".")
-        static let templatePath = Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
         static let unsafe = false
         static let singleOuput = false
+        
+        static var projectPath: Path {
+            if let projectPath = ProcessInfo.processInfo.environment["WEAVER_PROJECT_PATH"] {
+                return Path(projectPath)
+            } else {
+                return Path(".")
+            }
+        }
+
+        static var templatePath: Path {
+            if let templatePath = ProcessInfo.processInfo.environment["WEAVER_TEMPLATE_PATH"] {
+                return Path(templatePath)
+            } else {
+                return Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
+            }
+        }
     }
 }
 
