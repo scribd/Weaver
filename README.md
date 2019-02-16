@@ -86,7 +86,7 @@ Add the following to your `Podfile`:
 pod 'WeaverDI'
 ```
 
-This will download the Weaver binaries and dependencies in Pods/ during your next pod install execution and will allow you to invoke it via `${PODS_ROOT}/WeaverDI/bin/weaver` in your Script Build Phases.
+This will download the Weaver binaries and dependencies in Pods/ during your next pod install execution and will allow you to invoke it via `${PODS_ROOT}/WeaverDI/weaver/bin/weaver` in your Script Build Phases.
 
 This is the best way to install a specific version of Weaver since Homebrew cannot automatically install a specific version.
 
