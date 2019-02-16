@@ -22,6 +22,9 @@ uninstall:
 
 package: build
 	$(call install_files,./build/package/weaver)
+	mv ./build/package/weaver/bin/weaver ./build/package/weaver/bin/weaver_command
+	install -C ./tools/weaver.sh ./build/package/weaver/bin/weaver
+
 	cd ./build/package/ && zip -r ../../weaver-$(VERSION).zip ./weaver
 
 codecov: build
