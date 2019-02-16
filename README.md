@@ -66,7 +66,7 @@ Finally, the same dependency graph is used to generate the boilerplate code. It 
 
 ### (1) - Weaver command
 
-Weaver can be installed using `Homebrew` or manually.
+Weaver can be installed using `Homebrew`, `CocodaPods` or manually.
 
 #### Binary form
 
@@ -77,6 +77,18 @@ Download the latest release with the prebuilt binary from [release tab](https://
 ```bash
 $ brew install weaver
 ```
+
+#### [CocoaPods](https://guides.cocoapods.org)
+
+Add the following to your `Podfile`:
+
+```ruby
+pod 'WeaverDI'
+```
+
+This will download the Weaver binaries and dependencies in Pods/ during your next pod install execution and will allow you to invoke it via `${PODS_ROOT}/WeaverDI/bin/weaver` in your Script Build Phases.
+
+This is the best way to install a specific version of Weaver since Homebrew cannot automatically install a specific version.
 
 #### Building from source
 
@@ -111,7 +123,7 @@ Options:
 In Xcode, add the following command to a command line build phase: 
 
 ```
-weaver swift --input-path "$SOURCE_ROOT/*.swift" --input-path "$SOURCE_ROOT/**/*.swift" --output-path $SOURCE_ROOT/Generated
+weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --input-path "*.swift" --input-path "**/*.swift" --output-path output/relative/path
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
@@ -324,11 +336,51 @@ Example:
 ##### Configuration Attributes:
 - `isIsolated: Bool` (default: `false`): any object setting this to true is considered by Weaver as an object which isn't used in the project. An object flagged as isolated can only have isolated dependents. This attribute is useful to develop a feature wihout all the dependencies setup in the project.
 
-## Weaver configuration file
+## Generate Swift Files
+
+To generate the boilerplate code, the `swift` command shall be used.
+
+```bash
+$ weaver swift --help
+Usage:
+
+    $ weaver swift
+
+Options:
+    --project-path - Project's directory.
+    --config-path - Configuration path.
+    --output-path - Where the swift files will be generated.
+    --template-path - Custom template path.
+    --unsafe
+    --single-output
+    --input-path - Paths to input files.
+    --ignored-path - Paths to ignore.
+```
+
+### Example:
+
+```bash
+weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --input-path "*.swift" --input-path "**/*.swift" --output-path Generated
+```
+
+### Parameters:
+
+- `--project-path`: Acts like a base path for other relative paths like `config-path`, `output-path`, `template-path`, `input-path` and `ignored-path`. It defaults to the running directory.
+- `--config-path`: Path to a configuration file. By defaults, Weaver automatically detects `.weaver.yaml` and `.weaver.json` located at `project-path`.
+- `--output-path`: Path where the files will be generated. Defaults to `project-path`.
+- `--template-path`: Path to a custom rendering template.
+- `--unsafe`: Deactivates the dependency graph safety checks.
+- `--single-output`: Makes Weaver generate only one single Swift file.
+- `--input-path`: Path to the project's Swift code. Defaults to `project-path`. Supports [unix globbing](https://en.wikipedia.org/wiki/Glob_(programming)). Variadic parameter, which means it can be set more than once.
+- `--ignored-path`: Same than `input-path` but for ignoring files which shouldn't be parsed by Weaver. 
+
+### Configuration File:
 
 Weaver can read a configuration file rather than getting its parameters from the command line. It supports both `json` and `yaml` formats.
 
 To configure Weaver with a file, write a file named `.weaver.yaml` or `.weaver.json` at the root of your project.
+
+Parameters are named the same, but snakecased.
 
 For example, the [sample project configuration](https://github.com/scribd/Weaver/blob/master/Sample/.sample.weaver.yaml) looks like:
 
@@ -386,6 +438,7 @@ Options:
 
 - [From weaver 0.9.+ to 0.10.+](./Documentation/Migration_from_0.9.+_to_0.10.+.md)
 - [From weaver 0.10.+ to 0.11.+](./Documentation/Migration_from_0.10.+_to_0.11.+.md)
+- [From weaver 0.11.+ to 0.12.+](./Documentation/Migration_from_0.11.+_to_0.12.+.md)
 
 ## More content...
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
