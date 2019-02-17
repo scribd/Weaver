@@ -80,94 +80,97 @@ let main = Group {
         Parameters.ignoredPath)
     { projectPath, configPath, outputPath, templatePath, unsafe, singleOutput, inputPaths, ignoredPaths in
 
-        let configuration = try Configuration(configPath: configPath,
-                                              inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
-                                              ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
-                                              projectPath: projectPath,
-                                              outputPath: outputPath,
-                                              templatePath: templatePath,
-                                              unsafe: unsafe,
-                                              singleOutput: singleOutput)
-        
-        Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
+        do {
+            let configuration = try Configuration(configPath: configPath,
+                                                  inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
+                                                  ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
+                                                  projectPath: projectPath,
+                                                  outputPath: outputPath,
+                                                  templatePath: templatePath,
+                                                  unsafe: unsafe,
+                                                  singleOutput: singleOutput)
+            
+            Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
-        // ---- Link ----
+            // ---- Link ----
 
-        let linker = try Linker(configuration.inputPaths)
-        let dependencyGraph = linker.dependencyGraph
+            let linker = try Linker(configuration.inputPaths)
+            let dependencyGraph = linker.dependencyGraph
 
-        // ---- Generate ----
+            // ---- Generate ----
 
-        Logger.log(.info, "")
-        Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
-
-        let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
-                                           version: version,
-                                           template: configuration.templatePath)
-
-        let generatedData: [(file: String, data: String?)] = try {
-            if configuration.singleOutput {
-                return [(file: "swift", data: try generator.generate())]
-            } else {
-                return try generator.generate()
-            }
-        }()
-
-        Logger.log(.info, "Done".lightBlue, benchmark: .end("generating"))
-
-        // ---- Collect ----
-
-        let dataToWrite: [(path: Path, data: String?)] = generatedData.compactMap { (file, data) in
-
-            let filePath = Path(file)
-
-            guard let fileName = filePath.components.last else {
-                Logger.log(.error, "Could not retrieve file name from path '\(filePath)'".red)
-                return nil
-            }
-            let generatedFilePath = configuration.outputPath + "Weaver.\(fileName)"
-
-            guard let data = data else {
-                Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.".red)
-                return (path: generatedFilePath, data: nil)
-            }
-
-            return (path: generatedFilePath, data: data)
-        }
-
-        // ---- Inspect ----
-
-        if !configuration.unsafe {
             Logger.log(.info, "")
-            Logger.log(.info, "Checking dependency graph...".magenta, benchmark: .start("checking"))
+            Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
 
-            let inspector = Inspector(dependencyGraph: dependencyGraph)
-            try inspector.validate()
+            let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
+                                               version: version,
+                                               template: configuration.templatePath)
 
-            Logger.log(.info, "Done".magenta, benchmark: .end("checking"))
-        }
+            let generatedData: [(file: String, data: String?)] = try {
+                if configuration.singleOutput {
+                    return [(file: "swift", data: try generator.generate())]
+                } else {
+                    return try generator.generate()
+                }
+            }()
 
-        // ---- Write ----
+            Logger.log(.info, "Done".lightBlue, benchmark: .end("generating"))
 
-        Logger.log(.info, "")
-        Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
+            // ---- Collect ----
 
-        for (path, data) in dataToWrite {
-            if let data = data {
-                try path.parent().mkpath()
-                try path.write(data)
-                Logger.log(.info, "-> '\(path)'".lightMagenta)
-            } else if path.isFile && path.isDeletable {
-                try path.parent().mkpath()
-                try path.delete()
-                Logger.log(.info, " X '\(path)'".lightMagenta)
+            let dataToWrite: [(path: Path, data: String?)] = generatedData.compactMap { (file, data) in
+
+                let filePath = Path(file)
+
+                guard let fileName = filePath.components.last else {
+                    Logger.log(.error, "Could not retrieve file name from path '\(filePath)'".red)
+                    return nil
+                }
+                let generatedFilePath = configuration.outputPath + "Weaver.\(fileName)"
+
+                guard let data = data else {
+                    Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.".red)
+                    return (path: generatedFilePath, data: nil)
+                }
+
+                return (path: generatedFilePath, data: data)
             }
+
+            // ---- Inspect ----
+
+            if !configuration.unsafe {
+                Logger.log(.info, "")
+                Logger.log(.info, "Checking dependency graph...".magenta, benchmark: .start("checking"))
+
+                let inspector = Inspector(dependencyGraph: dependencyGraph)
+                try inspector.validate()
+
+                Logger.log(.info, "Done".magenta, benchmark: .end("checking"))
+            }
+
+            // ---- Write ----
+
+            Logger.log(.info, "")
+            Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
+
+            for (path, data) in dataToWrite {
+                if let data = data {
+                    try path.parent().mkpath()
+                    try path.write(data)
+                    Logger.log(.info, "-> '\(path)'".lightMagenta)
+                } else if path.isFile && path.isDeletable {
+                    try path.parent().mkpath()
+                    try path.delete()
+                    Logger.log(.info, " X '\(path)'".lightMagenta)
+                }
+            }
+
+            Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
+            Logger.log(.info, "")
+            Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
+        } catch {
+            Logger.log(.error, "\(error)")
         }
-
-        Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
-        Logger.log(.info, "")
-        Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
-
     }
     
     $0.command(
