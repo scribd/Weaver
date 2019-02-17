@@ -45,7 +45,7 @@ weaver generate --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT} -n
 
 With 0.12.+:
 
-This build build phase should now be written like the following:
+This build phase should now be written like the following:
 
 ```bash
 weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --input-path "*.swift" --input-path "**/*.swift" --output-path output/relative/path
