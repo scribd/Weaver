@@ -55,7 +55,7 @@ public final class SwiftGenerator {
         let string = try renderTemplate(with: dependencyContainers,
                                         imports: dependencyGraph.orderedImports)
 
-        return !string.isEmpty ? nil : string
+        return string.isEmpty ? nil : string
     }
 }
 
