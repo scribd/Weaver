@@ -142,9 +142,6 @@ Let's get into the code.
 **`AppDelegate`**:
 
 ```swift
-import UIKit
-import Weaver
-
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
