@@ -1,4 +1,4 @@
-# Migration from v0.11.+ to v0.12.+
+# Migration from v0.11.+ to v0.12.1+
 
 Weaver 0.12.0 comes with several breaking changes.
 
@@ -29,6 +29,7 @@ Options:
     --single-output
     --input-path - Paths to input files.
     --ignored-path - Paths to ignore.
+    --recursive-off
 ```
 
 See the [documentation](https://github.com/scribd/Weaver#generate-swift-files) for details.
@@ -43,10 +44,10 @@ The command to add to the build phase looked like the following:
 weaver generate --output_path ${SOURCE_ROOT}/output/path `find ${SOURCE_ROOT} -name '*.swift' | xargs -0`
 ```
 
-With 0.12.+:
+With 0.12.1+:
 
 This build phase should now be written like the following:
 
 ```bash
-weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --input-path "*.swift" --input-path "**/*.swift" --output-path output/relative/path
+weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --output-path output/relative/path
 ```

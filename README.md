@@ -102,7 +102,6 @@ Run the following to check if Weaver has been installed correctly.
 
 ```bash
 $ weaver swift --help
-
 Usage:
 
     $ weaver swift
@@ -116,6 +115,7 @@ Options:
     --single-output
     --input-path - Paths to input files.
     --ignored-path - Paths to ignore.
+    --recursive-off
 ```
 
 ### (2) - Weaver build phase
@@ -123,7 +123,7 @@ Options:
 In Xcode, add the following command to a command line build phase: 
 
 ```
-weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --input-path "*.swift" --input-path "**/*.swift" --output-path output/relative/path
+weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --output-path output/relative/path
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so Weaver can generate the boilerplate code before compilation happens.**
@@ -352,12 +352,13 @@ Options:
     --single-output
     --input-path - Paths to input files.
     --ignored-path - Paths to ignore.
+    --recursive-off
 ```
 
 ### Example:
 
 ```bash
-weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --input-path "*.swift" --input-path "**/*.swift" --output-path Generated
+weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --output-path Generated
 ```
 
 ### Parameters:
@@ -368,8 +369,9 @@ weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --input-path "*.swift" --
 - `--template-path`: Path to a custom rendering template.
 - `--unsafe`: Deactivates the dependency graph safety checks.
 - `--single-output`: Makes Weaver generate only one single Swift file.
-- `--input-path`: Path to the project's Swift code. Defaults to `project-path`. Supports [unix globbing](https://en.wikipedia.org/wiki/Glob_(programming)). Variadic parameter, which means it can be set more than once.
+- `--input-path`: Path to the project's Swift code. Defaults to `project-path`. Variadic parameter, which means it can be set more than once. By default, Weaver recursively read any Swift file located under the `input-path`.
 - `--ignored-path`: Same than `input-path` but for ignoring files which shouldn't be parsed by Weaver. 
+- `--recursive-off`: Deactivates recursivity for `input-path` and `ignored-path`.
 
 ### Configuration File:
 
@@ -382,12 +384,11 @@ Parameters are named the same, but snakecased.
 For example, the [sample project configuration](https://github.com/scribd/Weaver/blob/master/Sample/.sample.weaver.yaml) looks like:
 
 ```yaml
-output_path: "Sample/Generated"
+output_path: Sample/Generated
 input_paths:
-  - "Sample/*.swift"
-  - "Sample/**/*.swift"
+  - Sample
 ignored_paths:
-  - "Sample/Generated/*"
+  - Sample/Generated
 ```
 
 ## Export Dependency Graph
@@ -396,7 +397,6 @@ Weaver can ouput a JSON representation of the dependency graph of a project.
 
 ```bash
 $ weaver json --help
-
 Usage:
 
     $ weaver json
@@ -407,6 +407,7 @@ Options:
     --pretty [default: false]
     --input-path - Paths to input files.
     --ignored-path - Paths to ignore.
+    --recursive-off
 ```
 
 For an output example, please check this [Gist](https://gist.github.com/trupin/9438713f8fae0a5a7f424eca1976f42b).
@@ -417,7 +418,6 @@ Weaver can output the input/output `xcfilelist` files which can then be added to
 
 ```bash
 $ weaver xcfilelist --help
-
 Usage:
 
     $ weaver xcfilelist
@@ -429,6 +429,7 @@ Options:
     --single-output
     --input-path - Paths to input files.
     --ignored-path - Paths to ignore.
+    --recursive-off
 ```
 
 ## Migration guides

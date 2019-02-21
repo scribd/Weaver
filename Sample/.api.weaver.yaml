@@ -1,6 +1,5 @@
-output_path: "API/Generated"
+output_path: API/Generated
 input_paths:
-  - "API/*.swift"
-  - "API/**/*.swift"
+  - API
 ignored_paths:
-  - "API/Generated/*"
+  - API/Generated

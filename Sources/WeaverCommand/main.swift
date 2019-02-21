@@ -61,6 +61,7 @@ private enum Parameters {
     static let singleOutput = OptionalFlag("single-output", disabledName: "multi_outputs")
     static let inputPath = VariadicOption<String>("input-path", default: [], description: "Paths to input files.")
     static let ignoredPath = VariadicOption<String>("ignored-path", default: [], description: "Paths to ignore.")
+    static let recursiveOff = OptionalFlag("recursive-off", disabledName: "recursive-on")
     static let pretty = Flag("pretty", default: false)
 }
 
@@ -77,9 +78,10 @@ let main = Group {
         Parameters.unsafe,
         Parameters.singleOutput,
         Parameters.inputPath,
-        Parameters.ignoredPath)
-    { projectPath, configPath, outputPath, templatePath, unsafe, singleOutput, inputPaths, ignoredPaths in
-
+        Parameters.ignoredPath,
+        Parameters.recursiveOff)
+    { projectPath, configPath, outputPath, templatePath, unsafe, singleOutput, inputPaths, ignoredPaths, recursiveOff in
+        
         do {
             let configuration = try Configuration(configPath: configPath,
                                                   inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
@@ -88,13 +90,14 @@ let main = Group {
                                                   outputPath: outputPath,
                                                   templatePath: templatePath,
                                                   unsafe: unsafe,
-                                                  singleOutput: singleOutput)
+                                                  singleOutput: singleOutput,
+                                                  recursiveOff: recursiveOff)
             
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
             // ---- Link ----
 
-            let linker = try Linker(configuration.inputPaths)
+            let linker = try Linker(try configuration.inputPaths())
             let dependencyGraph = linker.dependencyGraph
 
             // ---- Generate ----
@@ -179,17 +182,19 @@ let main = Group {
         Parameters.configPath,
         Parameters.pretty,
         Parameters.inputPath,
-        Parameters.ignoredPath
-    ) { projectPath, configPath, pretty, inputPaths, ignoredPaths in
+        Parameters.ignoredPath,
+        Parameters.recursiveOff
+    ) { projectPath, configPath, pretty, inputPaths, ignoredPaths, recursiveOff in
         
         let configuration = try Configuration(configPath: configPath,
                                               inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
                                               ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
-                                              projectPath: projectPath)
+                                              projectPath: projectPath,
+                                              recursiveOff: recursiveOff)
         
         // ---- Link ----
 
-        let linker = try Linker(configuration.inputPaths, shouldLog: false)
+        let linker = try Linker(try configuration.inputPaths(), shouldLog: false)
         let dependencyGraph = linker.dependencyGraph
 
         // ---- Export ----
@@ -214,18 +219,20 @@ let main = Group {
         Parameters.projectPath,
         Parameters.singleOutput,
         Parameters.inputPath,
-        Parameters.ignoredPath
-    ) { configPath, outputPath, projectPath, singleOutput, inputPaths, ignoredPaths in
+        Parameters.ignoredPath,
+        Parameters.recursiveOff
+    ) { configPath, outputPath, projectPath, singleOutput, inputPaths, ignoredPaths, recursiveOff in
 
         let configuration = try Configuration(configPath: configPath,
                                               inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
                                               ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
                                               projectPath: projectPath,
-                                              singleOutput: singleOutput)
+                                              singleOutput: singleOutput,
+                                              recursiveOff: recursiveOff)
 
         // ---- Link ----
 
-        let linker = try Linker(configuration.inputPaths)
+        let linker = try Linker(try configuration.inputPaths())
         let dependencyGraph = linker.dependencyGraph
 
         // ---- Write ----
