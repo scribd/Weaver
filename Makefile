@@ -37,4 +37,5 @@ define install_files
 	install -d $(1)/share/weaver/Resources
 	install -C Resources/dependency_resolver.stencil $(1)/share/weaver/Resources
 	install -C .build/release/WeaverCommand $(1)/bin/weaver
+	install -C LICENSE $(1)/LICENSE
 endef
