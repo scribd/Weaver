@@ -1,6 +1,5 @@
-output_path: "Sample/Generated"
+output_path: Sample/Generated
 input_paths:
-  - "Sample/*.swift"
-  - "Sample/**/*.swift"
+  - Sample
 ignored_paths:
-  - "Sample/Generated/*"
+  - Sample/Generated

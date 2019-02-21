@@ -19,6 +19,7 @@ struct Configuration {
     let ignoredPathStrings: [String]
     let unsafe: Bool
     let singleOutput: Bool
+    let recursiveOff: Bool
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
@@ -26,15 +27,17 @@ struct Configuration {
                  outputPath: Path?,
                  templatePath: Path?,
                  unsafe: Bool?,
-                 singleOutput: Bool?) {
+                 singleOutput: Bool?,
+                 recursiveOff: Bool?) {
 
-        self.inputPathStrings = inputPathStrings ?? []
+        self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
         self.projectPath = projectPath ?? Defaults.projectPath
         self.outputPath = outputPath ?? Defaults.outputPath
         self.templatePath = templatePath ?? Defaults.templatePath
         self.unsafe = unsafe ?? Defaults.unsafe
         self.singleOutput = singleOutput ?? Defaults.singleOuput
+        self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
     }
     
     init(configPath: Path? = nil,
@@ -44,7 +47,8 @@ struct Configuration {
          outputPath: Path? = nil,
          templatePath: Path? = nil,
          unsafe: Bool? = nil,
-         singleOutput: Bool? = nil) throws {
+         singleOutput: Bool? = nil,
+         recursiveOff: Bool? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath,
@@ -65,7 +69,8 @@ struct Configuration {
                                           outputPath: outputPath,
                                           templatePath: templatePath,
                                           unsafe: unsafe,
-                                          singleOutput: singleOutput)
+                                          singleOutput: singleOutput,
+                                          recursiveOff: recursiveOff)
         }
         
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
@@ -73,6 +78,7 @@ struct Configuration {
         self.projectPath = projectPath
         self.unsafe = unsafe ?? configuration.unsafe
         self.singleOutput = singleOutput ?? configuration.singleOutput
+        self.recursiveOff = recursiveOff ?? configuration.recursiveOff
         
         let outputPath = outputPath ?? configuration.outputPath
         self.outputPath = outputPath.isRelative ? projectPath + configuration.outputPath : outputPath
@@ -93,6 +99,10 @@ struct Configuration {
         }
         return configPath
     }
+    
+    private var recursive: Bool {
+        return !recursiveOff
+    }
 }
 
 // MARK: - Constants
@@ -106,6 +116,8 @@ extension Configuration {
         static let outputPath = Path(".")
         static let unsafe = false
         static let singleOuput = false
+        static let recursiveOff = false
+        static let inputPathStrings = ["."]
         
         static var projectPath: Path {
             if let projectPath = ProcessInfo.processInfo.environment["WEAVER_PROJECT_PATH"] {
@@ -137,6 +149,7 @@ extension Configuration: Decodable {
         case ignoredPaths = "ignored_paths"
         case unsafe
         case singleOutput = "single_output"
+        case recursive
     }
     
     public init(from decoder: Decoder) throws {
@@ -149,10 +162,11 @@ extension Configuration: Decodable {
         projectPath = Defaults.projectPath
         outputPath = try container.decodeIfPresent(Path.self, forKey: .outputPath) ?? Defaults.outputPath
         templatePath = try container.decodeIfPresent(Path.self, forKey: .templatePath) ?? Defaults.templatePath
-        inputPathStrings = try container.decode([String].self, forKey: .inputPaths)
+        inputPathStrings = try container.decodeIfPresent([String].self, forKey: .inputPaths) ?? Defaults.inputPathStrings
         ignoredPathStrings = try container.decodeIfPresent([String].self, forKey: .ignoredPaths) ?? []
         unsafe = try container.decodeIfPresent(Bool.self, forKey: .unsafe) ?? Defaults.unsafe
         singleOutput = try container.decodeIfPresent(Bool.self, forKey: .singleOutput) ?? Defaults.singleOuput
+        recursiveOff = !(try container.decodeIfPresent(Bool.self, forKey: .recursive) ?? !Defaults.recursiveOff)
     }
 }
 
@@ -168,9 +182,18 @@ extension Path: Decodable {
 
 extension Configuration {
     
-    var inputPaths: [Path] {
-        let inputPaths = Set(inputPathStrings.flatMap { projectPath.glob($0) })
-        let ignoredPaths = Set(ignoredPathStrings.flatMap { projectPath.glob($0) })
+    func inputPaths() throws -> [Path]  {
+
+        let inputPaths = try Set(inputPathStrings
+            .map { projectPath + $0 }
+            .flatMap { recursive ? try $0.recursiveChildren() : try $0.children() }
+            .filter { $0.extension == "swift" })
+        
+        let ignoredPaths = try Set(ignoredPathStrings
+            .map { projectPath + $0 }
+            .flatMap { recursive ? try $0.recursiveChildren() : try $0.children() }
+            .filter { $0.extension == "swift" })
+        
         return inputPaths.subtracting(ignoredPaths).sorted()
     }
 }
