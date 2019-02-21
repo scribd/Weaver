@@ -24,7 +24,7 @@ package: build
 	$(call install_files,./build/package/weaver)
 	mv ./build/package/weaver/bin/weaver ./build/package/weaver/bin/weaver_command
 	install -C ./tools/weaver.sh ./build/package/weaver/bin/weaver
-	install -C LICENSE $(1)/LICENSE
+	install -C LICENSE ./build/package/weaver/LICENSE
 	
 	cd ./build/package/ && zip -r ../../weaver-$(VERSION).zip ./weaver
 
