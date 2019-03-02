@@ -173,6 +173,7 @@ let main = Group {
             Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
         } catch {
             Logger.log(.error, "\(error)")
+            exit(1)
         }
     }
     
