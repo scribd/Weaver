@@ -379,7 +379,7 @@ Weaver can read a configuration file rather than getting its parameters from the
 
 To configure Weaver with a file, write a file named `.weaver.yaml` or `.weaver.json` at the root of your project.
 
-Parameters are named the same, but snakecased.
+Parameters are named the same, but snakecased. They also work the same way with one exception, **`project_path` cannot be defined in a configuration. Weaver automatically set its value to the configuration file location**.
 
 For example, the [sample project configuration](https://github.com/scribd/Weaver/blob/master/Sample/.sample.weaver.yaml) looks like:
 
