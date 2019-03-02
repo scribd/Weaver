@@ -106,7 +106,7 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
     }
     {% endfor %}{# dependencyContainer.registrations #}
 
-    {% if dependencyContainer.doesSupportObjc %}{% if not dependencyContainer.references %}{% if not dependencyContainer.parameters %}override {% endif %}{% endif %}{% endif %}init({% if dependencyContainer.references %}injecting dependencies: {{dependencyContainer.targetType.name}}InputDependencyResolver{% if dependencyContainer.parameters %}, {% endif %}{% endif %}{% call ParametersDecl dependencyContainer.parameters %}) {
+    {% if dependencyContainer.doesSupportObjc and not dependencyContainer.references and not dependencyContainer.parameters %}override {% endif %}init({% if dependencyContainer.references %}injecting dependencies: {{dependencyContainer.targetType.name}}InputDependencyResolver{% if dependencyContainer.parameters %}, {% endif %}{% endif %}{% call ParametersDecl dependencyContainer.parameters %}) {
 
         {% call ParameterAssign dependencyContainer.parameters %}
 
@@ -122,13 +122,11 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
 
         {% for registration in dependencyContainer.registrations %}
 
-        {% if not registration.isTransient %}
-        {% if not registration.isWeak %}
+        {% if not registration.isTransient and not registration.isWeak %}
         {% if registration.parameters %}
         _ = {{registration.name}}({% call ParametersPassIn registration.parameters %})
         {% else %}
         _ = {{registration.name}}
-        {% endif %}
         {% endif %}
         {% endif %}
 
@@ -161,7 +159,7 @@ final class {{dependencyContainer.targetType.name}}ShimDependencyContainer{{depe
 {% endif %}{# dependencyContainer.references #}
 
 extension {{dependencyContainer.targetType.name}} {
-    public convenience init({% call ParametersDecl dependencyContainer.references %}{% if dependencyContainer.references %}{% if dependencyContainer.parameters %}, {% endif %}{% endif %}{% call ParametersDecl dependencyContainer.parameters %}) {
+    public convenience init({% call ParametersDecl dependencyContainer.references %}{% if dependencyContainer.references and dependencyContainer.parameters %}, {% endif %}{% call ParametersDecl dependencyContainer.parameters %}) {
         
         {% if dependencyContainer.references %}
         let shim = {{dependencyContainer.targetType.name}}ShimDependencyContainer({% call ParametersPassIn dependencyContainer.references %})
