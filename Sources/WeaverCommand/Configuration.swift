@@ -186,12 +186,12 @@ extension Configuration {
 
         let inputPaths = try Set(inputPathStrings
             .map { projectPath + $0 }
-            .flatMap { recursive ? try $0.recursiveChildren() : try $0.children() }
+            .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
             .filter { $0.extension == "swift" })
         
         let ignoredPaths = try Set(ignoredPathStrings
             .map { projectPath + $0 }
-            .flatMap { recursive ? try $0.recursiveChildren() : try $0.children() }
+            .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
             .filter { $0.extension == "swift" })
         
         return inputPaths.subtracting(ignoredPaths).sorted()
