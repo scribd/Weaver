@@ -23,6 +23,15 @@ final class SwiftGeneratorTests: XCTestCase {
         }
     }
     
+    func test_no_annotation_with_detailed_resolvers() {
+        do {
+            let actual = try actualOutput(detailedResolvers: true)
+            XCTAssertNil(actual)
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
     func test_empty_type_registration() {
         do {
             try performTest()
@@ -146,6 +155,14 @@ final class SwiftGeneratorTests: XCTestCase {
     func test_objc_compatible_container() {
         do {
             try performTest()
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
+    func test_detailed_resolvers() {
+        do {
+            try performTest(detailedResolvers: true)
         } catch {
             XCTFail("Unexpected error \(error)")
         }
