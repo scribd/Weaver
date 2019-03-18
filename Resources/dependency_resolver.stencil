@@ -53,13 +53,10 @@ protocol {{dependencyContainer.targetType.name}}InputDependencyResolver {
 {% endif %}
 
 {% if not dependencyContainer.targetType.generics %}
-{% if dependencyContainer.doesSupportObjc %}@objc {% endif %}protocol {{dependencyContainer.targetType.name}}DependencyResolver {
-
-    {% call DependencyResolverDecl dependencyContainer.parameters %}
-
-    {% call DependencyResolverDecl dependencyContainer.directReferences %}
-
-    {% call DependencyResolverDecl dependencyContainer.registrations %}
+{% if dependencyContainer.doesSupportObjc %}@objc {% endif %}protocol {{dependencyContainer.targetType.name}}DependencyResolver{% if detailedResolvers and dependencyContainer.resolverDependencies %}: {% for dependency in dependencyContainer.resolverDependencies %}{{dependency.abstractType.name}}Resolver{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %} {
+    {% if not detailedResolvers %}
+    {% call DependencyResolverDecl dependencyContainer.resolverDependencies %}
+    {% endif %}
 }
 {% endif %}
 
