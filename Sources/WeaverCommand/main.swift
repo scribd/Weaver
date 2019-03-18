@@ -126,7 +126,7 @@ let main = Group {
                                                detailedResolvers: configuration.detailedResolvers,
                                                version: version,
                                                mainTemplate: configuration.mainTemplatePath,
-                                               detailedResolverTemplate: configuration.detailedResolversTemplatePath)
+                                               detailedResolversTemplate: configuration.detailedResolversTemplatePath)
 
             let generatedData: [(file: String, data: String?)] = try {
                 if configuration.singleOutput {

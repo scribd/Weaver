@@ -25,7 +25,7 @@ public final class SwiftGenerator {
                 detailedResolvers: Bool,
                 version: String,
                 mainTemplate mainTemplatePath: Path,
-                detailedResolverTemplate detailedResolverTemplatePath: Path) throws {
+                detailedResolversTemplate detailedResolverTemplatePath: Path) throws {
 
         self.dependencyGraph = dependencyGraph
         self.detailedResolvers = detailedResolvers
@@ -38,8 +38,8 @@ public final class SwiftGenerator {
                                             environment: environment,
                                             name: nil)
 
-        let detailedResolverTemplate: String = try detailedResolverTemplatePath.read()
-        detailedResolversTemplate = StencilSwiftTemplate(templateString: detailedResolverTemplate,
+        let detailedResolversTemplateString: String = try detailedResolverTemplatePath.read()
+        detailedResolversTemplate = StencilSwiftTemplate(templateString: detailedResolversTemplateString,
                                                          environment: environment,
                                                          name: nil)
     }
@@ -72,14 +72,19 @@ public final class SwiftGenerator {
             return dependencyContainer.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
         }
 
-        var string = try renderMainTemplate(with: dependencyContainers, imports: dependencyGraph.orderedImports)
+        var string = try renderMainTemplate(with: dependencyContainers, imports: dependencyGraph.orderedImports).compacted()
+        guard !string.isEmpty else {
+            return nil
+        }
         
         if detailedResolvers {
-            let detailedResolversString = try renderDetailedResolversTemplate(with: dependencyGraph, withHeader: false)
-            string = [string, detailedResolversString].joined(separator: "\n")
+            let detailedResolversString = try renderDetailedResolversTemplate(with: dependencyGraph, withHeader: false).compacted()
+            if !detailedResolversString.isEmpty {
+                string = [string, detailedResolversString].joined(separator: "\n")
+            }
         }
 
-        return string.isEmpty ? nil : string.compacted()
+        return string
     }
 }
 
@@ -177,6 +182,13 @@ private struct DependencyViewModel {
             self.parameters = parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
         }
     }
+    
+    init(_ registration: RegistrationViewModel) {
+        name = registration.name
+        type = registration.type
+        abstractType = registration.abstractType
+        parameters = registration.parameters
+    }
 }
 
 private struct DependencyContainerViewModel {
@@ -217,7 +229,7 @@ private struct DependencyContainerViewModel {
         
         resolverDependencies = parameters
             + directReferences
-            + dependencyContainer.registrations.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+            + registrations.map { DependencyViewModel($0) }
     }
 }
 
