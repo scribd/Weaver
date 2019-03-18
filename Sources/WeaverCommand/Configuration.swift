@@ -14,30 +14,36 @@ import Yams
 struct Configuration {
     let projectPath: Path
     let outputPath: Path
-    let templatePath: Path
+    let mainTemplatePath: Path
+    let detailedResolversTemplatePath: Path
     let inputPathStrings: [String]
     let ignoredPathStrings: [String]
     let unsafe: Bool
     let singleOutput: Bool
     let recursiveOff: Bool
+    let detailedResolvers: Bool
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
                  projectPath: Path?,
                  outputPath: Path?,
-                 templatePath: Path?,
+                 mainTemplatePath: Path?,
+                 detailedResolversTemplatePath: Path?,
                  unsafe: Bool?,
                  singleOutput: Bool?,
-                 recursiveOff: Bool?) {
+                 recursiveOff: Bool?,
+                 detailedResolvers: Bool?) {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
         self.projectPath = projectPath ?? Defaults.projectPath
         self.outputPath = outputPath ?? Defaults.outputPath
-        self.templatePath = templatePath ?? Defaults.templatePath
+        self.mainTemplatePath = mainTemplatePath ?? Defaults.mainTemplatePath
+        self.detailedResolversTemplatePath = detailedResolversTemplatePath ?? Defaults.detailedResolversTemplatePath
         self.unsafe = unsafe ?? Defaults.unsafe
         self.singleOutput = singleOutput ?? Defaults.singleOuput
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
+        self.detailedResolvers = detailedResolvers ?? Defaults.detailedResolvers
     }
     
     init(configPath: Path? = nil,
@@ -45,10 +51,12 @@ struct Configuration {
          ignoredPathStrings: [String]? = nil,
          projectPath: Path? = nil,
          outputPath: Path? = nil,
-         templatePath: Path? = nil,
+         mainTemplatePath: Path? = nil,
+         detailedResolversTemplatePath: Path? = nil,
          unsafe: Bool? = nil,
          singleOutput: Bool? = nil,
-         recursiveOff: Bool? = nil) throws {
+         recursiveOff: Bool? = nil,
+         detailedResolvers: Bool? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath,
@@ -67,10 +75,12 @@ struct Configuration {
                                           ignoredPathStrings: ignoredPathStrings,
                                           projectPath: projectPath,
                                           outputPath: outputPath,
-                                          templatePath: templatePath,
+                                          mainTemplatePath: mainTemplatePath,
+                                          detailedResolversTemplatePath: detailedResolversTemplatePath,
                                           unsafe: unsafe,
                                           singleOutput: singleOutput,
-                                          recursiveOff: recursiveOff)
+                                          recursiveOff: recursiveOff,
+                                          detailedResolvers: detailedResolvers)
         }
         
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
@@ -79,13 +89,18 @@ struct Configuration {
         self.unsafe = unsafe ?? configuration.unsafe
         self.singleOutput = singleOutput ?? configuration.singleOutput
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
+        self.detailedResolvers = detailedResolvers ?? configuration.detailedResolvers
         
         let outputPath = outputPath ?? configuration.outputPath
         self.outputPath = outputPath.isRelative ? projectPath + configuration.outputPath : outputPath
 
-        let templatePath = templatePath ?? configuration.templatePath
-        let shouldUseProjectPath = templatePath.isRelative && templatePath != Defaults.templatePath
-        self.templatePath = shouldUseProjectPath ? projectPath + templatePath : templatePath
+        let mainTemplatePath = mainTemplatePath ?? configuration.mainTemplatePath
+        var shouldUseProjectPath = mainTemplatePath.isRelative && mainTemplatePath != Defaults.mainTemplatePath
+        self.mainTemplatePath = shouldUseProjectPath ? projectPath + mainTemplatePath : mainTemplatePath
+        
+        let detailedResolversTemplatePath = detailedResolversTemplatePath ?? configuration.detailedResolversTemplatePath
+        shouldUseProjectPath = detailedResolversTemplatePath.isRelative && detailedResolversTemplatePath != Defaults.detailedResolversTemplatePath
+        self.detailedResolversTemplatePath = shouldUseProjectPath ? projectPath + detailedResolversTemplatePath : detailedResolversTemplatePath
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -118,6 +133,7 @@ extension Configuration {
         static let singleOuput = false
         static let recursiveOff = false
         static let inputPathStrings = ["."]
+        static let detailedResolvers = false
         
         static var projectPath: Path {
             if let projectPath = ProcessInfo.processInfo.environment["WEAVER_PROJECT_PATH"] {
@@ -127,11 +143,19 @@ extension Configuration {
             }
         }
 
-        static var templatePath: Path {
-            if let templatePath = ProcessInfo.processInfo.environment["WEAVER_TEMPLATE_PATH"] {
-                return Path(templatePath)
+        static var mainTemplatePath: Path {
+            if let mainTemplatePath = ProcessInfo.processInfo.environment["WEAVER_MAIN_TEMPLATE_PATH"] {
+                return Path(mainTemplatePath)
             } else {
                 return Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
+            }
+        }
+        
+        static var detailedResolversTemplatePath: Path {
+            if let detailedResolversTemplatePath = ProcessInfo.processInfo.environment["WEAVER_DETAILED_RESOLVERS_TEMPLATE_PATH"] {
+                return Path(detailedResolversTemplatePath)
+            } else {
+                return Path("/usr/local/share/weaver/Resources/detailed_resolvers.stencil")
             }
         }
     }
@@ -144,12 +168,14 @@ extension Configuration: Decodable {
     private enum Keys: String, CodingKey {
         case projectPath = "project_path"
         case outputPath = "output_path"
-        case templatePath = "template_path"
+        case mainTemplatePath = "main_template_path"
+        case detailedResolversTemplatePath = "detailed_resolvers_template_path"
         case inputPaths = "input_paths"
         case ignoredPaths = "ignored_paths"
         case unsafe
         case singleOutput = "single_output"
         case recursive
+        case detailedResolvers = "detailed_resolvers"
     }
     
     public init(from decoder: Decoder) throws {
@@ -161,12 +187,14 @@ extension Configuration: Decodable {
         
         projectPath = Defaults.projectPath
         outputPath = try container.decodeIfPresent(Path.self, forKey: .outputPath) ?? Defaults.outputPath
-        templatePath = try container.decodeIfPresent(Path.self, forKey: .templatePath) ?? Defaults.templatePath
+        mainTemplatePath = try container.decodeIfPresent(Path.self, forKey: .mainTemplatePath) ?? Defaults.mainTemplatePath
+        detailedResolversTemplatePath = try container.decodeIfPresent(Path.self, forKey: .detailedResolversTemplatePath) ?? Defaults.detailedResolversTemplatePath
         inputPathStrings = try container.decodeIfPresent([String].self, forKey: .inputPaths) ?? Defaults.inputPathStrings
         ignoredPathStrings = try container.decodeIfPresent([String].self, forKey: .ignoredPaths) ?? []
         unsafe = try container.decodeIfPresent(Bool.self, forKey: .unsafe) ?? Defaults.unsafe
         singleOutput = try container.decodeIfPresent(Bool.self, forKey: .singleOutput) ?? Defaults.singleOuput
         recursiveOff = !(try container.decodeIfPresent(Bool.self, forKey: .recursive) ?? !Defaults.recursiveOff)
+        detailedResolvers = try container.decodeIfPresent(Bool.self, forKey: .detailedResolvers) ?? Defaults.detailedResolvers
     }
 }
 

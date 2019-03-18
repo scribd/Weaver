@@ -14,25 +14,39 @@ public final class SwiftGenerator {
     
     private let dependencyGraph: DependencyGraph
     
-    private let template: StencilSwiftTemplate
+    private let detailedResolvers: Bool
+    
+    private let mainTemplate: StencilSwiftTemplate
+    private let detailedResolversTemplate: StencilSwiftTemplate
     
     private let version: String
     
-    public init(dependencyGraph: DependencyGraph, version: String, template templatePath: Path) throws {
+    public init(dependencyGraph: DependencyGraph,
+                detailedResolvers: Bool,
+                version: String,
+                mainTemplate mainTemplatePath: Path,
+                detailedResolversTemplate detailedResolverTemplatePath: Path) throws {
 
         self.dependencyGraph = dependencyGraph
+        self.detailedResolvers = detailedResolvers
         self.version = version
 
-        let templateString: String = try templatePath.read()
         let environment = stencilSwiftEnvironment()
-        template = StencilSwiftTemplate(templateString: templateString,
-                                        environment: environment,
-                                        name: nil)
+
+        let mainTemplateString: String = try mainTemplatePath.read()
+        mainTemplate = StencilSwiftTemplate(templateString: mainTemplateString,
+                                            environment: environment,
+                                            name: nil)
+
+        let detailedResolversTemplateString: String = try detailedResolverTemplatePath.read()
+        detailedResolversTemplate = StencilSwiftTemplate(templateString: detailedResolversTemplateString,
+                                                         environment: environment,
+                                                         name: nil)
     }
     
     public func generate() throws -> [(file: String, data: String?)] {
 
-        return try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { item in
+        var items: [(String, String?)] = try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { item in
             
             let dependencyContainers = item.value.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
 
@@ -40,11 +54,17 @@ public final class SwiftGenerator {
                 return (file: item.key, data: nil)
             }
             
-            let string = try renderTemplate(with: dependencyContainers,
-                                            imports: dependencyGraph.importsByFile[item.key] ?? [])
+            let string = try renderMainTemplate(with: dependencyContainers,
+                                                imports: dependencyGraph.importsByFile[item.key] ?? [])
             
             return (file: item.key, data: string.compacted())
         }
+        
+        if detailedResolvers {
+            items.append((file: "DetailedResolvers.swift", data: try renderDetailedResolversTemplate(with: dependencyGraph, withHeader: true)))
+        }
+        
+        return items
     }
     
     public func generate() throws -> String? {
@@ -52,10 +72,19 @@ public final class SwiftGenerator {
             return dependencyContainer.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
         }
 
-        let string = try renderTemplate(with: dependencyContainers,
-                                        imports: dependencyGraph.orderedImports)
+        var string = try renderMainTemplate(with: dependencyContainers, imports: dependencyGraph.orderedImports).compacted()
+        guard !string.isEmpty else {
+            return nil
+        }
+        
+        if detailedResolvers {
+            let detailedResolversString = try renderDetailedResolversTemplate(with: dependencyGraph, withHeader: false).compacted()
+            if !detailedResolversString.isEmpty {
+                string = [string, detailedResolversString].joined(separator: "\n")
+            }
+        }
 
-        return string.isEmpty ? nil : string.compacted()
+        return string
     }
 }
 
@@ -63,11 +92,24 @@ public final class SwiftGenerator {
 
 private extension SwiftGenerator {
     
-    func renderTemplate(with dependencyContainers: [DependencyContainerViewModel], imports: [String]) throws -> String {
+    func renderMainTemplate(with dependencyContainers: [DependencyContainerViewModel], imports: [String]) throws -> String {
         let context: [String: Any] = ["version": version,
                                       "dependencyContainers": dependencyContainers,
+                                      "detailedResolvers": detailedResolvers,
                                       "imports": imports]
-        return try template.render(context)
+        return try mainTemplate.render(context)
+    }
+    
+    func renderDetailedResolversTemplate(with dependencyGraph: DependencyGraph, withHeader header: Bool) throws -> String {
+        let dependencies = dependencyGraph.dependencies
+            .map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+            .reduce(into: [:]) { $0[$1.abstractType.name] = $1 }
+            .values.sorted(by: { $0.abstractType.name < $1.abstractType.name })
+
+        let context: [String: Any] = ["dependencies": dependencies,
+                                      "header": header,
+                                      "imports": dependencyGraph.orderedImports]
+        return try detailedResolversTemplate.render(context)
     }
 }
 
@@ -140,6 +182,13 @@ private struct DependencyViewModel {
             self.parameters = parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
         }
     }
+    
+    init(_ registration: RegistrationViewModel) {
+        name = registration.name
+        type = registration.type
+        abstractType = registration.abstractType
+        parameters = registration.parameters
+    }
 }
 
 private struct DependencyContainerViewModel {
@@ -154,6 +203,8 @@ private struct DependencyContainerViewModel {
     let isPublic: Bool
     let doesSupportObjc: Bool
     let injectableDependencies: [DependencyContainerViewModel]?
+
+    let resolverDependencies: [DependencyViewModel]
     
     init?(_ dependencyContainer: DependencyContainer, dependencyGraph: DependencyGraph, depth: Int = 0) {
 
@@ -162,15 +213,23 @@ private struct DependencyContainerViewModel {
         }
         
         targetType = type
-        registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, dependencyGraph: dependencyGraph) }
-        directReferences = dependencyContainer.references.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
-        references = dependencyContainer.allReferences.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
-        parameters = dependencyContainer.parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph)}
         embeddingTypes = dependencyContainer.embeddingTypes
         isRoot = dependencyContainer.isRoot
         isPublic = dependencyContainer.isPublic
         doesSupportObjc = dependencyContainer.doesSupportObjc
         injectableDependencies = dependencyContainer.injectableDependencies(dependencyGraph: dependencyGraph, depth: depth)
+
+        references = dependencyContainer.allReferences.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+        registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, dependencyGraph: dependencyGraph) }
+
+        let directReferences = dependencyContainer.references.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+        self.directReferences = directReferences
+        let parameters = dependencyContainer.parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph)}
+        self.parameters = parameters
+        
+        resolverDependencies = parameters
+            + directReferences
+            + registrations.map { DependencyViewModel($0) }
     }
 }
 

@@ -23,6 +23,15 @@ final class SwiftGeneratorTests: XCTestCase {
         }
     }
     
+    func test_no_annotation_with_detailed_resolvers() {
+        do {
+            let actual = try actualOutput(detailedResolvers: true)
+            XCTAssertNil(actual)
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+    
     func test_empty_type_registration() {
         do {
             try performTest()
@@ -150,6 +159,14 @@ final class SwiftGeneratorTests: XCTestCase {
             XCTFail("Unexpected error \(error)")
         }
     }
+    
+    func test_detailed_resolvers() {
+        do {
+            try performTest(detailedResolvers: true)
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
 }
 
 // MARK: - Utils
@@ -158,7 +175,7 @@ private extension SwiftGeneratorTests {
     
     var version: String { return "0.12.3" }
     
-    func actualOutput(_ function: StringLiteralType = #function) throws -> String? {
+    func actualOutput(detailedResolvers: Bool = false, function: StringLiteralType = #function) throws -> String? {
         let fileName = function.replacingOccurrences(of: "()", with: "")
         let path = Path(#file).parent() + Path("Input/\(fileName).swift")
 
@@ -171,7 +188,9 @@ private extension SwiftGeneratorTests {
             return nil
         }
 
-        let templatePath = Path(#file).parent() + Path("../../../Resources/dependency_resolver.stencil")
+        let resourcesDirectory = Path(#file).parent().parent().parent().parent() + "Resources"
+        let mainTemplatePath = resourcesDirectory + "dependency_resolver.stencil"
+        let detailedResolversTemplatePath = resourcesDirectory + "detailed_resolvers.stencil"
         
         let lexer = Lexer(file, fileName: "test.swift")
         let tokens = try lexer.tokenize()
@@ -179,13 +198,17 @@ private extension SwiftGeneratorTests {
         let ast = try parser.parse()
         let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
         
-        let generator = try SwiftGenerator(dependencyGraph: dependencyGraph, version: version, template: templatePath)
+        let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
+                                           detailedResolvers: detailedResolvers,
+                                           version: version,
+                                           mainTemplate: mainTemplatePath,
+                                           detailedResolversTemplate: detailedResolversTemplatePath)
 
-        guard let (_ , actual) = try generator.generate().first else {
+        guard let actual: String = try generator.generate() else {
             return nil
         }
         
-        return actual.flatMap { $0 + "\n" }
+        return actual + "\n"
     }
     
     func expectedOutput(actual: String?, _ function: StringLiteralType = #function) throws -> String {
@@ -218,8 +241,8 @@ private extension SwiftGeneratorTests {
         print("\n")
     }
     
-    func performTest(_ function: StringLiteralType = #function) throws {
-        let actual = try actualOutput(function)
+    func performTest(detailedResolvers: Bool = false, function: StringLiteralType = #function) throws {
+        let actual = try actualOutput(detailedResolvers: detailedResolvers, function: function)
         let expected = try expectedOutput(actual: actual, function)
         
         XCTAssertEqual(actual!, expected)

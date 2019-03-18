@@ -56,13 +56,15 @@ private enum Parameters {
     static let projectPath = Option<Path?>("project-path", default: nil, description: "Project's directory.")
     static let configPath = Option<Path?>("config-path", default: nil, description: "Configuration path.")
     static let outputPath = Option<Path?>("output-path", default: nil, description: "Where the swift files will be generated.")
-    static let templatePath = Option<Path?>("template-path", default: nil, description: "Custom template path.")
+    static let mainTemplatePath = Option<Path?>("main-template-path", default: nil, description: "Custom main template path.")
+    static let detailedResolversTemplatePath = Option<Path?>("detailed-resolvers-template-path", default: nil, description: "Custom detailed resolvers template path.")
     static let unsafe = OptionalFlag("unsafe", disabledName: "safe")
     static let singleOutput = OptionalFlag("single-output", disabledName: "multi_outputs")
     static let inputPath = VariadicOption<String>("input-path", default: [], description: "Paths to input files.")
     static let ignoredPath = VariadicOption<String>("ignored-path", default: [], description: "Paths to ignore.")
     static let recursiveOff = OptionalFlag("recursive-off", disabledName: "recursive-on")
     static let pretty = Flag("pretty", default: false)
+    static let detailedResolvers = OptionalFlag("detailed-resolvers", default: nil)
 }
 
 // MARK: - Commands
@@ -74,13 +76,26 @@ let main = Group {
         Parameters.projectPath,
         Parameters.configPath,
         Parameters.outputPath,
-        Parameters.templatePath,
+        Parameters.mainTemplatePath,
+        Parameters.detailedResolversTemplatePath,
         Parameters.unsafe,
+        Parameters.detailedResolvers,
         Parameters.singleOutput,
         Parameters.inputPath,
         Parameters.ignoredPath,
         Parameters.recursiveOff)
-    { projectPath, configPath, outputPath, templatePath, unsafe, singleOutput, inputPaths, ignoredPaths, recursiveOff in
+    {
+        projectPath,
+        configPath,
+        outputPath,
+        mainTemplatePath,
+        detailedResolversTemplatePath,
+        unsafe,
+        detailedResolvers,
+        singleOutput,
+        inputPaths,
+        ignoredPaths,
+        recursiveOff in
         
         do {
             let configuration = try Configuration(configPath: configPath,
@@ -88,10 +103,12 @@ let main = Group {
                                                   ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
                                                   projectPath: projectPath,
                                                   outputPath: outputPath,
-                                                  templatePath: templatePath,
+                                                  mainTemplatePath: mainTemplatePath,
+                                                  detailedResolversTemplatePath: detailedResolversTemplatePath,
                                                   unsafe: unsafe,
                                                   singleOutput: singleOutput,
-                                                  recursiveOff: recursiveOff)
+                                                  recursiveOff: recursiveOff,
+                                                  detailedResolvers: detailedResolvers)
             
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
@@ -106,8 +123,10 @@ let main = Group {
             Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
 
             let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
+                                               detailedResolvers: configuration.detailedResolvers,
                                                version: version,
-                                               template: configuration.templatePath)
+                                               mainTemplate: configuration.mainTemplatePath,
+                                               detailedResolversTemplate: configuration.detailedResolversTemplatePath)
 
             let generatedData: [(file: String, data: String?)] = try {
                 if configuration.singleOutput {
@@ -185,7 +204,13 @@ let main = Group {
         Parameters.inputPath,
         Parameters.ignoredPath,
         Parameters.recursiveOff
-    ) { projectPath, configPath, pretty, inputPaths, ignoredPaths, recursiveOff in
+    ) {
+        projectPath,
+        configPath,
+        pretty,
+        inputPaths,
+        ignoredPaths,
+        recursiveOff in
         
         let configuration = try Configuration(configPath: configPath,
                                               inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
@@ -222,7 +247,14 @@ let main = Group {
         Parameters.inputPath,
         Parameters.ignoredPath,
         Parameters.recursiveOff
-    ) { configPath, outputPath, projectPath, singleOutput, inputPaths, ignoredPaths, recursiveOff in
+    ) {
+        configPath,
+        outputPath,
+        projectPath,
+        singleOutput,
+        inputPaths,
+        ignoredPaths,
+        recursiveOff in
 
         let configuration = try Configuration(configPath: configPath,
                                               inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
