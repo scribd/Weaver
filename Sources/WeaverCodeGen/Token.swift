@@ -34,6 +34,7 @@ public protocol Token: CustomStringConvertible {
 // MARK: - Token Types
 
 public struct RegisterAnnotation: Token, Hashable, Equatable {
+
     let name: String
     let type: Type
     let protocolType: Type?

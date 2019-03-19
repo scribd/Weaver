@@ -13,12 +13,14 @@ enum ConfigurationAttributeName: String {
     case isIsolated
     case customBuilder = "builder"
     case scope
+    case doesSupportObjc = "objc"
 }
 
 enum ConfigurationAttribute: Equatable, Hashable {
     case isIsolated(value: Bool)
     case customBuilder(value: String)
     case scope(value: Scope)
+    case doesSupportObjc(value: Bool)
 }
 
 // MARK: - Target
@@ -47,6 +49,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return "Config Attr - builder = \(value)"
         case .scope(let value):
             return "Config Attr - scope = \(value)"
+        case .doesSupportObjc(let value):
+            return "Config Attr - objc = \(value)"
         }
     }
     
@@ -58,6 +62,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return .customBuilder
         case .scope:
             return .scope
+        case .doesSupportObjc:
+            return .doesSupportObjc
         }
     }
 }
@@ -82,12 +88,14 @@ extension ConfigurationAnnotation {
         switch (configurationAttribute, target) {
         case (.isIsolated, .`self`),
              (.customBuilder, .dependency),
-             (.scope, .dependency):
+             (.scope, .dependency),
+             (.doesSupportObjc, .dependency):
             return true
             
         case (.isIsolated, _),
              (.customBuilder, _),
-             (.scope, _):
+             (.scope, _),
+             (.doesSupportObjc, _):
             return false
         }
     }
@@ -100,8 +108,8 @@ extension ConfigurationAnnotation {
     static func validate(configurationAttribute: ConfigurationAttribute, with dependencyKind: ConfigurationAttributeDependencyKind) -> Bool {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
-             (.customBuilder, _):
-            
+             (.customBuilder, _),
+             (.doesSupportObjc, _):
             return true
         case (.isIsolated, _),
              (.scope, _):
@@ -124,7 +132,10 @@ extension ConfigurationAttribute {
             
         case .scope?:
             self = .scope(value: try ConfigurationAttribute.scopeValue(from: valueString))
-            
+
+        case .doesSupportObjc?:
+            self = .doesSupportObjc(value: try ConfigurationAttribute.boolValue(from: valueString))
+
         case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
@@ -164,7 +175,8 @@ extension ConfigurationAttribute {
 
     var boolValue: Bool? {
         switch self {
-        case .isIsolated(let value):
+        case .isIsolated(let value),
+             .doesSupportObjc(let value):
             return value
 
         case .scope,
@@ -179,7 +191,8 @@ extension ConfigurationAttribute {
             return value
             
         case .customBuilder,
-             .isIsolated:
+             .isIsolated,
+             .doesSupportObjc:
             return nil
         }
     }
@@ -190,7 +203,8 @@ extension ConfigurationAttribute {
             return value
             
         case .scope,
-             .isIsolated:
+             .isIsolated,
+             .doesSupportObjc:
             return nil
         }
     }

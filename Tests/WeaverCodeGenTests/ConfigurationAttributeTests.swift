@@ -34,6 +34,13 @@ final class ConfigurationAttributeTests: XCTestCase {
         
         XCTAssertEqual(attribute.description, "Config Attr - scope = container")
     }
+    
+    func test_does_support_objc_description_should_be_valid() {
+        
+        let attribute = ConfigurationAttribute.doesSupportObjc(value: true)
+        
+        XCTAssertEqual(attribute.description, "Config Attr - objc = true")
+    }
 }
 
 final class ConfigurationAttributeTargetTests: XCTestCase {

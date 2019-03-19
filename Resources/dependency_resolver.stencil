@@ -55,12 +55,16 @@ protocol {{dependencyContainer.targetType.name}}InputDependencyResolver {
 {% endif %}
 
 {% if not dependencyContainer.targetType.generics %}
-{% if dependencyContainer.doesSupportObjc %}@objc {% endif %}protocol {{dependencyContainer.targetType.name}}DependencyResolver{% if detailedResolvers and dependencyContainer.resolverDependencies %}: {% for dependency in dependencyContainer.resolverDependencies %}{{dependency.abstractType.name}}Resolver{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %} {
-    {% if not detailedResolvers %}
-    {% call DependencyResolverDecl dependencyContainer.resolverDependencies %}
-    {% endif %}
-}
+{% if detailedResolvers %}
+{% if dependencyContainer.resolverDependencies %}
+typealias {{dependencyContainer.targetType.name}}DependencyResolver = {% for dependency in dependencyContainer.resolverDependencies %}{{dependency.abstractType.name}}Resolver{% if not forloop.last %} & {% endif %}{% endfor %}
 {% endif %}
+{% else %}{# detailedResolvers #}
+{% if dependencyContainer.doesSupportObjc %}@objc {% endif %}protocol {{dependencyContainer.targetType.name}}DependencyResolver {
+    {% call DependencyResolverDecl dependencyContainer.resolverDependencies %}
+}
+{% endif %}{# detailedResolvers #}
+{% endif %}{# not dependencyContainer.targetType.generics #}
 
 final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependencyContainer.targetType.generics}}{% if not dependencyContainer.targetType.generics %}: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver{% endif %} {
     
