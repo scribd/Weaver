@@ -167,6 +167,14 @@ final class SwiftGeneratorTests: XCTestCase {
             XCTFail("Unexpected error \(error)")
         }
     }
+    
+    func test_objc_compatible_detailed_resolvers() {
+        do {
+            try performTest(detailedResolvers: true)
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
 }
 
 // MARK: - Utils

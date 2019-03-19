@@ -7,12 +7,10 @@ import {{moduleName}}
 {% endfor %}{# imports #}
 {% endif %}
 
-// MARK: Detailed Resolvers
+// MARK: - Detailed Resolvers
 
 {% for dependency in dependencies %}
-// MARK: - {{dependency.abstractType.name}}Resolver
-
-protocol {{dependency.abstractType.name}}Resolver {
+{% if dependency.doesSupportObjc %}@objc {% endif %}protocol {{dependency.abstractType.name}}Resolver {
     {% if not dependency.customBuilder %}
 
     {% if dependency.parameters %}

@@ -128,6 +128,7 @@ private struct RegistrationViewModel {
     let hasDependencyContainer: Bool
     let isTransient: Bool
     let isWeak: Bool
+    let doesSupportObjc: Bool
     
     init(_ dependency: Dependency, dependencyGraph: DependencyGraph) {
         name = dependency.dependencyName
@@ -135,6 +136,7 @@ private struct RegistrationViewModel {
         abstractType = dependency.abstractType
         scope = dependency.configuration.scope.rawValue
         customBuilder = dependency.configuration.customBuilder
+        doesSupportObjc = dependency.configuration.doesSupportObjc
         
         if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {
             parameters = dependencyContainer.parameters.orderedValues.map {
@@ -161,12 +163,14 @@ private struct DependencyViewModel {
     let type: Type
     let abstractType: Type
     let parameters: [DependencyViewModel]
+    let doesSupportObjc: Bool
 
     init(_ dependency: Dependency, context: DependencyContainer? = nil, dependencyGraph: DependencyGraph) {
         
         name = dependency.dependencyName
         type = context?.parameters[dependency.dependencyName]?.type ?? dependency.type
         abstractType = context?.parameters[dependency.dependencyName]?.abstractType ?? dependency.abstractType
+        doesSupportObjc = dependency.configuration.doesSupportObjc
         
         let parameters = dependencyGraph.dependencyContainersByType[dependency.type.index]?.parameters ?? OrderedDictionary()
         if parameters.orderedValues.isEmpty, let types = dependencyGraph.typesByName[name] {
@@ -188,6 +192,7 @@ private struct DependencyViewModel {
         type = registration.type
         abstractType = registration.abstractType
         parameters = registration.parameters
+        doesSupportObjc = registration.doesSupportObjc
     }
 }
 
