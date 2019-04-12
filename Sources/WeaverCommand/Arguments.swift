@@ -18,7 +18,12 @@ extension Optional: ArgumentConvertible, CustomStringConvertible where Wrapped: 
     public var description: String {
         // Do not change this implementation since this description override
         // also has an impact on Stencil's reflexion system.
-        return String(describing: self)
+        switch self {
+        case .none:
+            return "nil"
+        case .some(let value):
+            return value.description
+        }
     }
 }
 
