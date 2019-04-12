@@ -181,7 +181,7 @@ final class SwiftGeneratorTests: XCTestCase {
 
 private extension SwiftGeneratorTests {
     
-    var version: String { return "0.12.3" }
+    var version: String { return "0.12.4" }
     
     func actualOutput(detailedResolvers: Bool = false, function: StringLiteralType = #function) throws -> String? {
         let fileName = function.replacingOccurrences(of: "()", with: "")
