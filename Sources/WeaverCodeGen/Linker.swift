@@ -114,8 +114,8 @@ final class DependencyContainer: Hashable {
         return registrations[index] ?? references[index] ?? nil
     }
     
-    var hashValue: Int {
-        return ObjectIdentifier(self).hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
     }
     
     static func ==(lhs: DependencyContainer, rhs: DependencyContainer) -> Bool {
@@ -232,8 +232,8 @@ private struct HashableDependency: Hashable {
     
     let value: Dependency
     
-    var hashValue: Int {
-        return ObjectIdentifier(value).hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(value))
     }
     
     static func ==(lhs: HashableDependency, rhs: HashableDependency) -> Bool {
@@ -276,8 +276,8 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
         self.fileLocation = fileLocation
     }
     
-    var hashValue: Int {
-        return ObjectIdentifier(self).hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
     }
     
     static func ==(lhs: Registration, rhs: Registration) -> Bool {
@@ -315,11 +315,11 @@ fileprivate final class Reference: ResolvableDependency, Hashable {
         self.fileLocation = fileLocation
     }
     
-    var hashValue: Int {
-        return ObjectIdentifier(self).hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
     }
     
-    static func ==(lhs: Reference, rhs: Reference) -> Bool {
+    static func == (lhs: Reference, rhs: Reference) -> Bool {
         return lhs === rhs
     }
 }

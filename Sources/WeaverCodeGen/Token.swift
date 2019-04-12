@@ -45,7 +45,7 @@ public struct RegisterAnnotation: Token, Hashable, Equatable {
         }
 
         let protocolType: Type?
-        let arrowIndex = matches.index { $0.hasPrefix("<-") }
+        let arrowIndex = matches.firstIndex { $0.hasPrefix("<-") }
         if let arrowIndex = arrowIndex, arrowIndex + 1 < matches.count {
             protocolType = try Type(matches[arrowIndex + 1])
         } else {

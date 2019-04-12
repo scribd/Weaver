@@ -45,7 +45,7 @@ final class OrderedDictionary<Key: Hashable, Value> {
             if dictionary[key] == nil {
                 orderedKeys.append(key)
             } else {
-                orderedKeys.index(of: key).flatMap { index -> Void in
+                orderedKeys.firstIndex(of: key).flatMap { index -> Void in
                     orderedKeys.remove(at: index)
                 }
                 orderedKeys.append(key)
