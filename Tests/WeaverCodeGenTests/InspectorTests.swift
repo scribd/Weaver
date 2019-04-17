@@ -105,9 +105,6 @@ final class API {
 final class Session {
     // weaver: sessionManager = SessionManager <- SessionManagerProtocol
     // weaver: sessionManager.scope = .container
-
-    // weaver: sessionManager1 = SessionManager <- SessionManagerProtocol
-    // weaver: sessionManager1.scope = .transient
 }
 
 final class SessionManager {
@@ -128,49 +125,14 @@ final class SessionManager {
             XCTFail("Expected error.")
         } catch let error as InspectorError {
             let underlyingError = InspectorAnalysisError.cyclicDependency(history: [
-                InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 13, file: "test.swift"), type: Type(name: "SessionManager")), stepCount: 0),
+                InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 10, file: "test.swift"), type: Type(name: "SessionManager")), stepCount: 0),
                 InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 0, file: "test.swift"), type: Type(name: "API")), stepCount: 1),
                 InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 5, file: "test.swift"), type: Type(name: "Session")), stepCount: 2)
                 ])
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 9, file: "test.swift"),
-                                                                                            name: "sessionManager1",
+            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 6, file: "test.swift"),
+                                                                                            name: "sessionManager",
                                                                                             type: Type(name: "SessionManager")),
                                                                         underlyingError: underlyingError))
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
-    func test_inspector_should_build_a_valid_dependency_graph_with_a_lazy_loaded_dependency_cycle() {
-        let file = File(contents: """
-final class API {
-    // weaver: session = Session <- SessionProtocol
-    // weaver: session.scope = .container
-}
-
-final class Session {
-    // weaver: sessionManager = SessionManager <- SessionManagerProtocol
-    // weaver: sessionManager.scope = .container
-
-    // weaver: sessionManager1 = SessionManager <- SessionManagerProtocol
-    // weaver: sessionManager1.scope = .container
-}
-
-final class SessionManager {
-    // weaver: api = API <- APIProtocol
-    // weaver: api.scope = .weak
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            let syntaxTree = try parser.parse()
-            let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
-            
-            try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
