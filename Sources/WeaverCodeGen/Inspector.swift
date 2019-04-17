@@ -164,7 +164,7 @@ private extension ResolvableDependency {
             return
         }
         
-        guard let scope = scope, !scope.allowsAccessFromChildren else {
+        guard let scope = scope, scope.allowsAccessFromChildren else {
             return
         }
         

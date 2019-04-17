@@ -32,10 +32,10 @@ extension Scope: CaseIterable, Encodable {
     var allowsAccessFromChildren: Bool {
         switch self {
         case .weak,
-             .container:
+             .container,
+             .transient:
             return true
-        case .transient,
-             .graph:
+        case .graph:
             return false
         }
     }
