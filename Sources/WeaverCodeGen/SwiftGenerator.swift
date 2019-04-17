@@ -232,9 +232,7 @@ private struct DependencyContainerViewModel {
         let parameters = dependencyContainer.parameters.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph)}
         self.parameters = parameters
         
-        resolverDependencies = parameters
-            + directReferences
-            + registrations.map { DependencyViewModel($0) }
+        resolverDependencies = directReferences + registrations.map { DependencyViewModel($0) }
     }
 }
 

@@ -56,11 +56,19 @@ protocol {{dependencyContainer.targetType.name}}InputDependencyResolver {
 
 {% if not dependencyContainer.targetType.generics %}
 {% if detailedResolvers %}
-{% if dependencyContainer.resolverDependencies %}
-typealias {{dependencyContainer.targetType.name}}DependencyResolver = {% for dependency in dependencyContainer.resolverDependencies %}{{dependency.abstractType.name}}Resolver{% if not forloop.last %} & {% endif %}{% endfor %}
+{% if dependencyContainer.parameters %}
+{% if dependencyContainer.doesSupportObjc %}@objc {% endif %}protocol {{dependencyContainer.targetType.name}}ParameterResolver {
+    {% for parameter in dependencyContainer.parameters %}
+    var {{parameter.name}}: {{parameter.abstractType}} { get }
+    {% endfor %}
+}
+{% endif %}
+{% if dependencyContainer.resolverDependencies or dependencyContainer.parameters %}
+typealias {{dependencyContainer.targetType.name}}DependencyResolver = {% if dependencyContainer.parameters %}{{dependencyContainer.targetType.name}}ParameterResolver{% if dependencyContainer.resolverDependencies %} & {% endif %}{% endif %}{% for dependency in dependencyContainer.resolverDependencies %}{{dependency.abstractType.name}}Resolver{% if not forloop.last %} & {% endif %}{% endfor %}
 {% endif %}
 {% else %}{# detailedResolvers #}
 {% if dependencyContainer.doesSupportObjc %}@objc {% endif %}protocol {{dependencyContainer.targetType.name}}DependencyResolver {
+    {% call DependencyResolverDecl dependencyContainer.parameters %}
     {% call DependencyResolverDecl dependencyContainer.resolverDependencies %}
 }
 {% endif %}{# detailedResolvers #}
