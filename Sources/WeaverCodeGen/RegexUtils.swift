@@ -32,9 +32,11 @@ enum Patterns {
     private static let equal = "\(spaces)=\(spaces)"
     private static let arrow = "\(spaces)<-\(spaces)"
     private static let name = "\\w+"
+    private static let typeNamePart = "\(name)(\\.\(name))*"
     
     static let typeName = "(\(genericType))|(\(arrayType))|(\(dictType))"
-    static let genericType = "(\(name))(<\(name)(\(spaces),\(spaces)\(name))*>)?\\??"
+    static let genericTypePart = "<\(typeNamePart)(\(spaces),\(spaces)\(typeNamePart))*>"
+    static let genericType = "(\(typeNamePart))(\(genericTypePart))?\\??"
     static let arrayType = "\\[\(spaces)(\(name)\\??)\(spaces)\\]\\??"
     static let dictType = "\\[\(spaces)(\(name)\\??)\(spaces):\(spaces)(\(name)\\??)\(spaces)\\]\\??"
     static let register = "^(\(name))\(equal)(\(typeName))\(spaces)(<-\(spaces)(\(typeName))\(spaces))?$"

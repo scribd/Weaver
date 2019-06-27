@@ -120,6 +120,14 @@ final class SwiftGeneratorTests: XCTestCase {
         }
     }
     
+    func test_nested_type_registration() {
+        do {
+            try performTest()
+        } catch {
+            XCTFail("Unexpected error \(error)")
+        }
+    }
+
     func test_injectable_type_with_indirect_references() {
         do {
             try performTest()

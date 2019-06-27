@@ -27,9 +27,9 @@ public struct Type: Hashable, Equatable {
             let isOptional = matches[0].hasSuffix("?")
             
             let genericNames: [String]
-            if matches.count > 2 {
+            if let genericTypesMatches = try NSRegularExpression(pattern: "(\(Patterns.genericTypePart))").matches(in: matches[0]) {
                 let characterSet = CharacterSet.whitespaces.union(CharacterSet(charactersIn: "<>,"))
-                genericNames = matches[2]
+                genericNames = genericTypesMatches[0]
                     .split(separator: ",")
                     .map { $0.trimmingCharacters(in: characterSet) }
             } else {
