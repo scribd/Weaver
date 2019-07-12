@@ -31,7 +31,7 @@ enum Patterns {
     private static let spaces = "\\s*"
     private static let equal = "\(spaces)=\(spaces)"
     private static let arrow = "\(spaces)<-\(spaces)"
-    private static let name = "\\w+"
+    private static let name = "\\w+(\\.\\w+)*"
     
     static let typeName = "(\(genericType))|(\(arrayType))|(\(dictType))"
     static let genericType = "(\(name))(<\(name)(\(spaces),\(spaces)\(name))*>)?\\??"
