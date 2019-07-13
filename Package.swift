@@ -3,6 +3,9 @@ import PackageDescription
 
 let package = Package(
     name: "Weaver",
+    platforms: [
+       .macOS(.v10_13)
+    ],
     dependencies: [
         .package(url: "https://github.com/jpsim/SourceKitten.git", from: "0.23.0"),
         .package(url: "https://github.com/kylef/Commander.git", from: "0.8.0"),
