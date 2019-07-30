@@ -27,9 +27,9 @@ public struct Type: Hashable, Equatable {
             let isOptional = matches[0].hasSuffix("?")
             
             let genericNames: [String]
-            if matches.count > 2 {
+            if let genericTypesMatches = try NSRegularExpression(pattern: "(\(Patterns.genericTypePart))").matches(in: matches[0]) {
                 let characterSet = CharacterSet.whitespaces.union(CharacterSet(charactersIn: "<>,"))
-                genericNames = matches[2]
+                genericNames = genericTypesMatches[0]
                     .split(separator: ",")
                     .map { $0.trimmingCharacters(in: characterSet) }
             } else {
@@ -37,15 +37,24 @@ public struct Type: Hashable, Equatable {
             }
             
             self.init(name: name, genericNames: genericNames, isOptional: isOptional)
-        } else if let matches = try NSRegularExpression(pattern: "^(\(Patterns.arrayType))$").matches(in: string) {
+        } else if let match = try NSRegularExpression(pattern: "^(\(Patterns.arrayTypeWithNamedGroups))$").firstMatch(in: string),
+                  let wholeType = match.rangeString(at: 0, in: string),
+                  let valueType = match.rangeString(withName: "value", in: string) {
+
             let name = "Array"
-            let isOptional = matches[0].hasSuffix("?")
-            let genericNames = [matches[1]]
+            let isOptional = wholeType.hasSuffix("?")
+            let genericNames = [valueType]
+
             self.init(name: name, genericNames: genericNames, isOptional: isOptional)
-        } else if let matches = try NSRegularExpression(pattern: "^(\(Patterns.dictType))$").matches(in: string) {
+        } else if let match = try NSRegularExpression(pattern: "^(\(Patterns.dictTypeWithNamedGroups))$").firstMatch(in: string),
+                  let wholeType = match.rangeString(at: 0, in: string),
+                  let keyType = match.rangeString(withName: "key", in: string),
+                  let valueType = match.rangeString(withName: "value", in: string) {
+
             let name = "Dictionary"
-            let isOptional = matches[0].hasSuffix("?")
-            let genericNames = [matches[1], matches[2]]
+            let isOptional = wholeType.hasSuffix("?")
+            let genericNames = [keyType, valueType]
+
             self.init(name: name, genericNames: genericNames, isOptional: isOptional)
         } else {
             return nil

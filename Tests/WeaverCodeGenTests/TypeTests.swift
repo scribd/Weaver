@@ -77,6 +77,20 @@ final class TypeTests: XCTestCase {
         }
     }
     
+    func test_init_should_build_correctly_with_nested_types() {
+        do {
+            let type = try Type("Test.NestedType<A, B.NestedType, C, D, E, F>?")
+
+            XCTAssertEqual(type, Type(
+                name: "Test.NestedType",
+                genericNames: ["A", "B.NestedType", "C", "D", "E", "F"],
+                isOptional: true
+            ))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     // MARK: - Description
     
     func test_description_should_return_a_valid_swift_type_with_generics() {
