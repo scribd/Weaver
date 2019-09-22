@@ -9,24 +9,6 @@ import Foundation
 import Commander
 import PathKit
 
-extension Optional: ArgumentConvertible, CustomStringConvertible where Wrapped: ArgumentConvertible {
-
-    public init(parser: ArgumentParser) throws {
-        self = try? Wrapped(parser: parser)
-    }
-    
-    public var description: String {
-        // Do not change this implementation since this description override
-        // also has an impact on Stencil's reflexion system.
-        switch self {
-        case .none:
-            return "nil"
-        case .some(let value):
-            return value.description
-        }
-    }
-}
-
 extension Path: ArgumentConvertible {
     public init(parser: ArgumentParser) throws {
         guard let value = parser.shift() else {
