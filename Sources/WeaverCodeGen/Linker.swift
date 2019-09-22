@@ -407,11 +407,16 @@ public final class DependencyGraph {
         }
     }()
     
-    /// All the dependencies in order of appearance in the source code.
+    /// All the dependencies ordered by priority then appearance in the source code.
+    ///
+    /// - Note: Registrations being supersets of references, they come first.
     lazy var dependencies: [ResolvableDependency] = {
-        let allDependencies = dependencyContainersByName.orderedValues.flatMap { $0.orderedDependencies } +
-            dependencyContainersByType.orderedValues.flatMap { $0.orderedDependencies }
-        
+        let allDependencies =
+            dependencyContainersByName.orderedValues.flatMap { $0.registrations.orderedValues } +
+            dependencyContainersByType.orderedValues.flatMap { $0.registrations.orderedValues } +
+            dependencyContainersByName.orderedValues.flatMap { $0.references.orderedValues } +
+            dependencyContainersByType.orderedValues.flatMap { $0.references.orderedValues }
+
         var filteredDependencies = Set<HashableDependency>()
         return allDependencies.filter {
             if filteredDependencies.contains(HashableDependency(value: $0)) {
@@ -458,14 +463,10 @@ public final class DependencyGraph {
 
 private extension DependencyGraph {
     
-    func insertDependencyContainer(with registerAnnotation: TokenBox<RegisterAnnotation>,
-                                   doesSupportObjc: Bool = false,
-                                   file: String?) {
+    func insertDependencyContainer(with registerAnnotation: TokenBox<RegisterAnnotation>, file: String?) {
         
         let fileLocation = FileLocation(line: registerAnnotation.line, file: file)
-        let dependencyContainer = DependencyContainer(type: registerAnnotation.value.type,
-                                                      doesSupportObjc: doesSupportObjc,
-                                                      fileLocation: fileLocation)
+        let dependencyContainer = DependencyContainer(type: registerAnnotation.value.type, fileLocation: fileLocation)
         dependencyContainersByName[registerAnnotation.value.name] = dependencyContainer
         
         let type = registerAnnotation.value.type

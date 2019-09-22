@@ -103,6 +103,7 @@ private extension SwiftGenerator {
     func renderDetailedResolversTemplate(with dependencyGraph: DependencyGraph, withHeader header: Bool) throws -> String {
         let dependencies = dependencyGraph.dependencies
             .map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+            .reversed() // Set highest priority last
             .reduce(into: [:]) { $0[$1.abstractType.name] = $1 }
             .values.sorted(by: { $0.abstractType.name < $1.abstractType.name })
 
