@@ -21,34 +21,38 @@ final class OrderedDictionary<Key: Hashable, Value> {
     }
     
     init(_ keyValues: [(Key, Value)] = []) {
-        dictionary = keyValues.reduce(into: [:]) { $0[$1.0] = $1.1 }
-        orderedKeys = keyValues.map { $0.0 }
+        keyValues.reversed().forEach { key, value in
+            guard dictionary[key] == nil else { return }
+            dictionary[key] = value
+            orderedKeys = [key] + orderedKeys
+        }
     }
     
     var orderedKeyValues: [KeyValue] {
-        var result = [KeyValue]()
-        for key in orderedKeys {
-            dictionary[key].flatMap { result.append(KeyValue(key: key, value: $0)) }
+        return orderedKeys.compactMap { key in
+            guard let value = dictionary[key] else { return nil }
+            return KeyValue(key: key, value: value)
         }
-        return result
     }
 
     var orderedValues: [Value] {
         return orderedKeyValues.map { $0.value }
     }
     
-    subscript(key: Key) -> Value? {
+    public subscript(key: Key) -> Value? {
         get {
             return dictionary[key]
         }
         set {
-            if dictionary[key] == nil {
+            if dictionary[key] == nil && newValue != nil {
                 orderedKeys.append(key)
             } else {
                 orderedKeys.firstIndex(of: key).flatMap { index -> Void in
                     orderedKeys.remove(at: index)
                 }
-                orderedKeys.append(key)
+                if newValue != nil {
+                    orderedKeys.append(key)
+                }
             }
             dictionary[key] = newValue
         }

@@ -29,7 +29,7 @@ enum ParserError: Error, Equatable {
 }
 
 enum SwiftGeneratorError: Error, Equatable {
-    case invalidTemplatePath(path: String)
+    case dependencyContainersNotFoundForFileName(String)
 }
 
 enum InspectorError: Error, Equatable {
@@ -142,8 +142,8 @@ extension SwiftGeneratorError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .invalidTemplatePath(let path):
-            return "Invalid template path: \(path)."
+        case .dependencyContainersNotFoundForFileName(let fileName):
+            return "Could not find dependency graphs for file: '\(fileName)'."
         }
     }
 }
