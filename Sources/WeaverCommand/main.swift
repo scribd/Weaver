@@ -56,8 +56,6 @@ private enum Parameters {
     static let projectPath = Option<Path?>("project-path", default: nil, description: "Project's directory.")
     static let configPath = Option<Path?>("config-path", default: nil, description: "Configuration path.")
     static let outputPath = Option<Path?>("output-path", default: nil, description: "Where the swift files will be generated.")
-    static let mainTemplatePath = Option<Path?>("main-template-path", default: nil, description: "Custom main template path.")
-    static let detailedResolversTemplatePath = Option<Path?>("detailed-resolvers-template-path", default: nil, description: "Custom detailed resolvers template path.")
     static let unsafe = OptionalFlag("unsafe", disabledName: "safe")
     static let singleOutput = OptionalFlag("single-output", disabledName: "multi_outputs")
     static let inputPath = VariadicOption<String>("input-path", default: [], description: "Paths to input files.")
@@ -76,8 +74,6 @@ let main = Group {
         Parameters.projectPath,
         Parameters.configPath,
         Parameters.outputPath,
-        Parameters.mainTemplatePath,
-        Parameters.detailedResolversTemplatePath,
         Parameters.unsafe,
         Parameters.detailedResolvers,
         Parameters.singleOutput,
@@ -88,8 +84,6 @@ let main = Group {
         projectPath,
         configPath,
         outputPath,
-        mainTemplatePath,
-        detailedResolversTemplatePath,
         unsafe,
         detailedResolvers,
         singleOutput,
@@ -103,8 +97,6 @@ let main = Group {
                                                   ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
                                                   projectPath: projectPath,
                                                   outputPath: outputPath,
-                                                  mainTemplatePath: mainTemplatePath,
-                                                  detailedResolversTemplatePath: detailedResolversTemplatePath,
                                                   unsafe: unsafe,
                                                   singleOutput: singleOutput,
                                                   recursiveOff: recursiveOff,
@@ -124,9 +116,7 @@ let main = Group {
 
             let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
                                                detailedResolvers: configuration.detailedResolvers,
-                                               version: version,
-                                               mainTemplate: configuration.mainTemplatePath,
-                                               detailedResolversTemplate: configuration.detailedResolversTemplatePath)
+                                               version: version)
 
             let generatedData: [(file: String, data: String?)] = try {
                 if configuration.singleOutput {

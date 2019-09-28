@@ -19,9 +19,7 @@ public final class SwiftGenerator {
     
     public init(dependencyGraph: DependencyGraph,
                 detailedResolvers: Bool,
-                version: String,
-                mainTemplate mainTemplatePath: Path,
-                detailedResolversTemplate detailedResolverTemplatePath: Path) throws {
+                version: String) throws {
 
         self.dependencyGraph = dependencyGraph
         self.detailedResolvers = detailedResolvers

@@ -6,9 +6,9 @@
 //
 
 import Foundation
+import PathKit
 import XCTest
 import SourceKittenFramework
-import PathKit
 
 @testable import WeaverCodeGen
 
@@ -220,10 +220,6 @@ private extension SwiftGeneratorTests {
             return nil
         }
 
-        let resourcesDirectory = Path(#file).parent().parent().parent().parent() + "Resources"
-        let mainTemplatePath = resourcesDirectory + "dependency_resolver.stencil"
-        let detailedResolversTemplatePath = resourcesDirectory + "detailed_resolvers.stencil"
-        
         let lexer = Lexer(file, fileName: "test.swift")
         let tokens = try lexer.tokenize()
         let parser = Parser(tokens, fileName: "test.swift")
@@ -232,9 +228,7 @@ private extension SwiftGeneratorTests {
         
         let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
                                            detailedResolvers: detailedResolvers,
-                                           version: version,
-                                           mainTemplate: mainTemplatePath,
-                                           detailedResolversTemplate: detailedResolversTemplatePath)
+                                           version: version)
 
         guard let actual: String = try generator.generate() else {
             return nil
@@ -274,10 +268,13 @@ private extension SwiftGeneratorTests {
     }
     
     func performTest(detailedResolvers: Bool = false, function: StringLiteralType = #function) throws {
-        let actual = try actualOutput(detailedResolvers: detailedResolvers, function: function)
+        guard let actual = try actualOutput(detailedResolvers: detailedResolvers, function: function) else {
+            XCTFail("Actual wasn't expected to be nil")
+            return
+        }
         let expected = try expectedOutput(actual: actual, function)
         
-        XCTAssertEqual(actual!, expected)
-        try actual.flatMap { try exportDiff(actual: $0, expected: expected, function) }
+        XCTAssertEqual(actual, expected)
+        try exportDiff(actual: actual, expected: expected, function)
     }
 }

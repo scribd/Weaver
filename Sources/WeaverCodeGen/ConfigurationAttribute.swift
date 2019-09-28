@@ -16,7 +16,7 @@ enum ConfigurationAttributeName: String {
     case doesSupportObjc = "objc"
 }
 
-enum ConfigurationAttribute: Equatable, Hashable {
+enum ConfigurationAttribute: Hashable {
     case isIsolated(value: Bool)
     case customBuilder(value: String)
     case scope(value: Scope)
@@ -25,7 +25,7 @@ enum ConfigurationAttribute: Equatable, Hashable {
 
 // MARK: - Target
 
-enum ConfigurationAttributeTarget: Equatable, Hashable {
+enum ConfigurationAttributeTarget: Hashable {
     case `self`
     case dependency(name: String)
 }

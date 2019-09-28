@@ -14,8 +14,6 @@ import Yams
 struct Configuration {
     let projectPath: Path
     let outputPath: Path
-    let mainTemplatePath: Path
-    let detailedResolversTemplatePath: Path
     let inputPathStrings: [String]
     let ignoredPathStrings: [String]
     let unsafe: Bool
@@ -27,8 +25,6 @@ struct Configuration {
                  ignoredPathStrings: [String]?,
                  projectPath: Path?,
                  outputPath: Path?,
-                 mainTemplatePath: Path?,
-                 detailedResolversTemplatePath: Path?,
                  unsafe: Bool?,
                  singleOutput: Bool?,
                  recursiveOff: Bool?,
@@ -38,8 +34,6 @@ struct Configuration {
         self.ignoredPathStrings = ignoredPathStrings ?? []
         self.projectPath = projectPath ?? Defaults.projectPath
         self.outputPath = outputPath ?? Defaults.outputPath
-        self.mainTemplatePath = mainTemplatePath ?? Defaults.mainTemplatePath
-        self.detailedResolversTemplatePath = detailedResolversTemplatePath ?? Defaults.detailedResolversTemplatePath
         self.unsafe = unsafe ?? Defaults.unsafe
         self.singleOutput = singleOutput ?? Defaults.singleOuput
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
@@ -51,8 +45,6 @@ struct Configuration {
          ignoredPathStrings: [String]? = nil,
          projectPath: Path? = nil,
          outputPath: Path? = nil,
-         mainTemplatePath: Path? = nil,
-         detailedResolversTemplatePath: Path? = nil,
          unsafe: Bool? = nil,
          singleOutput: Bool? = nil,
          recursiveOff: Bool? = nil,
@@ -75,8 +67,6 @@ struct Configuration {
                                           ignoredPathStrings: ignoredPathStrings,
                                           projectPath: projectPath,
                                           outputPath: outputPath,
-                                          mainTemplatePath: mainTemplatePath,
-                                          detailedResolversTemplatePath: detailedResolversTemplatePath,
                                           unsafe: unsafe,
                                           singleOutput: singleOutput,
                                           recursiveOff: recursiveOff,
@@ -93,14 +83,6 @@ struct Configuration {
         
         let outputPath = outputPath ?? configuration.outputPath
         self.outputPath = outputPath.isRelative ? projectPath + configuration.outputPath : outputPath
-
-        let mainTemplatePath = mainTemplatePath ?? configuration.mainTemplatePath
-        var shouldUseProjectPath = mainTemplatePath.isRelative && mainTemplatePath != Defaults.mainTemplatePath
-        self.mainTemplatePath = shouldUseProjectPath ? projectPath + mainTemplatePath : mainTemplatePath
-        
-        let detailedResolversTemplatePath = detailedResolversTemplatePath ?? configuration.detailedResolversTemplatePath
-        shouldUseProjectPath = detailedResolversTemplatePath.isRelative && detailedResolversTemplatePath != Defaults.detailedResolversTemplatePath
-        self.detailedResolversTemplatePath = shouldUseProjectPath ? projectPath + detailedResolversTemplatePath : detailedResolversTemplatePath
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -168,8 +150,6 @@ extension Configuration: Decodable {
     private enum Keys: String, CodingKey {
         case projectPath = "project_path"
         case outputPath = "output_path"
-        case mainTemplatePath = "main_template_path"
-        case detailedResolversTemplatePath = "detailed_resolvers_template_path"
         case inputPaths = "input_paths"
         case ignoredPaths = "ignored_paths"
         case unsafe
@@ -187,8 +167,6 @@ extension Configuration: Decodable {
         
         projectPath = Defaults.projectPath
         outputPath = try container.decodeIfPresent(Path.self, forKey: .outputPath) ?? Defaults.outputPath
-        mainTemplatePath = try container.decodeIfPresent(Path.self, forKey: .mainTemplatePath) ?? Defaults.mainTemplatePath
-        detailedResolversTemplatePath = try container.decodeIfPresent(Path.self, forKey: .detailedResolversTemplatePath) ?? Defaults.detailedResolversTemplatePath
         inputPathStrings = try container.decodeIfPresent([String].self, forKey: .inputPaths) ?? Defaults.inputPathStrings
         ignoredPathStrings = try container.decodeIfPresent([String].self, forKey: .ignoredPaths) ?? []
         unsafe = try container.decodeIfPresent(Bool.self, forKey: .unsafe) ?? Defaults.unsafe

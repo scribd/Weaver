@@ -16,7 +16,7 @@ public protocol AnyTokenBox {
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token & Equatable & Hashable>: AnyTokenBox, Equatable, Hashable, CustomStringConvertible {
+public struct TokenBox<T: Token & Hashable>: AnyTokenBox, Hashable, CustomStringConvertible {
     let value: T
     public let offset: Int
     public let length: Int
@@ -33,7 +33,7 @@ public protocol Token: CustomStringConvertible {
 
 // MARK: - Token Types
 
-public struct RegisterAnnotation: Token, Hashable, Equatable {
+public struct RegisterAnnotation: Token, Hashable {
 
     let name: String
     let type: Type
@@ -68,7 +68,7 @@ public struct RegisterAnnotation: Token, Hashable, Equatable {
     }
 }
 
-public struct ReferenceAnnotation: Token, Hashable, Equatable {
+public struct ReferenceAnnotation: Token, Hashable {
     
     let name: String
     let type: Type
@@ -88,7 +88,7 @@ public struct ReferenceAnnotation: Token, Hashable, Equatable {
     }
 }
 
-public struct ParameterAnnotation: Token, Hashable, Equatable {
+public struct ParameterAnnotation: Token, Hashable {
     
     let name: String
     let type: Type
@@ -108,7 +108,7 @@ public struct ParameterAnnotation: Token, Hashable, Equatable {
     }
 }
 
-public struct ConfigurationAnnotation: Token, Hashable, Equatable {
+public struct ConfigurationAnnotation: Token, Hashable {
     
     let attribute: ConfigurationAttribute
     
@@ -143,7 +143,7 @@ public struct ConfigurationAnnotation: Token, Hashable, Equatable {
     }
 }
 
-public struct ImportDeclaration: Token, Hashable, Equatable {
+public struct ImportDeclaration: Token, Hashable {
     
     let moduleName: String
     
@@ -160,7 +160,7 @@ public struct ImportDeclaration: Token, Hashable, Equatable {
     }
 }
 
-public struct InjectableType: Token, Hashable, Equatable {
+public struct InjectableType: Token, Hashable {
     let type: Type
     let accessLevel: AccessLevel
     let doesSupportObjc: Bool
@@ -178,15 +178,15 @@ public struct InjectableType: Token, Hashable, Equatable {
     }
 }
 
-public struct EndOfInjectableType: Token, Hashable, Equatable {
+public struct EndOfInjectableType: Token, Hashable {
     public let description = "_ }"
 }
 
-public struct AnyDeclaration: Token, Hashable, Equatable {
+public struct AnyDeclaration: Token, Hashable {
     public let description = "{"
 }
 
-public struct EndOfAnyDeclaration: Token, Hashable, Equatable {
+public struct EndOfAnyDeclaration: Token, Hashable {
     public let description = "}"
 }
 
