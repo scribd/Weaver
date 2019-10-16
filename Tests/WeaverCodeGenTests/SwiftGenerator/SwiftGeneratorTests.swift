@@ -223,7 +223,9 @@ private extension SwiftGeneratorTests {
         let resourcesDirectory = Path(#file).parent().parent().parent().parent() + "Resources"
         let mainTemplatePath = resourcesDirectory + "dependency_resolver.stencil"
         let detailedResolversTemplatePath = resourcesDirectory + "detailed_resolvers.stencil"
-        
+        let testsTemplatePath = resourcesDirectory + "dependency_resolver_stub.stencil"
+        let macrosTemplatePath = resourcesDirectory + "macros.stencil"
+
         let lexer = Lexer(file, fileName: "test.swift")
         let tokens = try lexer.tokenize()
         let parser = Parser(tokens, fileName: "test.swift")
@@ -233,10 +235,12 @@ private extension SwiftGeneratorTests {
         let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
                                            detailedResolvers: detailedResolvers,
                                            version: version,
-                                           mainTemplate: mainTemplatePath,
-                                           detailedResolversTemplate: detailedResolversTemplatePath)
+                                           mainTemplatePath: mainTemplatePath,
+                                           detailedResolversTemplatePath: detailedResolversTemplatePath,
+                                           testsTemplatePath: testsTemplatePath,
+                                           macrosTemplatePath: macrosTemplatePath)
 
-        guard let actual: String = try generator.generate() else {
+        guard let actual: String = try generator.generateMain() else {
             return nil
         }
         

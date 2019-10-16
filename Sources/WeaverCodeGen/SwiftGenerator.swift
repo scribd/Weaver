@@ -18,33 +18,46 @@ public final class SwiftGenerator {
     
     private let mainTemplate: StencilSwiftTemplate
     private let detailedResolversTemplate: StencilSwiftTemplate
-    
+    private let testsTemplate: StencilSwiftTemplate
+
+    private let projectTargetName: String?    
     private let version: String
     
     public init(dependencyGraph: DependencyGraph,
                 detailedResolvers: Bool,
                 version: String,
-                mainTemplate mainTemplatePath: Path,
-                detailedResolversTemplate detailedResolverTemplatePath: Path) throws {
+                mainTemplatePath: Path,
+                detailedResolversTemplatePath: Path,
+                testsTemplatePath: Path,
+                macrosTemplatePath: Path,
+                projectTargetName: String?) throws {
 
         self.dependencyGraph = dependencyGraph
         self.detailedResolvers = detailedResolvers
         self.version = version
+        self.projectTargetName = projectTargetName
 
         let environment = stencilSwiftEnvironment()
 
+        let macrosTemplateString: String = try macrosTemplatePath.read()
+
         let mainTemplateString: String = try mainTemplatePath.read()
-        mainTemplate = StencilSwiftTemplate(templateString: mainTemplateString,
+        mainTemplate = StencilSwiftTemplate(templateString: macrosTemplateString + mainTemplateString,
                                             environment: environment,
                                             name: nil)
 
-        let detailedResolversTemplateString: String = try detailedResolverTemplatePath.read()
-        detailedResolversTemplate = StencilSwiftTemplate(templateString: detailedResolversTemplateString,
+        let detailedResolversTemplateString: String = try detailedResolversTemplatePath.read()
+        detailedResolversTemplate = StencilSwiftTemplate(templateString: macrosTemplateString + detailedResolversTemplateString,
                                                          environment: environment,
                                                          name: nil)
+        
+        let testsTemplateString: String = try testsTemplatePath.read()
+        testsTemplate = StencilSwiftTemplate(templateString: macrosTemplateString + testsTemplateString,
+                                             environment: environment,
+                                             name: nil)
     }
     
-    public func generate() throws -> [(file: String, data: String?)] {
+    public func generateMain() throws -> [(file: String, data: String?)] {
 
         var items: [(String, String?)] = try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { item in
             
@@ -67,7 +80,7 @@ public final class SwiftGenerator {
         return items
     }
     
-    public func generate() throws -> String? {
+    public func generateMain() throws -> String? {
         let dependencyContainers = dependencyGraph.dependencyContainersByFile.orderedValues.flatMap { dependencyContainer in
             return dependencyContainer.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
         }
@@ -85,6 +98,30 @@ public final class SwiftGenerator {
         }
 
         return string
+    }
+    
+    public func generateTests() throws -> [(file: String, data: String?)] {
+        return try dependencyGraph.dependencyContainersByFile.orderedKeyValues.map { item in
+            
+            let dependencyContainers = item.value.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
+            
+            guard !dependencyContainers.isEmpty else {
+                return (file: item.key, data: nil)
+            }
+            
+            let string = try renderTestsTemplate(with: dependencyContainers,
+                                                 imports: dependencyGraph.importsByFile[item.key] ?? [])
+            
+            return (file: item.key, data: string.compacted())
+        }
+    }
+    
+    public func generateTests() throws -> String? {
+        let dependencyContainers = dependencyGraph.dependencyContainersByFile.orderedValues.flatMap { dependencyContainer in
+            return dependencyContainer.compactMap { DependencyContainerViewModel($0, dependencyGraph: dependencyGraph) }
+        }
+        let string = try renderTestsTemplate(with: dependencyContainers, imports: dependencyGraph.orderedImports).compacted()
+        return string.isEmpty ? nil : string
     }
 }
 
@@ -111,6 +148,19 @@ private extension SwiftGenerator {
                                       "header": header,
                                       "imports": dependencyGraph.orderedImports]
         return try detailedResolversTemplate.render(context)
+    }
+    
+    func renderTestsTemplate(with dependencyContainers: [DependencyContainerViewModel], imports: [String]) throws -> String {
+        guard let projectTargetName = projectTargetName else {
+            throw SwiftGeneratorError.missingProjectTargetName
+        }
+        
+        let context: [String: Any] = ["version": version,
+                                      "dependencyContainers": dependencyContainers,
+                                      "detailedResolvers": detailedResolvers,
+                                      "imports": imports,
+                                      "project_target_name": projectTargetName]
+        return try testsTemplate.render(context)
     }
 }
 

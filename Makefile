@@ -37,6 +37,8 @@ define install_files
 	install -d $(1)/bin
 	install -d $(1)/share/weaver/Resources
 	install -C Resources/dependency_resolver.stencil $(1)/share/weaver/Resources
+	install -C Resources/dependency_resolver_stub.stencil $(1)/share/weaver/Resources
 	install -C Resources/detailed_resolvers.stencil $(1)/share/weaver/Resources
+	install -C Resources/macros.stencil $(1)/share/weaver/Resources
 	install -C .build/release/WeaverCommand $(1)/bin/weaver
 endef

@@ -30,6 +30,7 @@ enum ParserError: Error, Equatable {
 
 enum SwiftGeneratorError: Error, Equatable {
     case invalidTemplatePath(path: String)
+    case missingProjectTargetName
 }
 
 enum InspectorError: Error, Equatable {
@@ -144,6 +145,8 @@ extension SwiftGeneratorError: CustomStringConvertible {
         switch self {
         case .invalidTemplatePath(let path):
             return "Invalid template path: \(path)."
+        case .missingProjectTargetName:
+            return "Project target name is missing."
         }
     }
 }
