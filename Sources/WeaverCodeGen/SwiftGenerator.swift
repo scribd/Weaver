@@ -199,6 +199,8 @@ private struct MetaDependencyContainer {
     }
     
     private func dependencyResolver() throws -> FileBodyMember? {
+        guard try targetType().genericNames.isEmpty else { return nil }
+        
         if detailedResolvers {
             let hasParameterResolver = try parameterResolver() != nil
             guard hasParameterResolver || dependencyContainer.resolverDependencies.isEmpty == false else { return nil }
@@ -241,7 +243,7 @@ private struct MetaDependencyContainer {
             .with(genericParameters: try targetType().genericNames.map { GenericParameter(name: $0) })
             .with(objc: dependencyContainer.doesSupportObjc)
             .adding(inheritedType: dependencyContainer.doesSupportObjc ? TypeIdentifier(name: "NSObject") : nil)
-            .adding(inheritedType: try targetType().dependencyResolverTypeID)
+            .adding(inheritedType: try dependencyResolver() != nil ? try targetType().dependencyResolverTypeID : nil)
             .adding(inheritedTypes: try dependencyContainer.registrations.orderedValues.compactMap { registration in
                 let dependencyContainer = try dependencyGraph.dependencyContainer(for: registration)
                 guard dependencyContainer.allReferences.isEmpty == false else { return nil }
@@ -320,7 +322,10 @@ private struct MetaDependencyContainer {
                 Assignment(
                     variable: dependenciesVariable,
                     value: try targetType(of: dependencyContainer).dependencyContainerTypeID.reference | .call(Tuple()
-                        .adding(parameter: TupleParameter(name: "injecting", value: Reference.named(.`self`)))
+                        .adding(parameter: dependencyContainer.allReferences.isEmpty == false ?
+                            TupleParameter(name: "injecting", value: Reference.named(.`self`))
+                            : nil
+                        )
                         .adding(parameters: dependencyContainer.parameters.orderedValues.map { $0.tupleParameter })
                     )
                 ),
@@ -335,7 +340,12 @@ private struct MetaDependencyContainer {
             members.append(
                 Assignment(
                     variable: valueVariable,
-                    value: registration.type.typeID.reference | .call()
+                    value: registration.type.typeID.reference | .call(Tuple()
+                        .adding(parameter: dependencyContainer.hasDependencies ?
+                            TupleParameter(name: "injecting", value: try targetType(of: dependencyContainer).dependencyContainerTypeID.reference | .call())
+                            : nil
+                        )
+                    )
                 )
             )
         }
@@ -548,7 +558,7 @@ private extension DependencyContainer {
     }
     
     var hasBuilder: Bool {
-        return !parameters.orderedValues.isEmpty || !allReferences.isEmpty
+        return parameters.isEmpty == false || allReferences.isEmpty == false
     }
     
     var isPublic: Bool {
