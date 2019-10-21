@@ -15,8 +15,8 @@ final class XCFilelistGeneratorTests: XCTestCase {
 
     func test_generator_should_generate_valid_xcfilelist_files() {
         let dependenciesByName = OrderedDictionary([
-            ("Foo", DependencyContainer(type: Type(name: "Foo"), fileLocation: FileLocation(line: 0, file: "FakePath/Foo.swift"))),
-            ("Bar", DependencyContainer(type: Type(name: "Bar"), fileLocation: FileLocation(line: 0, file: "FakePath/Bar.swift")))
+            ("Foo", DependencyContainer(type: SwiftType(name: "Foo"), fileLocation: FileLocation(line: 0, file: "FakePath/Foo.swift"))),
+            ("Bar", DependencyContainer(type: SwiftType(name: "Bar"), fileLocation: FileLocation(line: 0, file: "FakePath/Bar.swift")))
         ])
         let dependencyGraph = DependencyGraph(dependenciesByName)
 

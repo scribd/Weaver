@@ -42,7 +42,7 @@
         "repositoryURL": "https://github.com/scribd/Meta.git",
         "state": {
           "branch": "master",
-          "revision": "0c3c38d76b5cff651582dacbf4bc2604573b8383",
+          "revision": "1876012adb461e431e679d021bd64dc29f89acc5",
           "version": null
         }
       },
@@ -96,8 +96,8 @@
         "repositoryURL": "https://github.com/jpsim/SourceKitten.git",
         "state": {
           "branch": null,
-          "revision": "7b1571ef546e5ba160939545e5663d048389c998",
-          "version": "0.25.0"
+          "revision": "cc1f16acc70630d27498e81078789f5fa55d7463",
+          "version": "0.26.0"
         }
       },
       {
@@ -114,8 +114,8 @@
         "repositoryURL": "https://github.com/drmohundro/SWXMLHash.git",
         "state": {
           "branch": null,
-          "revision": "f43166a8e18fdd0857f29e303b1bb79a5428bca0",
-          "version": "4.9.0"
+          "revision": "a4931e5c3bafbedeb1601d3bb76bbe835c6d475a",
+          "version": "5.0.1"
         }
       },
       {

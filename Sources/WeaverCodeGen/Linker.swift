@@ -35,8 +35,8 @@ import Foundation
 */
 final class DependencyContainer: Hashable {
 
-    /// Type representation of the associated type.
-    fileprivate(set) var type: Type?
+    /// SwiftType representation of the associated type.
+    fileprivate(set) var type: SwiftType?
     
     /// Access level representation of the associated type.
     fileprivate(set) var accessLevel: AccessLevel
@@ -59,11 +59,11 @@ final class DependencyContainer: Hashable {
     /// Dependency containers from which this dependency container's associated type is being registered.
     fileprivate(set) var sources = [DependencyContainer]()
 
-    /// Types referenced by this dependency container.
-    fileprivate(set) var referencedTypes: Set<Type>
+    /// SwiftTypes referenced by this dependency container.
+    fileprivate(set) var referencedTypes: Set<SwiftType>
     
     /**
-     Types in which the dependency container's associated type is embedded.
+     SwiftTypes in which the dependency container's associated type is embedded.
      
      For example:
      
@@ -77,16 +77,16 @@ final class DependencyContainer: Hashable {
      
      Produces a dependency container with one embedding type: `Foo`.
     */
-    fileprivate(set) var embeddingTypes: [Type] = []
+    fileprivate(set) var embeddingTypes:  [SwiftType] = []
     
     /// Location of the associated type declaration in the source code file.
     fileprivate(set) var fileLocation: FileLocation
     
-    init(type: Type? = nil,
+    init(type: SwiftType? = nil,
          accessLevel: AccessLevel = .default,
          doesSupportObjc: Bool = false,
          configuration: DependencyContainerConfiguration = .empty,
-         referencedType: Type? = nil,
+         referencedType: SwiftType? = nil,
          fileLocation: FileLocation = FileLocation()) {
         
         self.type = type
@@ -154,13 +154,13 @@ protocol Dependency: AnyObject, Encodable {
     /// Name which was used to declare the dependency.
     var dependencyName: String { get }
 
-    /// Type which was used to declare the dependency.
-    var type: Type { get }
+    /// SwiftType which was used to declare the dependency.
+    var type: SwiftType { get }
     
     /// Abstract type which was used to declare the dependency.
     ///
     /// - Note: Usually a `protocol`, but can also be any parent class.
-    var abstractType: Type { get }
+    var abstractType: SwiftType { get }
     
     /// Scope declared with a scope annotation associated to the same dependency name.
     ///
@@ -180,7 +180,7 @@ protocol Dependency: AnyObject, Encodable {
 
 extension Dependency {
     
-    var abstractType: Type {
+    var abstractType: SwiftType {
         return type
     }
     
@@ -247,9 +247,9 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
     
     let dependencyName: String
     
-    let type: Type
+    let type: SwiftType
     
-    let abstractType: Type
+    let abstractType: SwiftType
     
     var configuration: DependencyConfiguration
     
@@ -260,8 +260,8 @@ fileprivate final class Registration: ResolvableDependency, Hashable {
     let fileLocation: FileLocation
     
     init(dependencyName: String,
-         type: Type,
-         abstractType: Type,
+         type: SwiftType,
+         abstractType: SwiftType,
          configuration: DependencyConfiguration = .empty,
          target: DependencyContainer,
          source: DependencyContainer,
@@ -291,7 +291,7 @@ fileprivate final class Reference: ResolvableDependency, Hashable {
     
     let dependencyName: String
     
-    let type: Type
+    let type: SwiftType
     
     let target: DependencyContainer
     
@@ -302,7 +302,7 @@ fileprivate final class Reference: ResolvableDependency, Hashable {
     let fileLocation: FileLocation
     
     init(dependencyName: String,
-         type: Type,
+         type: SwiftType,
          target: DependencyContainer,
          source: DependencyContainer,
          configuration: DependencyConfiguration,
@@ -336,13 +336,13 @@ fileprivate final class Parameter: Dependency {
     
     let source: DependencyContainer
     
-    let type: Type
+    let type: SwiftType
     
     let fileLocation: FileLocation
     
     init(parameterName: String,
          source: DependencyContainer,
-         type: Type,
+         type: SwiftType,
          fileLocation: FileLocation) {
         
         self.parameterName = parameterName
@@ -356,7 +356,7 @@ fileprivate final class Parameter: Dependency {
 
 struct DependencyIndex: Hashable, Equatable {
     let name: String
-    let type: Type?
+    let type: SwiftType?
 }
 
 typealias ParameterName = String
@@ -388,7 +388,7 @@ public final class DependencyGraph {
     private(set) var dependencyContainersByName: OrderedDictionary<String, DependencyContainer>
     
     /// `DependencyContainer`s grouped by type and iterable in order of appearance in the source code.
-    private(set) var dependencyContainersByType: OrderedDictionary<TypeIndex, DependencyContainer>
+    private(set) var dependencyContainersByType: OrderedDictionary<SwiftTypeIndex, DependencyContainer>
     
     /// Imported module names grouped by file name.
     private(set) var importsByFile: [String: [String]]
@@ -427,8 +427,8 @@ public final class DependencyGraph {
         }
     }()
     
-    /// Types grouped by type name.
-    lazy var typesByName: [String: [Type]] = {
+    /// SwiftTypes grouped by type name.
+    lazy var typesByName: [String:  [SwiftType]] = {
         return dependencies.reduce([:]) { (typesByName, dependency) in
             var typesByName = typesByName
             var types = typesByName[dependency.type.name] ?? []
@@ -450,7 +450,7 @@ public final class DependencyGraph {
         self.importsByFile = importsByFile
         self.dependencyContainersByType = dependencyContainersByName.orderedValues.reduce(into: OrderedDictionary()) {
             guard let type = $1.type else { return }
-            $0[TypeIndex(type: type)] = $1
+            $0[SwiftTypeIndex(type: type)] = $1
         }
     }
     
@@ -495,7 +495,7 @@ private extension DependencyGraph {
 
 private extension DependencyGraph {
     
-    func dependencyContainer(type: Type,
+    func dependencyContainer(type: SwiftType,
                              accessLevel: AccessLevel,
                              doesSupportObjc: Bool,
                              fileLocation: FileLocation) -> DependencyContainer {
@@ -644,7 +644,7 @@ private extension Linker {
     
     func linkDependencyContainer(_ dependencyContainer: DependencyContainer,
                                  with children: [Expr],
-                                 embeddingTypes: [Type] = [],
+                                 embeddingTypes:  [SwiftType] = [],
                                  file: String) throws {
         
         var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
@@ -800,7 +800,7 @@ extension Dependency {
     }
 }
 
-extension Type: Encodable {
+extension SwiftType: Encodable {
     
     enum CodingKeys: String, CodingKey {
         case objectType = "object_type"
@@ -810,7 +810,7 @@ extension Type: Encodable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode("\(Type.self)", forKey: .objectType)
+        try container.encode("\(SwiftType.self)", forKey: .objectType)
         try container.encode(name, forKey: .name)
         if !genericNames.isEmpty {
             try container.encode(genericNames, forKey: .generics)

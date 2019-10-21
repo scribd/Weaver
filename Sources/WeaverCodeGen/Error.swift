@@ -30,6 +30,8 @@ enum ParserError: Error, Equatable {
 
 enum SwiftGeneratorError: Error, Equatable {
     case dependencyContainersNotFoundForFileName(String)
+    case dependencyContainerIsMissingTypeInFile(String)
+    case dependencyContainerNotFoundForName(String)
 }
 
 enum InspectorError: Error, Equatable {
@@ -40,7 +42,7 @@ enum InspectorError: Error, Equatable {
 enum InspectorAnalysisError: Error, Equatable {
     case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
-    case isolatedResolverCannotHaveReferents(type: Type?, referents: [PrintableResolver])
+    case isolatedResolverCannotHaveReferents(type: SwiftType?, referents: [PrintableResolver])
 }
 
 enum InspectorAnalysisHistoryRecord: Equatable {
@@ -58,13 +60,13 @@ protocol Printable {
 
 struct PrintableResolver: Equatable, Printable {
     let fileLocation: FileLocation
-    let type: Type?
+    let type: SwiftType?
 }
 
 struct PrintableDependency: Equatable, Printable {
     let fileLocation: FileLocation
     let name: String
-    let type: Type?
+    let type: SwiftType?
 }
 
 struct FileLocation: Equatable, Printable {
@@ -144,6 +146,10 @@ extension SwiftGeneratorError: CustomStringConvertible {
         switch self {
         case .dependencyContainersNotFoundForFileName(let fileName):
             return "Could not find dependency graphs for file: '\(fileName)'."
+        case .dependencyContainerIsMissingTypeInFile(let fileName):
+            return "Could not resolve type for dependency container in file: '\(fileName)'."
+        case .dependencyContainerNotFoundForName(let name):
+            return "Could not find dependency container for name: '\(name)'."
         }
     }
 }

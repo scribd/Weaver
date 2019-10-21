@@ -26,7 +26,7 @@ final class MyService {
             
             if tokens.count == 2 {
                 XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService")),
+                    value: InjectableType(type: SwiftType(name: "MyService")),
                     offset: 7, length: 19, line: 1)
                 )
                 XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
@@ -56,11 +56,11 @@ final class MyService {
             
             if tokens.count == 4 {
                 XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService")),
+                    value: InjectableType(type: SwiftType(name: "MyService")),
                     offset: 7, length: 57, line: 1)
                 )
                 XCTAssertEqual(tokens[1] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyEmbeddedService")),
+                    value: InjectableType(type: SwiftType(name: "MyEmbeddedService")),
                     offset: 33, length: 29, line: 2)
                 )
                 XCTAssertEqual(tokens[2] as? TokenBox<EndOfInjectableType>, TokenBox(
@@ -92,7 +92,7 @@ public final class MyService {
             
             if tokens.count == 2 {
                 XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), accessLevel: .public),
+                    value: InjectableType(type: SwiftType(name: "MyService"), accessLevel: .public),
                     offset: 14, length: 19, line: 1)
                 )
                 XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
@@ -120,7 +120,7 @@ open final class MyService {
             
             if tokens.count == 2 {
                 XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), accessLevel: .open),
+                    value: InjectableType(type: SwiftType(name: "MyService"), accessLevel: .open),
                     offset: 12, length: 19, line: 1)
                 )
                 XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
@@ -148,7 +148,7 @@ internal final class MyService {
             
             if tokens.count == 2 {
                 XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), accessLevel: .internal),
+                    value: InjectableType(type: SwiftType(name: "MyService"), accessLevel: .internal),
                     offset: 16, length: 19, line: 1)
                 )
                 XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
@@ -176,7 +176,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             
             if tokens.count == 2 {
                 XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), doesSupportObjc: true),
+                    value: InjectableType(type: SwiftType(name: "MyService"), doesSupportObjc: true),
                     offset: 1, length: 58, line: 1)
                 )
                 XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
@@ -205,8 +205,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
                         name: "api",
-                        type: Type(name: "API"),
-                        protocolType: Type(name: "APIProtocol")
+                        type: SwiftType(name: "API"),
+                        protocolType: SwiftType(name: "APIProtocol")
                 ), offset: 1, length: 35, line: 1)
                 )
             } else {
@@ -231,7 +231,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
                         name: "api",
-                        type: Type(name: "API"),
+                        type: SwiftType(name: "API"),
                         protocolType: nil
                 ), offset: 1, length: 20, line: 1)
                 )
@@ -257,8 +257,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
                         name: "api",
-                        type: Type(name: "API", isOptional: true),
-                        protocolType: Type(name: "APIProtocol", isOptional: true)
+                        type: SwiftType(name: "API", isOptional: true),
+                        protocolType: SwiftType(name: "APIProtocol", isOptional: true)
                 ), offset: 1, length: 37, line: 1)
                 )
             } else {
@@ -283,8 +283,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
                         name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"]),
-                        protocolType: Type(name: "APIRequest", genericNames: ["T", "P"])
+                        type: SwiftType(name: "Request", genericNames: ["T", "P"]),
+                        protocolType: SwiftType(name: "APIRequest", genericNames: ["T", "P"])
                 ), offset: 1, length: 54, line: 1)
                 )
             } else {
@@ -309,8 +309,8 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
                         name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true),
-                        protocolType: Type(name: "APIRequest", genericNames: ["T", "P"], isOptional: true)
+                        type: SwiftType(name: "Request", genericNames: ["T", "P"], isOptional: true),
+                        protocolType: SwiftType(name: "APIRequest", genericNames: ["T", "P"], isOptional: true)
                 ), offset: 1, length: 56, line: 1)
                 )
             } else {
@@ -333,7 +333,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")),
+                    value: ReferenceAnnotation(name: "api", type: SwiftType(name: "APIProtocol")),
                     offset: 1, length: 29, line: 1)
                 )
             } else {
@@ -356,7 +356,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol", isOptional: true)),
+                    value: ReferenceAnnotation(name: "api", type: SwiftType(name: "APIProtocol", isOptional: true)),
                     offset: 1, length: 30, line: 1)
                 )
             } else {
@@ -381,7 +381,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
                     value: ReferenceAnnotation(
                         name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"])),
+                        type: SwiftType(name: "Request", genericNames: ["T", "P"])),
                     offset: 1, length: 35, line: 1)
                 )
             } else {
@@ -406,7 +406,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
                     value: ReferenceAnnotation(
                         name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true)
+                        type: SwiftType(name: "Request", genericNames: ["T", "P"], isOptional: true)
                 ), offset: 1, length: 36, line: 1)
                 )
             } else {
@@ -429,7 +429,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "movieID", type: Type(name: "UInt")),
+                    value: ParameterAnnotation(name: "movieID", type: SwiftType(name: "UInt")),
                     offset: 1, length: 26, line: 1)
                 )
             } else {
@@ -452,7 +452,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "movieID", type: Type(name: "UInt", isOptional: true)),
+                    value: ParameterAnnotation(name: "movieID", type: SwiftType(name: "UInt", isOptional: true)),
                     offset: 1, length: 27, line: 1)
                 )
             } else {
@@ -475,7 +475,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "request", type: Type(name: "Request", genericNames: ["T", "P"])),
+                    value: ParameterAnnotation(name: "request", type: SwiftType(name: "Request", genericNames: ["T", "P"])),
                     offset: 1, length: 35, line: 1)
                 )
             } else {
@@ -500,7 +500,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
                     value: ParameterAnnotation(
                         name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true)
+                        type: SwiftType(name: "Request", genericNames: ["T", "P"], isOptional: true)
                 ), offset: 1, length: 36, line: 1)
                 )
             } else {
@@ -804,7 +804,7 @@ final class Logger<T> {
             
             if tokens.count == 6 {
                 XCTAssertEqual(tokens[3] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "Logger", genericNames: ["T"])),
+                    value: InjectableType(type: SwiftType(name: "Logger", genericNames: ["T"])),
                     offset: 75, length: 46, line: 4
                 ))
             } else {
@@ -830,7 +830,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "array", type: Type(name: "Array", genericNames: ["String"], isOptional: false), protocolType: nil),
+                    value: RegisterAnnotation(name: "array", type: SwiftType(name: "Array", genericNames: ["String"], isOptional: false), protocolType: nil),
                     offset: 32, length: 28, line: 2
                 ))
             } else {
@@ -856,7 +856,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "array", type: Type(name: "Array", genericNames: ["String?"], isOptional: true), protocolType: nil),
+                    value: RegisterAnnotation(name: "array", type: SwiftType(name: "Array", genericNames: ["String?"], isOptional: true), protocolType: nil),
                     offset: 32, length: 32, line: 2
                 ))
             } else {
@@ -882,7 +882,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "dict", type: Type(name: "Dictionary", genericNames: ["String", "Int"], isOptional: false), protocolType: nil),
+                    value: RegisterAnnotation(name: "dict", type: SwiftType(name: "Dictionary", genericNames: ["String", "Int"], isOptional: false), protocolType: nil),
                     offset: 32, length: 35, line: 2
                 ))
             } else {
@@ -908,7 +908,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "dict", type: Type(name: "Dictionary", genericNames: ["String?", "Int?"], isOptional: true), protocolType: nil),
+                    value: RegisterAnnotation(name: "dict", type: SwiftType(name: "Dictionary", genericNames: ["String?", "Int?"], isOptional: true), protocolType: nil),
                     offset: 32, length: 34, line: 2
                 ))
             } else {

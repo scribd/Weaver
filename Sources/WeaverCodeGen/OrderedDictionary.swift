@@ -39,7 +39,7 @@ final class OrderedDictionary<Key: Hashable, Value> {
         return orderedKeyValues.map { $0.value }
     }
     
-    public subscript(key: Key) -> Value? {
+    subscript(key: Key) -> Value? {
         get {
             return dictionary[key]
         }
@@ -56,5 +56,9 @@ final class OrderedDictionary<Key: Hashable, Value> {
             }
             dictionary[key] = newValue
         }
+    }
+    
+    var isEmpty: Bool {
+        return dictionary.isEmpty
     }
 }

@@ -1,5 +1,5 @@
 //
-//  Type.swift
+//  SwiftType.swift
 //  WeaverCodeGen
 //
 //  Created by Théophane Rupin on 6/22/18.
@@ -8,9 +8,9 @@
 import Foundation
 
 /// Representation of any Swift type
-public struct Type: Hashable, Equatable {
+public struct SwiftType: Hashable, Equatable {
 
-    /// Type name
+    /// SwiftType name
     public let name: String
     
     /// Names of the generic parameters
@@ -75,18 +75,18 @@ public struct Type: Hashable, Equatable {
 
 // MARK: - Index
 
-struct TypeIndex: Hashable, Equatable {
+struct SwiftTypeIndex: Hashable, Equatable {
 
     let value: String
     
-    init(type: Type) {
+    init(type: SwiftType) {
         value = "\(type.name)\(type.isOptional ? "?" : "")"
     }
 }
 
 // MARK: - Description
 
-extension Type: CustomStringConvertible {
+extension SwiftType: CustomStringConvertible {
     
     public var description: String {
         return "\(name)\(generics)\(isOptional ? "?" : "")"
@@ -96,7 +96,7 @@ extension Type: CustomStringConvertible {
         return "\(name)\(isOptional ? "?" : "")"
     }
     
-    var index: TypeIndex {
-        return TypeIndex(type: self)
+    var index: SwiftTypeIndex {
+        return SwiftTypeIndex(type: self)
     }
 }

@@ -31,28 +31,28 @@ public protocol Token: CustomStringConvertible {
     static func create(_ string: String) throws -> Self?
 }
 
-// MARK: - Token Types
+// MARK: - Token SwiftTypes
 
 public struct RegisterAnnotation: Token, Hashable {
 
     let name: String
-    let type: Type
-    let protocolType: Type?
+    let type: SwiftType
+    let protocolType: SwiftType?
     
     public static func create(_ string: String) throws -> RegisterAnnotation? {
         guard let matches = try NSRegularExpression(pattern: Patterns.register).matches(in: string) else {
             return nil
         }
 
-        let protocolType: Type?
+        let protocolType: SwiftType?
         let arrowIndex = matches.firstIndex { $0.hasPrefix("<-") }
         if let arrowIndex = arrowIndex, arrowIndex + 1 < matches.count {
-            protocolType = try Type(matches[arrowIndex + 1])
+            protocolType = try SwiftType(matches[arrowIndex + 1])
         } else {
             protocolType = nil
         }
         
-        guard let type = try Type(matches[1]) else {
+        guard let type = try SwiftType(matches[1]) else {
             return nil
         }
         
@@ -71,13 +71,13 @@ public struct RegisterAnnotation: Token, Hashable {
 public struct ReferenceAnnotation: Token, Hashable {
     
     let name: String
-    let type: Type
+    let type: SwiftType
     
     public static func create(_ string: String) throws -> ReferenceAnnotation? {
         guard let matches = try NSRegularExpression(pattern: Patterns.reference).matches(in: string) else {
             return nil
         }
-        guard let type = try Type(matches[1]) else {
+        guard let type = try SwiftType(matches[1]) else {
             return nil
         }
         return ReferenceAnnotation(name: matches[0], type: type)
@@ -91,13 +91,13 @@ public struct ReferenceAnnotation: Token, Hashable {
 public struct ParameterAnnotation: Token, Hashable {
     
     let name: String
-    let type: Type
+    let type: SwiftType
     
     public static func create(_ string: String) throws -> ParameterAnnotation? {
         guard let matches = try NSRegularExpression(pattern: Patterns.parameter).matches(in: string) else {
             return nil
         }
-        guard let type = try Type(matches[1]) else {
+        guard let type = try SwiftType(matches[1]) else {
             return nil
         }
         return ParameterAnnotation(name: matches[0], type: type)
@@ -161,11 +161,11 @@ public struct ImportDeclaration: Token, Hashable {
 }
 
 public struct InjectableType: Token, Hashable {
-    let type: Type
+    let type: SwiftType
     let accessLevel: AccessLevel
     let doesSupportObjc: Bool
 
-    init(type: Type,
+    init(type: SwiftType,
          accessLevel: AccessLevel = .default,
          doesSupportObjc: Bool = false) {
         self.type = type
