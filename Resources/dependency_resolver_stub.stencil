@@ -31,11 +31,11 @@ final class {{dependencyContainer.targetType.name}}ResolverStub: {% if dependenc
 	{% endfor %}
 
 	{% if dependencyContainer.parameters %}
-	{% for parameter in dependencyContainer.parameters %}
-	init({{parameter.name}}: {{parameter.abstractType}}) {
+	init({% for parameter in dependencyContainer.parameters %}{{parameter.name}}: {{parameter.abstractType}}{% if not forloop.last  %}, {% endif %}{% endfor %}) {
+		{% for parameter in dependencyContainer.parameters %}
 		self.{{parameter.name}} = {{parameter.name}}
+		{% endfor %}
 	}
-	{% endfor %}
 	{% endif %}
 }
 
