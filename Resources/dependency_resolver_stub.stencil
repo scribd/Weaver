@@ -17,7 +17,7 @@ import {{moduleName}}
 
 final class {{dependencyContainer.targetType.name}}ResolverStub: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver {
 	
-	{% for parameter in dependencyContainer.parameter %}
+	{% for parameter in dependencyContainer.parameters %}
 	var {{parameter.name}}: {{parameter.abstractType}}
 	{% endfor %}
 
