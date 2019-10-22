@@ -27,7 +27,7 @@ struct Configuration {
     let recursiveOff: Bool
     let detailedResolvers: Bool
     let tests: Bool
-    let projectTargetName: String?
+    let testableImports: [String]?
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
@@ -43,7 +43,7 @@ struct Configuration {
                  recursiveOff: Bool?,
                  detailedResolvers: Bool?,
                  tests: Bool?,
-                 projectTargetName: String?) {
+                 testableImports: [String]?) {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
@@ -59,7 +59,7 @@ struct Configuration {
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
         self.detailedResolvers = detailedResolvers ?? Defaults.detailedResolvers
         self.tests = tests ?? Defaults.tests
-        self.projectTargetName = projectTargetName
+        self.testableImports = testableImports
     }
     
     init(configPath: Path? = nil,
@@ -77,7 +77,7 @@ struct Configuration {
          recursiveOff: Bool? = nil,
          detailedResolvers: Bool? = nil,
          tests: Bool? = nil,
-         projectTargetName: String? = nil) throws {
+         testableImports: [String]? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath,
@@ -106,7 +106,7 @@ struct Configuration {
                                           recursiveOff: recursiveOff,
                                           detailedResolvers: detailedResolvers,
                                           tests: tests,
-                                          projectTargetName: projectTargetName)
+                                          testableImports: testableImports)
         }
         
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
@@ -117,7 +117,7 @@ struct Configuration {
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
         self.detailedResolvers = detailedResolvers ?? configuration.detailedResolvers
         self.tests = tests ?? configuration.tests
-        self.projectTargetName = projectTargetName ?? configuration.projectTargetName
+        self.testableImports = testableImports ?? configuration.testableImports
         
         let mainOutputPath = mainOutputPath ?? configuration.mainOutputPath
         self.mainOutputPath = mainOutputPath.isRelative ? projectPath + configuration.mainOutputPath : mainOutputPath
@@ -237,7 +237,7 @@ extension Configuration: Decodable {
         case recursive
         case detailedResolvers = "detailed_resolvers"
         case tests
-        case projectTargetName = "project_target_name"
+        case testableImports = "testable_imports"
     }
     
     public init(from decoder: Decoder) throws {
@@ -261,7 +261,7 @@ extension Configuration: Decodable {
         recursiveOff = !(try container.decodeIfPresent(Bool.self, forKey: .recursive) ?? !Defaults.recursiveOff)
         detailedResolvers = try container.decodeIfPresent(Bool.self, forKey: .detailedResolvers) ?? Defaults.detailedResolvers
         tests = try container.decodeIfPresent(Bool.self, forKey: .tests) ?? Defaults.tests
-        projectTargetName = try container.decodeIfPresent(String.self, forKey: .projectTargetName)
+        testableImports = try container.decodeIfPresent([String].self, forKey: .testableImports)
     }
 }
 

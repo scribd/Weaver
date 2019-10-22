@@ -67,7 +67,7 @@ private enum Parameters {
     static let pretty = Flag("pretty", default: false)
     static let detailedResolvers = OptionalFlag("detailed-resolvers", default: nil)
     static let tests = OptionalFlag("tests", default: nil)
-    static let projectTargetName = Option<String?>("project-target-name", default: nil, description: "Project's target name.")
+    static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
 }
 
 // MARK: - Commands
@@ -89,7 +89,7 @@ let main = Group {
         Parameters.ignoredPath,
         Parameters.recursiveOff,
         Parameters.tests,
-        Parameters.projectTargetName)
+        Parameters.testableImports)
     {
         projectPath,
         configPath,
@@ -104,7 +104,7 @@ let main = Group {
         ignoredPaths,
         recursiveOff,
         tests,
-        projectTargetName in
+        testableImports in
         
         do {
             let configuration = try Configuration(configPath: configPath,
@@ -120,7 +120,7 @@ let main = Group {
                                                   recursiveOff: recursiveOff,
                                                   detailedResolvers: detailedResolvers,
                                                   tests: tests,
-                                                  projectTargetName: projectTargetName)
+                                                  testableImports: testableImports.isEmpty ? nil : testableImports)
             
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
@@ -141,7 +141,7 @@ let main = Group {
                                                detailedResolversTemplatePath: configuration.detailedResolversTemplatePath,
                                                testsTemplatePath: configuration.testsTemplatePath,
                                                macrosTemplatePath: configuration.macrosTemplatePath,
-                                               projectTargetName: configuration.projectTargetName)
+                                               testableImports: configuration.testableImports)
 
             let mainGeneratedData: [(file: String, data: String?)] = try {
                 if configuration.singleOutput {

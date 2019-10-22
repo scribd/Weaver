@@ -20,7 +20,7 @@ public final class SwiftGenerator {
     private let detailedResolversTemplate: StencilSwiftTemplate
     private let testsTemplate: StencilSwiftTemplate
 
-    private let projectTargetName: String?    
+    private let testableImports: [String]?
     private let version: String
     
     public init(dependencyGraph: DependencyGraph,
@@ -30,12 +30,12 @@ public final class SwiftGenerator {
                 detailedResolversTemplatePath: Path,
                 testsTemplatePath: Path,
                 macrosTemplatePath: Path,
-                projectTargetName: String?) throws {
+                testableImports: [String]?) throws {
 
         self.dependencyGraph = dependencyGraph
         self.detailedResolvers = detailedResolvers
         self.version = version
-        self.projectTargetName = projectTargetName
+        self.testableImports = testableImports
 
         let environment = stencilSwiftEnvironment()
 
@@ -151,15 +151,13 @@ private extension SwiftGenerator {
     }
     
     func renderTestsTemplate(with dependencyContainers: [DependencyContainerViewModel], imports: [String]) throws -> String {
-        guard let projectTargetName = projectTargetName else {
-            throw SwiftGeneratorError.missingProjectTargetName
-        }
-        
+        let testableImportsSet = Set(testableImports ?? [])
+        let imports = imports.filter { testableImportsSet.contains($0) == false }
         let context: [String: Any] = ["version": version,
                                       "dependencyContainers": dependencyContainers,
                                       "detailedResolvers": detailedResolvers,
                                       "imports": imports,
-                                      "project_target_name": projectTargetName]
+                                      "testableImports": testableImports ?? []]
         return try testsTemplate.render(context)
     }
 }
