@@ -29,6 +29,14 @@ final class {{dependencyContainer.targetType.name}}ResolverStub: {% if dependenc
 	}
     {% endif %}
 	{% endfor %}
+
+	{% if dependencyContainer.parameters %}
+	{% for parameter in dependencyContainer.parameters %}
+	init({{parameter.name}}: {{parameter.abstractType}}) {
+		self.{{parameter.name}} = {{parameter.name}}
+	}
+	{% endfor %}
+	{% endif %}
 }
 
 {% endfor %}
