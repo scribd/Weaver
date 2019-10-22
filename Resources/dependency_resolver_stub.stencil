@@ -22,10 +22,16 @@ final class {{dependencyContainer.targetType.name}}ResolverStub: {% if dependenc
 	{% endfor %}
 
 	{% for dependency in dependencyContainer.resolverDependencies %}
-    {% if not dependency.parameters %}
     var {{dependency.name}}Double = {{dependency.abstractType}}Double()
+    {% if not dependency.parameters %}
     var {{dependency.name}}: {{dependency.abstractType}} {
     	return {{dependency.name}}Double
+	}
+	{% else %}
+	private(set) var {{dependency.name}}Invocations = [({% for parameter in dependency.parameters %}{{parameter.name}}: {{parameter.abstractType}}{% if not forloop.last %}, {% endif %}{% endfor %})]
+	func {{dependency.name}}({% call ParametersDecl dependency.parameters %}) -> {{dependency.abstractType}} {
+		{{dependency.name}}Invocations.append(({% for parameter in dependency.parameters %}{{parameter.name}}{% if not forloop.last %}, {% endif %}{% endfor %}))
+		return {{dependency.name}}Double
 	}
     {% endif %}
 	{% endfor %}
