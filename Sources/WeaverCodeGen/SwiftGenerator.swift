@@ -40,11 +40,11 @@ public final class SwiftGenerator {
     }
     
     public func generate() throws -> String? {
-        
+
         guard dependencyGraph.dependencyContainersByFile.orderedKeys.isEmpty == false else {
             return nil
         }
-        
+
         let files = dependencyGraph.dependencyContainersByFile.orderedKeys.lazy.map {
             MetaWeaverFile(fileName: $0,
                            dependencyGraph: self.dependencyGraph,
@@ -464,6 +464,43 @@ private struct MetaDependencyContainer {
     }
 }
 
+private struct MetaDetailedResolvers {
+    
+    private let dependencyGraph: DependencyGraph
+    
+    func meta() throws -> [FileBodyMember] {
+        
+        let dependencies = dependencyGraph.dependencies
+            .reversed() // Set highest priority last
+            .reduce(into: [:]) { $0[$1.abstractType.name] = $1 }
+            .values.sorted { $0.abstractType.name < $1.abstractType.name }
+        
+        return try [
+            Comment.mark("Detailed Resolvers"),
+        ] + dependencies.flatMap { dependency -> [FileBodyMember] in
+            
+            let dependencyContainer = try dependencyGraph.dependencyContainer(for: dependency)
+            let resolver: TypeBodyMember
+            if dependency.configuration.customBuilder != nil || dependencyContainer.parameters.isEmpty {
+                resolver = ProtocolProperty(name: dependency.dependencyName, type: dependency.abstractType.typeID)
+            } else {
+                resolver = ProtocolFunction(name: dependency.dependencyName)
+                    .with(parameters: dependencyContainer.parameters.orderedValues.map { $0.functionParameter() })
+                    .with(resultType: dependency.abstractType.typeID)
+            }
+            
+            return [
+                EmptyLine(),
+                Type(identifier: dependency.resolverTypeID)
+                    .with(objc: dependency.configuration.doesSupportObjc)
+                    .with(kind: .protocol)
+                    .adding(inheritedType: TypeIdentifier(name: "AnyObject"))
+                    .adding(member: resolver)
+            ]
+        }
+    }
+}
+
 // MARK: - Utils
 
 private extension DependencyGraph {
@@ -604,5 +641,9 @@ private extension Dependency {
         return variable.reference | (dependencyContainer.parameters.isEmpty ? .none : .call(Tuple()
             .adding(parameters: dependencyContainer.parameters.orderedValues.map { $0.tupleParameter })
         ))
+    }
+    
+    var resolverTypeID: TypeIdentifier {
+        return TypeIdentifier(name: "\(dependencyName)Resolver")
     }
 }
