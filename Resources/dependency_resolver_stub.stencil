@@ -15,7 +15,7 @@ import {{moduleName}}
 
 // MARK: - {{dependencyContainer.targetType.name}}
 
-final class {{dependencyContainer.targetType.name}}ResolverStub: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver {
+class {{dependencyContainer.targetType.name}}ResolverStub: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver {
 	
 	{% for parameter in dependencyContainer.parameters %}
 	var {{parameter.name}}: {{parameter.abstractType}}
