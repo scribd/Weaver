@@ -231,7 +231,7 @@ private struct MetaDependencyContainer {
             return ProtocolProperty(name: dependency.dependencyName, type: dependency.abstractType.typeID)
         } else {
             return ProtocolFunction(name: dependency.dependencyName)
-                .with(parameters: dependencyContainer.parameters.orderedValues.map { $0.functionParameter })
+                .with(parameters: dependencyContainer.parameters.orderedValues.map { $0.functionParameter(self.dependencyContainer) })
                 .with(resultType: dependency.abstractType.typeID)
         }
     }
@@ -284,9 +284,7 @@ private struct MetaDependencyContainer {
         if dependencyContainer.parameters.isEmpty == false {
             return Function(kind: .named(registration.dependencyName))
                 .with(resultType: registration.abstractType.typeID)
-                .with(parameters: dependencyContainer.parameters.orderedValues.map { parameter in
-                    FunctionParameter(name: parameter.dependencyName, type: parameter.abstractType.typeID)
-                })
+                .with(parameters: dependencyContainer.parameters.orderedValues.map { $0.functionParameter(self.dependencyContainer) })
                 .adding(members: try dependencyResolverImplementationBody(for: registration))
         } else {
             return ComputedProperty(variable: Variable(name: registration.dependencyName)
@@ -370,7 +368,7 @@ private struct MetaDependencyContainer {
                                                 name: "dependencies",
                                                 type: try targetType().inputDependencyResolverTypeID))
         }
-        parameters += dependencyContainer.parameters.orderedValues.map { $0.functionParameter }
+        parameters += dependencyContainer.parameters.orderedValues.map { $0.functionParameter() }
         
         return Function(kind: .`init`)
             .with(override: dependencyContainer.doesSupportObjc && parameters.isEmpty)
@@ -421,7 +419,7 @@ private struct MetaDependencyContainer {
             })
             .adding(member: EmptyLine())
             .adding(member: Function(kind: .`init`)
-                .adding(parameters: dependencyContainer.allReferences.map { $0.functionParameter })
+                .adding(parameters: dependencyContainer.allReferences.map { $0.functionParameter(dependencyContainer) })
                 .adding(members: dependencyContainer.allReferences.map { reference in
                     Assignment(
                         variable: .named(.`self`) + reference.variable.reference,
@@ -449,8 +447,8 @@ private struct MetaDependencyContainer {
             .with(accessLevel: .public)
             .adding(member: EmptyLine())
             .adding(member: Function(kind: .`init`(convenience: true, optional: false))
-                .adding(parameters: dependencyContainer.allReferences.map { $0.functionParameter })
-                .adding(parameters: dependencyContainer.parameters.orderedValues.map { $0.functionParameter })
+                .adding(parameters: dependencyContainer.allReferences.map { $0.functionParameter(dependencyContainer) })
+                .adding(parameters: dependencyContainer.parameters.orderedValues.map { $0.functionParameter(dependencyContainer) })
                 .adding(member: shimAssignment)
                 .adding(member: Assignment(
                     variable: dependenciesVariable,
@@ -593,8 +591,9 @@ private extension Dependency {
         return TupleParameter(name: dependencyName, value: Reference.named(dependencyName))
     }
     
-    var functionParameter: FunctionParameter {
-        return FunctionParameter(name: dependencyName, type: abstractType.typeID)
+    func functionParameter(_ context: DependencyContainer? = nil) -> FunctionParameter {
+        let type = context?.parameters[dependencyName]?.abstractType ?? abstractType
+        return FunctionParameter(name: dependencyName, type: type.typeID)
     }
     
     var variable: Variable {
