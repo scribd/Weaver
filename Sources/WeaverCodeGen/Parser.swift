@@ -167,7 +167,8 @@ private extension Parser {
         case .dependency(let name):
             let _dependencyKind: ConfigurationAttributeDependencyKind? = referenceNames.contains(name) ?
                 .reference : registrationNames.contains(name) ?
-                    .registration : nil
+                .registration : nil
+            
             let error = ParserError.unknownDependency(printableDependency(line: configurationAnnotation.line, name: name))
             if let dependencyKind = _dependencyKind {
                 if !ConfigurationAnnotation.validate(configurationAttribute: configurationAnnotation.value.attribute,

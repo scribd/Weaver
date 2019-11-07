@@ -160,7 +160,7 @@ private extension ResolvableDependency {
         }
         buildCache.insert(buildCacheIndex)
         
-        guard !isReference && configuration.customBuilder == nil else {
+        guard isReference == false && configuration.customBuilder == nil else {
             return
         }
         
@@ -182,6 +182,12 @@ private extension DependencyContainer {
                            history: [InspectorAnalysisHistoryRecord]) throws {
 
         if visitedDependencyContainers.contains(self) {
+
+            let sourceDependencyIndex = DependencyIndex(name: sourceDependency.dependencyName,
+                                                        type: sourceDependency.target.type)
+            let isSourceDependencySelfAssigned = registrations[sourceDependencyIndex]?.isSelfAssigned ?? false
+            guard isSourceDependencySelfAssigned == false else { return }
+            
             throw InspectorError.invalidDependencyGraph(sourceDependency.printableDependency,
                                               underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
         }

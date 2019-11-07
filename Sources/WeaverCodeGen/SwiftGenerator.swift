@@ -139,10 +139,13 @@ private extension SwiftGenerator {
     
     func renderDetailedResolversTemplate(with dependencyGraph: DependencyGraph, withHeader header: Bool) throws -> String {
         let dependencies = dependencyGraph.dependencies
+            .lazy
+            .filter { $0.isSelfAssigned == false }
             .map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
             .reversed() // Set highest priority last
             .reduce(into: [:]) { $0[$1.abstractType.name] = $1 }
-            .values.sorted(by: { $0.abstractType.name < $1.abstractType.name })
+            .values
+            .sorted(by: { $0.abstractType.name < $1.abstractType.name })
 
         let context: [String: Any] = ["dependencies": dependencies,
                                       "header": header,
@@ -168,6 +171,7 @@ private struct RegistrationViewModel {
     
     let name: String
     let type: Type
+    let isSelfAssigned: Bool
     let abstractType: Type
     let scope: String
     let customBuilder: String?
@@ -175,34 +179,67 @@ private struct RegistrationViewModel {
     let hasReferences: Bool
     let hasBuilder: Bool
     let hasDependencyContainer: Bool
+    let hasSelfAssignment: Bool
     let isTransient: Bool
     let isWeak: Bool
     let doesSupportObjc: Bool
     
     init(_ dependency: Dependency, dependencyGraph: DependencyGraph) {
         name = dependency.dependencyName
-        type = dependency.type
-        abstractType = dependency.abstractType
+        isSelfAssigned = dependency.isSelfAssigned
+        let type = dependency.resolveType(dependencyGraph)
+        self.type = type
+        abstractType = dependency.resolveAbstractType(dependencyGraph)
         scope = dependency.configuration.scope.rawValue
         customBuilder = dependency.configuration.customBuilder
         doesSupportObjc = dependency.configuration.doesSupportObjc
         
-        if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {
+        if let dependencyContainer = dependencyGraph.dependencyContainersByType[type.index] {
             parameters = dependencyContainer.parameters.orderedValues.map {
                 DependencyViewModel($0, context: dependency.source, dependencyGraph: dependencyGraph)
             }
-            hasReferences = !dependencyContainer.allReferences.isEmpty
+            hasReferences = dependencyContainer.hasReferences
             hasBuilder = dependencyContainer.hasBuilder
             hasDependencyContainer = dependencyContainer.hasDependencies
+            hasSelfAssignment = dependencyContainer.registrations.orderedValues.contains { $0.isSelfAssigned }
         } else {
             parameters = []
             hasReferences = false
             hasBuilder = false
             hasDependencyContainer = false
+            hasSelfAssignment = false
         }
 
         isTransient = dependency.scope == .transient
         isWeak = dependency.scope == .weak
+    }
+}
+
+private extension Dependency {
+    
+    func resolveType(_ dependencyGraph: DependencyGraph) -> Type {
+        if isSelfAssigned, let targetType = dependencyGraph.dependencyContainersByName[dependencyName]?.type {
+            var type = self.type
+            type.name = targetType.name
+            return type
+        } else {
+            return type
+        }
+    }
+    
+    func resolveAbstractType(_ dependencyGraph: DependencyGraph) -> Type {
+        if isSelfAssigned, let targetType = dependencyGraph.dependencyContainersByName[dependencyName]?.type {
+            var type: Type
+            if abstractType != self.type {
+                type = abstractType
+            } else {
+                type = self.type
+                type.name = targetType.name
+            }
+            return type
+        } else {
+            return abstractType
+        }
     }
 }
 
@@ -213,15 +250,18 @@ private struct DependencyViewModel {
     let abstractType: Type
     let parameters: [DependencyViewModel]
     let doesSupportObjc: Bool
+    let isSelfAssigned: Bool
 
     init(_ dependency: Dependency, context: DependencyContainer? = nil, dependencyGraph: DependencyGraph) {
         
         name = dependency.dependencyName
-        type = context?.parameters[dependency.dependencyName]?.type ?? dependency.type
-        abstractType = context?.parameters[dependency.dependencyName]?.abstractType ?? dependency.abstractType
+        let type = context?.parameters[dependency.dependencyName]?.type ?? dependency.resolveType(dependencyGraph)
+        self.type = type
+        abstractType = context?.parameters[dependency.dependencyName]?.abstractType ?? dependency.resolveAbstractType(dependencyGraph)
         doesSupportObjc = dependency.configuration.doesSupportObjc
+        isSelfAssigned = dependency.isSelfAssigned
         
-        let parameters = dependencyGraph.dependencyContainersByType[dependency.type.index]?.parameters ?? OrderedDictionary()
+        let parameters = dependencyGraph.dependencyContainersByType[type.index]?.parameters ?? OrderedDictionary()
         if parameters.orderedValues.isEmpty, let types = dependencyGraph.typesByName[name] {
             var _parameters = [DependencyViewModel]()
             for type in types {
@@ -242,6 +282,7 @@ private struct DependencyViewModel {
         abstractType = registration.abstractType
         parameters = registration.parameters
         doesSupportObjc = registration.doesSupportObjc
+        isSelfAssigned = registration.isSelfAssigned
     }
 }
 
@@ -299,7 +340,9 @@ private extension String {
 private extension DependencyContainer {
     
     var hasDependencies: Bool {
-        return !registrations.orderedValues.isEmpty || !references.orderedValues.isEmpty || !parameters.orderedValues.isEmpty
+        return registrations.orderedValues.filter { $0.isSelfAssigned == false }.isEmpty == false ||
+            references.orderedValues.isEmpty == false ||
+            parameters.orderedValues.isEmpty == false
     }
     
     var allReferences: [ResolvableDependency] {
@@ -321,7 +364,7 @@ private extension DependencyContainer {
         
         let registrationNames = Set(registrations.orderedValues.map { $0.dependencyName })
         return referencesByName.orderedValues.filter {
-            !registrationNames.contains($0.dependencyName)
+            registrationNames.contains($0.dependencyName) == false
         }
     }
     
@@ -329,8 +372,12 @@ private extension DependencyContainer {
         return sources.isEmpty
     }
     
+    var hasReferences: Bool {
+        return allReferences.filter { $0.isSelfAssigned == false }.isEmpty == false
+    }
+    
     var hasBuilder: Bool {
-        return !parameters.orderedValues.isEmpty || !allReferences.isEmpty
+        return parameters.orderedValues.isEmpty == false || hasReferences
     }
     
     var isPublic: Bool {

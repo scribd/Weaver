@@ -195,6 +195,14 @@ extension Dependency {
     var isReference: Bool {
         return self is Reference
     }
+    
+    var isRegistration: Bool {
+        return self is Registration
+    }
+    
+    var isSelfAssigned: Bool {
+        return isRegistration && type.name == "Self"
+    }
 }
 
 extension Dependency where Self: Registration {

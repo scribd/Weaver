@@ -11,12 +11,12 @@ import Foundation
 public struct Type: Hashable, Equatable {
 
     /// Type name
-    public let name: String
+    public var name: String
     
     /// Names of the generic parameters
     public let genericNames: [String]
     
-    public let isOptional: Bool
+    public var isOptional: Bool
     
     public let generics: String
     
