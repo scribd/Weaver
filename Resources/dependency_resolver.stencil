@@ -39,6 +39,10 @@ typealias {{dependencyContainer.targetType.name}}DependencyResolver = {% if depe
 {% endif %}{# not dependencyContainer.targetType.generics #}
 
 final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependencyContainer.targetType.generics}}{% if not dependencyContainer.targetType.generics %}: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver{% endif %} {
+
+    {% if dependencyContainer.allowsCycles %}
+    fileprivate weak var _self: {{dependencyContainer.targetType}}?
+    {% endif %}
     
     {% call AttributesDecl dependencyContainer.parameters %}
 
@@ -46,15 +50,6 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
 
     {% for registration in dependencyContainer.registrations %}
 
-    {% if registration.isSelfAssigned %}
-    fileprivate weak var _{{registration.name}}: {{registration.abstractType}}?
-    var {{registration.name}}: {{registration.abstractType}} {
-        guard let value = _{{registration.name}} else {
-            fatalError("'_{{registration.name}}' was released too early.")
-        }
-        return value
-    }
-    {% else %}
     {% if not registration.isTransient %}
     private {% if registration.isWeak %}weak {% endif %}var _{{registration.name}}: {{registration.abstractType}}?
     {% endif %}
@@ -77,8 +72,8 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
         let dependencies = {{registration.type.name}}DependencyContainer{{registration.type.generics}}()
         {% endif %}
         let value = {{registration.type.name}}{{registration.type.generics}}({% if regitration.hasBuilder or registration.hasDependencyContainer %}injecting: dependencies{% endif %})
-        {% if registration.hasSelfAssignment %}
-        dependencies._{{registration.name}} = value
+        {% if registration.allowsCycles %}
+        dependencies._self = value
         {% endif %}
 
         {% else %}{# not registration.customBuilder #}
@@ -91,7 +86,6 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
 
         return value
     }
-    {% endif %}
     {% endfor %}{# dependencyContainer.registrations #}
 
     {% if dependencyContainer.doesSupportObjc and not dependencyContainer.references and not dependencyContainer.parameters %}override {% endif %}init({% if dependencyContainer.references %}injecting dependencies: {{dependencyContainer.targetType.name}}InputDependencyResolver{% if dependencyContainer.parameters %}, {% endif %}{% endif %}{% call ParametersDecl dependencyContainer.parameters %}) {
@@ -99,10 +93,12 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
         {% call ParameterAssign dependencyContainer.parameters %}
 
         {% for reference in dependencyContainer.references %}
+        {% if not reference.isSelfReference %}
         {% if reference.parameters %}
         {{reference.name}} = dependencies.{{reference.nane}}({% call ParametersPassIn dependency.parameters %})
         {% else %}
         {{reference.name}} = dependencies.{{reference.name}}
+        {% endif %}
         {% endif %}
         {% endfor %}
 
@@ -110,7 +106,7 @@ final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependen
 
         {% for registration in dependencyContainer.registrations %}
 
-        {% if not registration.isTransient and not registration.isWeak and not registration.isSelfAssigned %}
+        {% if not registration.isTransient and not registration.isWeak %}
         {% if registration.parameters %}
         _ = {{registration.name}}({% call ParametersPassIn registration.parameters %})
         {% else %}

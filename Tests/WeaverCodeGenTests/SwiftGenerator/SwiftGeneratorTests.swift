@@ -238,7 +238,8 @@ private extension SwiftGeneratorTests {
                                            mainTemplatePath: mainTemplatePath,
                                            detailedResolversTemplatePath: detailedResolversTemplatePath,
                                            testsTemplatePath: testsTemplatePath,
-                                           macrosTemplatePath: macrosTemplatePath)
+                                           macrosTemplatePath: macrosTemplatePath,
+                                           testableImports: nil)
 
         guard let actual: String = try generator.generateMain() else {
             return nil

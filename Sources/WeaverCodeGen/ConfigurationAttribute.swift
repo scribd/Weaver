@@ -14,6 +14,8 @@ enum ConfigurationAttributeName: String {
     case customBuilder = "builder"
     case scope
     case doesSupportObjc = "objc"
+    case allowsCycles
+    case onFatalError
 }
 
 enum ConfigurationAttribute: Equatable, Hashable {
@@ -21,6 +23,8 @@ enum ConfigurationAttribute: Equatable, Hashable {
     case customBuilder(value: String)
     case scope(value: Scope)
     case doesSupportObjc(value: Bool)
+    case allowsCycles(value: Bool)
+    case onFatalError(value: String)
 }
 
 // MARK: - Target
@@ -51,6 +55,10 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return "Config Attr - scope = \(value)"
         case .doesSupportObjc(let value):
             return "Config Attr - objc = \(value)"
+        case .allowsCycles(let value):
+            return "Config Attr - allowsCycles = \(value)"
+        case .onFatalError(let value):
+            return "Config Attr - fatalErrorFunction = \(value)"
         }
     }
     
@@ -64,6 +72,10 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return .scope
         case .doesSupportObjc:
             return .doesSupportObjc
+        case .allowsCycles:
+            return .allowsCycles
+        case .onFatalError:
+            return .onFatalError
         }
     }
 }
@@ -87,6 +99,8 @@ extension ConfigurationAnnotation {
     static func validate(configurationAttribute: ConfigurationAttribute, with target: ConfigurationAttributeTarget) -> Bool {
         switch (configurationAttribute, target) {
         case (.isIsolated, .`self`),
+             (.allowsCycles, .`self`),
+             (.onFatalError, .`self`),
              (.customBuilder, .dependency),
              (.scope, .dependency),
              (.doesSupportObjc, .dependency):
@@ -94,8 +108,10 @@ extension ConfigurationAnnotation {
             
         case (.isIsolated, _),
              (.customBuilder, _),
+             (.onFatalError, _),
              (.scope, _),
-             (.doesSupportObjc, _):
+             (.doesSupportObjc, _),
+             (.allowsCycles, _):
             return false
         }
     }
@@ -109,10 +125,12 @@ extension ConfigurationAnnotation {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
              (.customBuilder, _),
-             (.doesSupportObjc, _):
+             (.doesSupportObjc, _),
+             (.onFatalError, _):
             return true
         case (.isIsolated, _),
-             (.scope, _):
+             (.scope, _),
+             (.allowsCycles, _):
             return false
         }
     }
@@ -126,16 +144,16 @@ extension ConfigurationAttribute {
         switch ConfigurationAttributeName(rawValue: name) {
         case .isIsolated?:
             self = .isIsolated(value: try ConfigurationAttribute.boolValue(from: valueString))
-            
         case .customBuilder?:
             self = .customBuilder(value: valueString)
-            
         case .scope?:
             self = .scope(value: try ConfigurationAttribute.scopeValue(from: valueString))
-
         case .doesSupportObjc?:
             self = .doesSupportObjc(value: try ConfigurationAttribute.boolValue(from: valueString))
-
+        case .allowsCycles?:
+            self = .allowsCycles(value: try ConfigurationAttribute.boolValue(from: valueString))
+        case .onFatalError?:
+            self = .onFatalError(value: valueString)
         case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
@@ -176,11 +194,13 @@ extension ConfigurationAttribute {
     var boolValue: Bool? {
         switch self {
         case .isIsolated(let value),
-             .doesSupportObjc(let value):
+             .doesSupportObjc(let value),
+             .allowsCycles(let value):
             return value
 
         case .scope,
-             .customBuilder:
+             .customBuilder,
+             .onFatalError:
             return nil
         }
     }
@@ -192,19 +212,23 @@ extension ConfigurationAttribute {
             
         case .customBuilder,
              .isIsolated,
-             .doesSupportObjc:
+             .doesSupportObjc,
+             .allowsCycles,
+             .onFatalError:
             return nil
         }
     }
     
     var stringValue: String? {
         switch self {
-        case .customBuilder(let value):
+        case .customBuilder(let value),
+             .onFatalError(let value):
             return value
             
         case .scope,
              .isIsolated,
-             .doesSupportObjc:
+             .doesSupportObjc,
+             .allowsCycles:
             return nil
         }
     }

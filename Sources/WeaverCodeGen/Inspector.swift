@@ -182,12 +182,7 @@ private extension DependencyContainer {
                            history: [InspectorAnalysisHistoryRecord]) throws {
 
         if visitedDependencyContainers.contains(self) {
-
-            let sourceDependencyIndex = DependencyIndex(name: sourceDependency.dependencyName,
-                                                        type: sourceDependency.target.type)
-            let isSourceDependencySelfAssigned = registrations[sourceDependencyIndex]?.isSelfAssigned ?? false
-            guard isSourceDependencySelfAssigned == false else { return }
-            
+            guard configuration.allowsCycles == false else { return }
             throw InspectorError.invalidDependencyGraph(sourceDependency.printableDependency,
                                               underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
         }

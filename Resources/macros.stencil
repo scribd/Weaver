@@ -12,7 +12,20 @@
 
 {% macro AttributesDecl dependencies %}
 {% for dependency in dependencies %}
+	{% if dependency.isSelfReference %}
+	var {{dependency.name}}: {{dependency.abstractType}} {
+		guard let value = _self else {
+            {% if dependency.onFatalError %}
+            {{dependency.onFatalError}}()
+            {% else %}
+			fatalError("_self was released too early.")
+            {% endif %}
+		}
+		return value
+	}
+	{% else %}
     let {{dependency.name}}: {{dependency.abstractType}}
+    {% endif %}
 {% endfor %}
 {% endmacro %}
 

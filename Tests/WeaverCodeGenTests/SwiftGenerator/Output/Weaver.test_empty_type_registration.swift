@@ -24,7 +24,8 @@ final class ManagerTest1DependencyContainer: ManagerTest1DependencyResolver {
     private var _logger: LoggerTest1?
     var logger: LoggerTest1 {
         if let value = _logger { return value }
-        let value = LoggerTest1(injecting: LoggerTest1DependencyContainer())
+        let dependencies = LoggerTest1DependencyContainer()
+        let value = LoggerTest1(injecting: dependencies)
         _logger = value
         return value
     }

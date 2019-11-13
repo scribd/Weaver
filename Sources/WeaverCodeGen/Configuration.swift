@@ -56,8 +56,14 @@ struct DependencyContainerConfiguration: Configuration {
     
     let doesSupportObjc: Bool
     
+    let allowsCycles: Bool
+    
+    let onFatalError: String?
+    
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
         isIsolated = attributes?[.isIsolated]?.boolValue ?? false
         doesSupportObjc = attributes?[.doesSupportObjc]?.boolValue ?? false
+        allowsCycles = attributes?[.allowsCycles]?.boolValue ?? false
+        onFatalError = attributes?[.onFatalError]?.stringValue
     }
 }

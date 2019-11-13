@@ -140,7 +140,6 @@ private extension SwiftGenerator {
     func renderDetailedResolversTemplate(with dependencyGraph: DependencyGraph, withHeader header: Bool) throws -> String {
         let dependencies = dependencyGraph.dependencies
             .lazy
-            .filter { $0.isSelfAssigned == false }
             .map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
             .reversed() // Set highest priority last
             .reduce(into: [:]) { $0[$1.abstractType.name] = $1 }
@@ -171,7 +170,6 @@ private struct RegistrationViewModel {
     
     let name: String
     let type: Type
-    let isSelfAssigned: Bool
     let abstractType: Type
     let scope: String
     let customBuilder: String?
@@ -179,67 +177,40 @@ private struct RegistrationViewModel {
     let hasReferences: Bool
     let hasBuilder: Bool
     let hasDependencyContainer: Bool
-    let hasSelfAssignment: Bool
     let isTransient: Bool
     let isWeak: Bool
     let doesSupportObjc: Bool
-    
+    let allowsCycles: Bool
+    let onFatalError: String?
+
     init(_ dependency: Dependency, dependencyGraph: DependencyGraph) {
         name = dependency.dependencyName
-        isSelfAssigned = dependency.isSelfAssigned
-        let type = dependency.resolveType(dependencyGraph)
-        self.type = type
-        abstractType = dependency.resolveAbstractType(dependencyGraph)
+        type = dependency.type
+        abstractType = dependency.abstractType
         scope = dependency.configuration.scope.rawValue
         customBuilder = dependency.configuration.customBuilder
         doesSupportObjc = dependency.configuration.doesSupportObjc
         
-        if let dependencyContainer = dependencyGraph.dependencyContainersByType[type.index] {
+        if let dependencyContainer = dependencyGraph.dependencyContainersByType[dependency.type.index] {
             parameters = dependencyContainer.parameters.orderedValues.map {
                 DependencyViewModel($0, context: dependency.source, dependencyGraph: dependencyGraph)
             }
             hasReferences = dependencyContainer.hasReferences
             hasBuilder = dependencyContainer.hasBuilder
             hasDependencyContainer = dependencyContainer.hasDependencies
-            hasSelfAssignment = dependencyContainer.registrations.orderedValues.contains { $0.isSelfAssigned }
+            allowsCycles = dependencyContainer.configuration.allowsCycles
+            onFatalError = dependencyContainer.configuration.onFatalError
         } else {
             parameters = []
             hasReferences = false
             hasBuilder = false
             hasDependencyContainer = false
-            hasSelfAssignment = false
+            allowsCycles = false
+            onFatalError = nil
         }
 
         isTransient = dependency.scope == .transient
         isWeak = dependency.scope == .weak
-    }
-}
-
-private extension Dependency {
-    
-    func resolveType(_ dependencyGraph: DependencyGraph) -> Type {
-        if isSelfAssigned, let targetType = dependencyGraph.dependencyContainersByName[dependencyName]?.type {
-            var type = self.type
-            type.name = targetType.name
-            return type
-        } else {
-            return type
-        }
-    }
-    
-    func resolveAbstractType(_ dependencyGraph: DependencyGraph) -> Type {
-        if isSelfAssigned, let targetType = dependencyGraph.dependencyContainersByName[dependencyName]?.type {
-            var type: Type
-            if abstractType != self.type {
-                type = abstractType
-            } else {
-                type = self.type
-                type.name = targetType.name
-            }
-            return type
-        } else {
-            return abstractType
-        }
     }
 }
 
@@ -250,18 +221,31 @@ private struct DependencyViewModel {
     let abstractType: Type
     let parameters: [DependencyViewModel]
     let doesSupportObjc: Bool
-    let isSelfAssigned: Bool
+    let allowsCycles: Bool
+    let isSelfReference: Bool
+    let onFatalError: String?
 
     init(_ dependency: Dependency, context: DependencyContainer? = nil, dependencyGraph: DependencyGraph) {
         
         name = dependency.dependencyName
-        let type = context?.parameters[dependency.dependencyName]?.type ?? dependency.resolveType(dependencyGraph)
-        self.type = type
-        abstractType = context?.parameters[dependency.dependencyName]?.abstractType ?? dependency.resolveAbstractType(dependencyGraph)
+        type = context?.parameters[dependency.dependencyName]?.type ?? dependency.type
+        abstractType = context?.parameters[dependency.dependencyName]?.abstractType ?? dependency.abstractType
         doesSupportObjc = dependency.configuration.doesSupportObjc
-        isSelfAssigned = dependency.isSelfAssigned
         
-        let parameters = dependencyGraph.dependencyContainersByType[type.index]?.parameters ?? OrderedDictionary()
+        let dependencyContainer = dependencyGraph.dependencyContainersByType[type.index]
+        onFatalError = dependencyContainer?.configuration.onFatalError
+
+        let allowsCycles = dependencyContainer?.configuration.allowsCycles ?? false
+        self.allowsCycles = allowsCycles
+
+        if allowsCycles, let targetType = context?.type {
+            // target type being concrete, make sure to compare it to another concrete type.
+            isSelfReference = dependencyGraph.dependenciesByAbstractTypesByType[dependency.type.index]?[dependency.type.index]?.type == targetType
+        } else {
+            isSelfReference = false
+        }
+
+        let parameters = dependencyContainer?.parameters ?? OrderedDictionary()
         if parameters.orderedValues.isEmpty, let types = dependencyGraph.typesByName[name] {
             var _parameters = [DependencyViewModel]()
             for type in types {
@@ -282,7 +266,9 @@ private struct DependencyViewModel {
         abstractType = registration.abstractType
         parameters = registration.parameters
         doesSupportObjc = registration.doesSupportObjc
-        isSelfAssigned = registration.isSelfAssigned
+        allowsCycles = registration.allowsCycles
+        isSelfReference = false
+        onFatalError = registration.onFatalError
     }
 }
 
@@ -298,6 +284,7 @@ private struct DependencyContainerViewModel {
     let isPublic: Bool
     let doesSupportObjc: Bool
     let injectableDependencies: [DependencyContainerViewModel]?
+    let allowsCycles: Bool
 
     let resolverDependencies: [DependencyViewModel]
     
@@ -314,7 +301,7 @@ private struct DependencyContainerViewModel {
         doesSupportObjc = dependencyContainer.doesSupportObjc
         injectableDependencies = dependencyContainer.injectableDependencies(dependencyGraph: dependencyGraph, depth: depth)
 
-        references = dependencyContainer.allReferences.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
+        references = dependencyContainer.allReferences.map { DependencyViewModel($0, context: dependencyContainer, dependencyGraph: dependencyGraph) }
         registrations = dependencyContainer.registrations.orderedValues.map { RegistrationViewModel($0, dependencyGraph: dependencyGraph) }
 
         let directReferences = dependencyContainer.references.orderedValues.map { DependencyViewModel($0, dependencyGraph: dependencyGraph) }
@@ -323,6 +310,7 @@ private struct DependencyContainerViewModel {
         self.parameters = parameters
         
         resolverDependencies = directReferences + registrations.map { DependencyViewModel($0) }
+        allowsCycles = dependencyContainer.configuration.allowsCycles
     }
 }
 
@@ -340,7 +328,7 @@ private extension String {
 private extension DependencyContainer {
     
     var hasDependencies: Bool {
-        return registrations.orderedValues.filter { $0.isSelfAssigned == false }.isEmpty == false ||
+        return registrations.orderedValues.isEmpty == false ||
             references.orderedValues.isEmpty == false ||
             parameters.orderedValues.isEmpty == false
     }
@@ -373,11 +361,15 @@ private extension DependencyContainer {
     }
     
     var hasReferences: Bool {
-        return allReferences.filter { $0.isSelfAssigned == false }.isEmpty == false
+        return allReferences.isEmpty == false
+    }
+    
+    var hasParameters: Bool {
+        return parameters.orderedValues.isEmpty == false
     }
     
     var hasBuilder: Bool {
-        return parameters.orderedValues.isEmpty == false || hasReferences
+        return hasParameters || hasReferences
     }
     
     var isPublic: Bool {

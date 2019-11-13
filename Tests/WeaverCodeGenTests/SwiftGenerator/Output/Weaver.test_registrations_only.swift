@@ -24,7 +24,8 @@ final class FuuTest12DependencyContainer: FuuTest12DependencyResolver {
     private var _foo: FooTest12?
     var foo: FooTest12 {
         if let value = _foo { return value }
-        let value = FooTest12(injecting: FooTest12DependencyContainer())
+        let dependencies = FooTest12DependencyContainer()
+        let value = FooTest12(injecting: dependencies)
         _foo = value
         return value
     }

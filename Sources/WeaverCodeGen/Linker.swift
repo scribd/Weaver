@@ -199,10 +199,6 @@ extension Dependency {
     var isRegistration: Bool {
         return self is Registration
     }
-    
-    var isSelfAssigned: Bool {
-        return isRegistration && type.name == "Self"
-    }
 }
 
 extension Dependency where Self: Registration {
@@ -434,6 +430,12 @@ public final class DependencyGraph {
             return true
         }
     }()
+    
+    lazy var dependenciesByAbstractTypesByType: [TypeIndex: [TypeIndex: Dependency]] = dependencies.reduce(into: [:]) {
+        var dependenciesByAbstractType = $0[$1.type.index] ?? [:]
+        dependenciesByAbstractType[$1.abstractType.index] = $1
+        $0[$1.type.index] = dependenciesByAbstractType
+    }
     
     /// Types grouped by type name.
     lazy var typesByName: [String: [Type]] = {
