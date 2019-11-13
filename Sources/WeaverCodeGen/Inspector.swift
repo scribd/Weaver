@@ -172,7 +172,7 @@ private extension DependencyContainer {
                            history: [InspectorAnalysisHistoryRecord]) throws {
 
         if visitedDependencyContainers.contains(self) {
-            guard configuration.allowsCycles == false else { return }
+            guard visitedDependencyContainers.contains(where: { $0.configuration.allowsCycles }) == false else { return }
             throw InspectorError.invalidDependencyGraph(sourceDependency.printableDependency,
                                               underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
         }
