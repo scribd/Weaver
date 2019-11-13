@@ -41,7 +41,7 @@ typealias {{dependencyContainer.targetType.name}}DependencyResolver = {% if depe
 final class {{dependencyContainer.targetType.name}}DependencyContainer{{dependencyContainer.targetType.generics}}{% if not dependencyContainer.targetType.generics %}: {% if dependencyContainer.doesSupportObjc %}NSObject, {% endif %}{{dependencyContainer.targetType.name}}DependencyResolver{% endif %} {
 
     {% if dependencyContainer.allowsCycles %}
-    fileprivate weak var _self: {{dependencyContainer.targetType}}?
+    weak var _self: {{dependencyContainer.targetType}}?
     {% endif %}
     
     {% call AttributesDecl dependencyContainer.parameters %}
