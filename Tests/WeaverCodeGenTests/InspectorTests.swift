@@ -213,47 +213,6 @@ final class ViewController {
         }
     }
     
-    func test_inspector_should_build_an_invalid_dependency_graph_because_of_a_custom_builder_not_shared_with_children() {
-        let file = File(contents: """
-final class AppDelegate {
-    // weaver: appDelegate <- AppDelegateProtocol
-    // weaver: appDelegate.builder = AppDelegate.make
-    
-    // weaver: viewController = ViewController
-    // weaver: viewController.scope = .container
-    // weaver: viewController.builder = ViewController.make
-}
-
-final class ViewController {
-    // weaver: appDelegate <- AppDelegateProtocol
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            let syntaxTree = try parser.parse()
-            let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
-            
-            try inspector.validate()
-            XCTFail("Expected error.")
-        } catch let error as InspectorError {
-            let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [
-                InspectorAnalysisHistoryRecord.foundUnaccessibleDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                               name: "appDelegate",
-                                                                                               type: nil))
-                ])
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 10, file: "test.swift"),
-                                                                                            name: "appDelegate",
-                                                                                            type: nil),
-                                                                        underlyingError: underlyingError))
-        } catch {
-            XCTFail("Unexpected error: \(error).")
-        }
-    }
-    
     func test_inspector_should_build_a_valid_dependency_graph_with_two_references_of_the_same_type() {
         let file = File(contents: """
 final class AppDelegate {

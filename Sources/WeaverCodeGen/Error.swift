@@ -45,7 +45,6 @@ enum InspectorAnalysisError: Error, Equatable {
 }
 
 enum InspectorAnalysisHistoryRecord: Equatable {
-    case foundUnaccessibleDependency(PrintableDependency)
     case dependencyNotFound(PrintableDependency)
     case triedToBuildType(PrintableResolver, stepCount: Int)
     case triedToResolveDependencyInType(PrintableDependency, stepCount: Int)
@@ -203,8 +202,6 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
         switch self {
         case .dependencyNotFound(let dependency):
             return dependency.xcodeLogString(.warning, "Could not find the dependency '\(dependency.name)' in '\(dependency.type?.description ?? "_")'. You may want to register it here to solve this issue")
-        case .foundUnaccessibleDependency(let dependency):
-            return dependency.xcodeLogString(.warning, "Found unaccessible dependency '\(dependency.name)' in '\(dependency.type?.description ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
         case .triedToBuildType(let resolver, let stepCount):
             return resolver.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(resolver.type?.description ?? "_")'")
         case .triedToResolveDependencyInType(let dependency, let stepCount):
@@ -220,8 +217,7 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
     var unresolvableDependencyDetection: [InspectorAnalysisHistoryRecord] {
         return filter {
             switch $0 {
-            case .dependencyNotFound,
-                 .foundUnaccessibleDependency:
+            case .dependencyNotFound:
                 return true
             case .triedToResolveDependencyInType,
                  .triedToBuildType:
@@ -240,7 +236,6 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
             case .triedToBuildType:
                 return true
             case .dependencyNotFound,
-                 .foundUnaccessibleDependency,
                  .triedToResolveDependencyInType:
                 return false
             }
@@ -253,7 +248,6 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
             case .triedToResolveDependencyInType:
                 return true
             case .dependencyNotFound,
-                 .foundUnaccessibleDependency,
                  .triedToBuildType:
                 return false
             }

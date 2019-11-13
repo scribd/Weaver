@@ -11,32 +11,14 @@ import Foundation
 ///
 /// Possible cases:
 /// - transient: the `DependencyContainer` always creates a new instance when the type is resolved.
-/// - graph: a new instance is created when resolved the first time and then lives for the time the `DependencyContainer` object lives.
+/// - container: builds an instance at initialization of its container and keeps it for the lifetime its container.
 /// - weak: a new instance is created when resolved the first time and then lives for the time its strong references are living and shared with children.
-/// - container: like graph, but shared with children.
-enum Scope: String {
+enum Scope: String, CaseIterable, Encodable {
     case transient
-    case graph
-    case weak
     case container
+    case weak
     
     static var `default`: Scope {
-        return .graph
-    }
-}
-
-// MARK: Rules
-
-extension Scope: CaseIterable, Encodable {
-    
-    var allowsAccessFromChildren: Bool {
-        switch self {
-        case .weak,
-             .container,
-             .transient:
-            return true
-        case .graph:
-            return false
-        }
+        return .container
     }
 }

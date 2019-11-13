@@ -118,20 +118,7 @@ final class ErrorTests: XCTestCase {
     }
     
     // MARK: - InspectorError
-    
-    func test_inspectorError_invalidAST_description() {
         
-        let unexpectedExpr = Expr.configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .scope(value: .graph), target: .dependency(name: "fake_dependency")),
-                                                                   offset: 42,
-                                                                   length: 24,
-                                                                   line: 1))
-        errorDescription = InspectorError.invalidAST(FileLocation(line: nil, file: "fake_file.swift"), unexpectedExpr: unexpectedExpr).description
-        
-        expectedDescription = "fake_file.swift:1: error: Invalid AST because of token: Configuration - fake_dependency.Config Attr - scope = graph - 42[24] - at line: 1."
-        
-        XCTAssertEqual(errorDescription, expectedDescription)
-    }
-    
     func test_inspectorError_invalidDependencyGraph_description() {
         
         errorDescription = InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
@@ -217,17 +204,6 @@ final class ErrorTests: XCTestCase {
                                                                                                  type: Type(name: "fake_type"))).description
         
         expectedDescription = "fake_file.swift:43: warning: Could not find the dependency 'fake_dependency' in 'fake_type'. You may want to register it here to solve this issue."
-        
-        XCTAssertEqual(errorDescription, expectedDescription)
-    }
-    
-    func test_inspectorAnalysisHistoryRecord_foundUnaccessibleDependency_description() {
-        
-        errorDescription = InspectorAnalysisHistoryRecord.foundUnaccessibleDependency(PrintableDependency(fileLocation: FileLocation(line: 42, file: "fake_file.swift"),
-                                                                                                          name: "fake_dependency",
-                                                                                                          type: Type(name: "fake_type"))).description
-        
-        expectedDescription = "fake_file.swift:43: warning: Found unaccessible dependency 'fake_dependency' in 'fake_type'. You may want to set its scope to '.container' or '.weak' to solve this issue."
         
         XCTAssertEqual(errorDescription, expectedDescription)
     }

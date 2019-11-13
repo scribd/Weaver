@@ -91,18 +91,12 @@ private extension DependencyContainer {
         visitedDependencyContainers.insert(self)
 
         history.append(.triedToResolveDependencyInType(printableDependency(name: index.name), stepCount: history.resolutionSteps.count))
-        
-        if let dependency = dependency(for: index) {
-            if dependency.isReference && accessLevel == .public {
-                return
-            }
-            if let scope = dependency.scope, (dependency.configuration.customBuilder != nil && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
-                return
-            }
-            history.append(.foundUnaccessibleDependency(dependency.printableDependency))
-        } else {
-            history.append(.dependencyNotFound(printableDependency(name: index.name)))
+
+        guard dependency(for: index) == nil else {
+            return
         }
+        
+        history.append(.dependencyNotFound(printableDependency(name: index.name)))
 
         if try checkIsolation(history: history) == false {
            return
@@ -161,10 +155,6 @@ private extension ResolvableDependency {
         buildCache.insert(buildCacheIndex)
         
         guard isReference == false && configuration.customBuilder == nil else {
-            return
-        }
-        
-        guard let scope = scope, scope.allowsAccessFromChildren else {
             return
         }
         
