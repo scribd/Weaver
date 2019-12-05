@@ -22,14 +22,14 @@ public indirect enum Expr: Equatable {
 
 struct ExprSequence: Sequence, IteratorProtocol {
 
-    private var stack: [[Expr]]
+    private var stack: [(exprs: [Expr], embeddingTypes: [ConcreteType], file: String?)]
 
     init(exprs: [Expr]) {
-        self.stack = [exprs]
+        self.stack = [(exprs, [], nil)]
     }
 
-    mutating func next() -> Expr? {
-        guard let exprs = stack.popLast() else {
+    mutating func next() -> (expr: Expr, embeddingTypes: [ConcreteType], file: String?)? {
+        guard let (exprs, embeddingTypes, file) = stack.popLast() else {
             return nil
         }
 
@@ -39,12 +39,14 @@ struct ExprSequence: Sequence, IteratorProtocol {
 
         var mutableExprs = exprs
         mutableExprs.removeFirst()
-        stack.append(mutableExprs)
+        stack.append((mutableExprs, embeddingTypes, file))
 
         switch expr {
-        case .file(let exprs, _, _),
-             .typeDeclaration(_, let exprs):
-            stack.append(exprs)
+        case .file(let exprs, let file, _):
+            stack.append((exprs, embeddingTypes, file))
+            
+        case .typeDeclaration(let token, let exprs):
+            stack.append((exprs, embeddingTypes + [token.value.type], file))
 
         case .referenceAnnotation,
              .registerAnnotation,
@@ -53,7 +55,7 @@ struct ExprSequence: Sequence, IteratorProtocol {
             break
         }
 
-        return expr
+        return (expr, embeddingTypes, file)
     }
 }
 
@@ -114,11 +116,13 @@ extension Expr {
             return nil
         }
     }
-}
-
-extension ExprSequence {
-
-    var referenceAnnotations: [TokenBox<ReferenceAnnotation>] {
-        return compactMap {$0.toReferenceAnnotation() }
+    
+    func toRegisterAnnotation() -> TokenBox<RegisterAnnotation>? {
+        switch self {
+        case .registerAnnotation(let token):
+            return token
+        default:
+            return nil
+        }
     }
 }

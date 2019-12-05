@@ -10,13 +10,13 @@ import SourceKittenFramework
 
 // MARK: - Token
 
-public protocol AnyTokenBox {
+public protocol AnyTokenBox: Codable {
     var offset: Int { get }
     var length: Int { get }
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token & Equatable & Hashable>: AnyTokenBox, Equatable, Hashable, CustomStringConvertible {
+public struct TokenBox<T: Token & Hashable>: AnyTokenBox, Hashable, CustomStringConvertible {
     let value: T
     public let offset: Int
     public let length: Int
@@ -27,77 +27,91 @@ public struct TokenBox<T: Token & Equatable & Hashable>: AnyTokenBox, Equatable,
     }
 }
 
-public protocol Token: CustomStringConvertible {
+public protocol Token: CustomStringConvertible, Codable {
     static func create(_ string: String) throws -> Self?
 }
 
-// MARK: - Token Types
+// MARK: - Token SwiftTypes
 
-public struct RegisterAnnotation: Token, Hashable, Equatable {
+public struct RegisterAnnotation: Token, Hashable {
 
     let name: String
-    let type: Type
-    let protocolType: Type?
+    let type: ConcreteType
+    let protocolTypes: Set<AbstractType>
     
     public static func create(_ string: String) throws -> RegisterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.register).matches(in: string) else {
+        guard let matches = NSRegularExpression.register.matches(in: string) else {
             return nil
         }
 
-        let protocolType: Type?
+        var protocolTypes = [AbstractType]()
         let arrowIndex = matches.firstIndex { $0.hasPrefix("<-") }
-        if let arrowIndex = arrowIndex, arrowIndex + 1 < matches.count {
-            protocolType = try Type(matches[arrowIndex + 1])
-        } else {
-            protocolType = nil
+        if let arrowIndex = arrowIndex, arrowIndex + 1 < matches.count, let type = try AbstractType(matches[arrowIndex + 1]) {
+            protocolTypes.append(type)
+            
+            for (index, match) in matches.enumerated() where match.hasPrefix("&") {
+                if let type = try AbstractType(matches[index + 1]) {
+                    protocolTypes.append(type)
+                } else {
+                    return nil
+                }
+            }
         }
         
-        guard let type = try Type(matches[1]) else {
+        guard let type = try ConcreteType(matches[1]) else {
             return nil
         }
         
-        return RegisterAnnotation(name: matches[0], type: type, protocolType: protocolType)
+        return RegisterAnnotation(name: matches[0], type: type, protocolTypes: Set(protocolTypes))
     }
     
     public var description: String {
         var s = "\(name) = \(type)"
-        if let protocolType = protocolType {
-            s += " <- \(protocolType)"
+        if protocolTypes.isEmpty == false {
+            s += " <- \(protocolTypes.lazy.map { $0.description }.sorted())"
         }
         return s
     }
 }
 
-public struct ReferenceAnnotation: Token, Hashable, Equatable {
+public struct ReferenceAnnotation: Token, Hashable {
     
-    let name: String
-    let type: Type
+    public let name: String
+    public let types: Set<AbstractType>
     
     public static func create(_ string: String) throws -> ReferenceAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.reference).matches(in: string) else {
+        guard let matches = NSRegularExpression.reference.matches(in: string) else {
             return nil
         }
-        guard let type = try Type(matches[1]) else {
+        guard let firstType = try AbstractType(matches[1]) else {
             return nil
         }
-        return ReferenceAnnotation(name: matches[0], type: type)
+        var types = [firstType]
+        for (index, match) in matches.enumerated() where match.hasPrefix("&") {
+            if let type = try AbstractType(matches[index + 1]) {
+                types.append(type)
+            } else {
+                return nil
+            }
+        }
+        return ReferenceAnnotation(name: matches[0], types: Set(types))
     }
     
     public var description: String {
-        return "\(name) <- \(type)"
+        return "\(name) <- \(types.lazy.map { $0.description }.sorted())"
     }
 }
 
-public struct ParameterAnnotation: Token, Hashable, Equatable {
+public struct ParameterAnnotation: Token, Hashable {
     
-    let name: String
-    let type: Type
+    public let name: String
+    public let type: ConcreteType
     
     public static func create(_ string: String) throws -> ParameterAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.parameter).matches(in: string) else {
+        guard let matches = NSRegularExpression.parameter.matches(in: string) else {
             return nil
         }
-        guard let type = try Type(matches[1]) else {
+        guard let type = try ConcreteType(matches[1]) else {
             return nil
         }
         return ParameterAnnotation(name: matches[0], type: type)
@@ -108,11 +122,11 @@ public struct ParameterAnnotation: Token, Hashable, Equatable {
     }
 }
 
-public struct ConfigurationAnnotation: Token, Hashable, Equatable {
+public struct ConfigurationAnnotation: Token, Hashable {
     
-    let attribute: ConfigurationAttribute
+    public let attribute: ConfigurationAttribute
     
-    let target: ConfigurationAttributeTarget
+    public let target: ConfigurationAttributeTarget
     
     struct UniqueIdentifier: Hashable, Equatable {
         let name: ConfigurationAttributeName
@@ -124,7 +138,7 @@ public struct ConfigurationAnnotation: Token, Hashable, Equatable {
     }
     
     public static func create(_ string: String) throws -> ConfigurationAnnotation? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.configuration).matches(in: string) else {
+        guard let matches = NSRegularExpression.configuration.matches(in: string) else {
             return nil
         }
         
@@ -143,12 +157,12 @@ public struct ConfigurationAnnotation: Token, Hashable, Equatable {
     }
 }
 
-public struct ImportDeclaration: Token, Hashable, Equatable {
+public struct ImportDeclaration: Token, Hashable {
     
     let moduleName: String
     
     public static func create(_ string: String) throws -> ImportDeclaration? {
-        guard let matches = try NSRegularExpression(pattern: Patterns.import).matches(in: string) else {
+        guard let matches = NSRegularExpression.import.matches(in: string) else {
             return nil
         }
         
@@ -160,12 +174,13 @@ public struct ImportDeclaration: Token, Hashable, Equatable {
     }
 }
 
-public struct InjectableType: Token, Hashable, Equatable {
-    let type: Type
+public struct InjectableType: Token, Hashable {
+
+    let type: ConcreteType
     let accessLevel: AccessLevel
     let doesSupportObjc: Bool
 
-    init(type: Type,
+    init(type: ConcreteType,
          accessLevel: AccessLevel = .default,
          doesSupportObjc: Bool = false) {
         self.type = type
@@ -178,16 +193,31 @@ public struct InjectableType: Token, Hashable, Equatable {
     }
 }
 
-public struct EndOfInjectableType: Token, Hashable, Equatable {
-    public let description = "_ }"
+public struct EndOfInjectableType: Token, Hashable {
+    
+    public let description: String
+    
+    init() {
+        description = "_ }"
+    }
 }
 
-public struct AnyDeclaration: Token, Hashable, Equatable {
-    public let description = "{"
+public struct AnyDeclaration: Token, Hashable {
+    
+    public let description: String
+    
+    init() {
+        description = "{"
+    }
 }
 
-public struct EndOfAnyDeclaration: Token, Hashable, Equatable {
-    public let description = "}"
+public struct EndOfAnyDeclaration: Token, Hashable {
+
+    public let description: String
+    
+    init() {
+        description = "}"
+    }
 }
 
 // MARK: - Annotation Builder

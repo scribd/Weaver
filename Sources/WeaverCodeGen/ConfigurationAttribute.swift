@@ -9,23 +9,25 @@ import Foundation
 
 // MARK: - Attributes
 
-enum ConfigurationAttributeName: String {
+public enum ConfigurationAttributeName: String {
     case isIsolated
     case customBuilder = "builder"
     case scope
     case doesSupportObjc = "objc"
+    case setter
 }
 
-enum ConfigurationAttribute: Equatable, Hashable {
+public enum ConfigurationAttribute: Hashable {
     case isIsolated(value: Bool)
     case customBuilder(value: String)
     case scope(value: Scope)
     case doesSupportObjc(value: Bool)
+    case setter(value: Bool)
 }
 
 // MARK: - Target
 
-enum ConfigurationAttributeTarget: Equatable, Hashable {
+public enum ConfigurationAttributeTarget: Hashable {
     case `self`
     case dependency(name: String)
 }
@@ -41,7 +43,7 @@ enum ConfigurationAttributeDependencyKind {
 
 extension ConfigurationAttribute: CustomStringConvertible {
     
-    var description: String {
+    public var description: String {
         switch self {
         case .isIsolated(let value):
             return "Config Attr - isIsolated = \(value)"
@@ -51,6 +53,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return "Config Attr - scope = \(value)"
         case .doesSupportObjc(let value):
             return "Config Attr - objc = \(value)"
+        case .setter(let value):
+            return "Config Attr - setter = \(value)"
         }
     }
     
@@ -64,13 +68,15 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return .scope
         case .doesSupportObjc:
             return .doesSupportObjc
+        case .setter:
+            return .setter
         }
     }
 }
 
 extension ConfigurationAttributeTarget: CustomStringConvertible {
     
-    var description: String {
+    public var description: String {
         switch self {
         case .`self`:
             return "self"
@@ -89,13 +95,15 @@ extension ConfigurationAnnotation {
         case (.isIsolated, .`self`),
              (.customBuilder, .dependency),
              (.scope, .dependency),
-             (.doesSupportObjc, .dependency):
+             (.doesSupportObjc, .dependency),
+             (.setter, .dependency):
             return true
             
         case (.isIsolated, _),
              (.customBuilder, _),
              (.scope, _),
-             (.doesSupportObjc, _):
+             (.doesSupportObjc, _),
+             (.setter, _):
             return false
         }
     }
@@ -109,10 +117,12 @@ extension ConfigurationAnnotation {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
              (.customBuilder, _),
-             (.doesSupportObjc, _):
+             (.doesSupportObjc, _),
+             (.setter, .registration):
             return true
         case (.isIsolated, _),
-             (.scope, _):
+             (.scope, _),
+             (.setter, _):
             return false
         }
     }
@@ -126,16 +136,14 @@ extension ConfigurationAttribute {
         switch ConfigurationAttributeName(rawValue: name) {
         case .isIsolated?:
             self = .isIsolated(value: try ConfigurationAttribute.boolValue(from: valueString))
-            
         case .customBuilder?:
             self = .customBuilder(value: valueString)
-            
         case .scope?:
             self = .scope(value: try ConfigurationAttribute.scopeValue(from: valueString))
-
         case .doesSupportObjc?:
             self = .doesSupportObjc(value: try ConfigurationAttribute.boolValue(from: valueString))
-
+        case .setter?:
+            self = .setter(value: try ConfigurationAttribute.boolValue(from: valueString))
         case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
@@ -176,7 +184,8 @@ extension ConfigurationAttribute {
     var boolValue: Bool? {
         switch self {
         case .isIsolated(let value),
-             .doesSupportObjc(let value):
+             .doesSupportObjc(let value),
+             .setter(let value):
             return value
 
         case .scope,
@@ -192,7 +201,8 @@ extension ConfigurationAttribute {
             
         case .customBuilder,
              .isIsolated,
-             .doesSupportObjc:
+             .doesSupportObjc,
+             .setter:
             return nil
         }
     }
@@ -204,7 +214,8 @@ extension ConfigurationAttribute {
             
         case .scope,
              .isIsolated,
-             .doesSupportObjc:
+             .doesSupportObjc,
+             .setter:
             return nil
         }
     }

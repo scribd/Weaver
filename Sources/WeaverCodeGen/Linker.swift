@@ -9,59 +9,30 @@ import Foundation
 
 // MARK: - DependencyContainer
 
-/**
- 
-    Object representing the dependency container associated to an injectable type.
-
-    Dependency containers are linked together through `Registration`s, `Reference`s and
-    source dependency containers.
-
-    For example, the following code:
-
-    ```
-    final class Foo {
-        // weaver: boo <- Boo
-        // weaver: doo = Doo
-    }
-    ```
-
-    Produces the following graph:
-
-    `FooDependencyContainer` -- reference --> `BooDependencyContainer`
-                           |- registration -> `DooDependencyContainer`
-
-    `DooDependencyContainer` -- source --> `FooDependencyContainer`
- 
-*/
-final class DependencyContainer: Hashable {
-
-    /// Type representation of the associated type.
-    fileprivate(set) var type: Type?
+/// Representation of a Dependency Container.
+final class DependencyContainer: Encodable, CustomDebugStringConvertible {
     
-    /// Access level representation of the associated type.
-    fileprivate(set) var accessLevel: AccessLevel
+    /// Associated type.
+    let type: ConcreteType
     
-    /// True if the associated type is prefixed with `@objc` keyword.
-    fileprivate(set) var doesSupportObjc: Bool
-
+    /// Access level of the associated type.
+    let accessLevel: AccessLevel
+    
     /// Configuration built based on the configuration annotations.
-    fileprivate(set) var configuration: DependencyContainerConfiguration
+    fileprivate(set) var configuration = DependencyContainerConfiguration.empty
     
-    /// Registrations grouped by name & type and iterable in order of appearance in the source code.
-    fileprivate(set) var registrations = OrderedDictionary<DependencyIndex, ResolvableDependency>()
+    /// Dependencies in order of appearance in the code.
+    fileprivate(set) var dependencyNamesByConcreteType = OrderedDictionary<ConcreteType, Set<String>>()
+    fileprivate(set) var dependencyNamesByAbstractType = OrderedDictionary<AbstractType, Set<String>>()
+    fileprivate(set) var dependencies = OrderedDictionary<String, Dependency>()
+    
+    lazy var references = dependencies.orderedValues.filter { $0.kind == .reference }
+    lazy var registrations = dependencies.orderedValues.filter { $0.kind == .registration }
+    lazy var parameters = dependencies.orderedValues.filter { $0.kind == .parameter }
+    
+    /// Types from which this dependency container's associated type is being registered.
+    fileprivate(set) var sources = Set<ConcreteType>()
 
-    /// References grouped by name & type and iterable in order of appearance in the source code.
-    fileprivate(set) var references = OrderedDictionary<DependencyIndex, ResolvableDependency>()
-    
-    /// Parameters listed in order of appearance in the source code.
-    fileprivate(set) var parameters = OrderedDictionary<ParameterName, Dependency>()
-    
-    /// Dependency containers from which this dependency container's associated type is being registered.
-    fileprivate(set) var sources = [DependencyContainer]()
-
-    /// Types referenced by this dependency container.
-    fileprivate(set) var referencedTypes: Set<Type>
-    
     /**
      Types in which the dependency container's associated type is embedded.
      
@@ -77,49 +48,44 @@ final class DependencyContainer: Hashable {
      
      Produces a dependency container with one embedding type: `Foo`.
     */
-    fileprivate(set) var embeddingTypes: [Type] = []
+    let embeddingTypes:  [ConcreteType]
     
-    /// Location of the associated type declaration in the source code file.
-    fileprivate(set) var fileLocation: FileLocation
+    /// Location of the associated type declaration in the code.
+    let fileLocation: FileLocation?
+
+    enum DeclarationSource: String, Encodable {
+        case type
+        case registration
+        case reference
+    }
     
-    init(type: Type? = nil,
+    /// Indicates where the declaration comes from. Used for debugging.
+    let declarationSource: DeclarationSource
+    
+    init(type: ConcreteType,
          accessLevel: AccessLevel = .default,
-         doesSupportObjc: Bool = false,
-         configuration: DependencyContainerConfiguration = .empty,
-         referencedType: Type? = nil,
-         fileLocation: FileLocation = FileLocation()) {
+         embeddingTypes: [ConcreteType] = [],
+         fileLocation: FileLocation? = nil,
+         declarationSource: DeclarationSource) {
         
         self.type = type
         self.accessLevel = accessLevel
-        self.doesSupportObjc = doesSupportObjc
-        self.configuration = configuration
-        referencedTypes = Set([referencedType].compactMap { $0 })
         self.fileLocation = fileLocation
+        self.embeddingTypes = embeddingTypes
+        self.declarationSource = declarationSource
     }
     
-    /// All the resolvable dependencies in order of appearance in the source code.
-    var orderedDependencies: [ResolvableDependency] {
-        let orderedRegistrations: [ResolvableDependency] = registrations.orderedValues
-        let orderedReferences: [ResolvableDependency] = references.orderedValues
-        return orderedRegistrations + orderedReferences
-    }
-    
-    /// Returns the resolvable dependency for an index, looking first through the registrations,
-    /// then references.
-    ///
-    /// - Parameter index: Index of the resolvable dependency to look for.
-    ///
-    /// - Returns: The found resolvable dependency.
-    func dependency(for index: DependencyIndex) -> ResolvableDependency? {
-        return registrations[index] ?? references[index] ?? nil
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
-    }
-    
-    static func ==(lhs: DependencyContainer, rhs: DependencyContainer) -> Bool {
-        return lhs === rhs
+    var debugDescription: String {
+        return """
+        DependencyContainer:
+        - type: \(type)
+        - accessLevel: \(accessLevel)
+        - configuration: \(configuration)
+        - dependencies: \(dependencies.orderedKeyValues.map { ($0.key, $0.value.type) })
+        - sources: \(sources)
+        - embeddingTypes: \(embeddingTypes)
+        - declarationSource: \(declarationSource.rawValue)
+        """
     }
 }
 
@@ -145,221 +111,100 @@ final class DependencyContainer: Hashable {
     Produces a dependency of type `Registration` with:
     - `dependencyName` = "boo"
     - `type` = `Boo`
-    - `abstractType` = `BooProtocol`
     - `scope` = .transient
-    - `source` = `FooDependencyContainer`
+    - `source` = `FooDependency`
  */
-protocol Dependency: AnyObject, Encodable {
-
+final class Dependency: Encodable, CustomDebugStringConvertible {
+    
+    enum Kind: String, Encodable {
+        case registration
+        case reference
+        case parameter
+    }
+    
+    /// Kind of dependency
+    let kind: Kind
+    
     /// Name which was used to declare the dependency.
-    var dependencyName: String { get }
+    let dependencyName: String
 
+    enum `Type`: Hashable, Encodable, CustomStringConvertible {
+        case abstract(Set<AbstractType>) // Reference only
+        case concrete(ConcreteType) // Reference, registration or parameter
+        case full(ConcreteType, Set<AbstractType>) // Registration only
+    }
+    
     /// Type which was used to declare the dependency.
-    var type: Type { get }
-    
-    /// Abstract type which was used to declare the dependency.
-    ///
-    /// - Note: Usually a `protocol`, but can also be any parent class.
-    var abstractType: Type { get }
-    
-    /// Scope declared with a scope annotation associated to the same dependency name.
-    ///
-    /// - Note: `nil` if the dependency is a reference or a parameter.
-    var scope: Scope? { get }
+    let type: `Type`
     
     /// Configuration built based on the configuration annotations
     /// associated to the same dependency name.
-    var configuration: DependencyConfiguration { get }
+    fileprivate(set) var configuration: DependencyConfiguration = .empty
 
     /// Dependency container which contains the dependency.
-    var source: DependencyContainer { get }
+    let source: ConcreteType
     
     /// Location of the declarative annotation in the source code.
-    var fileLocation: FileLocation { get }
-}
-
-extension Dependency {
+    let fileLocation: FileLocation?
     
-    var abstractType: Type {
-        return type
-    }
-    
-    var scope: Scope? {
-        return nil
-    }
-    
-    var configuration: DependencyConfiguration {
-        return .empty
-    }
-    
-    var isReference: Bool {
-        return self is Reference
-    }
-}
-
-extension Dependency where Self: Registration {
-
-    var scope: Scope? {
-        return configuration.scope
-    }
-}
-
-/**
-    Representation of any kind of dependencies which can be resolved through a
-    hierarchy of dependency containers.
-
-    # A dependency can be one of the following:
-    - Registration
-    - Reference
-
-    For example the following code:
-
-    ```
-    final class Foo {
-        // weaver: boo = Boo
-    }
-    ```
-
-    Produces a dependency of type `Registration` with `BooDependencyContainer` as a target.
- */
-protocol ResolvableDependency: Dependency {
-    
-    /// Dependency container associated to the same type.
-    var target: DependencyContainer { get }
-}
-
-private struct HashableDependency: Hashable {
-    
-    let value: Dependency
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(value))
-    }
-    
-    static func ==(lhs: HashableDependency, rhs: HashableDependency) -> Bool {
-        return lhs.value === rhs.value
-    }
-}
-
-// MARK: - Registration
-
-fileprivate final class Registration: ResolvableDependency, Hashable {
-    
-    let dependencyName: String
-    
-    let type: Type
-    
-    let abstractType: Type
-    
-    var configuration: DependencyConfiguration
-    
-    let target: DependencyContainer
-    
-    let source: DependencyContainer
-    
-    let fileLocation: FileLocation
-    
-    init(dependencyName: String,
-         type: Type,
-         abstractType: Type,
-         configuration: DependencyConfiguration = .empty,
-         target: DependencyContainer,
-         source: DependencyContainer,
+    init(kind: Kind,
+         dependencyName: String,
+         type: `Type`,
+         source: ConcreteType,
          fileLocation: FileLocation) {
         
+        self.kind = kind
         self.dependencyName = dependencyName
         self.type = type
-        self.abstractType = abstractType
-        self.configuration = configuration
-        self.target = target
         self.source = source
         self.fileLocation = fileLocation
     }
     
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
-    }
-    
-    static func ==(lhs: Registration, rhs: Registration) -> Bool {
-        return lhs === rhs
-    }
-}
-
-// MARK: - Reference
-
-fileprivate final class Reference: ResolvableDependency, Hashable {
-    
-    let dependencyName: String
-    
-    let type: Type
-    
-    let target: DependencyContainer
-    
-    let source: DependencyContainer
-    
-    let configuration: DependencyConfiguration
-    
-    let fileLocation: FileLocation
-    
-    init(dependencyName: String,
-         type: Type,
-         target: DependencyContainer,
-         source: DependencyContainer,
-         configuration: DependencyConfiguration,
-         fileLocation: FileLocation) {
-        self.dependencyName = dependencyName
-        self.type = type
-        self.target = target
-        self.source = source
-        self.configuration = configuration
-        self.fileLocation = fileLocation
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
-    }
-    
-    static func == (lhs: Reference, rhs: Reference) -> Bool {
-        return lhs === rhs
+    var debugDescription: String {
+        return """
+        \(kind.rawValue.capitalized):
+        - name: \(dependencyName)
+        - type: \(type)
+        - configuration: \(configuration)
+        - source: \(source)
+        - fileLocation: \(fileLocation ?? FileLocation(line: nil, file: nil))
+        """
     }
 }
 
-// MARK: - Parameter
+// MARK: - Graph
 
-fileprivate final class Parameter: Dependency {
+/// Representation of the dependency graph.
+///
+/// - Note: Indexes the dependency containers and dependencies.
+public final class DependencyGraph: Encodable {
     
-    let parameterName: String
+    /// Imported module names.
+    fileprivate(set) var imports = Set<String>()
     
-    var dependencyName: String {
-        return parameterName
-    }
+    /// Abstract types by concrete type.
+    fileprivate(set) var abstractTypes = [ConcreteType: Set<AbstractType>]()
     
-    let source: DependencyContainer
+    /// Concrete types by abtract type.
+    fileprivate(set) var concreteTypes = [AbstractType: [String: ConcreteType]]()
+
+    /// Concrete types with no abstract types.
+    fileprivate(set) var orphinConcreteTypes = [String: Set<ConcreteType>]()
     
-    let type: Type
+    /// `DependencyContainer`s by concrete type and iterable in order of appearance in the source code.
+    fileprivate(set) var dependencyContainers = OrderedDictionary<ConcreteType, DependencyContainer>()
+
+    /// All dependencies in order of appearance in the code.
+    lazy var dependencies = dependencyContainers.orderedValues.flatMap { $0.dependencies.orderedValues }
+
+    /// Count of types with annotations.
+    public lazy var injectableTypesCount = dependencyContainers.orderedValues.filter { $0.dependencies.isEmpty == false }.count
+
+    // MARK: - Cached data
     
-    let fileLocation: FileLocation
-    
-    init(parameterName: String,
-         source: DependencyContainer,
-         type: Type,
-         fileLocation: FileLocation) {
-        
-        self.parameterName = parameterName
-        self.source = source
-        self.type = type
-        self.fileLocation = fileLocation
-    }
+    private var hasSelfReferenceCache = [ObjectIdentifier: Bool]()
+    private var concreteTypeCache = [ObjectIdentifier: ConcreteType]()
 }
-
-// MARK: - Indexes
-
-struct DependencyIndex: Hashable, Equatable {
-    let name: String
-    let type: Type?
-}
-
-typealias ParameterName = String
 
 /// Object in charge of going through the AST for each file, and link dependency containers
 /// together to produce the dependency graph.
@@ -377,200 +222,21 @@ public final class Linker {
     }
 }
 
-// MARK: - Graph
-
-/// Representation of the dependency graph.
-///
-/// - Note: Indexes the dependency containers and dependencies.
-public final class DependencyGraph {
-    
-    /// `DependencyContainer`s grouped by name and iterable in order of appearance in the source code.
-    private(set) var dependencyContainersByName: OrderedDictionary<String, DependencyContainer>
-    
-    /// `DependencyContainer`s grouped by type and iterable in order of appearance in the source code.
-    private(set) var dependencyContainersByType: OrderedDictionary<TypeIndex, DependencyContainer>
-    
-    /// Imported module names grouped by file name.
-    private(set) var importsByFile: [String: [String]]
-    
-    /// `DependencyContainer`s grouped by file name and iterable in order of appearance in the source code.
-    lazy var dependencyContainersByFile: OrderedDictionary<String, [DependencyContainer]> = {
-        return dependencyContainersByType.orderedValues.reduce(OrderedDictionary()) { (dependencyContainersByFile, dependencyContainer) in
-            guard let file = dependencyContainer.fileLocation.file else {
-                return dependencyContainersByFile
-            }
-            var dependencyContainersByFile = dependencyContainersByFile
-            var dependencyContainers = dependencyContainersByFile[file] ?? []
-            dependencyContainers.append(dependencyContainer)
-            dependencyContainersByFile[file] = dependencyContainers
-            return dependencyContainersByFile
-        }
-    }()
-    
-    /// All the dependencies ordered by priority then appearance in the source code.
-    ///
-    /// - Note: Registrations being supersets of references, they come first.
-    lazy var dependencies: [ResolvableDependency] = {
-        let allDependencies =
-            dependencyContainersByName.orderedValues.flatMap { $0.registrations.orderedValues } +
-            dependencyContainersByType.orderedValues.flatMap { $0.registrations.orderedValues } +
-            dependencyContainersByName.orderedValues.flatMap { $0.references.orderedValues } +
-            dependencyContainersByType.orderedValues.flatMap { $0.references.orderedValues }
-
-        var filteredDependencies = Set<HashableDependency>()
-        return allDependencies.filter {
-            if filteredDependencies.contains(HashableDependency(value: $0)) {
-                return false
-            }
-            filteredDependencies.insert(HashableDependency(value: $0))
-            return true
-        }
-    }()
-    
-    /// Types grouped by type name.
-    lazy var typesByName: [String: [Type]] = {
-        return dependencies.reduce([:]) { (typesByName, dependency) in
-            var typesByName = typesByName
-            var types = typesByName[dependency.type.name] ?? []
-            types.append(dependency.type)
-            if dependency.type != dependency.abstractType {
-                types.append(dependency.abstractType)
-            }
-            typesByName[dependency.type.name] = types
-            return typesByName
-        }
-    }()
-    
-    /// Ordered unique imports.
-    lazy var orderedImports: [String] = Set(importsByFile.values.flatMap { $0 }).sorted()
-    
-    init(_ dependencyContainersByName: OrderedDictionary<String, DependencyContainer> = OrderedDictionary(),
-         importsByFile: [String: [String]] = [:]) {
-        self.dependencyContainersByName = dependencyContainersByName
-        self.importsByFile = importsByFile
-        self.dependencyContainersByType = dependencyContainersByName.orderedValues.reduce(into: OrderedDictionary()) {
-            guard let type = $1.type else { return }
-            $0[TypeIndex(type: type)] = $1
-        }
-    }
-    
-    public var injectableTypesCount: Int {
-        return dependencyContainersByFile.orderedValues.count
-    }
-}
-
-// MARK: - Insertions
-
-private extension DependencyGraph {
-    
-    func insertDependencyContainer(with registerAnnotation: TokenBox<RegisterAnnotation>, file: String?) {
-        
-        let fileLocation = FileLocation(line: registerAnnotation.line, file: file)
-        let dependencyContainer = DependencyContainer(type: registerAnnotation.value.type, fileLocation: fileLocation)
-        dependencyContainersByName[registerAnnotation.value.name] = dependencyContainer
-        
-        let type = registerAnnotation.value.type
-        dependencyContainersByType[type.index] = dependencyContainer
-    }
-    
-    func insertDependencyContainer(with referenceAnnotation: ReferenceAnnotation) {
-        
-        let name = referenceAnnotation.name
-        let type = referenceAnnotation.type
-        if let dependencyContainer = dependencyContainersByName[name] {
-            dependencyContainer.referencedTypes.insert(type)
-            return
-        }
-        dependencyContainersByName[name] = DependencyContainer(referencedType: type)
-    }
-    
-    func insertImports(_ imports: [String], for file: String) {
-        var fileImports = importsByFile[file] ?? []
-        fileImports.append(contentsOf: imports)
-        importsByFile[file] = fileImports
-    }
-}
-
-// MARK: - LazyLoading
-
-private extension DependencyGraph {
-    
-    func dependencyContainer(type: Type,
-                             accessLevel: AccessLevel,
-                             doesSupportObjc: Bool,
-                             fileLocation: FileLocation) -> DependencyContainer {
-        
-        if let dependencyContainer = dependencyContainersByType[type.index] {
-            dependencyContainer.fileLocation = fileLocation
-            dependencyContainer.accessLevel = accessLevel
-            dependencyContainer.doesSupportObjc = doesSupportObjc
-            dependencyContainer.type = type
-            return dependencyContainer
-        }
-        
-        let dependencyContainer = DependencyContainer(type: type,
-                                                      accessLevel: accessLevel,
-                                                      doesSupportObjc: doesSupportObjc,
-                                                      fileLocation: fileLocation)
-        dependencyContainersByType[type.index] = dependencyContainer
-        return dependencyContainer
-    }
-    
-    func registration(source: DependencyContainer,
-                      registerAnnotation: TokenBox<RegisterAnnotation>,
-                      configuration: [TokenBox<ConfigurationAnnotation>],
-                      file: String) throws -> Registration {
-        
-        let name = registerAnnotation.value.name
-        guard let target = dependencyContainersByName[name] else {
-            throw InspectorError.invalidDependencyGraph(registerAnnotation.printableDependency(file: file),
-                                                        underlyingError: .unresolvableDependency(history: []))
-        }
-        
-        let configuration = DependencyConfiguration(with: configuration.map { $0.value.attribute })
-        
-        let fileLocation = FileLocation(line: registerAnnotation.line, file: file)
-        let type = registerAnnotation.value.type
-        return Registration(dependencyName: name,
-                            type: type,
-                            abstractType: registerAnnotation.value.protocolType ?? type,
-                            configuration: configuration,
-                            target: target,
-                            source: source,
-                            fileLocation: fileLocation)
-    }
-    
-    func reference(source: DependencyContainer,
-                   referenceAnnotation: TokenBox<ReferenceAnnotation>,
-                   configuration: [TokenBox<ConfigurationAnnotation>],
-                   file: String) throws -> Reference {
-        
-        let name = referenceAnnotation.value.name
-        guard let target = dependencyContainersByName[name] else {
-            throw InspectorError.invalidDependencyGraph(referenceAnnotation.printableDependency(file: file),
-                                                        underlyingError: .unresolvableDependency(history: []))
-            
-        }
-        
-        let configuration = DependencyConfiguration(with: configuration.map { $0.value.attribute })
-        
-        let fileLocation = FileLocation(line: referenceAnnotation.line, file: file)
-        
-        return Reference(dependencyName: name,
-                         type: referenceAnnotation.value.type,
-                         target: target,
-                         source: source,
-                         configuration: configuration,
-                         fileLocation: fileLocation)
-    }
-}
-
 // MARK: - Build
 
 private extension Linker {
     
+    /// Fills the dependency graph by visiting one or plural ASTs.
+    ///
+    /// 1. Link types (Abstract <-> Concrete)
+    /// 2. Collect dependency containers
+    /// 3. Link dependency containers (DC <- dependency -> DC)
+    ///
+    /// - Parameter syntaxTrees: ASTs to visit.
+    /// - Throws: `LinkerError` or `DependencyGraphError`.
     func buildDependencyGraph(from syntaxTrees: [Expr]) throws {
-        collectDependencyContainers(from: syntaxTrees)
+        linkAbstractTypesToConcreteTypes(from: syntaxTrees)
+        try collectDependencyContainers(from: syntaxTrees)
         try linkDependencyContainers(from: syntaxTrees)
     }
 }
@@ -579,31 +245,89 @@ private extension Linker {
 
 private extension Linker {
     
-    func collectDependencyContainers(from syntaxTrees: [Expr]) {
+    func collectDependencyContainers(from syntaxTrees: [Expr]) throws {
+
+        // Collect dependency containers
         
-        var file: String?
+        let typeDeclarations = OrderedDictionary<ConcreteType, DependencyContainer>()
+        let registerAnnotations = OrderedDictionary<ConcreteType, DependencyContainer>()
+        let referenceAnnotations = OrderedDictionary<ConcreteType, DependencyContainer>()
         
-        // Insert dependency containers for which we know the type.
-        for expr in ExprSequence(exprs: syntaxTrees) {
+        var configurationAnnotations = [ConcreteType: [ConfigurationAttributeName: ConfigurationAttribute]]()
+        
+        for (expr, embeddingTypes, file) in ExprSequence(exprs: syntaxTrees) {
             switch expr {
-            case .file(_, let _file, let imports):
-                file = _file
-                dependencyGraph.insertImports(imports, for: _file)
+            case .file(_, _, let imports):
+                imports.forEach { dependencyGraph.imports.insert($0) }
+
+            case .typeDeclaration(let token, _):
+                let location = FileLocation(line: token.line, file: file)
                 
+                let dependencyContainer = DependencyContainer(type: token.value.type,
+                                                              accessLevel: token.value.accessLevel,
+                                                              embeddingTypes: embeddingTypes,
+                                                              fileLocation: location,
+                                                              declarationSource: .type)
+                typeDeclarations[dependencyContainer.type] = dependencyContainer
+                
+                if token.value.doesSupportObjc {
+                    var attributes = configurationAnnotations[token.value.type] ?? [:]
+                    attributes[.doesSupportObjc] = .doesSupportObjc(value: true)
+                    configurationAnnotations[token.value.type] = attributes
+                }
+
             case .registerAnnotation(let token):
-                dependencyGraph.insertDependencyContainer(with: token, file: file)
+                let dependencyContainer = DependencyContainer(type: token.value.type,
+                                                              declarationSource: .registration)
+                registerAnnotations[dependencyContainer.type] = dependencyContainer
                 
-            case .typeDeclaration,
-                 .referenceAnnotation,
-                 .parameterAnnotation,
-                 .configurationAnnotation:
+            case .referenceAnnotation(let token):
+                let location = FileLocation(line: token.line, file: file)
+                let dependencyType = dependencyGraph.dependencyType(for: token.value.types,
+                                                                    dependencyName: token.value.name)
+                
+                let concreteType = try dependencyGraph.concreteType(for: dependencyType,
+                                                                    dependencyName: token.value.name,
+                                                                    at: location)
+
+                let dependencyContainer = DependencyContainer(type: concreteType,
+                                                              declarationSource: .reference)
+
+                referenceAnnotations[dependencyContainer.type] = dependencyContainer
+
+            case .configurationAnnotation(let token):
+                if token.value.target == .`self` {
+                    guard let concreteType = embeddingTypes.last else {
+                        let location = FileLocation(line: token.line, file: file)
+                        throw LinkerError.foundAnnotationOutsideOfType(location)
+                    }
+
+                    var attributes = configurationAnnotations[concreteType] ?? [:]
+                    attributes[token.value.attribute.name] = token.value.attribute
+                    configurationAnnotations[concreteType] = attributes
+                }
+                
+            case .parameterAnnotation:
                 break
             }
         }
+
+        // Fill the graph
         
-        // Insert dependency containers for which we don't know the type
-        for token in ExprSequence(exprs: syntaxTrees).referenceAnnotations {
-            dependencyGraph.insertDependencyContainer(with: token.value)
+        for dependencyContainer in typeDeclarations.orderedValues {
+            dependencyGraph.dependencyContainers[dependencyContainer.type] = dependencyContainer
+        }
+        for dependencyContainer in registerAnnotations.orderedValues where dependencyGraph.dependencyContainers[dependencyContainer.type] == nil {
+            dependencyGraph.dependencyContainers[dependencyContainer.type] = dependencyContainer
+        }
+        for dependencyContainer in referenceAnnotations.orderedValues where dependencyGraph.dependencyContainers[dependencyContainer.type] == nil {
+            dependencyGraph.dependencyContainers[dependencyContainer.type] = dependencyContainer
+        }
+        
+        // Fill dependency containers' configurations
+
+        for (type, attributes) in configurationAnnotations {
+            dependencyGraph.dependencyContainers[type]?.configuration = DependencyContainerConfiguration(with: attributes)
         }
     }
 }
@@ -612,208 +336,410 @@ private extension Linker {
 
 private extension Linker {
     
+    func linkAbstractTypesToConcreteTypes(from syntaxTrees: [Expr]) {
+        
+        for (expr, _, _) in ExprSequence(exprs: syntaxTrees) {
+            if let token = expr.toRegisterAnnotation() {
+                if token.value.protocolTypes.isEmpty == false {
+                    for abstractType in token.value.protocolTypes {
+                        var concreteTypes = dependencyGraph.concreteTypes[abstractType] ?? [:]
+                        concreteTypes[token.value.name] = token.value.type
+                        dependencyGraph.concreteTypes[abstractType] = concreteTypes
+                        
+                        var abstractTypes = dependencyGraph.abstractTypes[token.value.type] ?? Set()
+                        abstractTypes.insert(abstractType)
+                        dependencyGraph.abstractTypes[token.value.type] = abstractTypes
+                    }
+                } else {
+                    var concreteTypes = dependencyGraph.orphinConcreteTypes[token.value.name] ?? Set()
+                    concreteTypes.insert(token.value.type)
+                    dependencyGraph.orphinConcreteTypes[token.value.name] = concreteTypes
+                }
+            }
+        }
+    }
+    
     func linkDependencyContainers(from syntaxTrees: [Expr]) throws {
         
-        for syntaxTree in syntaxTrees {
-            if let file = syntaxTree.toFile() {
-                try linkDependencyContainers(from: file.types, file: file.name)
-            } else {
-                throw InspectorError.invalidAST(.unknown, unexpectedExpr: syntaxTree)
-            }
-        }
-    }
-    
-    func linkDependencyContainers(from exprs: [Expr], file: String) throws {
-        
-        for expr in exprs {
-            guard let (token, children) = expr.toTypeDeclaration() else {
-                throw InspectorError.invalidAST(.file(file), unexpectedExpr: expr)
-            }
-            
-            let fileLocation = FileLocation(line: token.line, file: file)
-            let dependencyContainer = dependencyGraph.dependencyContainer(type: token.value.type,
-                                                                          accessLevel: token.value.accessLevel,
-                                                                          doesSupportObjc: token.value.doesSupportObjc,
-                                                                          fileLocation: fileLocation)
-            
-            try linkDependencyContainer(dependencyContainer,
-                                        with: children,
-                                        file: file)
-        }
-    }
-    
-    func linkDependencyContainer(_ dependencyContainer: DependencyContainer,
-                                 with children: [Expr],
-                                 embeddingTypes: [Type] = [],
-                                 file: String) throws {
-        
-        var registerAnnotations: [TokenBox<RegisterAnnotation>] = []
-        var referenceAnnotations: [TokenBox<ReferenceAnnotation>] = []
-        var configurationAnnotations: [ConfigurationAttributeTarget: [TokenBox<ConfigurationAnnotation>]] = [:]
-        
-        for child in children {
-            switch child {
-            case .typeDeclaration(let injectableType, let children):
-                let fileLocation = FileLocation(line: injectableType.line, file: file)
-                let childDependencyContainer = dependencyGraph.dependencyContainer(type: injectableType.value.type,
-                                                                                   accessLevel: injectableType.value.accessLevel,
-                                                                                   doesSupportObjc: injectableType.value.doesSupportObjc,
-                                                                                   fileLocation: fileLocation)
-                try linkDependencyContainer(childDependencyContainer,
-                                            with: children,
-                                            embeddingTypes: embeddingTypes + [injectableType.value.type],
-                                            file: file)
+        var configurationAnnotations = [ConcreteType: [String: [ConfigurationAttribute]]]()
+
+        for (expr, embeddingTypes, file) in ExprSequence(exprs: syntaxTrees) {
+            switch expr {
+            case .registerAnnotation(let token):
+                let location = FileLocation(line: token.line, file: file)
+
+                guard let source = embeddingTypes.last else {
+                    throw LinkerError.foundAnnotationOutsideOfType(location)
+                }
                 
-            case .registerAnnotation(let registerAnnotation):
-                registerAnnotations.append(registerAnnotation)
+                guard let sourceDependencyContainer = dependencyGraph.dependencyContainers[source] else {
+                    throw LinkerError.unknownType(location, type: source)
+                }
+
+                let dependency = Dependency(kind: .registration,
+                                            dependencyName: token.value.name,
+                                            type: .init(token.value.type, token.value.protocolTypes),
+                                            source: source,
+                                            fileLocation: location)
                 
-            case .referenceAnnotation(let referenceAnnotation):
-                referenceAnnotations.append(referenceAnnotation)
+                sourceDependencyContainer.insertDependency(dependency)
                 
-            case .configurationAnnotation(let configurationAnnotation):
-                let target = configurationAnnotation.value.target
-                configurationAnnotations[target] = (configurationAnnotations[target] ?? []) + [configurationAnnotation]
+                let associatedDependencyContainer = try dependencyGraph.dependencyContainer(for: dependency)
+                associatedDependencyContainer.sources.insert(dependency.source)
                 
-            case .parameterAnnotation(let parameterAnnotation):
-                let parameter = Parameter(parameterName: parameterAnnotation.value.name,
-                                          source: dependencyContainer,
-                                          type: parameterAnnotation.value.type,
-                                          fileLocation: FileLocation(line: parameterAnnotation.line, file: file))
-                dependencyContainer.parameters[parameter.dependencyName] = parameter
+            case .referenceAnnotation(let token):
+                let location = FileLocation(line: token.line, file: file)
+
+                guard let source = embeddingTypes.last else {
+                    throw LinkerError.foundAnnotationOutsideOfType(location)
+                }
                 
-            case .file:
+                guard let sourceDependencyContainer = dependencyGraph.dependencyContainers[source] else {
+                    throw LinkerError.unknownType(location, type: source)
+                }
+
+                let dependencyType = dependencyGraph.dependencyType(for: token.value.types,
+                                                                    dependencyName: token.value.name)
+                let dependency = Dependency(kind: .reference,
+                                            dependencyName: token.value.name,
+                                            type: dependencyType,
+                                            source: source,
+                                            fileLocation: location)
+
+                sourceDependencyContainer.insertDependency(dependency)
+
+            case .parameterAnnotation(let token):
+                let location = FileLocation(line: token.line, file: file)
+                
+                guard let source = embeddingTypes.last else {
+                    throw LinkerError.foundAnnotationOutsideOfType(location)
+                }
+
+                guard let sourceDependencyContainer = dependencyGraph.dependencyContainers[source] else {
+                    throw LinkerError.unknownType(location, type: source)
+                }
+
+                let dependency = Dependency(kind: .parameter,
+                                            dependencyName: token.value.name,
+                                            type: .concrete(token.value.type),
+                                            source: source,
+                                            fileLocation: location)
+                
+                sourceDependencyContainer.insertDependency(dependency)
+
+            case .configurationAnnotation(let token):
+                if case .dependency(let name) = token.value.target {
+
+                    guard let concreteType = embeddingTypes.last else {
+                        let location = FileLocation(line: token.line, file: file)
+                        throw LinkerError.foundAnnotationOutsideOfType(location)
+                    }
+                    
+                    var attributesByDependencyName = configurationAnnotations[concreteType] ?? [:]
+                    var attributes = attributesByDependencyName[name] ?? []
+                    attributes.append(token.value.attribute)
+                    attributesByDependencyName[name] = attributes
+                    configurationAnnotations[concreteType] = attributesByDependencyName
+                }
+                
+            case .file,
+                 .typeDeclaration:
                 break
             }
         }
         
-        dependencyContainer.configuration = DependencyContainerConfiguration(
-            with: configurationAnnotations[.`self`]?.map { $0.value }
-        )
+        for (type, attributes) in configurationAnnotations {
+            
+            guard let dependencyContainer = dependencyGraph.dependencyContainers[type] else {
+                throw LinkerError.unknownType(nil, type: type)
+            }
+            
+            for (dependencyName, attributes) in attributes {
+                guard let dependency = dependencyContainer.dependencies[dependencyName] else {
+                    throw LinkerError.dependencyNotFound(nil, dependencyName: dependencyName)
+                }
+                dependency.configuration = DependencyConfiguration(with: attributes)
+            }
+        }
+    }
+}
+
+private extension DependencyContainer {
+    
+    func insertDependency(_ dependency: Dependency) {
         
-        dependencyContainer.embeddingTypes = embeddingTypes
-        
-        for registerAnnotation in registerAnnotations {
-            let name = registerAnnotation.value.name
-            let registration = try dependencyGraph.registration(source: dependencyContainer,
-                                                                registerAnnotation: registerAnnotation,
-                                                                configuration: configurationAnnotations[.dependency(name: name)] ?? [],
-                                                                file: file)
-            let index = DependencyIndex(name: name, type: registration.target.type)
-            dependencyContainer.registrations[index] = registration
-            registration.target.sources.append(dependencyContainer)
+        if let concreteType = dependency.type.concreteType {
+            var dependencyNames = dependencyNamesByConcreteType[concreteType] ?? Set()
+            dependencyNames.insert(dependency.dependencyName)
+            dependencyNamesByConcreteType[concreteType] = dependencyNames
         }
         
-        for referenceAnnotation in referenceAnnotations {
-            let name = referenceAnnotation.value.name
-            let reference = try dependencyGraph.reference(source: dependencyContainer,
-                                                          referenceAnnotation: referenceAnnotation,
-                                                          configuration: configurationAnnotations[.dependency(name: name)] ?? [],
-                                                          file: file)
-            let index = DependencyIndex(name: name, type: reference.target.type)
-            dependencyContainer.references[index] = reference
-            reference.target.sources.append(dependencyContainer)
+        for abstractType in dependency.type.abstractTypes {
+            var dependencyNames = dependencyNamesByAbstractType[abstractType] ?? Set()
+            dependencyNames.insert(dependency.dependencyName)
+            dependencyNamesByAbstractType[abstractType] = dependencyNames
         }
+        
+        dependencies[dependency.dependencyName] = dependency
     }
 }
 
 // MARK: - Encodable
 
-extension DependencyGraph: Encodable {
+extension DependencyGraph {
+    
+    private enum Key: CodingKey {
+        case imports
+        case abstractTypes
+        case concreteTypes
+        case orphinConcreteTypes
+        case dependencyContainers
+    }
     
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.unkeyedContainer()
-        try container.encode(dependencyContainersByName.orderedValues)
+        var container = encoder.container(keyedBy: Key.self)
+        try container.encode(imports, forKey: .imports)
+        try container.encode(abstractTypes, forKey: .abstractTypes)
+        try container.encode(concreteTypes, forKey: .concreteTypes)
+        try container.encode(orphinConcreteTypes, forKey: .orphinConcreteTypes)
+        try container.encode(dependencyContainers, forKey: .dependencyContainers)
     }
 }
 
-extension DependencyContainer: Encodable {
+extension Dependency.`Type` {
     
-    enum CodingKeys: String, CodingKey {
-        case objectType = "object_type"
-        case type
-        case sources
-        case dependencies
+    private enum Key: CodingKey {
+        case abstract
+        case concrete
     }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode("\(DependencyContainer.self)", forKey: .objectType)
-        try container.encode(type, forKey: .type)
-
-        var sourcesContainer = container.nestedUnkeyedContainer(forKey: .sources)
-        for source in sources {
-            try sourcesContainer.encode(source.type)
-        }
-        
-        if !orderedDependencies.isEmpty {
-            var dependenciesContainer = container.nestedUnkeyedContainer(forKey: .dependencies)
-            for dependency in orderedDependencies {
-                switch dependency {
-                case let registration as Registration:
-                    try dependenciesContainer.encode(registration)
-                case let parameter as Parameter:
-                    try dependenciesContainer.encode(parameter)
-                case let reference as Reference:
-                    try dependenciesContainer.encode(reference)
-                default:
-                    let cause = "Unknown dependency type."
-                    throw EncodingError.invalidValue(dependency, EncodingError.Context(codingPath: [CodingKeys.dependencies], debugDescription: cause))
-                }
-            }
-        }
-    }
-}
-
-private enum DependencyCodingKeys: String, CodingKey {
-    case objectType = "object_type"
-    case name
-    case type
-    case abstractType
-    case scope
-}
-
-extension Dependency {
     
     func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: DependencyCodingKeys.self)
+        var container = encoder.container(keyedBy: Key.self)
 
-        let objectType: String
         switch self {
-        case is Registration:
-            objectType = "\(Registration.self)"
-        case is Reference:
-            objectType = "\(Reference.self)"
-        case is Parameter:
-            objectType = "\(Parameter.self)"
-        default:
-            let cause = "Unknown dependency type."
-            throw EncodingError.invalidValue(self, EncodingError.Context(codingPath: [DependencyCodingKeys.objectType], debugDescription: cause))
+        case .abstract(let type):
+            try container.encode([type], forKey: .abstract)
+        case .concrete(let type):
+            try container.encode(type, forKey: .concrete)
+        case .full(let concrete, let abstract):
+            try container.encode(concrete, forKey: .concrete)
+            try container.encode(abstract, forKey: .abstract)
         }
-        
-        try container.encode(objectType, forKey: .objectType)
-        try container.encode(dependencyName, forKey: .name)
-        try container.encode(type, forKey: .type)
-        if abstractType != type {
-            try container.encode(abstractType, forKey: .abstractType)
-        }
-        try container.encode(configuration.scope, forKey: .scope)
     }
 }
 
-extension Type: Encodable {
-    
-    enum CodingKeys: String, CodingKey {
-        case objectType = "object_type"
-        case name
-        case generics
-    }
+// MARK: - CustomStringConvertible
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode("\(Type.self)", forKey: .objectType)
-        try container.encode(name, forKey: .name)
-        if !genericNames.isEmpty {
-            try container.encode(genericNames, forKey: .generics)
+extension Dependency.`Type` {
+
+    var description: String {
+        switch self {
+        case .abstract(let types):
+            return types.map { $0.description }.joined(separator: " & ")
+        case .concrete(let type):
+            return type.description
+        case .full(let concreteType, let abstractTypes):
+            return "\(concreteType) <- \(abstractTypes.map { $0.description }.joined(separator: " & "))"
         }
+    }
+}
+
+// MARK: - Utils
+
+extension DependencyGraph {
+    
+    func dependencyContainer(for concreteType: ConcreteType, at location: FileLocation? = nil) throws -> DependencyContainer {
+        guard let value = dependencyContainers[concreteType] else {
+            throw DependencyGraphError.dependencyContainerNotFound(location, type: concreteType)
+        }
+        return value
+    }
+    
+    func dependencyContainer(for dependency: Dependency) throws -> DependencyContainer {
+        let concreteType = try self.concreteType(for: dependency)
+        
+        guard let dependencyContainer = dependencyContainers[concreteType] else {
+            throw DependencyGraphError.dependencyContainerNotFound(dependency.fileLocation, type: concreteType)
+        }
+        
+        return dependencyContainer
+    }
+    
+    func concreteType(for dependency: Dependency) throws -> ConcreteType {
+        if let value = concreteTypeCache[ObjectIdentifier(dependency)] {
+            return value
+        }
+        let value = try concreteType(for: dependency.type,
+                                     dependencyName: dependency.dependencyName,
+                                     at: dependency.fileLocation)
+        concreteTypeCache[ObjectIdentifier(dependency)] = value
+        return value
+    }
+    
+    func concreteType(for dependencyType: Dependency.`Type`,
+                      dependencyName: String,
+                      at location: FileLocation? = nil) throws -> ConcreteType {
+        
+        switch dependencyType {
+        case .abstract(let abstractTypes):
+            var candidates = [String: ConcreteType]()
+            let concreteTypes = Set(abstractTypes.lazy.map { abstractType -> ConcreteType in
+                guard let concreteTypes = self.concreteTypes[abstractType] else {
+                    return abstractType.concreteType
+                }
+                if let concreteType = concreteTypes[dependencyName] {
+                    candidates[dependencyName] = concreteType
+                    return concreteType
+                } else if concreteTypes.count == 1 {
+                    for (name, type) in concreteTypes {
+                        candidates[name] = type
+                    }
+                    return concreteTypes.values.first!
+                } else {
+                    return abstractType.concreteType
+                }
+            })
+            guard concreteTypes.count == 1 else {
+                let candidates = candidates.lazy.map { ($0, $1) }.sorted { $0.0 < $1.0 }
+                throw DependencyGraphError.invalidAbstractTypeComposition(location, types: abstractTypes, candidates: candidates)
+            }
+            return concreteTypes.first!
+            
+        case .concrete(let concreteType),
+             .full(let concreteType, _):
+            return concreteType
+        }
+    }
+    
+    func dependencyType(for types: Set<AbstractType>,
+                        dependencyName: String) -> Dependency.`Type` {
+        
+        guard types.count == 1 else { return .abstract(types) }
+        
+        let type = types.first!
+        if self.abstractTypes[type.concreteType] != nil {
+            return .concrete(type.concreteType)
+        } else if let concreteTypes = orphinConcreteTypes[dependencyName], concreteTypes.contains(type.concreteType) {
+            return .concrete(type.concreteType)
+        } else if concreteTypes[type] != nil {
+            return .abstract(Set([type]))
+        } else {
+            return .concrete(type.concreteType)
+        }
+    }
+    
+    func isSelfReference(_ dependency: Dependency) throws -> Bool {
+        guard dependency.kind == .reference else { return false }
+        let concreteType = try self.concreteType(for: dependency)
+        return concreteType == dependency.source
+    }
+    
+    func hasSelfReference(_ dependencyContainer: DependencyContainer) throws -> Bool {
+        if let value = hasSelfReferenceCache[ObjectIdentifier(dependencyContainer)] {
+            return value
+        }
+        let value = try _hasSelfReference(dependencyContainer)
+        hasSelfReferenceCache[ObjectIdentifier(dependencyContainer)] = value
+        return value
+    }
+    
+    private func _hasSelfReference(_ dependencyContainer: DependencyContainer) throws -> Bool {
+        return try dependencyContainer.dependencies.orderedValues.contains { dependency in
+            try isSelfReference(dependency)
+        }
+    }
+}
+
+extension Dependency.Kind {
+    
+    var isResolvable: Bool {
+        switch self {
+        case .reference,
+             .registration:
+            return true
+        case .parameter:
+            return false
+        }
+    }
+}
+
+extension Dependency.`Type` {
+    
+    var abstractTypes: Set<AbstractType> {
+        switch self {
+        case .full(_, let types):
+            return types
+        case .abstract(let types):
+            return types
+        case .concrete:
+            return Set()
+        }
+    }
+    
+    var concreteType: ConcreteType? {
+        switch self {
+        case .concrete(let type),
+             .full(let type, _):
+            return type
+        case .abstract:
+            return nil
+        }
+    }
+    
+    var types: Set<AnyType> {
+        switch self {
+        case .full(let concreteType, let abstractTypes):
+            return abstractTypes.isEmpty ? Set([concreteType]) : abstractTypes
+        case .abstract(let types):
+            return types
+        case .concrete(let type):
+            return Set([type])
+        }
+    }
+    
+    init(_ concreteType: ConcreteType, _ abstractTypes: Set<AbstractType>) {
+        if abstractTypes.isEmpty == false {
+            self = .full(concreteType, abstractTypes)
+        } else {
+            self = .concrete(concreteType)
+        }
+    }
+    
+    static func ~= (_ lhs: Dependency.`Type`, _ rhs: Dependency.`Type`) -> Bool {
+        switch (lhs, rhs) {
+        case (.abstract(let lhs), .abstract(let rhs)):
+            return lhs == rhs
+        case (.full(_, let lhs), .abstract(let rhs)):
+            return rhs.isSubset(of: lhs)
+        case (.abstract(let lhs), .full(_, let rhs)):
+            return lhs.isSubset(of: rhs)
+        case (.concrete(let lhs), .concrete(let rhs)):
+            return lhs == rhs
+        case (.full(let lConcreteType, let lAbstractType), .full(let rConcreteType, let rAbstractType)):
+            guard lConcreteType == rConcreteType else { return false }
+            guard lAbstractType == rAbstractType else { return false }
+            return true
+        case (.abstract, _),
+             (.concrete, _),
+             (.full, _):
+            return false
+        }
+    }
+}
+
+extension Set where Element == AbstractType {
+    
+    func contains(_ member: ConcreteType?) -> Bool {
+        guard let member = member else {
+            return false
+        }
+        return contains(member.abstractType)
+    }
+}
+
+extension Sequence where Element: AnyType {
+    
+    var sorted: [Element] {
+        return sorted { $0.description < $1.description }
     }
 }

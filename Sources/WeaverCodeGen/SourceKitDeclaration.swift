@@ -12,7 +12,7 @@ struct SourceKitDeclaration {
     
     let offset: Int
     let length: Int
-    let type: Type
+    let type: ConcreteType
     let hasBody: Bool
     let accessLevel: AccessLevel
     let isInjectable: Bool
@@ -64,12 +64,12 @@ struct SourceKitDeclaration {
 
         do {
             guard let typeString = dictionary[SwiftDocKey.name.rawValue] as? String,
-                  let type = try Type(typeString) else {
+                  let type = try ConcreteType(typeString) else {
                 return nil
             }
 
             if let matches = try NSRegularExpression(pattern: "(\(type.name)<.*>)").matches(in: lineString),
-               let _type = try Type(matches[0]) {
+               let _type = try ConcreteType(matches[0]) {
                 self.type = _type
             } else {
                 self.type = type

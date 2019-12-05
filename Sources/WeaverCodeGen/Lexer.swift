@@ -15,27 +15,42 @@ public final class Lexer {
     private let file: File
     private let fileName: String
     
+    private let cache: LexerCache?
+    
     private lazy var lines: [Line] = self.file.lines
     
-    public init(_ file: File, fileName: String) {
+    public init(_ file: File,
+                fileName: String,
+                cache: LexerCache? = nil) {
+
         self.file = file
         self.fileName = fileName
+        self.cache = cache
     }
     
     /// Generates a sorted list of tokens
     public func tokenize() throws -> [AnyTokenBox] {
+        
+        if let filePath = file.path, let tokens = cache?.read(for: Path(filePath)) {
+            return tokens
+        }
         
         let sourceKitAST = try Structure(file: file).dictionary
         let sourceKitTokens = try SyntaxMap(file: file).tokens
         
         var line = lines.startIndex
 
-        var tokens = [AnyTokenBox]()
-        tokens += tokenize(from: sourceKitAST, at: &line)
-        tokens += try tokenize(from: sourceKitTokens)
-        tokens += try tokenize(from: file.lines)
-
-        return tokens.sorted(by: tokenSortFunction)
+        let tokens = try [
+            tokenize(from: sourceKitAST, at: &line),
+            tokenize(from: sourceKitTokens),
+            tokenize(from: file.lines)
+        ].flatMap { $0 }.sorted(by: tokenSortFunction)
+        
+        if let filePath = file.path, let cache = cache {
+            cache.write(tokens, for: Path(filePath))
+        }
+        
+        return tokens
     }
 }
 
