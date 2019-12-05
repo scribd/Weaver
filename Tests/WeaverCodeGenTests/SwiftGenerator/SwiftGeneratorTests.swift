@@ -6,9 +6,9 @@
 //
 
 import Foundation
+import PathKit
 import XCTest
 import SourceKittenFramework
-import PathKit
 
 @testable import WeaverCodeGen
 
@@ -17,15 +17,6 @@ final class SwiftGeneratorTests: XCTestCase {
     func test_no_annotation() {
         do {
             let actual = try actualOutput()
-            XCTAssertNil(actual)
-        } catch {
-            XCTFail("Unexpected error \(error)")
-        }
-    }
-    
-    func test_no_annotation_with_detailed_resolvers() {
-        do {
-            let actual = try actualOutput(detailedResolvers: true)
             XCTAssertNil(actual)
         } catch {
             XCTFail("Unexpected error \(error)")
@@ -183,22 +174,6 @@ final class SwiftGeneratorTests: XCTestCase {
             XCTFail("Unexpected error \(error)")
         }
     }
-    
-    func test_detailed_resolvers() {
-        do {
-            try performTest(detailedResolvers: true)
-        } catch {
-            XCTFail("Unexpected error \(error)")
-        }
-    }
-    
-    func test_objc_compatible_detailed_resolvers() {
-        do {
-            try performTest(detailedResolvers: true)
-        } catch {
-            XCTFail("Unexpected error \(error)")
-        }
-    }
 }
 
 // MARK: - Utils
@@ -207,7 +182,7 @@ private extension SwiftGeneratorTests {
     
     var version: String { return "0.12.4" }
     
-    func actualOutput(detailedResolvers: Bool = false, function: StringLiteralType = #function) throws -> String? {
+    func actualOutput(function: StringLiteralType = #function) throws -> String? {
         let fileName = function.replacingOccurrences(of: "()", with: "")
         let path = Path(#file).parent() + Path("Input/\(fileName).swift")
 
@@ -220,21 +195,17 @@ private extension SwiftGeneratorTests {
             return nil
         }
 
-        let resourcesDirectory = Path(#file).parent().parent().parent().parent() + "Resources"
-        let mainTemplatePath = resourcesDirectory + "dependency_resolver.stencil"
-        let detailedResolversTemplatePath = resourcesDirectory + "detailed_resolvers.stencil"
-        
         let lexer = Lexer(file, fileName: "test.swift")
         let tokens = try lexer.tokenize()
         let parser = Parser(tokens, fileName: "test.swift")
         let ast = try parser.parse()
         let dependencyGraph = try Linker(syntaxTrees: [ast]).dependencyGraph
+        let inspector = Inspector(dependencyGraph: dependencyGraph)
         
         let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
-                                           detailedResolvers: detailedResolvers,
+                                           inspector: inspector,
                                            version: version,
-                                           mainTemplate: mainTemplatePath,
-                                           detailedResolversTemplate: detailedResolversTemplatePath)
+                                           testableImports: nil)
 
         guard let actual: String = try generator.generate() else {
             return nil
@@ -273,11 +244,14 @@ private extension SwiftGeneratorTests {
         print("\n")
     }
     
-    func performTest(detailedResolvers: Bool = false, function: StringLiteralType = #function) throws {
-        let actual = try actualOutput(detailedResolvers: detailedResolvers, function: function)
+    func performTest(function: StringLiteralType = #function) throws {
+        guard let actual = try actualOutput(function: function) else {
+            XCTFail("Actual wasn't expected to be nil")
+            return
+        }
         let expected = try expectedOutput(actual: actual, function)
         
-        XCTAssertEqual(actual!, expected)
-        try actual.flatMap { try exportDiff(actual: $0, expected: expected, function) }
+        XCTAssertEqual(actual, expected)
+        try exportDiff(actual: actual, expected: expected, function)
     }
 }

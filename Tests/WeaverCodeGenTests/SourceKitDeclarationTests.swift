@@ -78,7 +78,7 @@ final class SourceKitDeclarationTests: XCTestCase {
     func test_init_should_set_name() {
      
         let model = makeModel(name: "fake_name")
-        XCTAssertEqual(model?.type, Type(name: "fake_name"))
+        XCTAssertEqual(model?.type, AnyType(name: "fake_name"))
     }
     
     // MARK: - isInjectable

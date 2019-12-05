@@ -28,9 +28,9 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 109, line: 0),
-                                                              children: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyEmbeddedService"), accessLevel: .default), offset: 32, length: 81, line: 1),
-                                                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", type: Type(name: "Session"), protocolType: Type(name: "SessionProtocol")), offset: 62, length: 48, line: 2))])])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 109, line: 0),
+                                                              children: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyEmbeddedService"), accessLevel: .default), offset: 32, length: 81, line: 1),
+                                                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", type: ConcreteType(name: "Session"), protocolTypes: [AbstractType(name: "SessionProtocol")]), offset: 62, length: 48, line: 2))])])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -44,7 +44,7 @@ final class MyService {
         let file = File(contents: """
 final class MyService {
   // weaver: api = API <- APIProtocol
-  // weaver: api.scope = .graph
+  // weaver: api.scope = .container
 }
 """)
         
@@ -54,9 +54,9 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 89, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol")), offset: 26, length: 36, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .scope(value: .graph), target: .dependency(name: "api")), offset: 64, length: 30, line: 2))])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 93, line: 0),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1)),
+                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .scope(value: .container), target: .dependency(name: "api")), offset: 64, length: 34, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -79,8 +79,8 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 58, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol", isOptional: true)), offset: 26, length: 37, line: 1))])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 58, line: 0),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol", isOptional: true)]), offset: 26, length: 37, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -103,8 +103,8 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 57, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol")), offset: 26, length: 36, line: 1))])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 57, line: 0),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -127,8 +127,8 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 42, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: nil), offset: 26, length: 21, line: 1))])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 42, line: 0),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: []), offset: 26, length: 21, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -151,37 +151,14 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 51, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1))])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 51, line: 0),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
             XCTAssertEqual(syntaxTree, expected)
         } catch {
             XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
-    func test_parser_should_generate_a_syntax_error_when_trying_to_add_a_scope_to_a_reference() {
-        let file = File(contents: """
-final class MyService {
-  // weaver: api <- APIProtocol
-  // weaver: api.scope = .graph
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            _ = try parser.parse()
-            XCTFail("An error was expected.")
-        } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                         name: "api",
-                                                                         type: nil)))
-        } catch {
-            XCTFail("Unexpected error: \(error).")
         }
     }
     
@@ -199,9 +176,7 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                         name: "api",
-                                                                         type: nil)))
+            XCTAssertEqual(error.description, ParserError.unknownDependency("api", FileLocation(line: 1, file: "test.swift")).description)
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -221,8 +196,8 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 93, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1)),
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 93, line: 0),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "MyService.make"), target: .dependency(name: "api")), offset: 58, length: 40, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
@@ -247,8 +222,8 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 93, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol")), offset: 26, length: 36, line: 1)),
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 93, line: 0),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "API.make"), target: .dependency(name: "api")), offset: 64, length: 34, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
@@ -275,9 +250,10 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "api",
-                                                                                              type: nil)))
+            XCTAssertEqual(
+                error.description,
+               ParserError.dependencyDoubleDeclaration("api", FileLocation(line: 2, file: "test.swift")).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -321,8 +297,8 @@ class Test {
             
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 51, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1))])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 51, line: 0),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -352,7 +328,7 @@ class Test {
         
         let file = File(contents: """
 final class MyService {
-  // weaver: api.scope = .graph
+  // weaver: api.scope = .container
 }
 """)
         do {
@@ -363,9 +339,10 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                    name: "api",
-                                                                                    type: nil)))
+            XCTAssertEqual(
+                error.description,
+                ParserError.unknownDependency("api", FileLocation(line: 1, file: "test.swift")).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -388,9 +365,10 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "api",
-                                                                                              type: nil)))
+            XCTAssertEqual(
+                error.description,
+                ParserError.dependencyDoubleDeclaration("api", FileLocation(line: 2, file: "test.swift")).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -410,7 +388,10 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.unexpectedToken(FileLocation(line: 0, file: "test.swift")))
+            XCTAssertEqual(
+                error.description,
+                ParserError.unexpectedToken(FileLocation(line: 0, file: "test.swift")).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -429,8 +410,8 @@ final class MovieManager {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MovieManager")), offset: 6, length: 52, line: 0),
-                                                              children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(name: "movieID", type: Type(name: "UInt", isOptional: true)), offset: 29, length: 28, line: 1))])],
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MovieManager")), offset: 6, length: 52, line: 0),
+                                                              children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(name: "movieID", type: ConcreteType(name: "UInt", isOptional: true)), offset: 29, length: 28, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -457,9 +438,10 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "movieID",
-                                                                                              type: nil)))
+            XCTAssertEqual(
+                error.description,
+                ParserError.dependencyDoubleDeclaration("movieID", FileLocation(line: 2, file: "test.swift")).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -482,9 +464,10 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "movieID",
-                                                                                              type: nil)))
+            XCTAssertEqual(
+                error.description,
+                ParserError.dependencyDoubleDeclaration("movieID", FileLocation(line: 2, file: "test.swift")).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -507,9 +490,10 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "movieID",
-                                                                                              type: nil)))
+            XCTAssertEqual(
+                error.description,
+                ParserError.dependencyDoubleDeclaration("movieID", FileLocation(line: 2, file: "test.swift")).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -529,8 +513,8 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 87, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1)),
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 87, line: 0),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`), offset: 58, length: 34, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
@@ -557,8 +541,11 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.configurationAttributeDoubleAssignation(FileLocation(line: 3, file: "test.swift"),
-                                                                                      attribute: .isIsolated(value: false)))
+            XCTAssertEqual(
+                error.description,
+                ParserError.configurationAttributeDoubleAssignation(FileLocation(line: 3, file: "test.swift"),
+                                                                    attribute: .isIsolated(value: false)).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -578,8 +565,8 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 80, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1)),
+            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 80, line: 0),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .doesSupportObjc(value: true), target: .dependency(name: "api")), offset: 58, length: 27, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
@@ -604,8 +591,11 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"),
-                                                               underlyingError: TokenError.invalidConfigurationAttributeTarget(name: "objc", target: .`self`)))
+            XCTAssertEqual(
+                error.description,
+                LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"),
+                                             underlyingError: TokenError.invalidConfigurationAttributeTarget(name: "objc", target: .`self`)).description
+            )
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
