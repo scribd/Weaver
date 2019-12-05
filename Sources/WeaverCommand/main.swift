@@ -19,7 +19,18 @@ private let version = "0.12.4"
 
 private extension Linker {
 
-    convenience init(_ inputPaths: [Path], shouldLog: Bool = true) throws {
+    convenience init(_ inputPaths: [Path],
+                     cachePath: Path,
+                     shouldLog: Bool = true) throws {
+
+        // ---- Read Cache ----
+
+        if shouldLog {
+            Logger.log(.info, "")
+            Logger.log(.info, "Reading cache...".yellow, benchmark: .start("caching"))
+        }
+        let lexerCache = LexerCache(for: cachePath, version: version, shouldLog: shouldLog)
+        if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("caching")) }
 
         // ---- Parse ----
 
@@ -33,13 +44,21 @@ private extension Linker {
             }
             
             if shouldLog { Logger.log(.info, "<- '\(filePath)'".yellow) }
-            let tokens = try Lexer(file, fileName: filePath.string).tokenize()
+            let tokens = try Lexer(file, fileName: filePath.string, cache: lexerCache).tokenize()
             return try Parser(tokens, fileName: filePath.string).parse()
         }
         if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("parsing")) }
+        
+        // ---- Write Cache ----
+        
+        if shouldLog {
+            Logger.log(.info, "")
+            Logger.log(.info, "Writing cache to disk...".yellow, benchmark: .start("caching"))
+        }
+        lexerCache.saveToDisk()
+        if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("caching")) }
 
         // ---- Link ----
-        
         
         if shouldLog {
             Logger.log(.info, "")
@@ -55,16 +74,15 @@ private extension Linker {
 private enum Parameters {
     static let projectPath = Option<Path?>("project-path", default: nil, description: "Project's directory.")
     static let configPath = Option<Path?>("config-path", default: nil, description: "Configuration path.")
-    static let outputPath = Option<Path?>("output-path", default: nil, description: "Where the swift files will be generated.")
-    static let mainTemplatePath = Option<Path?>("main-template-path", default: nil, description: "Custom main template path.")
-    static let detailedResolversTemplatePath = Option<Path?>("detailed-resolvers-template-path", default: nil, description: "Custom detailed resolvers template path.")
-    static let unsafe = OptionalFlag("unsafe", disabledName: "safe")
-    static let singleOutput = OptionalFlag("single-output", disabledName: "multi_outputs")
+    static let mainOutputPath = Option<Path?>("main-output-path", default: nil, description: "Where the main swift files will be generated.")
+    static let testsOutputPath = Option<Path?>("tests-output-path", default: nil, description: "Where the tests swift files will be generated.")
     static let inputPath = VariadicOption<String>("input-path", default: [], description: "Paths to input files.")
     static let ignoredPath = VariadicOption<String>("ignored-path", default: [], description: "Paths to ignore.")
+    static let cachePath = Option<Path?>("cache-path", default: nil, description: "Cache path.")
     static let recursiveOff = OptionalFlag("recursive-off", disabledName: "recursive-on")
     static let pretty = Flag("pretty", default: false)
-    static let detailedResolvers = OptionalFlag("detailed-resolvers", default: nil)
+    static let tests = OptionalFlag("tests", default: nil)
+    static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
 }
 
 // MARK: - Commands
@@ -75,47 +93,54 @@ let main = Group {
         "swift",
         Parameters.projectPath,
         Parameters.configPath,
-        Parameters.outputPath,
-        Parameters.mainTemplatePath,
-        Parameters.detailedResolversTemplatePath,
-        Parameters.unsafe,
-        Parameters.detailedResolvers,
-        Parameters.singleOutput,
+        Parameters.mainOutputPath,
+        Parameters.testsOutputPath,
         Parameters.inputPath,
         Parameters.ignoredPath,
-        Parameters.recursiveOff)
+        Parameters.cachePath,
+        Parameters.recursiveOff,
+        Parameters.tests,
+        Parameters.testableImports)
     {
         projectPath,
         configPath,
-        outputPath,
-        mainTemplatePath,
-        detailedResolversTemplatePath,
-        unsafe,
-        detailedResolvers,
-        singleOutput,
+        mainOutputPath,
+        testsOutputPath,
         inputPaths,
         ignoredPaths,
-        recursiveOff in
+        cachePath,
+        recursiveOff,
+        tests,
+        testableImports in
         
         do {
             let configuration = try Configuration(configPath: configPath,
                                                   inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
                                                   ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
                                                   projectPath: projectPath,
-                                                  outputPath: outputPath,
-                                                  mainTemplatePath: mainTemplatePath,
-                                                  detailedResolversTemplatePath: detailedResolversTemplatePath,
-                                                  unsafe: unsafe,
-                                                  singleOutput: singleOutput,
+                                                  mainOutputPath: mainOutputPath,
+                                                  testsOutputPath: testsOutputPath,
+                                                  cachePath: cachePath,
                                                   recursiveOff: recursiveOff,
-                                                  detailedResolvers: detailedResolvers)
+                                                  tests: tests,
+                                                  testableImports: testableImports.isEmpty ? nil : testableImports)
             
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
             // ---- Link ----
 
-            let linker = try Linker(try configuration.inputPaths())
+            let linker = try Linker(try configuration.inputPaths(), cachePath: configuration.cachePath)
             let dependencyGraph = linker.dependencyGraph
+
+            // ---- Inspect ----
+            
+            Logger.log(.info, "")
+            Logger.log(.info, "Checking dependency graph...".magenta, benchmark: .start("checking"))
+                
+            let inspector = Inspector(dependencyGraph: dependencyGraph)
+            try inspector.validate()
+            
+            Logger.log(.info, "Done".magenta, benchmark: .end("checking"))
 
             // ---- Generate ----
 
@@ -123,57 +148,27 @@ let main = Group {
             Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
 
             let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
-                                               detailedResolvers: configuration.detailedResolvers,
+                                               inspector: inspector,
                                                version: version,
-                                               mainTemplate: configuration.mainTemplatePath,
-                                               detailedResolversTemplate: configuration.detailedResolversTemplatePath)
+                                               testableImports: configuration.testableImports)
 
-            let generatedData: [(file: String, data: String?)] = try {
-                if configuration.singleOutput {
-                    return [(file: "swift", data: try generator.generate())]
-                } else {
-                    return try generator.generate()
-                }
-            }()
+            guard let mainGeneratedData = try generator.generate() else {
+                Logger.log(.info, "-- No Weaver annotation found in project.".red)
+                return
+            }
+            let testsGeneratedData = configuration.tests ? try generator.generateTests() : nil
 
             Logger.log(.info, "Done".lightBlue, benchmark: .end("generating"))
-
-            // ---- Collect ----
-
-            let dataToWrite: [(path: Path, data: String?)] = generatedData.compactMap { (file, data) in
-
-                let filePath = Path(file)
-
-                guard let fileName = filePath.components.last else {
-                    Logger.log(.error, "Could not retrieve file name from path '\(filePath)'".red)
-                    return nil
-                }
-                let generatedFilePath = configuration.outputPath + "Weaver.\(fileName)"
-
-                guard let data = data else {
-                    Logger.log(.info, "-- No Weaver annotation found in file '\(filePath)'.".red)
-                    return (path: generatedFilePath, data: nil)
-                }
-
-                return (path: generatedFilePath, data: data)
-            }
-
-            // ---- Inspect ----
-
-            if !configuration.unsafe {
-                Logger.log(.info, "")
-                Logger.log(.info, "Checking dependency graph...".magenta, benchmark: .start("checking"))
-
-                let inspector = Inspector(dependencyGraph: dependencyGraph)
-                try inspector.validate()
-
-                Logger.log(.info, "Done".magenta, benchmark: .end("checking"))
-            }
 
             // ---- Write ----
 
             Logger.log(.info, "")
             Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
+            
+            let dataToWrite = [
+                (configuration.mainOutputPath + "Weaver.swift", mainGeneratedData),
+                (configuration.testsOutputPath + "WeaverTests.swift", testsGeneratedData)
+            ]
 
             for (path, data) in dataToWrite {
                 if let data = data {
@@ -197,12 +192,32 @@ let main = Group {
     }
     
     $0.command(
+        "clean",
+        Parameters.projectPath,
+        Parameters.configPath,
+        Parameters.cachePath
+    ) {
+        projectPath,
+        configPath,
+        cachePath in
+        
+        let configuration = try Configuration(configPath: configPath,
+                                              projectPath: projectPath,
+                                              cachePath: cachePath)
+        
+        let lexerCache = LexerCache(for: configuration.cachePath, version: version)
+        lexerCache.clear()
+        lexerCache.saveToDisk()
+    }
+    
+    $0.command(
         "json",
         Parameters.projectPath,
         Parameters.configPath,
         Parameters.pretty,
         Parameters.inputPath,
         Parameters.ignoredPath,
+        Parameters.cachePath,
         Parameters.recursiveOff
     ) {
         projectPath,
@@ -210,17 +225,21 @@ let main = Group {
         pretty,
         inputPaths,
         ignoredPaths,
+        cachePath,
         recursiveOff in
         
         let configuration = try Configuration(configPath: configPath,
                                               inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
                                               ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
                                               projectPath: projectPath,
+                                              cachePath: cachePath,
                                               recursiveOff: recursiveOff)
         
         // ---- Link ----
 
-        let linker = try Linker(try configuration.inputPaths(), shouldLog: false)
+        let linker = try Linker(try configuration.inputPaths(),
+                                cachePath: configuration.cachePath,
+                                shouldLog: false)
         let dependencyGraph = linker.dependencyGraph
 
         // ---- Export ----
@@ -236,63 +255,6 @@ let main = Group {
         }
         
         Logger.log(.info, jsonString)
-    }
-    
-    $0.command(
-        "xcfilelist",
-        Parameters.configPath,
-        Parameters.outputPath,
-        Parameters.projectPath,
-        Parameters.singleOutput,
-        Parameters.inputPath,
-        Parameters.ignoredPath,
-        Parameters.recursiveOff
-    ) {
-        configPath,
-        outputPath,
-        projectPath,
-        singleOutput,
-        inputPaths,
-        ignoredPaths,
-        recursiveOff in
-
-        let configuration = try Configuration(configPath: configPath,
-                                              inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
-                                              ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
-                                              projectPath: projectPath,
-                                              singleOutput: singleOutput,
-                                              recursiveOff: recursiveOff)
-
-        // ---- Link ----
-
-        let linker = try Linker(try configuration.inputPaths())
-        let dependencyGraph = linker.dependencyGraph
-
-        // ---- Write ----
-
-        Logger.log(.info, "")
-        Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
-
-        let generator = XCFilelistGenerator(dependencyGraph: dependencyGraph,
-                                            projectPath: configuration.projectPath,
-                                            outputPath: configuration.outputPath,
-                                            singleOutput: configuration.singleOutput,
-                                            version: version)
-
-        let filelists = generator.generate()
-
-        let inputFilelistPath = configuration.outputPath + "WeaverInput.xcfilelist"
-        try inputFilelistPath.parent().mkpath()
-        try inputFilelistPath.write(filelists.input)
-        Logger.log(.info, "-> \(inputFilelistPath)".lightMagenta)
-
-        let outputFilelistPath = configuration.outputPath + "WeaverOutput.xcfilelist"
-        try outputFilelistPath.parent().mkpath()
-        try outputFilelistPath.write(filelists.output)
-        Logger.log(.info, "-> \(outputFilelistPath)".lightMagenta)
-
-        Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
-        Logger.log(.info, "")
     }
 }
 
