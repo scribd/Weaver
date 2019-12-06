@@ -32,6 +32,8 @@ public final class LexerCache {
     private let shouldLog: Bool
     
     private var cache: Cache
+    
+    public private(set) var didChange = false
 
     public init(for cachePath: Path,
                 version: String,
@@ -56,6 +58,7 @@ public final class LexerCache {
             if shouldLog {
                 print("Could not read cache. \(error.localizedDescription) Creating a new one.")
             }
+            didChange = true
             cache = Cache(version: version, values: [:])
         }
     }
@@ -79,6 +82,7 @@ public final class LexerCache {
     }
     
     public func clear() {
+        didChange = true
         cache = Cache(version: version, values: [:])
     }
 
@@ -92,11 +96,13 @@ public final class LexerCache {
             }
             
             guard let value = cache.values[key(for: filePath)] else {
+                didChange = true
                 return nil
             }
             
             guard lastUpdate <= value.lastUpdate else {
                 cache.values[key(for: filePath)] = nil
+                didChange = true
                 return nil
             }
             
@@ -123,6 +129,7 @@ public final class LexerCache {
     }
     
     private func fail(for filePath: Path, _ error: Error? = nil) {
+        didChange = true
         cache.values[key(for: filePath)] = nil
         if shouldLog {
             let errorMessage: String

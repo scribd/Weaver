@@ -62,7 +62,14 @@ extension Inspector {
                 foundDependencies[sourceType] = try resolve(dependency, in: source)
             }
         } catch let error as InspectorAnalysisError {
-            throw InspectorError.invalidDependencyGraph(dependency, underlyingError: error)
+            if source.sources.isEmpty {
+                let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [
+                    .triedToResolveDependencyInRootType(source)
+                ])
+                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: underlyingError)
+            } else {
+                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: error)
+            }
         }
     }
 }

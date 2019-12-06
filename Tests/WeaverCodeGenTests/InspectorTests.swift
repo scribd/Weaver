@@ -511,8 +511,9 @@ final class MovieViewController: UIViewController {
             XCTFail("Expected error.")
         } catch let error as InspectorError {
             XCTAssertEqual(error.description, """
-            test.swift:2: error: Invalid dependency: 'movieManager: MovieManaging'. Dependency cannot be resolved.
-            """)
+test.swift:2: error: Invalid dependency: 'movieManager: MovieManaging'. Dependency cannot be resolved.
+test.swift:1: warning: Type 'MovieViewController' doesn't seem to be attached to the dependency graph. You might have to use `self.isIsolated = true` or register it somewhere.
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

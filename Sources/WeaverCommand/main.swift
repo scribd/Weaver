@@ -22,6 +22,18 @@ private extension Linker {
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
                      shouldLog: Bool = true) throws {
+        
+        var didChange = false
+        try self.init(inputPaths,
+                      cachePath: cachePath,
+                      didChange: &didChange)
+        _ = didChange
+    }
+    
+    convenience init(_ inputPaths: [Path],
+                     cachePath: Path,
+                     shouldLog: Bool = true,
+                     didChange: inout Bool) throws {
 
         // ---- Read Cache ----
 
@@ -55,6 +67,7 @@ private extension Linker {
             Logger.log(.info, "")
             Logger.log(.info, "Writing cache to disk...".yellow, benchmark: .start("caching"))
         }
+        didChange = lexerCache.didChange
         lexerCache.saveToDisk()
         if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("caching")) }
 
@@ -129,7 +142,8 @@ let main = Group {
 
             // ---- Link ----
 
-            let linker = try Linker(try configuration.inputPaths(), cachePath: configuration.cachePath)
+            var didChange = false
+            let linker = try Linker(try configuration.inputPaths(), cachePath: configuration.cachePath, didChange: &didChange)
             let dependencyGraph = linker.dependencyGraph
 
             // ---- Inspect ----
@@ -165,24 +179,28 @@ let main = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
             
-            let dataToWrite = [
-                (configuration.mainOutputPath + "Weaver.swift", mainGeneratedData),
-                (configuration.testsOutputPath + "WeaverTests.swift", testsGeneratedData)
-            ]
+            if didChange {
+                let dataToWrite = [
+                    (configuration.mainOutputPath + "Weaver.swift", mainGeneratedData),
+                    (configuration.testsOutputPath + "WeaverTests.swift", testsGeneratedData)
+                ]
 
-            for (path, data) in dataToWrite {
-                if let data = data {
-                    try path.parent().mkpath()
-                    try path.write(data)
-                    Logger.log(.info, "-> '\(path)'".lightMagenta)
-                } else if path.isFile && path.isDeletable {
-                    try path.parent().mkpath()
-                    try path.delete()
-                    Logger.log(.info, " X '\(path)'".lightMagenta)
+                for (path, data) in dataToWrite {
+                    if let data = data {
+                        try path.parent().mkpath()
+                        try path.write(data)
+                        Logger.log(.info, "-> '\(path)'".lightMagenta)
+                    } else if path.isFile && path.isDeletable {
+                        try path.parent().mkpath()
+                        try path.delete()
+                        Logger.log(.info, " X '\(path)'".lightMagenta)
+                    }
                 }
+                Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
+            } else {
+                Logger.log(.info, "No change detected. Nothing to write to disk.".lightMagenta, benchmark: .end("writing"))
             }
 
-            Logger.log(.info, "Done".lightMagenta, benchmark: .end("writing"))
             Logger.log(.info, "")
             Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
         } catch {

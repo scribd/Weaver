@@ -62,6 +62,7 @@ enum InspectorAnalysisHistoryRecord: Error {
     case dependencyNotFound(Dependency, in: DependencyContainer)
     case triedToBuildType(DependencyContainer, stepCount: Int)
     case triedToResolveDependencyInType(Dependency, stepCount: Int)
+    case triedToResolveDependencyInRootType(DependencyContainer)
     case typeMismatch(Dependency, candidate: Dependency)
     case implicitDependency(Dependency, candidates: [Dependency])
     case implicitType(Dependency, candidates: [Dependency])
@@ -254,7 +255,9 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
         case .triedToBuildType(let dependencyContainer, let stepCount):
             return dependencyContainer.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(dependencyContainer.type)'")
         case .triedToResolveDependencyInType(let dependency, let stepCount):
-            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.dependencyName)' in type '\(dependency.type)'")
+            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.dependencyName)' in type '\(dependency.source)'")
+        case .triedToResolveDependencyInRootType(let dependencyContainer):
+            return dependencyContainer.xcodeLogString(.warning, "Type '\(dependencyContainer.type)' doesn't seem to be attached to the dependency graph. You might have to use `self.isIsolated = true` or register it somewhere")
         case .typeMismatch(let dependency, let candidate):
             return """
             \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' has a mismatching type '\(dependency.type)'"))
@@ -291,6 +294,7 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
                  .implicitType:
                 return true
             case .triedToResolveDependencyInType,
+                 .triedToResolveDependencyInRootType,
                  .triedToBuildType:
                 return false
             }
@@ -308,6 +312,7 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
                 return true
             case .dependencyNotFound,
                  .triedToResolveDependencyInType,
+                 .triedToResolveDependencyInRootType,
                  .typeMismatch,
                  .implicitDependency,
                  .implicitType:
@@ -320,6 +325,7 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
         return filter {
             switch $0 {
             case .triedToResolveDependencyInType,
+                 .triedToResolveDependencyInRootType,
                  .typeMismatch,
                  .implicitDependency,
                  .implicitType:
