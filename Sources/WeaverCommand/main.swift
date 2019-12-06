@@ -125,19 +125,22 @@ let main = Group {
         recursiveOff,
         tests,
         testableImports in
+
+        let configuration = try Configuration(configPath: configPath,
+                                              inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
+                                              ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
+                                              projectPath: projectPath,
+                                              mainOutputPath: mainOutputPath,
+                                              testsOutputPath: testsOutputPath,
+                                              cachePath: cachePath,
+                                              recursiveOff: recursiveOff,
+                                              tests: tests,
+                                              testableImports: testableImports.isEmpty ? nil : testableImports)
+
+        let mainOutputPath = configuration.mainOutputPath + "Weaver.swift"
+        let testsOutputPath = configuration.testsOutputPath + "WeaverTests.swift"
         
         do {
-            let configuration = try Configuration(configPath: configPath,
-                                                  inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
-                                                  ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
-                                                  projectPath: projectPath,
-                                                  mainOutputPath: mainOutputPath,
-                                                  testsOutputPath: testsOutputPath,
-                                                  cachePath: cachePath,
-                                                  recursiveOff: recursiveOff,
-                                                  tests: tests,
-                                                  testableImports: testableImports.isEmpty ? nil : testableImports)
-            
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
             // ---- Link ----
@@ -181,8 +184,8 @@ let main = Group {
             
             if didChange {
                 let dataToWrite = [
-                    (configuration.mainOutputPath + "Weaver.swift", mainGeneratedData),
-                    (configuration.testsOutputPath + "WeaverTests.swift", testsGeneratedData)
+                    (mainOutputPath, mainGeneratedData),
+                    (testsOutputPath, testsGeneratedData)
                 ]
 
                 for (path, data) in dataToWrite {
@@ -204,6 +207,8 @@ let main = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
         } catch {
+            try? mainOutputPath.write(Data())
+            try? testsOutputPath.write(Data())
             Logger.log(.error, "\(error)")
             exit(1)
         }
