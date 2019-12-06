@@ -10,14 +10,23 @@ import Meta
 
 extension TypeIdentifier {
     
-    static let mainDependencyContainerTypeID = TypeIdentifier(name: "MainDependencyContainer")
-    static let mainDependencyResolverStubTypeID = TypeIdentifier(name: "MainDependencyResolverStub")
+    static let mainDependencyContainer = TypeIdentifier(name: "MainDependencyContainer")
+    static let mainDependencyResolverStub = TypeIdentifier(name: "MainDependencyResolverStub")
     static let anyObject = TypeIdentifier(name: "AnyObject")
     static let nsObject = TypeIdentifier(name: "NSObject")
 
     static func builder(of typeID: TypeIdentifier) -> TypeIdentifier {
         return TypeIdentifier(name: "Builder").adding(genericParameter: typeID)
     }
+}
+
+extension Variable {
+    
+    static let _self = Variable(name: "_self")
+    static let __self = Variable(name: "__self")
+    static let source = Variable(name: "source")
+    static let __mainSelf = Variable(name: "__mainSelf")
+    static let value = Variable(name: "value")
 }
 
 extension AnyType {

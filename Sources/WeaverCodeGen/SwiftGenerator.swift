@@ -277,7 +277,7 @@ private final class MetaWeaverFile {
 private extension MetaWeaverFile {
     
     func mainDependencyContainer() throws -> Type {
-        return Type(identifier: .mainDependencyContainerTypeID)
+        return Type(identifier: .mainDependencyContainer)
             .with(objc: doesSupportObjc)
             .adding(inheritedType: doesSupportObjc ? .nsObject : nil)
             .adding(member: PlainCode(code: """
@@ -361,7 +361,7 @@ private extension MetaWeaverFile {
                     .with(type: .builder(of: declaration.type.typeID))
                     .with(immutable: false))
                     .with(accessLevel: .private)
-                    .with(value: TypeIdentifier.mainDependencyContainerTypeID.reference + .named("fatalBuilder") | .call()),
+                    .with(value: TypeIdentifier.mainDependencyContainer.reference + .named("fatalBuilder") | .call()),
             ]
             
             if declaration.parameters.isEmpty {
@@ -373,7 +373,6 @@ private extension MetaWeaverFile {
                         )))
                 ]
             } else {
-                let _selfVariable = Variable(name: "_self")
                 members += [
                     Function(kind: .named(declaration.declarationName))
                         .with(resultType: declaration.type.typeID)
@@ -382,12 +381,12 @@ private extension MetaWeaverFile {
                             return FunctionParameter(name: parameter.dependencyName, type: concreteType.typeID)
                         })
                         .adding(member: Return(value: .named("_\(declaration.declarationName)") | .block(FunctionBody()
-                            .adding(parameter: FunctionBodyParameter(name: _selfVariable.name))
+                            .adding(parameter: FunctionBodyParameter(name: Variable._self.name))
                             .adding(members: try declaration.parameters.compactMap { parameter in
                                 let declaration = try self.declaration(for: parameter)
                                 return Assignment(
-                                    variable: _selfVariable.reference + .named("_\(declaration.declarationName)"),
-                                    value: _selfVariable.reference + .named("builder") | .call(Tuple()
+                                    variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
+                                    value: Variable._self.reference + .named("builder") | .call(Tuple()
                                         .adding(parameter: TupleParameter(value:  Reference.named(parameter.dependencyName)))
                                     )
                                 )
@@ -422,7 +421,7 @@ private extension MetaWeaverFile {
     }
     
     func resolversImplementationExtension() -> Extension {
-        return Extension(type: .mainDependencyContainerTypeID)
+        return Extension(type: .mainDependencyContainer)
             .adding(inheritedTypes: orderedDeclarations.map { declaration in
                 TypeIdentifier(name: declaration.resolverTypeName)
             })
@@ -460,7 +459,7 @@ private extension MetaWeaverFile {
     }
     
     func settersImplementationExtension() -> Extension {
-        return Extension(type: .mainDependencyContainerTypeID)
+        return Extension(type: .mainDependencyContainer)
             .adding(inheritedTypes: setterDeclarations.map { declaration in
                 TypeIdentifier(name: declaration.setterTypeName)
             })
@@ -531,9 +530,6 @@ private extension MetaWeaverFile {
         return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [TypeBodyMember] in
             guard dependencyContainer.declarationSource == .type else { return [] }
             
-            let _selfVariable = Variable(name: "_self")
-            let sourceVariable = Variable(name: "source")
-
             let inputReferences = try self.inputReferences(of: dependencyContainer)
             let containsAmbiguousDeclarations = try self.containsAmbiguousDeclarations(in: dependencyContainer)
             let containsDeclarationBasedOnSource = try self.containsDeclarationBasedOnSource(in: dependencyContainer)
@@ -551,9 +547,9 @@ private extension MetaWeaverFile {
                         dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
                     )
                     .adding(parameter: containsDeclarationBasedOnSource ?
-                        FunctionParameter(alias: "_", name: sourceVariable.name, type: .string) : nil
+                        FunctionParameter(alias: "_", name: Variable.source.name, type: .string) : nil
                     )
-                    .adding(member: Assignment(variable: _selfVariable, value: TypeIdentifier.mainDependencyContainerTypeID.reference | .call()))
+                    .adding(member: Assignment(variable: Variable._self, value: TypeIdentifier.mainDependencyContainer.reference | .call()))
                     .adding(members: try inputReferences.compactMap { reference in
                         
                         let declaration = try self.declaration(for: reference)
@@ -563,8 +559,8 @@ private extension MetaWeaverFile {
                         
                         let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
                             Assignment(
-                                variable: _selfVariable.reference + .named("_\(declaration.declarationName)"),
-                                value: _selfVariable.reference + .named("builder") | .call(Tuple()
+                                variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
+                                value: Variable._self.reference + .named("builder") | .call(Tuple()
                                     .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
                                 )
                             )
@@ -572,7 +568,7 @@ private extension MetaWeaverFile {
                         
                         let resolvedDeclarations = try resolvedDeclarationsBySource(for: reference, in: dependencyContainer)
                         if resolvedDeclarations.count > 1 {
-                            return Switch(reference: sourceVariable.reference)
+                            return Switch(reference: Variable.source.reference)
                                 .adding(cases: resolvedDeclarations.compactMap { source, declaration in
                                     guard let source = source else { return nil }
                                     return SwitchCase()
@@ -580,7 +576,7 @@ private extension MetaWeaverFile {
                                         .adding(member: assignment(declaration))
                                 })
                                 .adding(case: SwitchCase(name: .default)
-                                    .adding(member: TypeIdentifier.mainDependencyContainerTypeID.reference + .named("fatalError") | .call())
+                                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call())
                                 )
                         } else if let resolvedDeclaration = resolvedDeclarations.first?.declaration {
                             return assignment(resolvedDeclaration)
@@ -599,7 +595,7 @@ private extension MetaWeaverFile {
                             let declaration = try self.declaration(for: registration)
                             return Assignment(
                                 variable: Reference.named("_"),
-                                value: _selfVariable.reference + .named("_\(declaration.declarationName)") | .call(Tuple()
+                                value: Variable._self.reference + .named("_\(declaration.declarationName)") | .call(Tuple()
                                     .adding(parameter: TupleParameter(value: Value.nil))
                                 )
                             )
@@ -610,9 +606,9 @@ private extension MetaWeaverFile {
                     })
                     .adding(member: Return(value: containsAmbiguousDeclarations ?
                         dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
-                            .adding(parameter: TupleParameter(value: _selfVariable.reference))
+                            .adding(parameter: TupleParameter(value: Variable._self.reference))
                         ) :
-                        _selfVariable.reference)
+                        Variable._self.reference)
                     )
             ]
             
@@ -625,7 +621,7 @@ private extension MetaWeaverFile {
                         )
                         .with(static: true)
                         .adding(member: Return(value:
-                            TypeIdentifier.mainDependencyContainerTypeID.reference | .call() + dependencyContainer.type.dependencyResolverVariable.reference | .call()
+                            TypeIdentifier.mainDependencyContainer.reference | .call() + dependencyContainer.type.dependencyResolverVariable.reference | .call()
                         ))
                 ]
             }
@@ -638,11 +634,6 @@ private extension MetaWeaverFile {
                         from dependencyContainer: DependencyContainer) throws -> Assignment? {
         
         guard registration.configuration.setter == false else { return nil }
-
-        let _selfVariable = Variable(name: "_self")
-        let __selfVariable = Variable(name: "__self")
-        let __mainSelfVariable = Variable(name: "__mainSelf")
-        let valueVariable = Variable(name: "value")
 
         guard let concreteType = registration.type.concreteType else { return nil }
         let declaration = try self.declaration(for: registration)
@@ -668,22 +659,22 @@ private extension MetaWeaverFile {
         if let customBuilder = registration.configuration.customBuilder {
             switch target.declarationSource {
             case .type:
-                resolverReference = hasInputDependencies ? _selfVariable.reference + concreteType.dependencyResolverVariable.reference | .call(Tuple()
+                resolverReference = hasInputDependencies ? Variable._self.reference + concreteType.dependencyResolverVariable.reference | .call(Tuple()
                     .adding(parameter: targetContainsDeclarationBasedOnSource ? TupleParameter(value: Value.string(dependencyContainer.type.description)) : nil)
                 ) : nil
                 builderReference = .named(customBuilder) | .call(Tuple()
-                    .adding(parameter: hasInputDependencies ? TupleParameter(value: __selfVariable.reference) : nil)
+                    .adding(parameter: hasInputDependencies ? TupleParameter(value: Variable.__self.reference) : nil)
                 )
                 shouldUnwrapResolverReference = false
             case .reference,
                  .registration:
                 resolverReference = containsAmbiguousDeclarations ? dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
-                    .adding(parameter: TupleParameter(value: _selfVariable.reference))
+                    .adding(parameter: TupleParameter(value: Variable._self.reference))
                 ) : nil
                 builderReference = .named(customBuilder) | .call(Tuple()
                     .adding(parameter: TupleParameter(value:
-                        (containsAmbiguousDeclarations ? __selfVariable : _selfVariable).reference |
-                        (containsAmbiguousDeclarations ? +_selfVariable.reference : .none) |
+                        (containsAmbiguousDeclarations ? Variable.__self : Variable._self).reference |
+                        (containsAmbiguousDeclarations ? +Variable._self.reference : .none) |
                         .as |
                         target.type.inputDependencyResolverTypeID.reference
                     ))
@@ -691,13 +682,13 @@ private extension MetaWeaverFile {
                 shouldUnwrapResolverReference = containsAmbiguousDeclarations
             }
         } else {
-            resolverReference = hasInputDependencies ? _selfVariable.reference + concreteType.dependencyResolverVariable.reference | .call(Tuple()
+            resolverReference = hasInputDependencies ? Variable._self.reference + concreteType.dependencyResolverVariable.reference | .call(Tuple()
                 .adding(parameter: targetContainsDeclarationBasedOnSource ? TupleParameter(value: Value.string(dependencyContainer.type.description)) : nil)
             ) : nil
             builderReference = concreteType.typeID.reference | .call(Tuple()
                 .adding(parameter: hasInputDependencies ? TupleParameter(
                     name: "injecting",
-                    value: __selfVariable.reference
+                    value: Variable.__self.reference
                 ) : nil)
             )
             shouldUnwrapResolverReference = targetContainsAmbiguousDeclarations
@@ -716,57 +707,55 @@ private extension MetaWeaverFile {
         
         builderReference = builderFunction | .block(FunctionBody()
             .adding(parameter: FunctionBodyParameter(name: hasParameters ? "copyParameters" : "_"))
-            .adding(context: hasInputDependencies ? FunctionBodyContext(name: _selfVariable.name, kind: .weak) : nil)
+            .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
             .adding(member: hasInputDependencies ?
-                Guard(assignment: Assignment(variable: _selfVariable, value: _selfVariable.reference))
-                    .adding(member: TypeIdentifier.mainDependencyContainerTypeID.reference + .named("fatalError") | .call()) : nil)
+                Guard(assignment: Assignment(variable: Variable._self, value: Variable._self.reference))
+                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call()) : nil)
             .adding(member: resolverReference.flatMap {
-                Assignment(variable: __selfVariable, value: $0)
+                Assignment(variable: Variable.__self, value: $0)
             })
             .adding(member: hasParameters ? .named("copyParameters") | .unwrap | .call(Tuple()
                 .adding(parameter: TupleParameter(
-                    value: (resolverReference != nil ? __selfVariable : _selfVariable).reference |
-                        (shouldUnwrapResolverReference ? +_selfVariable.reference : .none) |
+                    value: (resolverReference != nil ? Variable.__self : Variable._self).reference |
+                        (shouldUnwrapResolverReference ? +Variable._self.reference : .none) |
                         .named(" as! ") |
-                        TypeIdentifier.mainDependencyContainerTypeID.reference
+                        TypeIdentifier.mainDependencyContainer.reference
                 ))
             ) : nil)
             .adding(members: targetSelfReferences.isEmpty == false ? try [
                 Assignment(
-                    variable: __mainSelfVariable,
-                    value: (resolverReference != nil ? __selfVariable : _selfVariable).reference |
-                        (shouldUnwrapResolverReference ? +_selfVariable.reference : .none) |
+                    variable: Variable.__mainSelf,
+                    value: (resolverReference != nil ? Variable.__self : Variable._self).reference |
+                        (shouldUnwrapResolverReference ? +Variable._self.reference : .none) |
                         .named(" as! ") |
-                        TypeIdentifier.mainDependencyContainerTypeID.reference
+                        TypeIdentifier.mainDependencyContainer.reference
                 ),
                 Assignment(
-                    variable: valueVariable,
+                    variable: Variable.value,
                     value: builderReference
                 )
             ] + targetSelfReferences.map { selfReference in
                 let declaration = try self.declaration(for: selfReference)
                 return Assignment(
-                    variable: __mainSelfVariable.reference + .named("_\(declaration.declarationName)"),
-                    value: __mainSelfVariable.reference + .named("weakBuilder") | .call(Tuple()
-                        .adding(parameter: TupleParameter(value: valueVariable.reference))
+                    variable: Variable.__mainSelf.reference + .named("_\(declaration.declarationName)"),
+                    value: Variable.__mainSelf.reference + .named("weakBuilder") | .call(Tuple()
+                        .adding(parameter: TupleParameter(value: Variable.value.reference))
                     )
                 )
             } + [
-                Return(value: valueVariable.reference)
+                Return(value: Variable.value.reference)
             ] : [
                 Return(value: builderReference)
             ])
         )
         
         return Assignment(
-            variable: _selfVariable.reference + .named("_\(declaration.declarationName)"),
+            variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
             value: builderReference
         )
     }
     
     func dependencyResolverProxies() throws -> [FileBodyMember] {
-        
-        let _selfVariable = Variable(name: "_self")
         
         return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
             guard try containsAmbiguousDeclarations(in: dependencyContainer) else { return [] }
@@ -776,13 +765,13 @@ private extension MetaWeaverFile {
                 Type(identifier: dependencyContainer.type.dependencyResolverProxyTypeID)
                     .with(kind: .struct)
                     .adding(member: EmptyLine())
-                    .adding(member: Property(variable: _selfVariable
+                    .adding(member: Property(variable: Variable._self
                         .with(type: dependencyContainer.type.dependencyResolverTypeID))
                     )
                     .adding(member: EmptyLine())
                     .adding(member: Function(kind: .`init`(convenience: false, optional: false))
-                        .adding(parameter: FunctionParameter(alias: "_", name: _selfVariable.name, type: dependencyContainer.type.dependencyResolverTypeID))
-                        .adding(member: Assignment(variable: .named(.`self`) + _selfVariable.reference, value: _selfVariable.reference))
+                        .adding(parameter: FunctionParameter(alias: "_", name: Variable._self.name, type: dependencyContainer.type.dependencyResolverTypeID))
+                        .adding(member: Assignment(variable: .named(.`self`) + Variable._self.reference, value: Variable._self.reference))
                     )
                     .adding(members: try dependencyContainer.dependencies.orderedValues.flatMap { dependency -> [TypeBodyMember] in
                         let declaration = try self.declaration(for: dependency)
@@ -792,7 +781,7 @@ private extension MetaWeaverFile {
                             members += [
                                 ComputedProperty(variable: Variable(name: declaration.name)
                                     .with(type: declaration.type.typeID))
-                                    .adding(member: Return(value: _selfVariable.reference + .named(declaration.declarationName)))
+                                    .adding(member: Return(value: Variable._self.reference + .named(declaration.declarationName)))
                             ]
                         } else {
                             members += [
@@ -802,7 +791,7 @@ private extension MetaWeaverFile {
                                         guard let concreteType = parameter.type.concreteType else { return nil }
                                         return FunctionParameter(name: parameter.dependencyName, type: concreteType.typeID)
                                     })
-                                    .adding(member: Return(value: _selfVariable.reference + .named(declaration.declarationName) | .call(Tuple()
+                                    .adding(member: Return(value: Variable._self.reference + .named(declaration.declarationName) | .call(Tuple()
                                         .adding(parameters: declaration.parameters.map { parameter in
                                             return TupleParameter(name: parameter.dependencyName, value: Reference.named(parameter.dependencyName))
                                         })
@@ -822,7 +811,7 @@ private extension MetaWeaverFile {
 private extension MetaWeaverFile {
     
     func mainDependencyResolverStub() -> Type {
-        return Type(identifier: .mainDependencyResolverStubTypeID)
+        return Type(identifier: .mainDependencyResolverStub)
             .with(kind: .class(final: false))
             .with(objc: doesSupportObjc)
             .adding(inheritedType: doesSupportObjc ? .nsObject : nil)
@@ -881,7 +870,7 @@ private extension MetaWeaverFile {
     }
     
     func resolversStubImplementationExtension() -> Extension {
-        return Extension(type: .mainDependencyResolverStubTypeID)
+        return Extension(type: .mainDependencyResolverStub)
             .adding(inheritedTypes: orderedDeclarations.map { declaration in
                 TypeIdentifier(name: declaration.resolverTypeName)
             })
@@ -899,7 +888,7 @@ private extension MetaWeaverFile {
     }
     
     func settersStubImplementationExtension() -> Extension {
-        return Extension(type: .mainDependencyResolverStubTypeID)
+        return Extension(type: .mainDependencyResolverStub)
             .adding(inheritedTypes: setterDeclarations.map { declaration in
                 TypeIdentifier(name: declaration.setterTypeName)
             })
