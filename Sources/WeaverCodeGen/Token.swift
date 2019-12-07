@@ -222,7 +222,10 @@ public struct EndOfAnyDeclaration: Token, Hashable {
 
 // MARK: - Annotation Builder
 
-enum TokenBuilder {
+public enum TokenBuilder {
+    
+    public static let annotationRegexString = "weaver[[:space:]]*:"
+    static let annotationRegex = try! NSRegularExpression(pattern: "^\(TokenBuilder.annotationRegexString)[[:space:]]*(.*)")
 
     static func makeAnnotationToken(string: String,
                                     offset: Int,
@@ -232,8 +235,7 @@ enum TokenBuilder {
         let chars = CharacterSet(charactersIn: "/").union(.whitespaces)
         let annotation = string.trimmingCharacters(in: chars)
 
-        let bodyRegex = try NSRegularExpression(pattern: "^weaver\\s*:\\s*(.*)")
-        guard let body = bodyRegex.matches(in: annotation)?.first else {
+        guard let body = TokenBuilder.annotationRegex.matches(in: annotation)?.first else {
             return nil
         }
 

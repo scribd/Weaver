@@ -8,6 +8,8 @@
 import Foundation
 import PathKit
 import Yams
+import ShellOut
+import WeaverCodeGen
 
 // MARK: - Configuration
 
@@ -220,18 +222,34 @@ extension Path: Decodable {
 
 extension Configuration {
     
+    private static let annotationRegex = "\\/\\/[[:space:]]*\(TokenBuilder.annotationRegexString)"
+    
     func inputPaths() throws -> [Path]  {
+        var inputPaths = Set<Path>()
 
-        let inputPaths = try Set(inputPathStrings
-            .map { projectPath + $0 }
+        let inputDirectories = Set(inputPathStrings
+            .lazy
+            .map { self.projectPath + $0 }
+            .filter { $0.exists && $0.isDirectory }
+            .map { $0.absolute().string })
+
+        inputPaths.formUnion(try shellOut(to: "grep", arguments: ["-e", Configuration.annotationRegex] + Array(inputDirectories) + ["-R", "-l"])
+            .split(separator: "\n")
+            .lazy
+            .map { Path(String($0)) }
+            .filter { $0.extension == "swift" })
+        
+        inputPaths.formUnion(inputPathStrings
+            .lazy
+            .map { self.projectPath + $0 }
+            .filter { $0.exists && $0.isFile && $0.extension == "swift" })
+
+        inputPaths.subtract(try ignoredPathStrings
+            .lazy
+            .map { self.projectPath + $0 }
             .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
             .filter { $0.extension == "swift" })
         
-        let ignoredPaths = try Set(ignoredPathStrings
-            .map { projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
-            .filter { $0.extension == "swift" })
-        
-        return inputPaths.subtracting(ignoredPaths).sorted()
+        return inputPaths.sorted()
     }
 }

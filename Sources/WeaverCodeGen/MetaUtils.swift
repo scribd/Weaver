@@ -24,9 +24,10 @@ extension Variable {
     
     static let _self = Variable(name: "_self")
     static let __self = Variable(name: "__self")
-    static let source = Variable(name: "source")
     static let __mainSelf = Variable(name: "__mainSelf")
-    static let value = Variable(name: "value")
+    static let source = Variable(name: "source")
+    static let value = Variable(name: "_value")
+    static let proxySelf = Variable(name: "value")
 }
 
 extension AnyType {

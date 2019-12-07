@@ -674,7 +674,7 @@ private extension MetaWeaverFile {
                 builderReference = .named(customBuilder) | .call(Tuple()
                     .adding(parameter: TupleParameter(value:
                         (containsAmbiguousDeclarations ? Variable.__self : Variable._self).reference |
-                        (containsAmbiguousDeclarations ? +Variable._self.reference : .none) |
+                        (containsAmbiguousDeclarations ? +Variable.proxySelf.reference : .none) |
                         .as |
                         target.type.inputDependencyResolverTypeID.reference
                     ))
@@ -717,7 +717,7 @@ private extension MetaWeaverFile {
             .adding(member: hasParameters ? .named("copyParameters") | .unwrap | .call(Tuple()
                 .adding(parameter: TupleParameter(
                     value: (resolverReference != nil ? Variable.__self : Variable._self).reference |
-                        (shouldUnwrapResolverReference ? +Variable._self.reference : .none) |
+                        (shouldUnwrapResolverReference ? +Variable.proxySelf.reference : .none) |
                         .named(" as! ") |
                         TypeIdentifier.mainDependencyContainer.reference
                 ))
@@ -726,7 +726,7 @@ private extension MetaWeaverFile {
                 Assignment(
                     variable: Variable.__mainSelf,
                     value: (resolverReference != nil ? Variable.__self : Variable._self).reference |
-                        (shouldUnwrapResolverReference ? +Variable._self.reference : .none) |
+                        (shouldUnwrapResolverReference ? +Variable.proxySelf.reference : .none) |
                         .named(" as! ") |
                         TypeIdentifier.mainDependencyContainer.reference
                 ),
@@ -765,13 +765,13 @@ private extension MetaWeaverFile {
                 Type(identifier: dependencyContainer.type.dependencyResolverProxyTypeID)
                     .with(kind: .struct)
                     .adding(member: EmptyLine())
-                    .adding(member: Property(variable: Variable._self
+                    .adding(member: Property(variable: Variable.proxySelf
                         .with(type: dependencyContainer.type.dependencyResolverTypeID))
                     )
                     .adding(member: EmptyLine())
                     .adding(member: Function(kind: .`init`(convenience: false, optional: false))
-                        .adding(parameter: FunctionParameter(alias: "_", name: Variable._self.name, type: dependencyContainer.type.dependencyResolverTypeID))
-                        .adding(member: Assignment(variable: .named(.`self`) + Variable._self.reference, value: Variable._self.reference))
+                        .adding(parameter: FunctionParameter(alias: "_", name: Variable.proxySelf.name, type: dependencyContainer.type.dependencyResolverTypeID))
+                        .adding(member: Assignment(variable: .named(.`self`) + Variable.proxySelf.reference, value: Variable.proxySelf.reference))
                     )
                     .adding(members: try dependencyContainer.dependencies.orderedValues.flatMap { dependency -> [TypeBodyMember] in
                         let declaration = try self.declaration(for: dependency)
@@ -781,7 +781,7 @@ private extension MetaWeaverFile {
                             members += [
                                 ComputedProperty(variable: Variable(name: declaration.name)
                                     .with(type: declaration.type.typeID))
-                                    .adding(member: Return(value: Variable._self.reference + .named(declaration.declarationName)))
+                                    .adding(member: Return(value: Variable.proxySelf.reference + .named(declaration.declarationName)))
                             ]
                         } else {
                             members += [
@@ -791,7 +791,7 @@ private extension MetaWeaverFile {
                                         guard let concreteType = parameter.type.concreteType else { return nil }
                                         return FunctionParameter(name: parameter.dependencyName, type: concreteType.typeID)
                                     })
-                                    .adding(member: Return(value: Variable._self.reference + .named(declaration.declarationName) | .call(Tuple()
+                                    .adding(member: Return(value: Variable.proxySelf.reference + .named(declaration.declarationName) | .call(Tuple()
                                         .adding(parameters: declaration.parameters.map { parameter in
                                             return TupleParameter(name: parameter.dependencyName, value: Reference.named(parameter.dependencyName))
                                         })
