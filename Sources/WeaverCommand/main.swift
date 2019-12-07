@@ -144,9 +144,13 @@ let main = Group {
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
 
             // ---- Link ----
+            
+            Logger.log(.info, "Listing files...".yellow, benchmark: .start("listing"))
+            let inputPaths = try configuration.inputPaths()
+            Logger.log(.info, "Done".yellow, benchmark: .end("listing"))
 
             var didChange = false
-            let linker = try Linker(try configuration.inputPaths(), cachePath: configuration.cachePath, didChange: &didChange)
+            let linker = try Linker(inputPaths, cachePath: configuration.cachePath, didChange: &didChange)
             let dependencyGraph = linker.dependencyGraph
 
             // ---- Inspect ----
