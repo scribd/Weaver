@@ -90,33 +90,6 @@ extension Expr: CustomStringConvertible {
 
 extension Expr {
     
-    func toFile() -> (types: [Expr], name: String, imports: [String])? {
-        switch self {
-        case .file(let types, let name, let imports):
-            return (types, name, imports)
-        default:
-            return nil
-        }
-    }
-    
-    func toTypeDeclaration() -> (token: TokenBox<InjectableType>, children: [Expr])? {
-        switch self {
-        case .typeDeclaration(let token, let children):
-            return (token, children)
-        default:
-            return nil
-        }
-    }
-    
-    func toReferenceAnnotation() -> TokenBox<ReferenceAnnotation>? {
-        switch self {
-        case .referenceAnnotation(let token):
-            return token
-        default:
-            return nil
-        }
-    }
-    
     func toRegisterAnnotation() -> TokenBox<RegisterAnnotation>? {
         switch self {
         case .registerAnnotation(let token):

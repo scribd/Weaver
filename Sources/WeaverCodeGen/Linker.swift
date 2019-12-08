@@ -128,7 +128,7 @@ final class Dependency: Encodable, CustomDebugStringConvertible {
     /// Name which was used to declare the dependency.
     let dependencyName: String
 
-    enum `Type`: Hashable, Encodable, CustomStringConvertible {
+    enum `Type`: Hashable, CustomStringConvertible {
         case abstract(Set<AbstractType>) // Reference only
         case concrete(ConcreteType) // Reference, registration or parameter
         case full(ConcreteType, Set<AbstractType>) // Registration only
@@ -177,7 +177,7 @@ final class Dependency: Encodable, CustomDebugStringConvertible {
 /// Representation of the dependency graph.
 ///
 /// - Note: Indexes the dependency containers and dependencies.
-public final class DependencyGraph: Encodable {
+public final class DependencyGraph {
     
     /// Imported module names.
     fileprivate(set) var imports = Set<String>()
@@ -481,50 +481,6 @@ private extension DependencyContainer {
         }
         
         dependencies[dependency.dependencyName] = dependency
-    }
-}
-
-// MARK: - Encodable
-
-extension DependencyGraph {
-    
-    private enum Key: CodingKey {
-        case imports
-        case abstractTypes
-        case concreteTypes
-        case orphinConcreteTypes
-        case dependencyContainers
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: Key.self)
-        try container.encode(imports, forKey: .imports)
-        try container.encode(abstractTypes, forKey: .abstractTypes)
-        try container.encode(concreteTypes, forKey: .concreteTypes)
-        try container.encode(orphinConcreteTypes, forKey: .orphinConcreteTypes)
-        try container.encode(dependencyContainers, forKey: .dependencyContainers)
-    }
-}
-
-extension Dependency.`Type` {
-    
-    private enum Key: CodingKey {
-        case abstract
-        case concrete
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: Key.self)
-
-        switch self {
-        case .abstract(let type):
-            try container.encode([type], forKey: .abstract)
-        case .concrete(let type):
-            try container.encode(type, forKey: .concrete)
-        case .full(let concrete, let abstract):
-            try container.encode(concrete, forKey: .concrete)
-            try container.encode(abstract, forKey: .abstract)
-        }
     }
 }
 
