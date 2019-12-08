@@ -1,8 +1,8 @@
 //
-//  main.swift
+//  Command.swift
 //  WeaverCommand
 //
-//  Created by Théophane Rupin on 2/20/18.
+//  Created by Théophane Rupin on 12/7/19.
 //
 
 import Foundation
@@ -100,7 +100,7 @@ private enum Parameters {
 
 // MARK: - Commands
 
-let main = Group {
+public let weaverCommand = Group {
     
     $0.command(
         "swift",
@@ -282,4 +282,3 @@ let main = Group {
     }
 }
 
-main.run(version)

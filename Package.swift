@@ -18,6 +18,8 @@ let package = Package(
     targets: [
         .target(name: "WeaverCodeGen", dependencies: ["SourceKittenFramework", "Meta", "PathKit"]),
         .testTarget(name: "WeaverCodeGenTests", dependencies: ["WeaverCodeGen"]),
-        .target(name: "WeaverCommand", dependencies: ["PathKit", "Commander", "Rainbow", "Yams", "WeaverCodeGen", "ShellOut"])
+        .target(name: "WeaverCommand", dependencies: ["PathKit", "Commander", "Rainbow", "Yams", "WeaverCodeGen", "ShellOut"]),
+        .testTarget(name: "WeaverCommandTests", dependencies: ["WeaverCommand"]),
+        .target(name: "WeaverMain", dependencies: ["WeaverCommand"])
     ]
 )
