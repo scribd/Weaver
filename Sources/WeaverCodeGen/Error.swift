@@ -49,6 +49,7 @@ enum SwiftGeneratorError: Error {
 enum InspectorError: Error {
     case invalidAST(FileLocation, unexpectedExpr: Expr)
     case invalidDependencyGraph(Dependency, underlyingError: InspectorAnalysisError)
+    case invalidContainerScope(Dependency)
 }
 
 enum InspectorAnalysisError: Error {
@@ -209,6 +210,9 @@ extension InspectorError: CustomStringConvertible {
                 description = ([description] + notes.map { $0.description }).joined(separator: "\n")
             }
             return description
+        case .invalidContainerScope(let dependency):
+            let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a container scope"
+            return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         }
     }
 }

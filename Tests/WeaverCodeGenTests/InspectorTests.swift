@@ -858,4 +858,35 @@ test.swift:7: warning: Found candidates: 'logger: Logger'.
             XCTFail("Unexpected error: \(error)")
         }
     }
+
+    func test_inspector_should_build_an_invalid_dependency_graph_with_a_registration_using_scope_container_on_dependency_taking_parameters() {
+            let file = File(contents: """
+final class MovieViewController {
+    // weaver: movieManager = MovieManager
+    // weaver: movieManager.scope = .container
+}
+
+final class MovieManager {
+    // weaver: movieID <= Int
+}
+""")
+            
+            do {
+                let lexer = Lexer(file, fileName: "test.swift")
+                let tokens = try lexer.tokenize()
+                let parser = Parser(tokens, fileName: "test.swift")
+                let syntaxTree = try parser.parse()
+                let linker = try Linker(syntaxTrees: [syntaxTree])
+                let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+                
+                try inspector.validate()
+                XCTFail("Expected error.")
+            } catch let error as InspectorError {
+                XCTAssertEqual(error.description, """
+test.swift:2: error: Dependency 'movieManager' cannot declare parameters and be registered with a container scope.
+""")
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
 }

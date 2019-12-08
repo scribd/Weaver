@@ -22,6 +22,7 @@ public final class Inspector {
     
     public func validate() throws {
         for dependency in dependencyGraph.dependencies where dependency.kind.isResolvable {
+            try validateConfiguration(of: dependency)
             try resolve(dependency)
             try build(dependency)
         }
@@ -82,7 +83,7 @@ private extension Inspector {
         if let foundDependency = resolutionCache[cacheIndex] {
             return foundDependency
         }
-
+        
         var visitedDependencyContainers = Set<ObjectIdentifier>()
         var history = [InspectorAnalysisHistoryRecord]()
         history.reserveCapacity(dependencyGraph.dependencyContainers.orderedKeys.count)
@@ -309,6 +310,25 @@ private extension Inspector {
                                   from: sourceDependency,
                                   visitedDependencyContainers: &visitedDependencyContainersCopy,
                                   history: history)
+        }
+    }
+}
+
+// MARK: - Configuration check
+
+private extension Inspector {
+    
+    func validateConfiguration(of dependency: Dependency) throws {
+        switch dependency.configuration.scope {
+        case .container:
+            let target = try dependencyGraph.dependencyContainer(for: dependency)
+            if target.parameters.isEmpty == false {
+                throw InspectorError.invalidContainerScope(dependency)
+            }
+        case .lazy,
+             .weak,
+             .transient:
+            break
         }
     }
 }
