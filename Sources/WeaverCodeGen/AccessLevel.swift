@@ -13,4 +13,14 @@ public enum AccessLevel: String {
     case `internal`
     
     static let `default`: AccessLevel = .`internal`
+    
+    var isPublic: Bool {
+        switch self {
+        case .public,
+             .open:
+            return true
+        case .internal:
+            return false
+        }
+    }
 }

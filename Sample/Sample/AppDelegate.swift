@@ -14,7 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    fileprivate let dependencies: AppDelegateDependencyResolver = AppDelegateDependencyContainer()
+    fileprivate let dependencies = MainDependencyContainer.appDelegateDependencyResolver()
     
     // weaver: logger = Logger
     // weaver: logger.scope = .container
@@ -39,6 +39,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     // weaver: reviewManager = ReviewManager <- ReviewManaging
     // weaver: reviewManager.scope = .container
+    // weaver: reviewManager.objc = true
     
     func applicationDidFinishLaunching(_ application: UIApplication) {
         
@@ -56,6 +57,6 @@ extension AppDelegate {
     }
     
     static func makeMovieManager(_ dependencies: AppDelegateDependencyResolver) -> MovieManaging {
-        return MovieManager(logger: dependencies.logger, host: "https://api.themoviedb.org/3")
+        return MovieManager(host: "https://api.themoviedb.org/3", logger: dependencies.logger)
     }
 }

@@ -26,8 +26,11 @@ final class MovieViewController: UIViewController {
     
     // weaver: movieManager <- MovieManaging
     // weaver: imageManager <- ImageManaging
+    // weaver: reviewManager <- ReviewManaging
     
     // weaver: reviewController = WSReviewViewController
+    // weaver: reviewController.builder = WSReviewViewController.make
+    // weaver: reviewController.scope = .weak
     
     private var originalBarStyle: UIBarStyle?
     
@@ -134,7 +137,7 @@ final class MovieViewController: UIViewController {
 private extension MovieViewController {
     
     @objc func didTapImage(_: UITapGestureRecognizer) {
-        let controller = dependencies.reviewController(movieID: dependencies.movieID)
+        let controller = dependencies.reviewController
         navigationController?.pushViewController(controller, animated: true)
     }
 }
@@ -149,5 +152,14 @@ private extension MovieViewController.ViewModel {
     init(_ movie: Movie) {
         thumbnail = movie.poster_path
         overview = movie.overview
+    }
+}
+
+// MARK: - Custom builder
+
+extension WSReviewViewController {
+    
+    static func make(_ dependencies: WSReviewViewControllerInputDependencyResolver) -> WSReviewViewController {
+        return WSReviewViewController(dependencies, movieID: dependencies.movieID)
     }
 }

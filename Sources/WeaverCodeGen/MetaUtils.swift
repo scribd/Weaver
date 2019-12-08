@@ -53,10 +53,14 @@ extension AnyType {
         return Variable(name: "\(name.variableCased)DependencyResolver")
     }
     
+    var publicDependencyResolverVariable: Variable {
+        return Variable(name: "public\(dependencyResolverVariable.name.typeCase)")
+    }
+    
     var inputDependencyResolverTypeID: TypeIdentifier {
         return TypeIdentifier(name: "\(name)InputDependencyResolver")
     }
-    
+        
     var toTypeName: String {
         let optional = isOptional ? "Optional_" : String()
         let genericNames = self.genericNames.isEmpty == false ?

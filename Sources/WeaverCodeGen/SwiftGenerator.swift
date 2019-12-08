@@ -41,11 +41,11 @@ public final class SwiftGenerator {
         return file
     }
     
-    public func generate() throws -> String? {
+    public func generate() throws -> String {
         return try file().meta().swiftString
     }
     
-    public func generateTests() throws -> String? {
+    public func generateTests() throws -> String {
         return try file().metaTests().swiftString
     }
 }
@@ -245,7 +245,8 @@ private final class MetaWeaverFile {
             ],
             dependencyResolvers(),
             inputDependencyResolvers(),
-            dependencyResolverProxies()
+            dependencyResolverProxies(),
+            publicDependencyInitExtensions()
         ].flatMap { $0 }
     }
     
@@ -348,7 +349,7 @@ private extension MetaWeaverFile {
             .adding(member: EmptyLine())
             .adding(member: Function(kind: .`init`(convenience: false, optional: false))
                 .with(override: doesSupportObjc)
-                .with(accessLevel: .private)
+                .with(accessLevel: .fileprivate)
             )
             .adding(members: try dependencyResolverCopyMethods())
     }
@@ -527,45 +528,66 @@ private extension MetaWeaverFile {
     }
     
     func dependencyResolverCopyMethods() throws -> [TypeBodyMember] {
-        return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [TypeBodyMember] in
-            guard dependencyContainer.declarationSource == .type else { return [] }
-            
-            let inputReferences = try self.inputReferences(of: dependencyContainer)
-            let containsAmbiguousDeclarations = try self.containsAmbiguousDeclarations(in: dependencyContainer)
-            let containsDeclarationBasedOnSource = try self.containsDeclarationBasedOnSource(in: dependencyContainer)
+        return try dependencyGraph.dependencyContainers.orderedValues.flatMap {
+            try dependencyResolverCopyMethod(for: $0)
+        }
+    }
+    
+    func dependencyResolverCopyMethod(for dependencyContainer: DependencyContainer, publicInterface: Bool = false) throws -> [TypeBodyMember] {
+        guard dependencyContainer.declarationSource == .type else { return [] }
+        
+        let inputReferences: [Dependency]
+        if publicInterface {
+            inputReferences = try dependencyContainer.parameters + self.inputReferences(of: dependencyContainer)
+        } else {
+            inputReferences = try self.inputReferences(of: dependencyContainer)
+        }
+        let containsAmbiguousDeclarations = try self.containsAmbiguousDeclarations(in: dependencyContainer)
+        let containsDeclarationBasedOnSource = try self.containsDeclarationBasedOnSource(in: dependencyContainer)
 
-            let selfReferenceDeclarations = try dependencyContainer.references.reduce(into: Set<MetaDependencyDeclaration>()) { declarations, reference in
-                guard try dependencyGraph.isSelfReference(reference) else { return }
-                let declaration = try self.declaration(for: reference)
-                declarations.insert(declaration)
-            }
-            
-            var members: [TypeBodyMember] = [
-                EmptyLine(),
-                Function(kind: .named(dependencyContainer.type.dependencyResolverVariable.name))
-                    .with(resultType: containsAmbiguousDeclarations ?
-                        dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
-                    )
-                    .adding(parameter: containsDeclarationBasedOnSource ?
-                        FunctionParameter(alias: "_", name: Variable.source.name, type: .string) : nil
-                    )
-                    .adding(member: Assignment(variable: Variable._self, value: TypeIdentifier.mainDependencyContainer.reference | .call()))
-                    .adding(members: try inputReferences.compactMap { reference in
-                        
-                        let declaration = try self.declaration(for: reference)
-                        guard selfReferenceDeclarations.contains(declaration) == false else {
-                            return nil
-                        }
-                        
-                        let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
-                            Assignment(
-                                variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
-                                value: Variable._self.reference + .named("builder") | .call(Tuple()
-                                    .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
-                                )
+        let selfReferenceDeclarations = try dependencyContainer.references.reduce(into: Set<MetaDependencyDeclaration>()) { declarations, reference in
+            guard try dependencyGraph.isSelfReference(reference) else { return }
+            let declaration = try self.declaration(for: reference)
+            declarations.insert(declaration)
+        }
+        
+        let accessLevel: Meta.AccessLevel =
+            (inputReferences.isEmpty && dependencyContainer.parameters.isEmpty) || publicInterface ? .fileprivate : .private
+        
+        var members: [TypeBodyMember] = [
+            EmptyLine(),
+            Function(kind: .named(publicInterface ?
+                dependencyContainer.type.publicDependencyResolverVariable.name : dependencyContainer.type.dependencyResolverVariable.name))
+                .with(accessLevel: accessLevel)
+                .with(resultType: containsAmbiguousDeclarations ?
+                    dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
+                )
+                .adding(parameter: containsDeclarationBasedOnSource && publicInterface == false ?
+                    FunctionParameter(alias: "_", name: Variable.source.name, type: .string) : nil
+                )
+                .adding(parameters: publicInterface ? try inputReferences.compactMap { reference in
+                    let declaration = try self.declaration(for: reference)
+                    guard selfReferenceDeclarations.contains(declaration) == false else { return nil }
+                    return FunctionParameter(name: declaration.declarationName, type: declaration.type.typeID)
+                } : [])
+                .adding(member: Assignment(variable: Variable._self, value: TypeIdentifier.mainDependencyContainer.reference | .call()))
+                .adding(members: try inputReferences.compactMap { reference in
+                    
+                    let declaration = try self.declaration(for: reference)
+                    guard selfReferenceDeclarations.contains(declaration) == false else { return nil }
+
+                    let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
+                        Assignment(
+                            variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
+                            value: Variable._self.reference + .named("builder") | .call(Tuple()
+                                .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
                             )
-                        }
-                        
+                        )
+                    }
+
+                    if publicInterface {
+                        return assignment(declaration)
+                    } else {
                         let resolvedDeclarations = try resolvedDeclarationsBySource(for: reference, in: dependencyContainer)
                         if resolvedDeclarations.count > 1 {
                             return Switch(reference: Variable.source.reference)
@@ -583,51 +605,53 @@ private extension MetaWeaverFile {
                         } else {
                             return nil
                         }
-                    })
-                    .adding(members: try dependencyContainer.registrations.compactMap { registration in
-                        try copyAssignment(for: registration, from: dependencyContainer)
-                    })
-                    .adding(members: try dependencyContainer.registrations.compactMap { registration in
-                        guard registration.configuration.setter == false else { return nil }
-                        switch registration.configuration.scope {
-                        case .container,
-                             .weak:
-                            let declaration = try self.declaration(for: registration)
-                            return Assignment(
-                                variable: Reference.named("_"),
-                                value: Variable._self.reference + .named("_\(declaration.declarationName)") | .call(Tuple()
-                                    .adding(parameter: TupleParameter(value: Value.nil))
-                                )
+                    }
+                })
+                .adding(members: try dependencyContainer.registrations.compactMap { registration in
+                    try copyAssignment(for: registration, from: dependencyContainer)
+                })
+                .adding(members: try dependencyContainer.registrations.compactMap { registration in
+                    guard registration.configuration.setter == false else { return nil }
+                    switch registration.configuration.scope {
+                    case .container:
+                        let declaration = try self.declaration(for: registration)
+                        return Assignment(
+                            variable: Reference.named("_"),
+                            value: Variable._self.reference + .named("_\(declaration.declarationName)") | .call(Tuple()
+                                .adding(parameter: TupleParameter(value: Value.nil))
                             )
-                        case .lazy,
-                             .transient:
-                            return nil
-                        }
-                    })
-                    .adding(member: Return(value: containsAmbiguousDeclarations ?
-                        dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
-                            .adding(parameter: TupleParameter(value: Variable._self.reference))
-                        ) :
-                        Variable._self.reference)
-                    )
-            ]
-            
-            if dependencyContainer.references.isEmpty {
-                members += [
-                    EmptyLine(),
-                    Function(kind: .named(dependencyContainer.type.dependencyResolverVariable.name))
-                        .with(resultType: containsAmbiguousDeclarations ?
-                            dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
                         )
-                        .with(static: true)
-                        .adding(member: Return(value:
-                            TypeIdentifier.mainDependencyContainer.reference | .call() + dependencyContainer.type.dependencyResolverVariable.reference | .call()
-                        ))
-                ]
-            }
-            
-            return members
+                    case .lazy,
+                         .weak,
+                         .transient:
+                        return nil
+                    }
+                })
+                .adding(member: Return(value: containsAmbiguousDeclarations ?
+                    dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
+                        .adding(parameter: TupleParameter(value: Variable._self.reference))
+                    ) :
+                    Variable._self.reference)
+                )
+        ]
+        
+        if inputReferences.isEmpty && dependencyContainer.parameters.isEmpty {
+            members += [
+                EmptyLine(),
+                Function(kind: .named(dependencyContainer.type.dependencyResolverVariable.name))
+                    .with(resultType: containsAmbiguousDeclarations ?
+                        dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
+                    )
+                    .with(static: true)
+                    .adding(member: Return(value:
+                        TypeIdentifier.mainDependencyContainer.reference | .call() + dependencyContainer.type.dependencyResolverVariable.reference | .call()
+                    ))
+            ]
+        } else if dependencyContainer.accessLevel.isPublic && publicInterface == false {
+            members += try dependencyResolverCopyMethod(for: dependencyContainer, publicInterface: true)
         }
+        
+        return members
     }
     
     func copyAssignment(for registration: Dependency,
@@ -801,6 +825,43 @@ private extension MetaWeaverFile {
                         
                         return members
                     })
+            ]
+        }
+    }
+    
+    func publicDependencyInitExtensions() throws -> [FileBodyMember] {
+        return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
+            guard dependencyContainer.declarationSource == .type else { return [] }
+            guard dependencyContainer.accessLevel.isPublic else { return [] }
+            let parameters = try dependencyContainer.parameters + inputReferences(of: dependencyContainer)
+            let dependencyResolverVariable = parameters.isEmpty ?
+                dependencyContainer.type.dependencyResolverVariable : dependencyContainer.type.publicDependencyResolverVariable
+            return [
+                EmptyLine(),
+                Extension(type: dependencyContainer.type.typeID.with(genericParameters: []))
+                    .adding(member: Function(kind: .`init`(convenience: true, optional: false))
+                        .with(accessLevel: .public)
+                        .adding(parameters: try parameters.map { dependency in
+                            let declaration = try self.declaration(for: dependency)
+                            return FunctionParameter(name: declaration.declarationName, type: declaration.type.typeID)
+                        })
+                        .adding(member: Assignment(
+                            variable: Variable._self,
+                            value: TypeIdentifier.mainDependencyContainer.reference | .call()
+                        ))
+                        .adding(member: Assignment(
+                            variable: Variable.__self,
+                            value: Variable._self.reference + dependencyResolverVariable.reference | .call(Tuple()
+                                .adding(parameters: try parameters.map { dependency in
+                                    let declaration = try self.declaration(for: dependency)
+                                    return TupleParameter(name: declaration.declarationName, value: Reference.named(declaration.declarationName))
+                                })
+                            )
+                        ))
+                        .adding(member: Reference.named(.`self`) + .named(.`init`) | .call(Tuple()
+                            .adding(parameter: TupleParameter(name: "injecting", value: Variable.__self.reference))
+                        ))
+                    )
             ]
         }
     }

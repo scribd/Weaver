@@ -173,10 +173,7 @@ let main = Group {
                                                version: version,
                                                testableImports: configuration.testableImports)
 
-            guard let mainGeneratedData = try generator.generate() else {
-                Logger.log(.info, "-- No Weaver annotation found in project.".red)
-                return
-            }
+            let mainGeneratedData = try generator.generate()
             let testsGeneratedData = configuration.tests ? try generator.generateTests() : nil
 
             Logger.log(.info, "Done".lightBlue, benchmark: .end("generating"))
@@ -186,7 +183,7 @@ let main = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
             
-            if didChange {
+            if didChange || mainOutputPath.exists == false || testsOutputPath.exists == false {
                 let dataToWrite = [
                     (mainOutputPath, mainGeneratedData),
                     (testsOutputPath, testsGeneratedData)

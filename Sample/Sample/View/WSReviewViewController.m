@@ -14,7 +14,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface WSReviewViewController () <UITableViewDelegate, UITableViewDataSource>
 
-@property (nonatomic, strong) id<WSReviewViewControllerDependencyResolver> dependencies;
+@property (nonatomic, strong) WSReviewViewControllerDependencyResolver dependencies;
+
+@property (nonatomic, assign) NSUInteger movieID;
 
 @property (nonatomic, strong) UITableView *tableView;
 
@@ -36,11 +38,12 @@ NS_ASSUME_NONNULL_BEGIN
     return _tableView;
 }
 
-- (instancetype)initWithDependencies:(id<WSReviewViewControllerDependencyResolver>)dependencies {
+- (instancetype)initWithDependencies:(WSReviewViewControllerDependencyResolver)dependencies movieID:(NSUInteger)movieID {
     self = [super init];
     
     if (self) {
         self.dependencies = dependencies;
+        self.movieID = movieID;
     }
     
     return self;
@@ -62,7 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
                                               [self.tableView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
                                               [self.tableView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor]]];
     
-    [self.dependencies.reviewManager getReviewsFor:self.dependencies.movieID completion:^(ReviewPage * _Nullable page, ReviewManagerError * _Nullable error) {
+    [self.dependencies.reviewManager getReviewsFor:self.movieID completion:^(ReviewPage * _Nullable page, ReviewManagerError * _Nullable error) {
         if (error) {
             NSLog(@"%@: Could not retrieve reviews from server: %@", NSStringFromClass([WSReviewViewController class]), error);
             return;

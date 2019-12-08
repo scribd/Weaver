@@ -8,13 +8,18 @@
 
 #import <UIKit/UIKit.h>
 
-@protocol WSReviewViewControllerDependencyResolver;
+@protocol MovieIDResolver;
+@protocol ReviewManagerResolver;
+
+typedef id<
+    ReviewManagerResolver
+> WSReviewViewControllerDependencyResolver;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface WSReviewViewController : UIViewController
 
-- (instancetype)initWithDependencies:(id<WSReviewViewControllerDependencyResolver>)dependencies NS_SWIFT_NAME(init(injecting:));
+- (instancetype)initWithDependencies:(WSReviewViewControllerDependencyResolver)dependencies movieID:(NSUInteger)movieID NS_SWIFT_NAME(init(_:movieID:));
 
 @end
 
