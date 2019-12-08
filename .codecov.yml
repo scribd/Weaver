@@ -1,6 +1,5 @@
 coverage:
   ignore:
-    - Sources/WeaverCommand
     - "Sources/WeaverCodeGen/*.generated.swift"
     - Tests
   status:
