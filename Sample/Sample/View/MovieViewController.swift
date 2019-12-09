@@ -17,8 +17,6 @@ final class MovieViewController: UIViewController {
         let overview: String?
     }
     
-    private let dependencies: MovieViewControllerDependencyResolver
-
     @LoggerDependency(.registration, type: Logger.self)
     private var logger: Logger
 
@@ -65,8 +63,7 @@ final class MovieViewController: UIViewController {
         return recognizer
     }()
 
-    required init(injecting dependencies: MovieViewControllerDependencyResolver) {
-        self.dependencies = dependencies
+    required init(injecting _: MovieViewControllerDependencyResolver) {
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -119,7 +116,7 @@ final class MovieViewController: UIViewController {
                 case .success(let image):
                     self.thumbnailImageView.image = image
                 case .failure(let error):
-                    self.dependencies.logger.log(.error, "\(error)")
+                    self.logger.log(.error, "\(error)")
                 }
             }
             
@@ -128,12 +125,12 @@ final class MovieViewController: UIViewController {
     }
     
     private func loadData(completion: @escaping (ViewModel) -> ()) {
-        movieManager.getMovie(id: dependencies.movieID) { result in
+        movieManager.getMovie(id: movieID) { result in
             switch result {
             case .success(let movie):
                 completion(ViewModel(movie))
             case .failure(let error):
-                self.dependencies.logger.log(.error, "\(error)")
+                self.logger.log(.error, "\(error)")
                 completion(ViewModel())
             }
         }

@@ -30,6 +30,7 @@ extension Variable {
     static let proxySelf = Variable(name: "value")
     static let resolver = Variable(name: "resolver")
     static let dynamicResolvers = Variable(name: "dynamicResolvers")
+    static let dynamicResolversLock = Variable(name: "dynamicResolversLock")
 }
 
 extension AnyType {

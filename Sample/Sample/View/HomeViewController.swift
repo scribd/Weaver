@@ -13,9 +13,7 @@ import API
 // weaver: import API
 
 final class HomeViewController: UIViewController {
-    
-    private let dependencies: HomeViewControllerDependencyResolver
-    
+        
     private var movies = [Movie]()
     
     @LoggerDependency(.registration, type: Logger.self)
@@ -36,8 +34,7 @@ final class HomeViewController: UIViewController {
         return tableView
     }()
 
-    required init(injecting dependencies: HomeViewControllerDependencyResolver) {
-        self.dependencies = dependencies
+    required init(injecting _: HomeViewControllerDependencyResolver) {
         super.init(nibName: nil, bundle: nil)
     }
     

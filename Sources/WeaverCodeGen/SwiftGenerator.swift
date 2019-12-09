@@ -361,13 +361,8 @@ private static func fatalBuilder<T>() -> Builder<T> {
 """))
             .adding(member: isSwift5 ? PlainCode(code: """
 
-fileprivate static var dynamicResolvers = [Any]()
-private static var dynamicResolversLock = os_unfair_lock()
-private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
-    os_unfair_lock_lock(&dynamicResolversLock)
-    defer { os_unfair_lock_unlock(&dynamicResolversLock) }
-    return execute()
-}
+fileprivate static var \(Variable.dynamicResolvers.name) = [\(TypeIdentifier.mainDependencyContainer.swiftString)]()
+private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
 """) : nil)
             .adding(members: isSwift5 ? [
                 EmptyLine(),
@@ -394,15 +389,15 @@ private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
         
         return orderedDeclarations.flatMap { declaration -> [FileBodyMember] in
             
-            let resolverBlockType: TypeIdentifier
+            let wrappedValueType: TypeIdentifier
             if declaration.parameters.isEmpty {
-                resolverBlockType = TypeIdentifier(name: .custom("() -> \(declaration.type.typeID.swiftString)"))
+                wrappedValueType = declaration.type.typeID
             } else {
                 let parameters = declaration.parameters.compactMap { parameter in
                     guard let concreteType = parameter.type.concreteType else { return nil }
                     return concreteType.typeID.swiftString
                 }.joined(separator: ", ")
-                resolverBlockType = TypeIdentifier(name: .custom("(\(parameters)) -> \(declaration.type.typeID.swiftString)"))
+                wrappedValueType = TypeIdentifier(name: .custom("(\(parameters)) -> \(declaration.type.typeID.swiftString)"))
             }
             
             let kindFunctionParameter = FunctionParameter(alias: "_", name: "kind", type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).DependencyKind"))
@@ -420,15 +415,11 @@ private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
                 .adding(genericParameter: GenericParameter(name: "ConcreteType"))
                 .adding(member: EmptyLine())
                 .adding(member: Property(variable: Variable.resolver
-                    .with(type: resolverBlockType))
+                    .with(type: TypeIdentifier(name: declaration.resolverTypeName)))
                     .with(value: Reference.block(FunctionBody()
                         .adding(member: Guard(assignment: Assignment(
                             variable: Variable.resolver,
-                            value: TypeIdentifier.mainDependencyContainer.reference +
-                                Variable.dynamicResolvers.reference +
-                                .named("last") |
-                                .named(" as? ") |
-                                resolverBlockType.reference
+                            value: TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("last")
                         ))
                             .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call()))
                             .adding(member: Return(value: Variable.resolver.reference))
@@ -444,8 +435,17 @@ private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
                 )
                 .adding(member: EmptyLine())
                 .adding(member: ComputedProperty(variable: Variable(name: "wrappedValue")
-                    .with(type: declaration.parameters.isEmpty ? declaration.type.typeID : resolverBlockType))
-                    .adding(member: Return(value: Variable.resolver.reference | (declaration.parameters.isEmpty ? .call() : .none)))
+                    .with(type: wrappedValueType))
+                    .adding(member: declaration.parameters.isEmpty ?
+                        Return(value: Variable.resolver.reference + .named(declaration.declarationName)) :
+                        Return(value: FunctionBody().adding(member:
+                            .named(.`self`) + Variable.resolver.reference + .named(declaration.declarationName) | .call(Tuple()
+                                .adding(parameters: declaration.parameters.enumerated().map { index, parameter in
+                                    TupleParameter(name: parameter.dependencyName, value: Reference.named("$\(index)"))
+                                })
+                            )
+                        ))
+                    )
                 )
             
             return [
@@ -755,9 +755,16 @@ private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
                         dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
                     )
                     .with(static: true)
-                    .adding(member: Return(value:
-                        TypeIdentifier.mainDependencyContainer.reference | .call() + dependencyContainer.type.dependencyResolverVariable.reference | .call()
+                    .adding(member: Assignment(
+                        variable: Variable._self,
+                        value: TypeIdentifier.mainDependencyContainer.reference | .call() + dependencyContainer.type.dependencyResolverVariable.reference | .call()
                     ))
+                    .adding(members: isSwift5 ? [
+                        TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("append") | .call(Tuple()
+                            .adding(parameter: TupleParameter(value: Variable._self.reference | .named(" as! ") | TypeIdentifier.mainDependencyContainer.reference))
+                        )
+                    ] : [])
+                    .adding(member: Return(value: Variable._self.reference))
             ]
         } else if dependencyContainer.accessLevel.isPublic && publicInterface == false {
             members += try dependencyResolverCopyMethod(for: dependencyContainer, publicInterface: true)
@@ -841,6 +848,26 @@ private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
             builderFunction = .none
         }
         
+        let dynamicResolverMembers: [FunctionBodyMember]
+        if isSwift5 && hasInputDependencies {
+            dynamicResolverMembers = [
+                Reference.named("defer") | .block(FunctionBody()
+                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("removeLast") | .call())
+                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolversLock.reference + .named("unlock") | .call())
+                ),
+                TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolversLock.reference + .named("lock") | .call(),
+                TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("append") | .call(Tuple()
+                    .adding(parameter: TupleParameter(value:
+                        (resolverReference != nil ? Variable.__self : Variable._self).reference |
+                            (shouldUnwrapResolverReference ? +Variable.proxySelf.reference : .none) |
+                            (resolverReference != nil ? .named(" as! ") | TypeIdentifier.mainDependencyContainer.reference : .none)
+                    ))
+                )
+            ]
+        } else {
+            dynamicResolverMembers = []
+        }
+        
         builderReference = builderFunction | .block(FunctionBody()
             .adding(parameter: FunctionBodyParameter(name: hasParameters ? "copyParameters" : "_"))
             .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
@@ -878,9 +905,9 @@ private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
                         .adding(parameter: TupleParameter(value: Variable.value.reference))
                     )
                 )
-            } + [
+            } + dynamicResolverMembers + [
                 Return(value: Variable.value.reference)
-            ] : [
+            ] : dynamicResolverMembers + [
                 Return(value: builderReference)
             ])
         )

@@ -69,13 +69,8 @@ import UIKit
     }
 
 
-    fileprivate static var dynamicResolvers = [Any]()
-    private static var dynamicResolversLock = os_unfair_lock()
-    private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
-        os_unfair_lock_lock(&dynamicResolversLock)
-        defer { os_unfair_lock_unlock(&dynamicResolversLock) }
-        return execute()
-    }
+    fileprivate static var dynamicResolvers = [MainDependencyContainer]()
+    private static var dynamicResolversLock = NSRecursiveLock()
 
     enum Scope {
         case transient
@@ -159,12 +154,24 @@ import UIKit
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
+            defer {
+                MainDependencyContainer.dynamicResolvers.removeLast()
+                MainDependencyContainer.dynamicResolversLock.unlock()
+            }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            MainDependencyContainer.dynamicResolvers.append(_self)
             return AppDelegate.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
         _self._movieAPI = lazyBuilder { [weak _self] _ in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
+            defer {
+                MainDependencyContainer.dynamicResolvers.removeLast()
+                MainDependencyContainer.dynamicResolversLock.unlock()
+            }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            MainDependencyContainer.dynamicResolvers.append(_self)
             return AppDelegate.makeMovieAPI(_self as MovieAPIInputDependencyResolver)
         }
         _self._imageManager = lazyBuilder { _ in return ImageManager() }
@@ -172,6 +179,12 @@ import UIKit
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
+            defer {
+                MainDependencyContainer.dynamicResolvers.removeLast()
+                MainDependencyContainer.dynamicResolversLock.unlock()
+            }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            MainDependencyContainer.dynamicResolvers.append(_self)
             return AppDelegate.makeMovieManager(_self as MovieManagerInputDependencyResolver)
         }
         _self._homeViewController = lazyBuilder { [weak _self] _ in
@@ -179,6 +192,12 @@ import UIKit
                 MainDependencyContainer.fatalError()
             }
             let __self = _self.homeViewControllerDependencyResolver()
+            defer {
+                MainDependencyContainer.dynamicResolvers.removeLast()
+                MainDependencyContainer.dynamicResolversLock.unlock()
+            }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            MainDependencyContainer.dynamicResolvers.append(__self as! MainDependencyContainer)
             return HomeViewController(injecting: __self)
         }
         _self._reviewManager = lazyBuilder { [weak _self] _ in
@@ -186,6 +205,12 @@ import UIKit
                 MainDependencyContainer.fatalError()
             }
             let __self = _self.reviewManagerDependencyResolver()
+            defer {
+                MainDependencyContainer.dynamicResolvers.removeLast()
+                MainDependencyContainer.dynamicResolversLock.unlock()
+            }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            MainDependencyContainer.dynamicResolvers.append(__self as! MainDependencyContainer)
             return ReviewManager(injecting: __self)
         }
         _ = _self._logger(nil)
@@ -198,7 +223,11 @@ import UIKit
         return _self
     }
 
-    static func appDelegateDependencyResolver() -> AppDelegateDependencyResolver { return MainDependencyContainer().appDelegateDependencyResolver() }
+    static func appDelegateDependencyResolver() -> AppDelegateDependencyResolver {
+        let _self = MainDependencyContainer().appDelegateDependencyResolver()
+        MainDependencyContainer.dynamicResolvers.append(_self as! MainDependencyContainer)
+        return _self
+    }
 
     private func personManagerDependencyResolver() -> PersonManagerDependencyResolver {
         let _self = MainDependencyContainer()
@@ -227,6 +256,12 @@ import UIKit
             }
             let __self = _self.movieViewControllerDependencyResolver()
             copyParameters?(__self as! MainDependencyContainer)
+            defer {
+                MainDependencyContainer.dynamicResolvers.removeLast()
+                MainDependencyContainer.dynamicResolversLock.unlock()
+            }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            MainDependencyContainer.dynamicResolvers.append(__self as! MainDependencyContainer)
             return MovieViewController(injecting: __self)
         }
         _ = _self._logger(nil)
@@ -243,6 +278,12 @@ import UIKit
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
+            defer {
+                MainDependencyContainer.dynamicResolvers.removeLast()
+                MainDependencyContainer.dynamicResolversLock.unlock()
+            }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            MainDependencyContainer.dynamicResolvers.append(_self)
             return WSReviewViewController.make(_self as WSReviewViewControllerInputDependencyResolver)
         }
         _ = _self._logger(nil)
@@ -322,8 +363,8 @@ typealias WSReviewViewControllerInputDependencyResolver = ImageManagerResolver &
 @propertyWrapper
 struct HomeViewControllerDependency<ConcreteType> {
 
-    let resolver: () -> UIViewController =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> UIViewController else {
+    let resolver: HomeViewControllerResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -339,7 +380,7 @@ struct HomeViewControllerDependency<ConcreteType> {
     }
 
     var wrappedValue: UIViewController {
-        return resolver()
+        return resolver.homeViewController
     }
 }
 
@@ -356,8 +397,8 @@ extension HomeViewControllerDependency where ConcreteType == Void {
 @propertyWrapper
 struct ImageManagerDependency<ConcreteType> {
 
-    let resolver: () -> ImageManaging =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> ImageManaging else {
+    let resolver: ImageManagerResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -373,7 +414,7 @@ struct ImageManagerDependency<ConcreteType> {
     }
 
     var wrappedValue: ImageManaging {
-        return resolver()
+        return resolver.imageManager
     }
 }
 
@@ -390,8 +431,8 @@ extension ImageManagerDependency where ConcreteType == Void {
 @propertyWrapper
 struct LoggerDependency<ConcreteType> {
 
-    let resolver: () -> Logger =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> Logger else {
+    let resolver: LoggerResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -407,7 +448,7 @@ struct LoggerDependency<ConcreteType> {
     }
 
     var wrappedValue: Logger {
-        return resolver()
+        return resolver.logger
     }
 }
 
@@ -424,8 +465,8 @@ extension LoggerDependency where ConcreteType == Void {
 @propertyWrapper
 struct MovieAPIDependency<ConcreteType> {
 
-    let resolver: () -> APIProtocol =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> APIProtocol else {
+    let resolver: MovieAPIResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -441,7 +482,7 @@ struct MovieAPIDependency<ConcreteType> {
     }
 
     var wrappedValue: APIProtocol {
-        return resolver()
+        return resolver.movieAPI
     }
 }
 
@@ -458,8 +499,8 @@ extension MovieAPIDependency where ConcreteType == Void {
 @propertyWrapper
 struct MovieControllerDependency<ConcreteType> {
 
-    let resolver: (UInt, String) -> UIViewController =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? (UInt, String) -> UIViewController else {
+    let resolver: MovieControllerResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -475,7 +516,7 @@ struct MovieControllerDependency<ConcreteType> {
     }
 
     var wrappedValue: (UInt, String) -> UIViewController {
-        return resolver
+        return { self.resolver.movieController(movieID: $0, movieTitle: $1) }
     }
 }
 
@@ -492,8 +533,8 @@ extension MovieControllerDependency where ConcreteType == Void {
 @propertyWrapper
 struct MovieIDDependency<ConcreteType> {
 
-    let resolver: () -> UInt =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> UInt else {
+    let resolver: MovieIDResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -509,7 +550,7 @@ struct MovieIDDependency<ConcreteType> {
     }
 
     var wrappedValue: UInt {
-        return resolver()
+        return resolver.movieID
     }
 }
 
@@ -526,8 +567,8 @@ extension MovieIDDependency where ConcreteType == Void {
 @propertyWrapper
 struct MovieManagerDependency<ConcreteType> {
 
-    let resolver: () -> MovieManaging =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> MovieManaging else {
+    let resolver: MovieManagerResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -543,7 +584,7 @@ struct MovieManagerDependency<ConcreteType> {
     }
 
     var wrappedValue: MovieManaging {
-        return resolver()
+        return resolver.movieManager
     }
 }
 
@@ -560,8 +601,8 @@ extension MovieManagerDependency where ConcreteType == Void {
 @propertyWrapper
 struct MovieTitleDependency<ConcreteType> {
 
-    let resolver: () -> String =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> String else {
+    let resolver: MovieTitleResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -577,7 +618,7 @@ struct MovieTitleDependency<ConcreteType> {
     }
 
     var wrappedValue: String {
-        return resolver()
+        return resolver.movieTitle
     }
 }
 
@@ -594,8 +635,8 @@ extension MovieTitleDependency where ConcreteType == Void {
 @propertyWrapper
 struct ReviewControllerDependency<ConcreteType> {
 
-    let resolver: () -> WSReviewViewController =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> WSReviewViewController else {
+    let resolver: ReviewControllerResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -611,7 +652,7 @@ struct ReviewControllerDependency<ConcreteType> {
     }
 
     var wrappedValue: WSReviewViewController {
-        return resolver()
+        return resolver.reviewController
     }
 }
 
@@ -628,8 +669,8 @@ extension ReviewControllerDependency where ConcreteType == Void {
 @propertyWrapper
 struct ReviewManagerDependency<ConcreteType> {
 
-    let resolver: () -> ReviewManaging =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> ReviewManaging else {
+    let resolver: ReviewManagerResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -645,7 +686,7 @@ struct ReviewManagerDependency<ConcreteType> {
     }
 
     var wrappedValue: ReviewManaging {
-        return resolver()
+        return resolver.reviewManager
     }
 }
 
@@ -662,8 +703,8 @@ extension ReviewManagerDependency where ConcreteType == Void {
 @propertyWrapper
 struct UrlSessionDependency<ConcreteType> {
 
-    let resolver: () -> URLSession =  {
-        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> URLSession else {
+    let resolver: UrlSessionResolver =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last else {
             MainDependencyContainer.fatalError()
         }
         return resolver
@@ -679,7 +720,7 @@ struct UrlSessionDependency<ConcreteType> {
     }
 
     var wrappedValue: URLSession {
-        return resolver()
+        return resolver.urlSession
     }
 }
 

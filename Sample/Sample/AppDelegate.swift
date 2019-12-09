@@ -14,7 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     
-    fileprivate let dependencies = MainDependencyContainer.appDelegateDependencyResolver()
+    private let dependencies = MainDependencyContainer.appDelegateDependencyResolver()
     
     @LoggerDependency(.registration, type: Logger.self, scope: .container)
     private var logger: Logger
@@ -41,7 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         window = UIWindow()
         
-        window?.rootViewController = UINavigationController(rootViewController: dependencies.homeViewController)
+        window?.rootViewController = UINavigationController(rootViewController: homeViewController)
         window?.makeKeyAndVisible()
     }
 }
