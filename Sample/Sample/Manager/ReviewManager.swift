@@ -37,28 +37,26 @@ import API
 
 final class ReviewManager: ReviewManaging {
 
-    private let dependencies: ReviewManagerDependencyResolver
-    
     @LoggerDependency(.registration, type: Logger.self)
     private var logger: Logger
 
     @MovieAPIDependency(.reference)
     private var movieAPI: APIProtocol
     
-    required init(injecting dependencies: ReviewManagerDependencyResolver) {
-        self.dependencies = dependencies
+    required init(injecting _: ReviewManagerDependencyResolver) {
+        // no-op
     }
     
     func getReviews(for movieID: UInt, completion: @escaping (ReviewPage?, ReviewManagerError?) -> Void) {
 
         let request = APIRequest<Page<Review.Properties>>(path: "/movie/\(movieID)/reviews")
         
-        dependencies.movieAPI.send(request: request) { result in
+        movieAPI.send(request: request) { result in
             switch result {
             case .success(let page):
                 completion(ReviewPage(page), nil)
             case .failure(let error):
-                self.dependencies.logger.log(.error, "\(error)")
+                self.logger.log(.error, "\(error)")
                 completion(nil, ReviewManagerError(.oops))
             }
         }
