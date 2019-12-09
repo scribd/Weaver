@@ -163,34 +163,6 @@ internal final class MyService {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_an_extension_of_ObjCDependencyInjectable() {
-        
-        let file = File(contents: """
-
-extension MyService: MyServiceObjCDependencyInjectable {
-}
-""")
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            
-            if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "MyService"), doesSupportObjc: true),
-                    offset: 1, length: 58, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 58, length: 1, line: 2)
-                )
-            } else {
-                XCTFail("Unexpected amount of tokens: \(tokens.count).")
-            }
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation() {
         
         let file = File(contents: """

@@ -18,12 +18,14 @@ final class HomeViewController: UIViewController {
     
     private var movies = [Movie]()
     
-    // weaver: logger = Logger
+    @LoggerDependency(.registration, type: Logger.self)
+    private var logger: Logger
     
-    // weaver: movieManager <- MovieManaging
-    
-    // weaver: movieController = MovieViewController <- UIViewController
-    // weaver: movieController.scope = .weak
+    @MovieManagerDependency(.reference)
+    private var movieManager: MovieManaging
+
+    @MovieControllerDependency(.registration, type: MovieViewController.self, scope: .weak)
+    private var movieController: (UInt, String) -> UIViewController
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
@@ -59,14 +61,14 @@ final class HomeViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
-        dependencies.movieManager.getDiscoverMovies { result in
+        movieManager.getDiscoverMovies { result in
             switch result {
             case .success(let page):
                 self.movies = page.results
                 self.tableView.reloadData()
                 
             case .failure(let error):
-                self.dependencies.logger.log(.error, "\(error)")
+                self.logger.log(.error, "\(error)")
             }
         }
     }
@@ -76,7 +78,7 @@ extension HomeViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let movie = movies[indexPath.row]
-        let controller = dependencies.movieController(movieID: movie.id, title: movie.title)
+        let controller = movieController(movie.id, movie.title)
         navigationController?.pushViewController(controller, animated: true)
         tableView.deselectRow(at: indexPath, animated: true)
     }

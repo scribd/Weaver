@@ -39,9 +39,11 @@ final class ReviewManager: ReviewManaging {
 
     private let dependencies: ReviewManagerDependencyResolver
     
-    // weaver: logger = Logger
-    
-    // weaver: movieAPI <- APIProtocol
+    @LoggerDependency(.registration, type: Logger.self)
+    private var logger: Logger
+
+    @MovieAPIDependency(.reference)
+    private var movieAPI: APIProtocol
     
     required init(injecting dependencies: ReviewManagerDependencyResolver) {
         self.dependencies = dependencies

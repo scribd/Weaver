@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum AccessLevel: String {
+public enum AccessLevel: String, CaseIterable {
     case `public`
     case `open`
     case `internal`

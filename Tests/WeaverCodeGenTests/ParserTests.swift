@@ -551,32 +551,6 @@ final class MyService {
         }
     }
     
-    func test_parser_should_generate_a_valid_syntax_tree_with_an_objc_configuration_attribute() {
-        let file = File(contents: """
-final class MyService {
-  // weaver: api <- APIProtocol
-  // weaver: api.objc = true
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            let syntaxTree = try parser.parse()
-            
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 80, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .doesSupportObjc(value: true), target: .dependency(name: "api")), offset: 58, length: 27, line: 2))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
     func test_parser_should_generate_a_syntax_error_when_objc_config_attribute_is_set_on_self() {
         let file = File(contents: """
 final class MyService {

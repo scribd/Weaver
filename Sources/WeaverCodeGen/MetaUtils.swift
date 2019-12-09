@@ -28,6 +28,8 @@ extension Variable {
     static let source = Variable(name: "source")
     static let value = Variable(name: "_value")
     static let proxySelf = Variable(name: "value")
+    static let resolver = Variable(name: "resolver")
+    static let dynamicResolvers = Variable(name: "dynamicResolvers")
 }
 
 extension AnyType {

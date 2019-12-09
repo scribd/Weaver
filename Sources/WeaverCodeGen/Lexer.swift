@@ -74,19 +74,23 @@ private extension Lexer {
     }
     
     /// Tokenize declarations from the SourceKitAST
-    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) -> [AnyTokenBox] {
+    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) throws -> [AnyTokenBox] {
         var tokens = [AnyTokenBox]()
+        
+        if let annotation = try SourceKitDependencyAnnotation(sourceKitAST, lines: lines[line...].map { ($0.content, $0.range) }) {
+            return try annotation.toTokens()
+        }
 
-        let typeDeclaration = SourceKitDeclaration(sourceKitAST)
+        let typeDeclaration = SourceKitTypeDeclaration(sourceKitAST)
         
         if let typeDeclaration = typeDeclaration {
             var startToken = typeDeclaration.toToken
 
             if let nextLine = findNextLine(after: line, containing: Int(startToken.offset)) {
                 line = nextLine
-                if let _typeDeclaration = SourceKitDeclaration(sourceKitAST, lineString: lines[line].content) {
+                if let _typeDeclaration = SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content) {
                     startToken = _typeDeclaration.toToken
-                } 
+                }
                 startToken.line = line
             } else {
                 return tokens
@@ -97,7 +101,7 @@ private extension Lexer {
         
         if let children = sourceKitAST[SwiftDocKey.substructure.rawValue] as? [[String: SourceKitRepresentable]] {
             for child in children {
-                tokens += tokenize(from: child, at: &line)
+                tokens += try tokenize(from: child, at: &line)
             }
         }
 

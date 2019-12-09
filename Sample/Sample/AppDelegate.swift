@@ -13,36 +13,32 @@ import API
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
+    
     fileprivate let dependencies = MainDependencyContainer.appDelegateDependencyResolver()
     
-    // weaver: logger = Logger
-    // weaver: logger.scope = .container
+    @LoggerDependency(.registration, type: Logger.self, scope: .container)
+    private var logger: Logger
     
-    // weaver: urlSession = URLSession
-    // weaver: urlSession.scope = .container
-    // weaver: urlSession.builder = { _ in URLSession.shared }
+    @UrlSessionDependency(.registration, type: URLSession.self, scope: .container, builder: AppDelegate.makeURLSession)
+    private var urlSession: URLSession
     
-    // weaver: movieAPI = MovieAPI <- APIProtocol
-    // weaver: movieAPI.scope = .container
-    // weaver: movieAPI.builder = AppDelegate.makeMovieAPI
+    @MovieAPIDependency(.registration, type: MovieAPI.self, scope: .container, builder: AppDelegate.makeMovieAPI)
+    private var movieAPI: APIProtocol
+    
+    @ImageManagerDependency(.registration, type: ImageManager.self, scope: .container)
+    private var imageManager: ImageManaging
+    
+    @MovieManagerDependency(.registration, type: MovieManager.self, scope: .container, builder: AppDelegate.makeMovieManager)
+    private var movieManager: MovieManaging
 
-    // weaver: imageManager = ImageManager <- ImageManaging
-    // weaver: imageManager.scope = .container
-    
-    // weaver: movieManager = MovieManager <- MovieManaging
-    // weaver: movieManager.scope = .container
-    // weaver: movieManager.builder = AppDelegate.makeMovieManager
-    
-    // weaver: homeViewController = HomeViewController <- UIViewController
-    // weaver: homeViewController.scope = .container
-    
-    // weaver: reviewManager = ReviewManager <- ReviewManaging
-    // weaver: reviewManager.scope = .container
-    // weaver: reviewManager.objc = true
+    @HomeViewControllerDependency(.registration, type: HomeViewController.self, scope: .container)
+    private var homeViewController: UIViewController
+
+    @ReviewManagerDependency(.registration, type: ReviewManager.self, scope: .container, objc: true)
+    private var reviewManager: ReviewManaging
     
     func applicationDidFinishLaunching(_ application: UIApplication) {
-        
+
         window = UIWindow()
         
         window?.rootViewController = UINavigationController(rootViewController: dependencies.homeViewController)
@@ -51,12 +47,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension AppDelegate {
+    
+    static func makeURLSession(_ dependencies: URLSessionInputDependencyResolver) -> URLSession {
+        return .shared
+    }
 
-    static func makeMovieAPI(_ dependencies: AppDelegateDependencyResolver) -> APIProtocol {
+    static func makeMovieAPI(_ dependencies: MovieAPIInputDependencyResolver) -> APIProtocol {
         return MovieAPI(urlSession: dependencies.urlSession)
     }
     
-    static func makeMovieManager(_ dependencies: AppDelegateDependencyResolver) -> MovieManaging {
+    static func makeMovieManager(_ dependencies: MovieManagerInputDependencyResolver) -> MovieManaging {
         return MovieManager(host: "https://api.themoviedb.org/3", logger: dependencies.logger)
     }
 }

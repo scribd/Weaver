@@ -117,12 +117,13 @@ extension ConfigurationAnnotation {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
              (.customBuilder, _),
-             (.doesSupportObjc, _),
-             (.setter, .registration):
+             (.setter, .registration),
+             (.doesSupportObjc, .registration):
             return true
         case (.isIsolated, _),
              (.scope, _),
-             (.setter, _):
+             (.setter, _),
+             (.doesSupportObjc, _):
             return false
         }
     }

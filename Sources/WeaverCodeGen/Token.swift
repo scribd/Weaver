@@ -152,6 +152,14 @@ public struct ConfigurationAnnotation: Token, Hashable {
         return ConfigurationAnnotation(attribute: attribute, target: target)
     }
     
+    public static func create(attribute: ConfigurationAttribute, target: ConfigurationAttributeTarget) throws -> ConfigurationAnnotation {
+        guard validate(configurationAttribute: attribute, with: target) else {
+            throw TokenError.invalidConfigurationAttributeTarget(name: attribute.name.rawValue, target: target)
+        }
+        
+        return ConfigurationAnnotation(attribute: attribute, target: target)
+    }
+    
     public var description: String {
         return "\(target).\(attribute)"
     }
@@ -178,14 +186,11 @@ public struct InjectableType: Token, Hashable {
 
     let type: ConcreteType
     let accessLevel: AccessLevel
-    let doesSupportObjc: Bool
 
     init(type: ConcreteType,
-         accessLevel: AccessLevel = .default,
-         doesSupportObjc: Bool = false) {
+         accessLevel: AccessLevel = .default) {
         self.type = type
         self.accessLevel = accessLevel
-        self.doesSupportObjc = doesSupportObjc
     }
     
     public var description: String {

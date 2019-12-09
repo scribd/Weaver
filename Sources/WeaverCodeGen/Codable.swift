@@ -391,21 +391,18 @@ extension InjectableType {
     private enum Key: String, CodingKey {
         case type = "t"
         case accessLevel = "a"
-        case doesSupportObjc = "o"
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         type = try container.decode(ConcreteType.self, forKey: .type)
         accessLevel = try container.decode(AccessLevel.self, forKey: .accessLevel)
-        doesSupportObjc = try container.decode(Bool.self, forKey: .doesSupportObjc)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(type, forKey: .type)
         try container.encode(accessLevel, forKey: .accessLevel)
-        try container.encode(doesSupportObjc, forKey: .doesSupportObjc)
     }
 }
 

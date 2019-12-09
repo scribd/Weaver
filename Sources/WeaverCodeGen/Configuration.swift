@@ -56,11 +56,8 @@ struct DependencyConfiguration: Configuration {
 struct DependencyContainerConfiguration: Configuration {
     
     let isIsolated: Bool
-    
-    let doesSupportObjc: Bool
-    
+        
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
         isIsolated = attributes?[.isIsolated]?.boolValue ?? false
-        doesSupportObjc = attributes?[.doesSupportObjc]?.boolValue ?? false
     }
 }

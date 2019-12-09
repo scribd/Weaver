@@ -116,7 +116,7 @@ final class DependencyContainer: Encodable, CustomDebugStringConvertible {
  */
 final class Dependency: Encodable, CustomDebugStringConvertible {
     
-    enum Kind: String, Encodable {
+    enum Kind: String, Encodable, CaseIterable {
         case registration
         case reference
         case parameter
@@ -269,12 +269,6 @@ private extension Linker {
                                                               fileLocation: location,
                                                               declarationSource: .type)
                 typeDeclarations[dependencyContainer.type] = dependencyContainer
-                
-                if token.value.doesSupportObjc {
-                    var attributes = configurationAnnotations[token.value.type] ?? [:]
-                    attributes[.doesSupportObjc] = .doesSupportObjc(value: true)
-                    configurationAnnotations[token.value.type] = attributes
-                }
 
             case .registerAnnotation(let token):
                 let dependencyContainer = DependencyContainer(type: token.value.type,

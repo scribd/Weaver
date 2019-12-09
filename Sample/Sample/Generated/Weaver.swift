@@ -11,7 +11,7 @@ import UIKit
         Swift.fatalError(message, file: file, line: line)
     }
 
-    private static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
+    fileprivate static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
         onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
     }
 
@@ -68,6 +68,28 @@ import UIKit
         }
     }
 
+
+    fileprivate static var dynamicResolvers = [Any]()
+    private static var dynamicResolversLock = os_unfair_lock()
+    private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
+        os_unfair_lock_lock(&dynamicResolversLock)
+        defer { os_unfair_lock_unlock(&dynamicResolversLock) }
+        return execute()
+    }
+
+    enum Scope {
+        case transient
+        case container
+        case weak
+        case lazy
+    }
+
+    enum DependencyKind {
+        case registration
+        case reference
+        case parameter
+    }
+
     private var _homeViewController: Builder<UIViewController> = MainDependencyContainer.fatalBuilder()
     var homeViewController: UIViewController {
         return _homeViewController(nil)
@@ -90,10 +112,10 @@ import UIKit
 
     private var _movieController: Builder<UIViewController> = MainDependencyContainer.fatalBuilder()
     func movieController(movieID: UInt,
-                         title: String) -> UIViewController {
+                         movieTitle: String) -> UIViewController {
         return _movieController { _self in
             _self._movieID = _self.builder(movieID)
-            _self._title = _self.builder(title)
+            _self._movieTitle = _self.builder(movieTitle)
         }
     }
 
@@ -107,6 +129,11 @@ import UIKit
         return _movieManager(nil)
     }
 
+    private var _movieTitle: Builder<String> = MainDependencyContainer.fatalBuilder()
+    var movieTitle: String {
+        return _movieTitle(nil)
+    }
+
     private var _reviewController: Builder<WSReviewViewController> = MainDependencyContainer.fatalBuilder()
     var reviewController: WSReviewViewController {
         return _reviewController(nil)
@@ -115,11 +142,6 @@ import UIKit
     private var _reviewManager: Builder<ReviewManaging> = MainDependencyContainer.fatalBuilder()
     var reviewManager: ReviewManaging {
         return _reviewManager(nil)
-    }
-
-    private var _title: Builder<String> = MainDependencyContainer.fatalBuilder()
-    var title: String {
-        return _title(nil)
     }
 
     private var _urlSession: Builder<URLSession> = MainDependencyContainer.fatalBuilder()
@@ -137,7 +159,7 @@ import UIKit
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
-            return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
+            return AppDelegate.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
         _self._movieAPI = lazyBuilder { [weak _self] _ in
             guard let _self = _self else {
@@ -246,7 +268,7 @@ protocol MovieAPIResolver: AnyObject {
 }
 
 protocol MovieControllerResolver: AnyObject {
-    func movieController(movieID: UInt, title: String) -> UIViewController
+    func movieController(movieID: UInt, movieTitle: String) -> UIViewController
 }
 
 protocol MovieIDResolver: AnyObject {
@@ -257,6 +279,10 @@ protocol MovieManagerResolver: AnyObject {
     var movieManager: MovieManaging { get }
 }
 
+protocol MovieTitleResolver: AnyObject {
+    var movieTitle: String { get }
+}
+
 protocol ReviewControllerResolver: AnyObject {
     var reviewController: WSReviewViewController { get }
 }
@@ -265,15 +291,11 @@ protocol ReviewControllerResolver: AnyObject {
     var reviewManager: ReviewManaging { get }
 }
 
-protocol TitleResolver: AnyObject {
-    var title: String { get }
-}
-
 protocol UrlSessionResolver: AnyObject {
     var urlSession: URLSession { get }
 }
 
-extension MainDependencyContainer: HomeViewControllerResolver, ImageManagerResolver, LoggerResolver, MovieAPIResolver, MovieControllerResolver, MovieIDResolver, MovieManagerResolver, ReviewControllerResolver, ReviewManagerResolver, TitleResolver, UrlSessionResolver {
+extension MainDependencyContainer: HomeViewControllerResolver, ImageManagerResolver, LoggerResolver, MovieAPIResolver, MovieControllerResolver, MovieIDResolver, MovieManagerResolver, MovieTitleResolver, ReviewControllerResolver, ReviewManagerResolver, UrlSessionResolver {
 }
 
 extension MainDependencyContainer {
@@ -287,7 +309,7 @@ typealias ReviewManagerDependencyResolver = LoggerResolver & MovieAPIResolver
 
 typealias HomeViewControllerDependencyResolver = LoggerResolver & MovieManagerResolver & MovieControllerResolver
 
-typealias MovieViewControllerDependencyResolver = LoggerResolver & MovieIDResolver & TitleResolver & MovieManagerResolver & ImageManagerResolver & ReviewManagerResolver & ReviewControllerResolver
+typealias MovieViewControllerDependencyResolver = LoggerResolver & MovieIDResolver & MovieTitleResolver & MovieManagerResolver & ImageManagerResolver & ReviewManagerResolver & ReviewControllerResolver
 
 typealias MovieAPIInputDependencyResolver = HomeViewControllerResolver & ImageManagerResolver & LoggerResolver & MovieAPIResolver & MovieManagerResolver & ReviewManagerResolver & UrlSessionResolver
 
@@ -295,4 +317,378 @@ typealias MovieManagerInputDependencyResolver = HomeViewControllerResolver & Ima
 
 typealias URLSessionInputDependencyResolver = HomeViewControllerResolver & ImageManagerResolver & LoggerResolver & MovieAPIResolver & MovieManagerResolver & ReviewManagerResolver & UrlSessionResolver
 
-typealias WSReviewViewControllerInputDependencyResolver = ImageManagerResolver & LoggerResolver & MovieIDResolver & MovieManagerResolver & ReviewControllerResolver & ReviewManagerResolver & TitleResolver
+typealias WSReviewViewControllerInputDependencyResolver = ImageManagerResolver & LoggerResolver & MovieIDResolver & MovieManagerResolver & MovieTitleResolver & ReviewControllerResolver & ReviewManagerResolver
+
+@propertyWrapper
+struct HomeViewControllerDependency<ConcreteType> {
+
+    let resolver: () -> UIViewController =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> UIViewController else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: UIViewController {
+        return resolver()
+    }
+}
+
+extension HomeViewControllerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct ImageManagerDependency<ConcreteType> {
+
+    let resolver: () -> ImageManaging =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> ImageManaging else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: ImageManaging {
+        return resolver()
+    }
+}
+
+extension ImageManagerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct LoggerDependency<ConcreteType> {
+
+    let resolver: () -> Logger =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> Logger else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: Logger {
+        return resolver()
+    }
+}
+
+extension LoggerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct MovieAPIDependency<ConcreteType> {
+
+    let resolver: () -> APIProtocol =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> APIProtocol else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: APIProtocol {
+        return resolver()
+    }
+}
+
+extension MovieAPIDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct MovieControllerDependency<ConcreteType> {
+
+    let resolver: (UInt, String) -> UIViewController =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? (UInt, String) -> UIViewController else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: (UInt, String) -> UIViewController {
+        return resolver
+    }
+}
+
+extension MovieControllerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct MovieIDDependency<ConcreteType> {
+
+    let resolver: () -> UInt =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> UInt else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: UInt {
+        return resolver()
+    }
+}
+
+extension MovieIDDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct MovieManagerDependency<ConcreteType> {
+
+    let resolver: () -> MovieManaging =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> MovieManaging else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: MovieManaging {
+        return resolver()
+    }
+}
+
+extension MovieManagerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct MovieTitleDependency<ConcreteType> {
+
+    let resolver: () -> String =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> String else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: String {
+        return resolver()
+    }
+}
+
+extension MovieTitleDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct ReviewControllerDependency<ConcreteType> {
+
+    let resolver: () -> WSReviewViewController =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> WSReviewViewController else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: WSReviewViewController {
+        return resolver()
+    }
+}
+
+extension ReviewControllerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct ReviewManagerDependency<ConcreteType> {
+
+    let resolver: () -> ReviewManaging =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> ReviewManaging else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: ReviewManaging {
+        return resolver()
+    }
+}
+
+extension ReviewManagerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct UrlSessionDependency<ConcreteType> {
+
+    let resolver: () -> URLSession =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> URLSession else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: URLSession {
+        return resolver()
+    }
+}
+
+extension UrlSessionDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}

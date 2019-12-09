@@ -113,7 +113,7 @@ struct Configuration {
     }
     
     private var recursive: Bool {
-        return !recursiveOff
+        return recursiveOff == false
     }
 }
 
@@ -223,6 +223,7 @@ extension Path: Decodable {
 extension Configuration {
     
     private static let annotationRegex = "\\/\\/[[:space:]]*\(TokenBuilder.annotationRegexString)"
+    private static let propertyWrapperRegex = "\"@\\w*Dependency\""
     
     func inputPaths() throws -> [Path]  {
         var inputPaths = Set<Path>()
@@ -233,7 +234,8 @@ extension Configuration {
             .filter { $0.exists && $0.isDirectory }
             .map { $0.absolute().string })
 
-        inputPaths.formUnion(try shellOut(to: "grep", arguments: ["-e", Configuration.annotationRegex] + Array(inputDirectories) + ["-R", "-l"])
+        let grepArguments = ["-lR", "-e", Configuration.annotationRegex, "-e", Configuration.propertyWrapperRegex] + Array(inputDirectories)
+        inputPaths.formUnion(try shellOut(to: "grep", arguments: grepArguments)
             .split(separator: "\n")
             .lazy
             .map { Path(String($0)) }
@@ -251,5 +253,9 @@ extension Configuration {
             .filter { $0.extension == "swift" })
         
         return inputPaths.sorted()
+    }
+    
+    func isSwift5() throws -> Bool {
+        return try shellOut(to: "swift --version").hasPrefix("Apple Swift version 5.")
     }
 }

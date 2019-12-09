@@ -20,15 +20,19 @@ public final class SwiftGenerator {
 
     private let version: String
     
+    private let isSwift5: Bool
+    
     public init(dependencyGraph: DependencyGraph,
                 inspector: Inspector,
                 version: String,
-                testableImports: [String]?) throws {
+                testableImports: [String]?,
+                isSwift5: Bool = false) throws {
 
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.version = version
         self.testableImports = testableImports
+        self.isSwift5 = isSwift5
     }
     
     private var _file: MetaWeaverFile?
@@ -36,7 +40,11 @@ public final class SwiftGenerator {
         if let file = _file {
             return file
         }
-        let file = try MetaWeaverFile(dependencyGraph, inspector, version, testableImports)
+        let file = try MetaWeaverFile(dependencyGraph,
+                                      inspector,
+                                      version,
+                                      testableImports,
+                                      isSwift5)
         _file = file
         return file
     }
@@ -107,6 +115,7 @@ private final class MetaDependencyDeclaration: Hashable {
     
     lazy var declarationName = "\(name)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
     lazy var resolverTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Resolver"
+    lazy var dependencyTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Dependency"
     lazy var setterName = "set\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
     lazy var setterTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Setter"
     lazy var declarationDoubleName = "\(name)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Double"
@@ -160,6 +169,8 @@ private final class MetaWeaverFile {
     private let version: String
     
     private let testableImports: [String]?
+    
+    private let isSwift5: Bool
 
     // Pre computed data
     
@@ -181,12 +192,14 @@ private final class MetaWeaverFile {
     init(_ dependencyGraph: DependencyGraph,
          _ inspector: Inspector,
          _ version: String,
-         _ testableImports: [String]?) throws {
+         _ testableImports: [String]?,
+         _ isSwift5: Bool) throws {
         
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.version = version
         self.testableImports = testableImports
+        self.isSwift5 = isSwift5
         
         let desambiguatedDeclarations = try MetaWeaverFile.desambiguatedDeclarations(from: dependencyGraph)
         declarations = desambiguatedDeclarations
@@ -246,7 +259,8 @@ private final class MetaWeaverFile {
             dependencyResolvers(),
             inputDependencyResolvers(),
             dependencyResolverProxies(),
-            publicDependencyInitExtensions()
+            publicDependencyInitExtensions(),
+            propertyWrappers()
         ].flatMap { $0 }
     }
     
@@ -283,67 +297,88 @@ private extension MetaWeaverFile {
             .adding(inheritedType: doesSupportObjc ? .nsObject : nil)
             .adding(member: PlainCode(code: """
             
-            static var onFatalError: (String, StaticString, UInt) -> Never = { message, file, line in
-                Swift.fatalError(message, file: file, line: line)
-            }
-                
-            private static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
-                onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
-            }
+static var onFatalError: (String, StaticString, UInt) -> Never = { message, file, line in
+    Swift.fatalError(message, file: file, line: line)
+}
+    
+fileprivate static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
+    onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
+}
 
-            private typealias ParametersCopier = (MainDependencyContainer) -> Void
-            private typealias Builder<T> = (ParametersCopier?) -> T
+private typealias ParametersCopier = (\(TypeIdentifier.mainDependencyContainer.swiftString)) -> Void
+private typealias Builder<T> = (ParametersCopier?) -> T
 
-            private func builder<T>(_ value: T) -> Builder<T> {
-                return { [weak self] copyParameters in
-                    guard let self = self else {
-                        MainDependencyContainer.fatalError()
-                    }
-                    copyParameters?(self)
-                    return value
-                }
-            }
+private func builder<T>(_ value: T) -> Builder<T> {
+    return { [weak self] copyParameters in
+        guard let self = self else {
+            \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
+        }
+        copyParameters?(self)
+        return value
+    }
+}
 
-            private func weakBuilder<T>(_ value: T) -> Builder<T> where T: AnyObject {
-                return { [weak self, weak value] copyParameters in
-                    guard let self = self, let value = value else {
-                        MainDependencyContainer.fatalError()
-                    }
-                    copyParameters?(self)
-                    return value
-                }
-            }
+private func weakBuilder<T>(_ value: T) -> Builder<T> where T: AnyObject {
+    return { [weak self, weak value] copyParameters in
+        guard let self = self, let value = value else {
+            \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
+        }
+        copyParameters?(self)
+        return value
+    }
+}
 
-            private func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
-                var _value: T?
-                return { copyParameters in
-                    if let value = _value {
-                        return value
-                    }
-                    let value = builder(copyParameters)
-                    _value = value
-                    return value
-                }
-            }
+private func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
+    var _value: T?
+    return { copyParameters in
+        if let value = _value {
+            return value
+        }
+        let value = builder(copyParameters)
+        _value = value
+        return value
+    }
+}
 
-            private func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
-                weak var _value: T?
-                return { copyParameters in
-                    if let value = _value {
-                        return value
-                    }
-                    let value = builder(copyParameters)
-                    _value = value
-                    return value
-                }
-            }
+private func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
+    weak var _value: T?
+    return { copyParameters in
+        if let value = _value {
+            return value
+        }
+        let value = builder(copyParameters)
+        _value = value
+        return value
+    }
+}
 
-            private static func fatalBuilder<T>() -> Builder<T> {
-                return { _ in
-                    MainDependencyContainer.fatalError()
-                }
-            }
-            """))
+private static func fatalBuilder<T>() -> Builder<T> {
+    return { _ in
+        \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
+    }
+}
+
+"""))
+            .adding(member: isSwift5 ? PlainCode(code: """
+
+fileprivate static var dynamicResolvers = [Any]()
+private static var dynamicResolversLock = os_unfair_lock()
+private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
+    os_unfair_lock_lock(&dynamicResolversLock)
+    defer { os_unfair_lock_unlock(&dynamicResolversLock) }
+    return execute()
+}
+""") : nil)
+            .adding(members: isSwift5 ? [
+                EmptyLine(),
+                Type(identifier: TypeIdentifier(name: "Scope"))
+                    .with(kind: .enum)
+                    .adding(members: Scope.allCases.map { Case(name: $0.rawValue) }),
+                EmptyLine(),
+                Type(identifier: TypeIdentifier(name: "DependencyKind"))
+                    .with(kind: .enum)
+                    .adding(members: Dependency.Kind.allCases.map { Case(name: $0.rawValue) }),
+            ] : [])
             .adding(members: try resolversImplementation())
             .adding(members: settersImplementation())
             .adding(member: EmptyLine())
@@ -352,6 +387,83 @@ private extension MetaWeaverFile {
                 .with(accessLevel: .fileprivate)
             )
             .adding(members: try dependencyResolverCopyMethods())
+    }
+    
+    func propertyWrappers() throws -> [FileBodyMember] {
+        guard isSwift5 else { return [] }
+        
+        return orderedDeclarations.flatMap { declaration -> [FileBodyMember] in
+            
+            let resolverBlockType: TypeIdentifier
+            if declaration.parameters.isEmpty {
+                resolverBlockType = TypeIdentifier(name: .custom("() -> \(declaration.type.typeID.swiftString)"))
+            } else {
+                let parameters = declaration.parameters.compactMap { parameter in
+                    guard let concreteType = parameter.type.concreteType else { return nil }
+                    return concreteType.typeID.swiftString
+                }.joined(separator: ", ")
+                resolverBlockType = TypeIdentifier(name: .custom("(\(parameters)) -> \(declaration.type.typeID.swiftString)"))
+            }
+            
+            let kindFunctionParameter = FunctionParameter(alias: "_", name: "kind", type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).DependencyKind"))
+            let initFunctionParameters = [
+                FunctionParameter(name: "scope", type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).Scope"))
+                    .with(defaultValue: +Reference.named("container")),
+                FunctionParameter(name: "setter", type: .bool).with(defaultValue: Value.bool(false)),
+                FunctionParameter(name: "objc", type: .bool).with(defaultValue: Value.bool(false)),
+                FunctionParameter(name: "builder", type: .optional(wrapped: .any))
+                    .with(defaultValue: Value.nil)
+            ]
+            
+            let type = Type(identifier: TypeIdentifier(name: declaration.dependencyTypeName))
+                .with(kind: .struct)
+                .adding(genericParameter: GenericParameter(name: "ConcreteType"))
+                .adding(member: EmptyLine())
+                .adding(member: Property(variable: Variable.resolver
+                    .with(type: resolverBlockType))
+                    .with(value: Reference.block(FunctionBody()
+                        .adding(member: Guard(assignment: Assignment(
+                            variable: Variable.resolver,
+                            value: TypeIdentifier.mainDependencyContainer.reference +
+                                Variable.dynamicResolvers.reference +
+                                .named("last") |
+                                .named(" as? ") |
+                                resolverBlockType.reference
+                        ))
+                            .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call()))
+                            .adding(member: Return(value: Variable.resolver.reference))
+                        ) | .call()
+                    )
+                )
+                .adding(member: EmptyLine())
+                .adding(member: Function(kind: .`init`)
+                    .adding(parameter: kindFunctionParameter)
+                    .adding(parameter: FunctionParameter(name: "type", type: TypeIdentifier(name: "ConcreteType.Type")))
+                    .adding(parameters: initFunctionParameters)
+                    .adding(member: Comment.comment("no-op"))
+                )
+                .adding(member: EmptyLine())
+                .adding(member: ComputedProperty(variable: Variable(name: "wrappedValue")
+                    .with(type: declaration.parameters.isEmpty ? declaration.type.typeID : resolverBlockType))
+                    .adding(member: Return(value: Variable.resolver.reference | (declaration.parameters.isEmpty ? .call() : .none)))
+                )
+            
+            return [
+                EmptyLine(),
+                PlainCode(code: """
+                @propertyWrapper
+                \(MetaCode(meta: type))
+                """),
+                EmptyLine(),
+                Extension(type: TypeIdentifier(name: declaration.dependencyTypeName))
+                    .adding(constraint: Reference.named("ConcreteType") == Reference.named("Void"))
+                    .adding(member: Function(kind: .`init`)
+                        .adding(parameter: kindFunctionParameter)
+                        .adding(parameters: initFunctionParameters)
+                        .adding(member: Comment.comment("no-op"))
+                    )
+            ]
+        }
     }
     
     func resolversImplementation() throws -> [TypeBodyMember] {

@@ -19,18 +19,26 @@ final class MovieViewController: UIViewController {
     
     private let dependencies: MovieViewControllerDependencyResolver
 
-    // weaver: logger = Logger
+    @LoggerDependency(.registration, type: Logger.self)
+    private var logger: Logger
+
+    @MovieIDDependency(.parameter)
+    private var movieID: UInt
     
-    // weaver: movieID <= UInt
-    // weaver: title <= String
+    @MovieTitleDependency(.parameter)
+    private var movieTitle: String
     
-    // weaver: movieManager <- MovieManaging
-    // weaver: imageManager <- ImageManaging
-    // weaver: reviewManager <- ReviewManaging
-    
-    // weaver: reviewController = WSReviewViewController
-    // weaver: reviewController.builder = WSReviewViewController.make
-    // weaver: reviewController.scope = .weak
+    @MovieManagerDependency(.reference)
+    private var movieManager: MovieManaging
+
+    @ImageManagerDependency(.reference)
+    private var imageManager: ImageManaging
+
+    @ReviewManagerDependency(.reference)
+    private var reviewManager: ReviewManaging
+
+    @ReviewControllerDependency(.registration, type: WSReviewViewController.self, scope: .weak, builder: WSReviewViewController.make)
+    private var reviewController: WSReviewViewController
     
     private var originalBarStyle: UIBarStyle?
     
@@ -82,9 +90,9 @@ final class MovieViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        dependencies.logger.log(.info, "Showing movie: \(dependencies.title).")
+        logger.log(.info, "Showing movie: \(movieTitle).")
         
-        title = dependencies.title
+        title = movieTitle
         view.backgroundColor = .black
         edgesForExtendedLayout = []
 
@@ -106,7 +114,7 @@ final class MovieViewController: UIViewController {
         ])
         
         loadData { viewModel in
-            self.dependencies.imageManager.getImage(with: viewModel.thumbnail) { result in
+            self.imageManager.getImage(with: viewModel.thumbnail) { result in
                 switch result {
                 case .success(let image):
                     self.thumbnailImageView.image = image
@@ -120,7 +128,7 @@ final class MovieViewController: UIViewController {
     }
     
     private func loadData(completion: @escaping (ViewModel) -> ()) {
-        dependencies.movieManager.getMovie(id: dependencies.movieID) { result in
+        movieManager.getMovie(id: dependencies.movieID) { result in
             switch result {
             case .success(let movie):
                 completion(ViewModel(movie))
@@ -137,8 +145,7 @@ final class MovieViewController: UIViewController {
 private extension MovieViewController {
     
     @objc func didTapImage(_: UITapGestureRecognizer) {
-        let controller = dependencies.reviewController
-        navigationController?.pushViewController(controller, animated: true)
+        navigationController?.pushViewController(reviewController, animated: true)
     }
 }
 

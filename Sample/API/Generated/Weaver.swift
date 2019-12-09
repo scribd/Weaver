@@ -10,7 +10,7 @@ final class MainDependencyContainer {
         Swift.fatalError(message, file: file, line: line)
     }
 
-    private static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
+    fileprivate static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
         onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
     }
 
@@ -65,6 +65,28 @@ final class MainDependencyContainer {
         return { _ in
             MainDependencyContainer.fatalError()
         }
+    }
+
+
+    fileprivate static var dynamicResolvers = [Any]()
+    private static var dynamicResolversLock = os_unfair_lock()
+    private static func dynamicResolversExecute<T>(_ execute: () -> T) -> T {
+        os_unfair_lock_lock(&dynamicResolversLock)
+        defer { os_unfair_lock_unlock(&dynamicResolversLock) }
+        return execute()
+    }
+
+    enum Scope {
+        case transient
+        case container
+        case weak
+        case lazy
+    }
+
+    enum DependencyKind {
+        case registration
+        case reference
+        case parameter
     }
 
     private var _host: Builder<Optional<String>> = MainDependencyContainer.fatalBuilder()
@@ -227,5 +249,141 @@ extension MovieManager {
         let _self = MainDependencyContainer()
         let __self = _self.publicMovieManagerDependencyResolver(host: host, logger: logger)
         self.init(injecting: __self)
+    }
+}
+
+@propertyWrapper
+struct HostDependency<ConcreteType> {
+
+    let resolver: () -> Optional<String> =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> Optional<String> else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: Optional<String> {
+        return resolver()
+    }
+}
+
+extension HostDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct LoggerDependency<ConcreteType> {
+
+    let resolver: () -> Logger =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> Logger else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: Logger {
+        return resolver()
+    }
+}
+
+extension LoggerDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct MovieAPIDependency<ConcreteType> {
+
+    let resolver: () -> APIProtocol =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> APIProtocol else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: APIProtocol {
+        return resolver()
+    }
+}
+
+extension MovieAPIDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+}
+
+@propertyWrapper
+struct UrlSessionDependency<ConcreteType> {
+
+    let resolver: () -> URLSession =  {
+        guard let resolver = MainDependencyContainer.dynamicResolvers.last as? () -> URLSession else {
+            MainDependencyContainer.fatalError()
+        }
+        return resolver
+    }()
+
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         type: ConcreteType.Type,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
+    }
+
+    var wrappedValue: URLSession {
+        return resolver()
+    }
+}
+
+extension UrlSessionDependency where ConcreteType == Void {
+    init(_ kind: MainDependencyContainer.DependencyKind,
+         scope: MainDependencyContainer.Scope = .container,
+         setter: Bool = false,
+         objc: Bool = false,
+         builder: Optional<Any> = nil) {
+        // no-op
     }
 }

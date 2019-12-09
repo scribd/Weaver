@@ -171,7 +171,8 @@ public let weaverCommand = Group {
             let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
                                                inspector: inspector,
                                                version: version,
-                                               testableImports: configuration.testableImports)
+                                               testableImports: configuration.testableImports,
+                                               isSwift5: try configuration.isSwift5())
 
             let mainGeneratedData = try generator.generate()
             let testsGeneratedData = configuration.tests ? try generator.generateTests() : nil
@@ -208,8 +209,6 @@ public let weaverCommand = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Injection done in \(dependencyGraph.injectableTypesCount) different types".lightWhite, benchmark: .end("all"))
         } catch {
-            try? mainOutputPath.write(Data())
-            try? testsOutputPath.write(Data())
             Logger.log(.error, "\(error)")
             exit(1)
         }
