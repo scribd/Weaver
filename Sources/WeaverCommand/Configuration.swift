@@ -254,8 +254,4 @@ extension Configuration {
         
         return inputPaths.sorted()
     }
-    
-    func isSwift5() throws -> Bool {
-        return try shellOut(to: "swift --version").hasPrefix("Apple Swift version 5.")
-    }
 }

@@ -67,32 +67,6 @@ final class MainDependencyContainer {
         }
     }
 
-    private static var dynamicResolvers = [Any]()
-    private static var dynamicResolversLock = NSRecursiveLock()
-
-    fileprivate static func popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
-        guard let dynamicResolver = dynamicResolvers.removeFirst() as? Resolver else {
-            MainDependencyContainer.fatalError()
-        }
-        return dynamicResolver
-    }
-
-    fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
-        dynamicResolvers.append(resolver)
-    }
-
-    enum Scope {
-        case transient
-        case container
-        case weak
-        case lazy
-    }
-
-    enum DependencyKind {
-        case registration
-        case reference
-        case parameter
-    }
 
     private var _host: Builder<Optional<String>> = MainDependencyContainer.fatalBuilder()
     var host: Optional<String> {
@@ -120,49 +94,29 @@ final class MainDependencyContainer {
     private func movieAPIDependencyResolver() -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
         _self._urlSession = _self.builder(urlSession)
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _ = _self._logger(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.urlSession })
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
         return _self
     }
 
     fileprivate func publicMovieAPIDependencyResolver(urlSession: URLSession) -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
         _self._urlSession = _self.builder(urlSession)
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _ = _self._logger(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.urlSession })
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
         return _self
     }
 
     fileprivate func imageManagerDependencyResolver() -> ImageManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _self._urlSession = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return ImageManager.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
         _self._movieAPI = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
@@ -172,9 +126,6 @@ final class MainDependencyContainer {
         _ = _self._logger(nil)
         _ = _self._urlSession(nil)
         _ = _self._movieAPI(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.urlSession })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
         return _self
     }
 
@@ -186,16 +137,12 @@ final class MainDependencyContainer {
     private func movieManagerDependencyResolver() -> MovieManagerDependencyResolver {
         let _self = MainDependencyContainer()
         _self._urlSession = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
         }
         _self._movieAPI = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
@@ -204,10 +151,6 @@ final class MainDependencyContainer {
         }
         _ = _self._urlSession(nil)
         _ = _self._movieAPI(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.urlSession })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
-        MainDependencyContainer.pushDynamicResolver({ _self.host })
         return _self
     }
 
@@ -217,16 +160,12 @@ final class MainDependencyContainer {
         _self._host = _self.builder(host)
         _self._logger = _self.builder(logger)
         _self._urlSession = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
         }
         _self._movieAPI = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
@@ -235,10 +174,6 @@ final class MainDependencyContainer {
         }
         _ = _self._urlSession(nil)
         _ = _self._movieAPI(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.urlSession })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
-        MainDependencyContainer.pushDynamicResolver({ _self.host })
         return _self
     }
 }
@@ -296,35 +231,5 @@ extension MovieManager {
         let _self = MainDependencyContainer()
         let __self = _self.publicMovieManagerDependencyResolver(host: host, logger: logger)
         self.init(injecting: __self)
-    }
-}
-
-@propertyWrapper
-struct Weaver<ConcreteType, AbstractType> {
-
-    typealias Resolver = () -> AbstractType
-    let resolver = MainDependencyContainer.popDynamicResolver(Resolver.self)
-
-    init(_ kind: MainDependencyContainer.DependencyKind,
-         type: ConcreteType.Type,
-         scope: MainDependencyContainer.Scope = .container,
-         setter: Bool = false,
-         objc: Bool = false,
-         builder: Optional<Any> = nil) {
-        // no-op
-    }
-
-    var wrappedValue: AbstractType {
-        return resolver()
-    }
-}
-
-extension Weaver where ConcreteType == Void {
-    init(_ kind: MainDependencyContainer.DependencyKind,
-         scope: MainDependencyContainer.Scope = .container,
-         setter: Bool = false,
-         objc: Bool = false,
-         builder: Optional<Any> = nil) {
-        // no-op
     }
 }

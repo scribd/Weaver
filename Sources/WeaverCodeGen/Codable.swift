@@ -290,9 +290,46 @@ extension TokenBox: Codable {
     }
 }
 
+extension AnnotationStyle: Codable {
+    
+    private enum CompactAnnotationStyle: String, Codable {
+        case comment = "c"
+        case propertyWrapper = "p"
+        
+        init(_ value: AnnotationStyle) {
+            switch value {
+            case .comment:
+                self = .comment
+            case .propertyWrapper:
+                self = .propertyWrapper
+            }
+        }
+        
+        var unzip: AnnotationStyle {
+            switch self {
+            case .comment:
+                return .comment
+            case .propertyWrapper:
+                return .propertyWrapper
+            }
+        }
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self = try container.decode(CompactAnnotationStyle.self).unzip
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(CompactAnnotationStyle(self))
+    }
+}
+
 extension RegisterAnnotation {
     
     private enum Key: String, CodingKey {
+        case style = "s"
         case name = "n"
         case type = "t"
         case protocolTypes = "p"
@@ -300,6 +337,7 @@ extension RegisterAnnotation {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
+        style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
         type = try container.decode(ConcreteType.self, forKey: .type)
         protocolTypes = try container.decode(Set<AbstractType>.self, forKey: .protocolTypes)
@@ -307,6 +345,7 @@ extension RegisterAnnotation {
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
+        try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
         try container.encode(type, forKey: .type)
         try container.encode(protocolTypes, forKey: .protocolTypes)
@@ -316,18 +355,21 @@ extension RegisterAnnotation {
 extension ReferenceAnnotation {
     
     private enum Key: String, CodingKey {
+        case style = "s"
         case name = "n"
         case types = "t"
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
+        style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
         types = try container.decode(Set<AbstractType>.self, forKey: .types)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
+        try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
         try container.encode(types, forKey: .types)
     }
@@ -336,18 +378,21 @@ extension ReferenceAnnotation {
 extension ParameterAnnotation {
     
     private enum Key: String, CodingKey {
+        case style = "s"
         case name = "n"
         case type = "t"
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
+        style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
         type = try container.decode(ConcreteType.self, forKey: .type)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
+        try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
         try container.encode(type, forKey: .type)
     }

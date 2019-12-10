@@ -171,8 +171,7 @@ public let weaverCommand = Group {
             let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
                                                inspector: inspector,
                                                version: version,
-                                               testableImports: configuration.testableImports,
-                                               isSwift5: try configuration.isSwift5())
+                                               testableImports: configuration.testableImports)
 
             let mainGeneratedData = try generator.generate()
             let testsGeneratedData = configuration.tests ? try generator.generateTests() : nil

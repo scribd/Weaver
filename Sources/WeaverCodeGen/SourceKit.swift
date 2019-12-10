@@ -12,7 +12,9 @@ import SourceKittenFramework
 
 struct SourceKitDependencyAnnotation {
     
+    let file: String?
     let line: Int
+    
     let annotationString: String
     let offset: Int
     let length: Int
@@ -23,7 +25,10 @@ struct SourceKitDependencyAnnotation {
     let accessLevel: AccessLevel
     let configurationAttributes: [ConfigurationAttribute]
     
-    init?(_ dictionary: [String: Any], lines: [(content: String, range: NSRange)], line: Int) throws {
+    init?(_ dictionary: [String: Any],
+          lines: [(content: String, range: NSRange)],
+          file: String?,
+          line: Int) throws {
         
         guard let kindString = dictionary[SwiftDocKey.kind.rawValue] as? String,
               let kind = SwiftDeclarationKind(rawValue: kindString),
@@ -79,6 +84,7 @@ struct SourceKitDependencyAnnotation {
             return nil
         }
         
+        self.file = file
         self.line = line + annotationLineStartIndex
         
         let annotationString = lines[annotationLineStartIndex...annotationLineEndIndex]
@@ -240,11 +246,12 @@ extension SourceKitDependencyAnnotation {
         switch dependencyKind {
         case .registration?:
             guard let type = type else {
-                throw LexerError.invalidAnnotation(FileLocation(),
+                throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
             
-            let annotation = RegisterAnnotation(name: name,
+            let annotation = RegisterAnnotation(style: .propertyWrapper,
+                                                name: name,
                                                 type: type,
                                                 protocolTypes: abstractTypes)
  
@@ -254,10 +261,12 @@ extension SourceKitDependencyAnnotation {
                                 line: line)
         case .parameter?:
             guard let type = abstractTypes.first, abstractTypes.count == 1 else {
-                throw LexerError.invalidAnnotation(FileLocation(),
+                throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
-            let annotation = ParameterAnnotation(name: name, type: type.concreteType)
+            let annotation = ParameterAnnotation(style: .propertyWrapper,
+                                                 name: name,
+                                                 type: type.concreteType)
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
@@ -265,17 +274,19 @@ extension SourceKitDependencyAnnotation {
             
         case .reference?:
             guard abstractTypes.isEmpty == false else {
-                throw LexerError.invalidAnnotation(FileLocation(),
+                throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
-            let annotation = ReferenceAnnotation(name: name, types: abstractTypes)
+            let annotation = ReferenceAnnotation(style: .propertyWrapper,
+                                                 name: name,
+                                                 types: abstractTypes)
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
                                 line: line)
             
         case .none:
-            throw LexerError.invalidAnnotation(FileLocation(),
+            throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                underlyingError: TokenError.invalidAnnotation(annotationString))
         }
         

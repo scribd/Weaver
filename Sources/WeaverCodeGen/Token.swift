@@ -31,10 +31,16 @@ public protocol Token: CustomStringConvertible, Codable {
     static func create(_ string: String) throws -> Self?
 }
 
+public enum AnnotationStyle: String, Hashable {
+    case comment
+    case propertyWrapper
+}
+
 // MARK: - Token SwiftTypes
 
 public struct RegisterAnnotation: Token, Hashable {
 
+    let style: AnnotationStyle
     let name: String
     let type: ConcreteType
     let protocolTypes: Set<AbstractType>
@@ -62,7 +68,10 @@ public struct RegisterAnnotation: Token, Hashable {
             return nil
         }
         
-        return RegisterAnnotation(name: matches[0], type: type, protocolTypes: Set(protocolTypes))
+        return RegisterAnnotation(style: .comment,
+                                  name: matches[0],
+                                  type: type,
+                                  protocolTypes: Set(protocolTypes))
     }
     
     public var description: String {
@@ -76,6 +85,7 @@ public struct RegisterAnnotation: Token, Hashable {
 
 public struct ReferenceAnnotation: Token, Hashable {
     
+    public let style: AnnotationStyle
     public let name: String
     public let types: Set<AbstractType>
     
@@ -94,7 +104,7 @@ public struct ReferenceAnnotation: Token, Hashable {
                 return nil
             }
         }
-        return ReferenceAnnotation(name: matches[0], types: Set(types))
+        return ReferenceAnnotation(style: .comment, name: matches[0], types: Set(types))
     }
     
     public var description: String {
@@ -104,6 +114,7 @@ public struct ReferenceAnnotation: Token, Hashable {
 
 public struct ParameterAnnotation: Token, Hashable {
     
+    public let style: AnnotationStyle
     public let name: String
     public let type: ConcreteType
     
@@ -114,7 +125,7 @@ public struct ParameterAnnotation: Token, Hashable {
         guard let type = try ConcreteType(matches[1]) else {
             return nil
         }
-        return ParameterAnnotation(name: matches[0], type: type)
+        return ParameterAnnotation(style: .comment, name: matches[0], type: type)
     }
     
     public var description: String {

@@ -34,8 +34,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @Weaver(.registration, type: HomeViewController.self, scope: .container)
     private var homeViewController: UIViewController
 
-    @Weaver(.registration, type: ReviewManager.self, scope: .container, objc: true)
-    private var reviewManager: ReviewManaging
+    // weaver: reviewManager = ReviewManager <- ReviewManaging
+    // weaver: reviewManager.scope = .container
+    // weaver: reviewManager.objc = true
     
     func applicationDidFinishLaunching(_ application: UIApplication) {
 

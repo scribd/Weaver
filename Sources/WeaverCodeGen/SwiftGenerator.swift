@@ -20,19 +20,15 @@ public final class SwiftGenerator {
 
     private let version: String
     
-    private let isSwift5: Bool
-    
     public init(dependencyGraph: DependencyGraph,
                 inspector: Inspector,
                 version: String,
-                testableImports: [String]?,
-                isSwift5: Bool = false) throws {
+                testableImports: [String]?) throws {
 
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.version = version
         self.testableImports = testableImports
-        self.isSwift5 = isSwift5
     }
     
     private var _file: MetaWeaverFile?
@@ -43,8 +39,7 @@ public final class SwiftGenerator {
         let file = try MetaWeaverFile(dependencyGraph,
                                       inspector,
                                       version,
-                                      testableImports,
-                                      isSwift5)
+                                      testableImports)
         _file = file
         return file
     }
@@ -169,8 +164,6 @@ private final class MetaWeaverFile {
     
     private let testableImports: [String]?
     
-    private let isSwift5: Bool
-
     // Pre computed data
     
     private let declarations: Set<MetaDependencyDeclaration>
@@ -179,6 +172,7 @@ private final class MetaWeaverFile {
     private var setterDeclarations = [MetaDependencyDeclaration]()
     private var doesSupportObjcByDeclaration = [MetaDependencyDeclaration: Bool]()
     private var isParameterByDeclaration = [MetaDependencyDeclaration: Bool]()
+    private var isPropertyWrapperAnnotationByDeclaration = [MetaDependencyDeclaration: Bool]()
     
     private lazy var doesSupportObjc = dependencyGraph.dependencies.contains { $0.configuration.doesSupportObjc }
 
@@ -191,14 +185,12 @@ private final class MetaWeaverFile {
     init(_ dependencyGraph: DependencyGraph,
          _ inspector: Inspector,
          _ version: String,
-         _ testableImports: [String]?,
-         _ isSwift5: Bool) throws {
+         _ testableImports: [String]?) throws {
         
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.version = version
         self.testableImports = testableImports
-        self.isSwift5 = isSwift5
         
         let desambiguatedDeclarations = try MetaWeaverFile.desambiguatedDeclarations(from: dependencyGraph)
         declarations = desambiguatedDeclarations
@@ -219,6 +211,9 @@ private final class MetaWeaverFile {
             }
             let isParameter = isParameterByDeclaration[declaration] ?? true
             isParameterByDeclaration[declaration] = isParameter && dependency.kind == .parameter
+            if dependency.annotationStyle == .propertyWrapper {
+                isPropertyWrapperAnnotationByDeclaration[declaration] = true
+            }
         }
     }
     
@@ -358,7 +353,7 @@ private static func fatalBuilder<T>() -> Builder<T> {
 }
 
 """))
-            .adding(member: isSwift5 ? PlainCode(code: """
+            .adding(member: dependencyGraph.hasPropertyWrapperAnnotations ? PlainCode(code: """
 private static var dynamicResolvers = [Any]()
 private static var dynamicResolversLock = NSRecursiveLock()
 
@@ -373,7 +368,7 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
     dynamicResolvers.append(resolver)
 }
 """) : nil)
-            .adding(members: isSwift5 ? [
+            .adding(members: dependencyGraph.hasPropertyWrapperAnnotations ? [
                 EmptyLine(),
                 Type(identifier: TypeIdentifier(name: "Scope"))
                     .with(kind: .enum)
@@ -394,9 +389,8 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
     }
     
     func propertyWrappers() throws -> [FileBodyMember] {
-        guard isSwift5 else { return [] }
-        
         return declarations.reduce(into: Set<Int>()) { parametersCounts, declaration in
+            guard isPropertyWrapperAnnotationByDeclaration[declaration] ?? false else { return }
             parametersCounts.insert(declaration.parameters.count)
         }.sorted().flatMap { parameterCount -> [FileBodyMember] in
             
@@ -749,7 +743,8 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         return nil
                     }
                 })
-                .adding(members: isSwift5 ? try dependencyContainer.dependencies.orderedValues.map { dependency in
+                .adding(members: try dependencyContainer.dependencies.orderedValues.compactMap { dependency in
+                    guard dependency.annotationStyle == .propertyWrapper else { return nil }
                     let declaration = try self.declaration(for: dependency)
                     return TypeIdentifier.mainDependencyContainer.reference + .named("pushDynamicResolver") | .call(Tuple()
                         .adding(parameter: TupleParameter(value: declaration.parameters.isEmpty ?
@@ -757,7 +752,7 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                             Variable._self.reference + .named(declaration.declarationName)
                         ))
                     )
-                } : [])
+                })
                 .adding(member: Return(value: containsAmbiguousDeclarations ?
                     dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
                         .adding(parameter: TupleParameter(value: Variable._self.reference))
@@ -800,6 +795,9 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         let targetContainsAmbiguousDeclarations = try containsAmbiguousDeclarations(in: target)
         let targetSelfReferences = try target.references.filter { reference in
             try dependencyGraph.isSelfReference(reference)
+        }
+        let targetHasPropertyWrapperAnnotations = target.dependencies.orderedValues.contains {
+            $0.annotationStyle == .propertyWrapper
         }
         
         let hasInputDependencies =
@@ -865,7 +863,7 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         builderReference = builderFunction | .block(FunctionBody()
             .adding(parameter: FunctionBodyParameter(name: hasParameters ? "copyParameters" : "_"))
             .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
-            .adding(member: isSwift5 ? PlainCode(code: """
+            .adding(member: targetHasPropertyWrapperAnnotations ? PlainCode(code: """
             defer { MainDependencyContainer.dynamicResolversLock.unlock() }
             MainDependencyContainer.dynamicResolversLock.lock()
             """) : nil)

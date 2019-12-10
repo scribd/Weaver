@@ -159,35 +159,21 @@ import UIKit
 
     fileprivate func appDelegateDependencyResolver() -> AppDelegateDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _self._urlSession = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
         _self._movieAPI = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeMovieAPI(_self as MovieAPIInputDependencyResolver)
         }
-        _self._imageManager = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return ImageManager()
-        }
+        _self._imageManager = lazyBuilder { _ in return ImageManager() }
         _self._movieManager = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
@@ -224,7 +210,6 @@ import UIKit
         MainDependencyContainer.pushDynamicResolver({ _self.imageManager })
         MainDependencyContainer.pushDynamicResolver({ _self.movieManager })
         MainDependencyContainer.pushDynamicResolver({ _self.homeViewController })
-        MainDependencyContainer.pushDynamicResolver({ _self.reviewManager })
         return _self
     }
 
@@ -235,11 +220,7 @@ import UIKit
 
     private func personManagerDependencyResolver() -> PersonManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _ = _self._logger(nil)
         MainDependencyContainer.pushDynamicResolver({ _self.logger })
         MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
@@ -249,11 +230,7 @@ import UIKit
     private func reviewManagerDependencyResolver() -> ReviewManagerDependencyResolver {
         let _self = MainDependencyContainer()
         _self._movieAPI = _self.builder(movieAPI)
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _ = _self._logger(nil)
         MainDependencyContainer.pushDynamicResolver({ _self.logger })
         MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
@@ -265,11 +242,7 @@ import UIKit
         _self._imageManager = _self.builder(imageManager)
         _self._movieManager = _self.builder(movieManager)
         _self._reviewManager = _self.builder(reviewManager)
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _self._movieController = weakLazyBuilder { [weak _self] copyParameters in
             defer { MainDependencyContainer.dynamicResolversLock.unlock() }
             MainDependencyContainer.dynamicResolversLock.lock()
@@ -292,14 +265,8 @@ import UIKit
         _self._imageManager = _self.builder(imageManager)
         _self._movieManager = _self.builder(movieManager)
         _self._reviewManager = _self.builder(reviewManager)
-        _self._logger = lazyBuilder { _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
-            return Logger()
-        }
+        _self._logger = lazyBuilder { _ in return Logger() }
         _self._reviewController = weakLazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }

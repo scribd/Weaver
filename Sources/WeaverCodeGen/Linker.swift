@@ -144,6 +144,9 @@ final class Dependency: Encodable, CustomDebugStringConvertible {
     /// Dependency container which contains the dependency.
     let source: ConcreteType
     
+    /// Style of annotation used to declare the dependency.
+    let annotationStyle: AnnotationStyle
+    
     /// Location of the declarative annotation in the source code.
     let fileLocation: FileLocation?
     
@@ -151,11 +154,13 @@ final class Dependency: Encodable, CustomDebugStringConvertible {
          dependencyName: String,
          type: `Type`,
          source: ConcreteType,
+         annotationStyle: AnnotationStyle,
          fileLocation: FileLocation) {
         
         self.kind = kind
         self.dependencyName = dependencyName
         self.type = type
+        self.annotationStyle = annotationStyle
         self.source = source
         self.fileLocation = fileLocation
     }
@@ -199,6 +204,9 @@ public final class DependencyGraph {
 
     /// Count of types with annotations.
     public lazy var injectableTypesCount = dependencyContainers.orderedValues.filter { $0.dependencies.isEmpty == false }.count
+
+    /// Contains at least one annotation using a property wrapper.
+    lazy var hasPropertyWrapperAnnotations = dependencies.contains { $0.annotationStyle == .propertyWrapper }
 
     // MARK: - Cached data
     
@@ -374,6 +382,7 @@ private extension Linker {
                                             dependencyName: token.value.name,
                                             type: .init(token.value.type, token.value.protocolTypes),
                                             source: source,
+                                            annotationStyle: token.value.style,
                                             fileLocation: location)
                 
                 sourceDependencyContainer.insertDependency(dependency)
@@ -398,6 +407,7 @@ private extension Linker {
                                             dependencyName: token.value.name,
                                             type: dependencyType,
                                             source: source,
+                                            annotationStyle: token.value.style,
                                             fileLocation: location)
 
                 sourceDependencyContainer.insertDependency(dependency)
@@ -417,6 +427,7 @@ private extension Linker {
                                             dependencyName: token.value.name,
                                             type: .concrete(token.value.type),
                                             source: source,
+                                            annotationStyle: token.value.style,
                                             fileLocation: location)
                 
                 sourceDependencyContainer.insertDependency(dependency)

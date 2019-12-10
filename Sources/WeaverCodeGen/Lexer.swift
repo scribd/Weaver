@@ -78,7 +78,7 @@ private extension Lexer {
         var tokens = [AnyTokenBox]()
         
         let restOfLines = lines[line...].map { ($0.content, $0.range) }
-        if let annotation = try SourceKitDependencyAnnotation(sourceKitAST, lines: restOfLines, line: line) {
+        if let annotation = try SourceKitDependencyAnnotation(sourceKitAST, lines: restOfLines, file: file.path, line: line) {
             return try annotation.toTokens()
         }
 
