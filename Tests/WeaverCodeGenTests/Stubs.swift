@@ -15,6 +15,7 @@ extension Dependency {
                           dependencyName: name,
                           type: .concrete(type),
                           source: type,
+                          annotationStyle: .comment,
                           fileLocation: location)
     }
 }

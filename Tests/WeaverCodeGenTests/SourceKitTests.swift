@@ -25,11 +25,11 @@ final class SourceKitDependencyAnnotationTests: XCTestCase {
                            setter: Bool = false,
                            builder: String? = nil,
                            type: String = "FakeType",
-                           dependencyKind: String = "WeaverReg") throws -> SourceKitDependencyAnnotation? {
+                           dependencyKind: String = "registration") throws -> SourceKitDependencyAnnotation? {
 
         let builder = builder.flatMap { ", builder: \($0)" } ?? ""
         let lineContent = """
-@\(dependencyKind)(\(type).self, scope: .\(scope), setter: \(setter)\(builder)) private var \(name): \(abstractTypes)
+@Weaver(.\(dependencyKind), type: \(type).self, scope: .\(scope), setter: \(setter)\(builder)) private var \(name): \(abstractTypes)
 """
 
         let jsonString = """
@@ -63,7 +63,7 @@ final class SourceKitDependencyAnnotationTests: XCTestCase {
                 return nil
             }
             let line = (content: lineContent, range: NSRange(location: 0, length: lineContent.count))
-            return try SourceKitDependencyAnnotation(jsonObject, lines: [line])
+            return try SourceKitDependencyAnnotation(jsonObject, lines: [line], file: "FakeFile.swift", line: 0)
         } catch {
             XCTFail("Unexpected json parsing error: \(error)")
             return nil
@@ -104,23 +104,18 @@ final class SourceKitDependencyAnnotationTests: XCTestCase {
     }
     
     func test_init_should_set_dependency_kind_to_references() throws {
-        let model = try makeModel(dependencyKind: "WeaverRef")
+        let model = try makeModel(dependencyKind: "reference")
         XCTAssertEqual(model?.dependencyKind, .reference)
     }
     
     func test_init_should_set_dependency_kind_to_registration() throws {
-        let model = try makeModel(dependencyKind: "WeaverReg")
+        let model = try makeModel(dependencyKind: "registration")
         XCTAssertEqual(model?.dependencyKind, .registration)
     }
 
     func test_init_should_set_dependency_kind_to_parameters() throws {
-        let model = try makeModel(dependencyKind: "WeaverParam")
+        let model = try makeModel(dependencyKind: "parameter")
         XCTAssertEqual(model?.dependencyKind, .parameter)
-    }
-    
-    func test_init_should_return_nil_with_unknown_dependency_kind() throws {
-        let model = try makeModel(dependencyKind: "Fake")
-        XCTAssertNil(model)
     }
     
     func test_init_should_set_access_level_to_public() throws {

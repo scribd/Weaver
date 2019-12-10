@@ -30,7 +30,7 @@ final class MyService {
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 109, line: 0),
                                                               children: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyEmbeddedService"), accessLevel: .default), offset: 32, length: 81, line: 1),
-                                                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", type: ConcreteType(name: "Session"), protocolTypes: [AbstractType(name: "SessionProtocol")]), offset: 62, length: 48, line: 2))])])],
+                                                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(style: .comment, name: "session", type: ConcreteType(name: "Session"), protocolTypes: [AbstractType(name: "SessionProtocol")]), offset: 62, length: 48, line: 2))])])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -55,7 +55,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 93, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1)),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(style: .comment, name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .scope(value: .container), target: .dependency(name: "api")), offset: 64, length: 34, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
@@ -80,7 +80,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 58, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol", isOptional: true)]), offset: 26, length: 37, line: 1))])],
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(style: .comment, name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol", isOptional: true)]), offset: 26, length: 37, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -104,7 +104,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 57, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1))])],
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(style: .comment, name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -128,7 +128,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 42, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: []), offset: 26, length: 21, line: 1))])],
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(style: .comment, name: "api", type: ConcreteType(name: "API"), protocolTypes: []), offset: 26, length: 21, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -152,7 +152,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 51, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1))])],
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -197,7 +197,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 93, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "MyService.make"), target: .dependency(name: "api")), offset: 58, length: 40, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
@@ -223,7 +223,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 93, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1)),
+                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(style: .comment, name: "api", type: ConcreteType(name: "API"), protocolTypes: [AbstractType(name: "APIProtocol")]), offset: 26, length: 36, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "API.make"), target: .dependency(name: "api")), offset: 64, length: 34, line: 2))])],
                                      name: "test.swift",
                                      imports: [])
@@ -298,7 +298,7 @@ class Test {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 51, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1))])],
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -411,7 +411,7 @@ final class MovieManager {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MovieManager")), offset: 6, length: 52, line: 0),
-                                                              children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(name: "movieID", type: ConcreteType(name: "UInt", isOptional: true)), offset: 29, length: 28, line: 1))])],
+                                                              children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(style: .comment, name: "movieID", type: ConcreteType(name: "UInt", isOptional: true)), offset: 29, length: 28, line: 1))])],
                                      name: "test.swift",
                                      imports: [])
             
@@ -514,7 +514,7 @@ final class MyService {
             let syntaxTree = try parser.parse()
             
             let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: ConcreteType(name: "MyService")), offset: 6, length: 87, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
+                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol")]), offset: 26, length: 30, line: 1)),
                                                                          .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`), offset: 58, length: 34, line: 2))])],
                                      name: "test.swift",
                                      imports: [])

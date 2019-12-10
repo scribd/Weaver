@@ -32,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private var movieManager: MovieManaging
 
     @Weaver(.registration, type: HomeViewController.self, scope: .container)
-    private var homeViewController: UIViewController
+    @objc private var homeViewController: UIViewController
 
     // weaver: reviewManager = ReviewManager <- ReviewManaging
     // weaver: reviewManager.scope = .container

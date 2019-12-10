@@ -23,7 +23,7 @@ struct SourceKitDependencyAnnotation {
     let abstractTypes: Set<AbstractType>
     let dependencyKind: Dependency.Kind?
     let accessLevel: AccessLevel
-    let configurationAttributes: [ConfigurationAttribute]
+    private(set) var configurationAttributes = [ConfigurationAttribute]()
     
     init?(_ dictionary: [String: Any],
           lines: [(content: String, range: NSRange)],
@@ -87,6 +87,10 @@ struct SourceKitDependencyAnnotation {
         self.file = file
         self.line = line + annotationLineStartIndex
         
+        if attributes.contains(where: { $0["key.attribute"] as? String == "source.decl.attribute.objc" }) {
+            configurationAttributes.append(ConfigurationAttribute.doesSupportObjc(value: true))
+        }
+        
         let annotationString = lines[annotationLineStartIndex...annotationLineEndIndex]
             .map { $0.content.trimmingCharacters(in: .whitespaces) }
             .joined(separator: " ")
@@ -98,7 +102,7 @@ struct SourceKitDependencyAnnotation {
 
         dependencyKind = annotationBuilder.dependencyKind
         type = annotationBuilder.concreteType
-        configurationAttributes = annotationBuilder.configurationAttributes
+        configurationAttributes += annotationBuilder.configurationAttributes
     }
     
     private static func parseBuilder(_ annotationString: String) throws -> (

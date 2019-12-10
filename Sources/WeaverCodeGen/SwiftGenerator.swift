@@ -420,7 +420,6 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 FunctionParameter(name: "scope", type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).Scope"))
                     .with(defaultValue: +Reference.named("container")),
                 FunctionParameter(name: "setter", type: .bool).with(defaultValue: Value.bool(false)),
-                FunctionParameter(name: "objc", type: .bool).with(defaultValue: Value.bool(false)),
                 FunctionParameter(name: "builder", type: .optional(wrapped: .any))
                     .with(defaultValue: Value.nil)
             ]

@@ -176,6 +176,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
+                        style: .comment, 
                         name: "api",
                         type: ConcreteType(name: "API"),
                         protocolTypes: [AbstractType(name: "APIProtocol")]
@@ -202,6 +203,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
+                        style: .comment,
                         name: "api",
                         type: ConcreteType(name: "API"),
                         protocolTypes: []
@@ -228,6 +230,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
+                        style: .comment,
                         name: "api",
                         type: ConcreteType(name: "API", isOptional: true),
                         protocolTypes: [AbstractType(name: "APIProtocol", isOptional: true)]
@@ -254,6 +257,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
+                        style: .comment,
                         name: "request",
                         type: ConcreteType(name: "Request", genericNames: ["T", "P"]),
                         protocolTypes: [AbstractType(name: "APIRequest", genericNames: ["T", "P"])]
@@ -280,6 +284,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
                     value: RegisterAnnotation(
+                        style: .comment,
                         name: "request",
                         type: ConcreteType(name: "Request", genericNames: ["T", "P"], isOptional: true),
                         protocolTypes: [AbstractType(name: "APIRequest", genericNames: ["T", "P"], isOptional: true)]
@@ -305,7 +310,7 @@ internal final class MyService {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol")]),
+                    value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol")]),
                     offset: 1, length: 29, line: 1)
                 )
             } else {
@@ -328,7 +333,7 @@ internal final class MyService {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(name: "api", types: [AbstractType(name: "APIProtocol", isOptional: true)]),
+                    value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol", isOptional: true)]),
                     offset: 1, length: 30, line: 1)
                 )
             } else {
@@ -352,6 +357,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
                     value: ReferenceAnnotation(
+                        style: .comment,
                         name: "request",
                         types: [AbstractType(name: "Request", genericNames: ["T", "P"])]),
                     offset: 1, length: 35, line: 1)
@@ -377,6 +383,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
                     value: ReferenceAnnotation(
+                        style: .comment,
                         name: "request",
                         types: [AbstractType(name: "Request", genericNames: ["T", "P"], isOptional: true)]
                 ), offset: 1, length: 36, line: 1)
@@ -401,7 +408,7 @@ internal final class MyService {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "movieID", type: ConcreteType(name: "UInt")),
+                    value: ParameterAnnotation(style: .comment, name: "movieID", type: ConcreteType(name: "UInt")),
                     offset: 1, length: 26, line: 1)
                 )
             } else {
@@ -424,7 +431,7 @@ internal final class MyService {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "movieID", type: ConcreteType(name: "UInt", isOptional: true)),
+                    value: ParameterAnnotation(style: .comment, name: "movieID", type: ConcreteType(name: "UInt", isOptional: true)),
                     offset: 1, length: 27, line: 1)
                 )
             } else {
@@ -447,7 +454,7 @@ internal final class MyService {
             
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "request", type: ConcreteType(name: "Request", genericNames: ["T", "P"])),
+                    value: ParameterAnnotation(style: .comment, name: "request", type: ConcreteType(name: "Request", genericNames: ["T", "P"])),
                     offset: 1, length: 35, line: 1)
                 )
             } else {
@@ -471,6 +478,7 @@ internal final class MyService {
             if tokens.count == 1 {
                 XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
                     value: ParameterAnnotation(
+                        style: .comment,
                         name: "request",
                         type: ConcreteType(name: "Request", genericNames: ["T", "P"], isOptional: true)
                 ), offset: 1, length: 36, line: 1)
@@ -790,7 +798,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "array", type: ConcreteType(name: "Array", genericNames: ["String"], isOptional: false), protocolTypes: []),
+                    value: RegisterAnnotation(style: .comment, name: "array", type: ConcreteType(name: "Array", genericNames: ["String"], isOptional: false), protocolTypes: []),
                     offset: 32, length: 28, line: 2
                 ))
             } else {
@@ -816,7 +824,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "array", type: ConcreteType(name: "Array", genericNames: ["String?"], isOptional: true), protocolTypes: []),
+                    value: RegisterAnnotation(style: .comment, name: "array", type: ConcreteType(name: "Array", genericNames: ["String?"], isOptional: true), protocolTypes: []),
                     offset: 32, length: 32, line: 2
                 ))
             } else {
@@ -842,7 +850,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "dict", type: ConcreteType(name: "Dictionary", genericNames: ["String", "Int"], isOptional: false), protocolTypes: []),
+                    value: RegisterAnnotation(style: .comment, name: "dict", type: ConcreteType(name: "Dictionary", genericNames: ["String", "Int"], isOptional: false), protocolTypes: []),
                     offset: 32, length: 35, line: 2
                 ))
             } else {
@@ -868,7 +876,7 @@ final class MovieManager {
             
             if tokens.count == 3 {
                 XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "dict", type: ConcreteType(name: "Dictionary", genericNames: ["String?", "Int?"], isOptional: true), protocolTypes: []),
+                    value: RegisterAnnotation(style: .comment, name: "dict", type: ConcreteType(name: "Dictionary", genericNames: ["String?", "Int?"], isOptional: true), protocolTypes: []),
                     offset: 32, length: 34, line: 2
                 ))
             } else {

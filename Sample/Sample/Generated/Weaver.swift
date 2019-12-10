@@ -285,7 +285,7 @@ import UIKit
 }
 
 
-protocol HomeViewControllerResolver: AnyObject {
+@objc protocol HomeViewControllerResolver: AnyObject {
     var homeViewController: UIViewController { get }
 }
 
@@ -363,7 +363,6 @@ struct Weaver<ConcreteType, AbstractType> {
          type: ConcreteType.Type,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
-         objc: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }
@@ -377,7 +376,6 @@ extension Weaver where ConcreteType == Void {
     init(_ kind: MainDependencyContainer.DependencyKind,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
-         objc: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }
@@ -393,7 +391,6 @@ struct WeaverP2<ConcreteType, AbstractType, P1, P2> {
          type: ConcreteType.Type,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
-         objc: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }
@@ -407,7 +404,6 @@ extension WeaverP2 where ConcreteType == Void {
     init(_ kind: MainDependencyContainer.DependencyKind,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
-         objc: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }
