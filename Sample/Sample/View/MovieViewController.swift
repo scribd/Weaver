@@ -17,25 +17,25 @@ final class MovieViewController: UIViewController {
         let overview: String?
     }
     
-    @LoggerDependency(.registration, type: Logger.self)
+    @Weaver(.registration, type: Logger.self)
     private var logger: Logger
 
-    @MovieIDDependency(.parameter)
+    @Weaver(.parameter)
     private var movieID: UInt
     
-    @MovieTitleDependency(.parameter)
+    @Weaver(.parameter)
     private var movieTitle: String
     
-    @MovieManagerDependency(.reference)
+    @Weaver(.reference)
     private var movieManager: MovieManaging
 
-    @ImageManagerDependency(.reference)
+    @Weaver(.reference)
     private var imageManager: ImageManaging
 
-    @ReviewManagerDependency(.reference)
+    @Weaver(.reference)
     private var reviewManager: ReviewManaging
 
-    @ReviewControllerDependency(.registration, type: WSReviewViewController.self, scope: .weak, builder: WSReviewViewController.make)
+    @Weaver(.registration, type: WSReviewViewController.self, scope: .weak, builder: WSReviewViewController.make)
     private var reviewController: WSReviewViewController
     
     private var originalBarStyle: UIBarStyle?

@@ -37,10 +37,10 @@ import API
 
 final class ReviewManager: ReviewManaging {
 
-    @LoggerDependency(.registration, type: Logger.self)
+    @Weaver(.registration, type: Logger.self)
     private var logger: Logger
 
-    @MovieAPIDependency(.reference)
+    @Weaver(.reference)
     private var movieAPI: APIProtocol
     
     required init(injecting _: ReviewManagerDependencyResolver) {

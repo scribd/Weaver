@@ -14,6 +14,9 @@ extension TypeIdentifier {
     static let mainDependencyResolverStub = TypeIdentifier(name: "MainDependencyResolverStub")
     static let anyObject = TypeIdentifier(name: "AnyObject")
     static let nsObject = TypeIdentifier(name: "NSObject")
+    static let abstractType = TypeIdentifier(name: "AbstractType")
+    static let concreteType = TypeIdentifier(name: "ConcreteType")
+    static let resolver = TypeIdentifier(name: "Resolver")
 
     static func builder(of typeID: TypeIdentifier) -> TypeIdentifier {
         return TypeIdentifier(name: "Builder").adding(genericParameter: typeID)

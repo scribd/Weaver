@@ -16,13 +16,13 @@ final class HomeViewController: UIViewController {
         
     private var movies = [Movie]()
     
-    @LoggerDependency(.registration, type: Logger.self)
+    @Weaver(.registration, type: Logger.self)
     private var logger: Logger
     
-    @MovieManagerDependency(.reference)
+    @Weaver(.reference)
     private var movieManager: MovieManaging
 
-    @MovieControllerDependency(.registration, type: MovieViewController.self, scope: .weak)
+    @WeaverP2(.registration, type: MovieViewController.self, scope: .weak)
     private var movieController: (UInt, String) -> UIViewController
     
     private lazy var tableView: UITableView = {

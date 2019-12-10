@@ -77,7 +77,8 @@ private extension Lexer {
     func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) throws -> [AnyTokenBox] {
         var tokens = [AnyTokenBox]()
         
-        if let annotation = try SourceKitDependencyAnnotation(sourceKitAST, lines: lines[line...].map { ($0.content, $0.range) }) {
+        let restOfLines = lines[line...].map { ($0.content, $0.range) }
+        if let annotation = try SourceKitDependencyAnnotation(sourceKitAST, lines: restOfLines, line: line) {
             return try annotation.toTokens()
         }
 

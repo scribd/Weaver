@@ -115,7 +115,6 @@ private final class MetaDependencyDeclaration: Hashable {
     
     lazy var declarationName = "\(name)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
     lazy var resolverTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Resolver"
-    lazy var dependencyTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Dependency"
     lazy var setterName = "set\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
     lazy var setterTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Setter"
     lazy var declarationDoubleName = "\(name)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Double"
@@ -360,9 +359,19 @@ private static func fatalBuilder<T>() -> Builder<T> {
 
 """))
             .adding(member: isSwift5 ? PlainCode(code: """
+private static var dynamicResolvers = [Any]()
+private static var dynamicResolversLock = NSRecursiveLock()
 
-fileprivate static var \(Variable.dynamicResolvers.name) = [\(TypeIdentifier.mainDependencyContainer.swiftString)]()
-private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
+fileprivate static func popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
+    guard let dynamicResolver = dynamicResolvers.removeFirst() as? Resolver else {
+        MainDependencyContainer.fatalError()
+    }
+    return dynamicResolver
+}
+
+fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
+    dynamicResolvers.append(resolver)
+}
 """) : nil)
             .adding(members: isSwift5 ? [
                 EmptyLine(),
@@ -387,20 +396,32 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
     func propertyWrappers() throws -> [FileBodyMember] {
         guard isSwift5 else { return [] }
         
-        return orderedDeclarations.flatMap { declaration -> [FileBodyMember] in
+        return declarations.reduce(into: Set<Int>()) { parametersCounts, declaration in
+            parametersCounts.insert(declaration.parameters.count)
+        }.sorted().flatMap { parameterCount -> [FileBodyMember] in
+            
+            let typeID = TypeIdentifier(name: "Weaver\(parameterCount == 0 ? "" : "P\(parameterCount)")")
+
+            let resolverTypealias = TypeAlias(
+                identifier: TypeAliasIdentifier(name: "Resolver"),
+                value: TypeIdentifier(name: .custom(
+                    "(\((1..<parameterCount+1).map { "P\($0)" }.joined(separator: ", "))) -> \(TypeIdentifier.abstractType.swiftString)"
+                ))
+            )
             
             let wrappedValueType: TypeIdentifier
-            if declaration.parameters.isEmpty {
-                wrappedValueType = declaration.type.typeID
+            if parameterCount == 0 {
+                wrappedValueType = .abstractType
             } else {
-                let parameters = declaration.parameters.compactMap { parameter in
-                    guard let concreteType = parameter.type.concreteType else { return nil }
-                    return concreteType.typeID.swiftString
-                }.joined(separator: ", ")
-                wrappedValueType = TypeIdentifier(name: .custom("(\(parameters)) -> \(declaration.type.typeID.swiftString)"))
+                wrappedValueType = .resolver
             }
             
-            let kindFunctionParameter = FunctionParameter(alias: "_", name: "kind", type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).DependencyKind"))
+            let kindFunctionParameter = FunctionParameter(
+                alias: "_",
+                name: "kind",
+                type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).DependencyKind")
+            )
+            
             let initFunctionParameters = [
                 FunctionParameter(name: "scope", type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).Scope"))
                     .with(defaultValue: +Reference.named("container")),
@@ -409,23 +430,19 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
                 FunctionParameter(name: "builder", type: .optional(wrapped: .any))
                     .with(defaultValue: Value.nil)
             ]
-            
-            let type = Type(identifier: TypeIdentifier(name: declaration.dependencyTypeName))
+
+            let type = Type(identifier: typeID)
                 .with(kind: .struct)
                 .adding(genericParameter: GenericParameter(name: "ConcreteType"))
+                .adding(genericParameter: GenericParameter(name: "AbstractType"))
+                .adding(genericParameters: (1..<parameterCount+1).map { GenericParameter(name: "P\($0)") })
                 .adding(member: EmptyLine())
-                .adding(member: Property(variable: Variable.resolver
-                    .with(type: TypeIdentifier(name: declaration.resolverTypeName)))
-                    .with(value: Reference.block(FunctionBody()
-                        .adding(member: Guard(assignment: Assignment(
-                            variable: Variable.resolver,
-                            value: TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("last")
-                        ))
-                            .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call()))
-                            .adding(member: Return(value: Variable.resolver.reference))
-                        ) | .call()
+                .adding(member: resolverTypealias)
+                .adding(member: Property(variable: Variable.resolver)
+                    .with(value: TypeIdentifier.mainDependencyContainer.reference + .named("popDynamicResolver") | .call(Tuple()
+                        .adding(parameter: TupleParameter(value: Reference.named(resolverTypealias.identifier.swiftString) + .named(.`self`)))
                     )
-                )
+                ))
                 .adding(member: EmptyLine())
                 .adding(member: Function(kind: .`init`)
                     .adding(parameter: kindFunctionParameter)
@@ -436,16 +453,15 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
                 .adding(member: EmptyLine())
                 .adding(member: ComputedProperty(variable: Variable(name: "wrappedValue")
                     .with(type: wrappedValueType))
-                    .adding(member: declaration.parameters.isEmpty ?
-                        Return(value: Variable.resolver.reference + .named(declaration.declarationName)) :
-                        Return(value: FunctionBody().adding(member:
-                            .named(.`self`) + Variable.resolver.reference + .named(declaration.declarationName) | .call(Tuple()
-                                .adding(parameters: declaration.parameters.enumerated().map { index, parameter in
-                                    TupleParameter(name: parameter.dependencyName, value: Reference.named("$\(index)"))
-                                })
-                            )
-                        ))
-                    )
+                    .adding(member: Return(value: Variable.resolver.reference | (parameterCount == 0 ? .call() : .none)))
+                )
+            
+            let `extension` = Extension(type: typeID)
+                .adding(constraint: TypeIdentifier.concreteType.reference == TypeIdentifier.void.reference)
+                .adding(member: Function(kind: .`init`)
+                    .adding(parameter: kindFunctionParameter)
+                    .adding(parameters: initFunctionParameters)
+                    .adding(member: Comment.comment("no-op"))
                 )
             
             return [
@@ -455,13 +471,7 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
                 \(MetaCode(meta: type))
                 """),
                 EmptyLine(),
-                Extension(type: TypeIdentifier(name: declaration.dependencyTypeName))
-                    .adding(constraint: Reference.named("ConcreteType") == Reference.named("Void"))
-                    .adding(member: Function(kind: .`init`)
-                        .adding(parameter: kindFunctionParameter)
-                        .adding(parameters: initFunctionParameters)
-                        .adding(member: Comment.comment("no-op"))
-                    )
+                `extension`
             ]
         }
     }
@@ -739,6 +749,15 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
                         return nil
                     }
                 })
+                .adding(members: isSwift5 ? try dependencyContainer.dependencies.orderedValues.map { dependency in
+                    let declaration = try self.declaration(for: dependency)
+                    return TypeIdentifier.mainDependencyContainer.reference + .named("pushDynamicResolver") | .call(Tuple()
+                        .adding(parameter: TupleParameter(value: declaration.parameters.isEmpty ?
+                            Reference.named("{ \(Variable._self.name).\(declaration.declarationName) }") :
+                            Variable._self.reference + .named(declaration.declarationName)
+                        ))
+                    )
+                } : [])
                 .adding(member: Return(value: containsAmbiguousDeclarations ?
                     dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
                         .adding(parameter: TupleParameter(value: Variable._self.reference))
@@ -759,11 +778,6 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
                         variable: Variable._self,
                         value: TypeIdentifier.mainDependencyContainer.reference | .call() + dependencyContainer.type.dependencyResolverVariable.reference | .call()
                     ))
-                    .adding(members: isSwift5 ? [
-                        TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("append") | .call(Tuple()
-                            .adding(parameter: TupleParameter(value: Variable._self.reference | .named(" as! ") | TypeIdentifier.mainDependencyContainer.reference))
-                        )
-                    ] : [])
                     .adding(member: Return(value: Variable._self.reference))
             ]
         } else if dependencyContainer.accessLevel.isPublic && publicInterface == false {
@@ -848,29 +862,13 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
             builderFunction = .none
         }
         
-        let dynamicResolverMembers: [FunctionBodyMember]
-        if isSwift5 && hasInputDependencies {
-            dynamicResolverMembers = [
-                Reference.named("defer") | .block(FunctionBody()
-                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("removeLast") | .call())
-                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolversLock.reference + .named("unlock") | .call())
-                ),
-                TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolversLock.reference + .named("lock") | .call(),
-                TypeIdentifier.mainDependencyContainer.reference + Variable.dynamicResolvers.reference + .named("append") | .call(Tuple()
-                    .adding(parameter: TupleParameter(value:
-                        (resolverReference != nil ? Variable.__self : Variable._self).reference |
-                            (shouldUnwrapResolverReference ? +Variable.proxySelf.reference : .none) |
-                            (resolverReference != nil ? .named(" as! ") | TypeIdentifier.mainDependencyContainer.reference : .none)
-                    ))
-                )
-            ]
-        } else {
-            dynamicResolverMembers = []
-        }
-        
         builderReference = builderFunction | .block(FunctionBody()
             .adding(parameter: FunctionBodyParameter(name: hasParameters ? "copyParameters" : "_"))
             .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
+            .adding(member: isSwift5 ? PlainCode(code: """
+            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
+            MainDependencyContainer.dynamicResolversLock.lock()
+            """) : nil)
             .adding(member: hasInputDependencies ?
                 Guard(assignment: Assignment(variable: Variable._self, value: Variable._self.reference))
                     .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call()) : nil)
@@ -905,9 +903,9 @@ private static var \(Variable.dynamicResolversLock.name) = NSRecursiveLock()
                         .adding(parameter: TupleParameter(value: Variable.value.reference))
                     )
                 )
-            } + dynamicResolverMembers + [
+            } + [
                 Return(value: Variable.value.reference)
-            ] : dynamicResolverMembers + [
+            ] : [
                 Return(value: builderReference)
             ])
         )

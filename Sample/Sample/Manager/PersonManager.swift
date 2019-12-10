@@ -28,10 +28,10 @@ final class PersonManager: PersonManaging {
 
     // weaver: self.isIsolated = true
 
-    @LoggerDependency(.registration, type: Logger.self)
+    @Weaver(.registration, type: Logger.self)
     private var logger: Logger
 
-    @MovieAPIDependency(.reference)
+    @Weaver(.reference)
     private var movieAPI: APIProtocol
     
     init(injecting _: PersonManagerDependencyResolver) {

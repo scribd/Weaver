@@ -16,25 +16,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     private let dependencies = MainDependencyContainer.appDelegateDependencyResolver()
     
-    @LoggerDependency(.registration, type: Logger.self, scope: .container)
+    @Weaver(.registration, type: Logger.self, scope: .container)
     private var logger: Logger
     
-    @UrlSessionDependency(.registration, type: URLSession.self, scope: .container, builder: AppDelegate.makeURLSession)
+    @Weaver(.registration, type: URLSession.self, scope: .container, builder: AppDelegate.makeURLSession)
     private var urlSession: URLSession
     
-    @MovieAPIDependency(.registration, type: MovieAPI.self, scope: .container, builder: AppDelegate.makeMovieAPI)
+    @Weaver(.registration, type: MovieAPI.self, scope: .container, builder: AppDelegate.makeMovieAPI)
     private var movieAPI: APIProtocol
     
-    @ImageManagerDependency(.registration, type: ImageManager.self, scope: .container)
+    @Weaver(.registration, type: ImageManager.self, scope: .container)
     private var imageManager: ImageManaging
     
-    @MovieManagerDependency(.registration, type: MovieManager.self, scope: .container, builder: AppDelegate.makeMovieManager)
+    @Weaver(.registration, type: MovieManager.self, scope: .container, builder: AppDelegate.makeMovieManager)
     private var movieManager: MovieManaging
 
-    @HomeViewControllerDependency(.registration, type: HomeViewController.self, scope: .container)
+    @Weaver(.registration, type: HomeViewController.self, scope: .container)
     private var homeViewController: UIViewController
 
-    @ReviewManagerDependency(.registration, type: ReviewManager.self, scope: .container, objc: true)
+    @Weaver(.registration, type: ReviewManager.self, scope: .container, objc: true)
     private var reviewManager: ReviewManaging
     
     func applicationDidFinishLaunching(_ application: UIApplication) {

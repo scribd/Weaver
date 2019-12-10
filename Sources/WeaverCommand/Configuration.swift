@@ -223,7 +223,7 @@ extension Path: Decodable {
 extension Configuration {
     
     private static let annotationRegex = "\\/\\/[[:space:]]*\(TokenBuilder.annotationRegexString)"
-    private static let propertyWrapperRegex = "\"@\\w*Dependency\""
+    private static let propertyWrapperRegex = "\"@\\w*Weaver\""
     
     func inputPaths() throws -> [Path]  {
         var inputPaths = Set<Path>()

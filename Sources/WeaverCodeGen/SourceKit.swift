@@ -12,6 +12,7 @@ import SourceKittenFramework
 
 struct SourceKitDependencyAnnotation {
     
+    let line: Int
     let annotationString: String
     let offset: Int
     let length: Int
@@ -22,7 +23,7 @@ struct SourceKitDependencyAnnotation {
     let accessLevel: AccessLevel
     let configurationAttributes: [ConfigurationAttribute]
     
-    init?(_ dictionary: [String: Any], lines: [(content: String, range: NSRange)]) throws {
+    init?(_ dictionary: [String: Any], lines: [(content: String, range: NSRange)], line: Int) throws {
         
         guard let kindString = dictionary[SwiftDocKey.kind.rawValue] as? String,
               let kind = SwiftDeclarationKind(rawValue: kindString),
@@ -78,6 +79,8 @@ struct SourceKitDependencyAnnotation {
             return nil
         }
         
+        self.line = line + annotationLineStartIndex
+        
         let annotationString = lines[annotationLineStartIndex...annotationLineEndIndex]
             .map { $0.content.trimmingCharacters(in: .whitespaces) }
             .joined(separator: " ")
@@ -110,7 +113,7 @@ struct SourceKitDependencyAnnotation {
         guard let structure = structures.first else { return nil }
         
         guard let annotationTypeString = structure[SwiftDocKey.name.rawValue] as? String else { return nil }
-        guard annotationTypeString.hasSuffix("Dependency") else { return nil }
+        guard annotationTypeString.hasPrefix("Weaver") else { return nil }
 
         var concreteType: ConcreteType?
         var configurationAttributes = [ConfigurationAttribute]()
@@ -248,7 +251,7 @@ extension SourceKitDependencyAnnotation {
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
-                                line: .defaultLine)
+                                line: line)
         case .parameter?:
             guard let type = abstractTypes.first, abstractTypes.count == 1 else {
                 throw LexerError.invalidAnnotation(FileLocation(),
@@ -258,7 +261,7 @@ extension SourceKitDependencyAnnotation {
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
-                                line: .defaultLine)
+                                line: line)
             
         case .reference?:
             guard abstractTypes.isEmpty == false else {
@@ -269,7 +272,7 @@ extension SourceKitDependencyAnnotation {
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
-                                line: .defaultLine)
+                                line: line)
             
         case .none:
             throw LexerError.invalidAnnotation(FileLocation(),
@@ -281,7 +284,7 @@ extension SourceKitDependencyAnnotation {
             return TokenBox(value: annotation,
                             offset: offset,
                             length: length,
-                            line: .defaultLine)
+                            line: line)
         }
     }
 }
