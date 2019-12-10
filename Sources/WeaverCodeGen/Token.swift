@@ -10,13 +10,13 @@ import SourceKittenFramework
 
 // MARK: - Token
 
-public protocol AnyTokenBox: Codable {
+public protocol AnyTokenBox: Codable, CustomStringConvertible {
     var offset: Int { get }
     var length: Int { get }
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token & Hashable>: AnyTokenBox, Hashable, CustomStringConvertible {
+public struct TokenBox<T: Token & Hashable>: AnyTokenBox, Hashable {
     let value: T
     public let offset: Int
     public let length: Int

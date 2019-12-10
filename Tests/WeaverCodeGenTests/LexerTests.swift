@@ -25,14 +25,8 @@ final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "MyService")),
-                    offset: 7, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 25, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "internal MyService { - 7[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 25[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -55,22 +49,10 @@ final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 4 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "MyService")),
-                    offset: 7, length: 57, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "MyEmbeddedService")),
-                    offset: 33, length: 29, line: 2)
-                )
-                XCTAssertEqual(tokens[2] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 61, length: 1, line: 3)
-                )
-                XCTAssertEqual(tokens[3] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 63, length: 1, line: 4)
-                )
+                XCTAssertEqual(tokens[0].description, "internal MyService { - 7[57] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "internal MyEmbeddedService { - 33[29] - at line: 2")
+                XCTAssertEqual(tokens[2].description, "_ } - 61[1] - at line: 3")
+                XCTAssertEqual(tokens[3].description, "_ } - 63[1] - at line: 4")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -91,14 +73,8 @@ public final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "MyService"), accessLevel: .public),
-                    offset: 14, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 32, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "public MyService { - 14[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 32[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -119,14 +95,8 @@ open final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "MyService"), accessLevel: .open),
-                    offset: 12, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 30, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "open MyService { - 12[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 30[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -147,14 +117,8 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "MyService"), accessLevel: .internal),
-                    offset: 16, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 34, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "internal MyService { - 16[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 34[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -174,14 +138,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        style: .comment, 
-                        name: "api",
-                        type: ConcreteType(name: "API"),
-                        protocolTypes: [AbstractType(name: "APIProtocol")]
-                ), offset: 1, length: 35, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                api = API <- ["APIProtocol"] - 1[35] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -201,14 +160,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        style: .comment,
-                        name: "api",
-                        type: ConcreteType(name: "API"),
-                        protocolTypes: []
-                ), offset: 1, length: 20, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "api = API - 1[20] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -228,14 +180,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        style: .comment,
-                        name: "api",
-                        type: ConcreteType(name: "API", isOptional: true),
-                        protocolTypes: [AbstractType(name: "APIProtocol", isOptional: true)]
-                ), offset: 1, length: 37, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                api = API? <- ["APIProtocol?"] - 1[37] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -255,14 +202,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        style: .comment,
-                        name: "request",
-                        type: ConcreteType(name: "Request", genericNames: ["T", "P"]),
-                        protocolTypes: [AbstractType(name: "APIRequest", genericNames: ["T", "P"])]
-                ), offset: 1, length: 54, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                request = Request<T, P> <- ["APIRequest<T, P>"] - 1[54] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -282,14 +224,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        style: .comment,
-                        name: "request",
-                        type: ConcreteType(name: "Request", genericNames: ["T", "P"], isOptional: true),
-                        protocolTypes: [AbstractType(name: "APIRequest", genericNames: ["T", "P"], isOptional: true)]
-                ), offset: 1, length: 56, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                request = Request<T, P>? <- ["APIRequest<T, P>?"] - 1[56] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -309,10 +246,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol")]),
-                    offset: 1, length: 29, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                api <- ["APIProtocol"] - 1[29] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -332,10 +268,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(style: .comment, name: "api", types: [AbstractType(name: "APIProtocol", isOptional: true)]),
-                    offset: 1, length: 30, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                api <- ["APIProtocol?"] - 1[30] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -355,13 +290,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(
-                        style: .comment,
-                        name: "request",
-                        types: [AbstractType(name: "Request", genericNames: ["T", "P"])]),
-                    offset: 1, length: 35, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                request <- ["Request<T, P>"] - 1[35] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -381,13 +312,9 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(
-                        style: .comment,
-                        name: "request",
-                        types: [AbstractType(name: "Request", genericNames: ["T", "P"], isOptional: true)]
-                ), offset: 1, length: 36, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                request <- ["Request<T, P>?"] - 1[36] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -407,10 +334,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(style: .comment, name: "movieID", type: ConcreteType(name: "UInt")),
-                    offset: 1, length: 26, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "movieID <= UInt - 1[26] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -430,10 +354,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(style: .comment, name: "movieID", type: ConcreteType(name: "UInt", isOptional: true)),
-                    offset: 1, length: 27, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "movieID <= UInt? - 1[27] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -453,10 +374,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(style: .comment, name: "request", type: ConcreteType(name: "Request", genericNames: ["T", "P"])),
-                    offset: 1, length: 35, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request <= Request<T, P> - 1[35] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -476,13 +394,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(
-                        style: .comment,
-                        name: "request",
-                        type: ConcreteType(name: "Request", genericNames: ["T", "P"], isOptional: true)
-                ), offset: 1, length: 36, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request <= Request<T, P>? - 1[36] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -503,10 +415,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .customBuilder(value: "make"), target: .dependency(name: "api")),
-                    offset: 1, length: 29, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "api.Config Attr - builder = make - 1[29] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -527,10 +436,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`),
-                    offset: 1, length: 33, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "self.Config Attr - isIsolated = true - 1[33] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -551,10 +457,7 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .isIsolated(value: false), target: .`self`),
-                    offset: 1, length: 34, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "self.Config Attr - isIsolated = false - 1[34] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -575,11 +478,7 @@ internal final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: "ok", expected: "true|false")
-            XCTAssertEqual(
-                error.description,
-                LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError).description
-            )
+            XCTAssertEqual(error.description, "test.swift:2: error: Invalid configuration attribute value: 'ok'. Expected 'true|false'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -614,11 +513,7 @@ func ignoredFunc() {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.unknownConfigurationAttribute(name: "fakeAttribute")
-            XCTAssertEqual(
-                error.description,
-                LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError).description
-            )
+            XCTAssertEqual(error.description, "test.swift:2: error: Unknown configuration attribute: 'fakeAttribute'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -655,11 +550,7 @@ final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidAnnotation("weaver: api = API <-- APIProtocol")
-            XCTAssertEqual(
-                error.description,
-                LexerError.invalidAnnotation(FileLocation(line: 4, file: "test.swift"), underlyingError: underlyingError).description
-            )
+            XCTAssertEqual(error.description, "test.swift:5: error: Invalid annotation: 'weaver: api = API <-- APIProtocol'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -696,11 +587,7 @@ final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: ".thisScopeDoesNotExists", expected: "transient|container|weak|lazy")
-            XCTAssertEqual(
-                error.description,
-                LexerError.invalidAnnotation(FileLocation(line: 5, file: "test.swift"), underlyingError: underlyingError).description
-            )
+            XCTAssertEqual(error.description, "test.swift:6: error: Invalid configuration attribute value: '.thisScopeDoesNotExists'. Expected 'transient|container|weak|lazy'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -718,10 +605,7 @@ final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ImportDeclaration>, TokenBox(
-                    value: ImportDeclaration(moduleName: "API"),
-                    offset: 1, length: 21, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "import API - 1[21] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -742,10 +626,7 @@ import API
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ImportDeclaration>, TokenBox(
-                    value: ImportDeclaration(moduleName: "API"),
-                    offset: 1, length: 10, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "import API - 1[10] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -771,10 +652,7 @@ final class Logger<T> {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 6 {
-                XCTAssertEqual(tokens[3] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: ConcreteType(name: "Logger", genericNames: ["T"])),
-                    offset: 75, length: 46, line: 4
-                ))
+                XCTAssertEqual(tokens[3].description, "internal Logger<T> { - 75[46] - at line: 4")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -797,10 +675,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(style: .comment, name: "array", type: ConcreteType(name: "Array", genericNames: ["String"], isOptional: false), protocolTypes: []),
-                    offset: 32, length: 28, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "array = Array<String> - 32[28] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -823,10 +698,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(style: .comment, name: "array", type: ConcreteType(name: "Array", genericNames: ["String?"], isOptional: true), protocolTypes: []),
-                    offset: 32, length: 32, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "array = Array<String?>? - 32[32] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -849,10 +721,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(style: .comment, name: "dict", type: ConcreteType(name: "Dictionary", genericNames: ["String", "Int"], isOptional: false), protocolTypes: []),
-                    offset: 32, length: 35, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "dict = Dictionary<String, Int> - 32[35] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -875,10 +744,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(style: .comment, name: "dict", type: ConcreteType(name: "Dictionary", genericNames: ["String?", "Int?"], isOptional: true), protocolTypes: []),
-                    offset: 32, length: 34, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "dict = Dictionary<String?, Int?>? - 32[34] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
