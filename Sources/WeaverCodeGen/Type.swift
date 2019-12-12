@@ -132,7 +132,14 @@ indirect enum CompositeType: Hashable, Sequence, CustomStringConvertible {
     }
     
     var isOptional: Bool {
-        return first?.isOptional ?? false
+        switch self {
+        case .components(let components) where components.count == 1:
+            return components.first!.isOptional
+        case .components,
+             .closure,
+             .tuple:
+            return false
+        }
     }
     
     func union(_ other: CompositeType) -> CompositeType {

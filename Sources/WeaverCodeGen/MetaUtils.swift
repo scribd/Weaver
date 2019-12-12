@@ -89,7 +89,7 @@ extension CompositeType {
     var toTypeName: String {
         switch self {
         case .components(let components):
-            return components.lazy.map { $0.toTypeName }.joined(separator: "_")
+            return components.lazy.map { $0.toTypeName }.sorted().joined(separator: "_")
         case .closure(let closure):
             return closure.toTypeName
         case .tuple(let parameters):
