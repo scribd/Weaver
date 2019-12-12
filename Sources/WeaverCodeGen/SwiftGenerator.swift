@@ -351,9 +351,9 @@ private static func fatalBuilder<T>() -> Builder<T> {
         \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
     }
 }
-
 """))
             .adding(member: dependencyGraph.hasPropertyWrapperAnnotations ? PlainCode(code: """
+
 private static var dynamicResolvers = [Any]()
 private static var dynamicResolversLock = NSRecursiveLock()
 
@@ -1027,7 +1027,7 @@ private extension MetaWeaverFile {
                 return [
                     EmptyLine(),
                     PlainCode(code: """
-                        var \(doubleVariable.name): \(concreteType.typeID.swiftString)\(concreteType.value.isOptional ? " = nil" : "!")
+                    var \(doubleVariable.name): \(concreteType.typeID.swiftString)\(concreteType.value.isOptional ? " = nil" : "!")
                     """),
                     ComputedProperty(variable: Variable(name: declaration.declarationName)
                         .with(type: declaration.type.typeID))
