@@ -67,7 +67,6 @@ final class MainDependencyContainer {
         }
     }
 
-
     private var _host: Builder<Optional<String>> = MainDependencyContainer.fatalBuilder()
     var host: Optional<String> {
         return _host(nil)
