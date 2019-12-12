@@ -266,79 +266,11 @@ private final class TypeParser {
             
         case .delimiter(.arrayOrDictOpen):
             consumeToken()
-            let elementType = try parse()
-            switch currentToken {
-            case .delimiter(.arrayOrDictClose):
-                consumeToken()
-                type = .components([AnyType(name: "Array", parameterTypes: [elementType])])
-            
-            case .delimiter(.colon):
-                consumeToken()
-                let keyType = elementType
-                let valueType = try parse()
-                try consumeTokenOrBail(.delimiter(.arrayOrDictClose))
-                type = .components([AnyType(name: "Dictionary", parameterTypes: [keyType, valueType])])
-
-            case .delimiter(let delimiter):
-                throw TokenError.invalidTokenInType(type: string, token: delimiter.rawValue)
-
-            case .typeName(let typename):
-                throw TokenError.invalidTokenInType(type: string, token: typename)
-
-            case .none:
-                throw TokenError.invalidTokenInType(type: string, token: nil)
-            }
+            type = try parseArrayOrDictionary()
             
         case .delimiter(.tupleOpen):
             consumeToken()
-            var parameters = [TupleComponent]()
-            if consumeToken(.delimiter(.tupleClose)) == false {
-                repeat {
-                    var alias: String?
-                    var name: String?
-                    if case .typeName(let value) = currentToken {
-                        consumeToken()
-                        alias = value
-                    }
-                    if currentToken == .delimiter(.tupleClose) ||
-                       currentToken == .delimiter(.comma) ||
-                       currentToken == .delimiter(.colon) {
-                        alias = nil
-                        revertToken()
-                    }
-                    if case .typeName(let value) = currentToken {
-                        consumeToken()
-                        name = value
-                    }
-                    if currentToken == .delimiter(.tupleClose) ||
-                       currentToken == .delimiter(.comma) {
-                        name = nil
-                        revertToken()
-                    }
-                    if name != nil {
-                        try consumeTokenOrBail(.delimiter(.colon))
-                    }
-                    let type = try parse()
-                    parameters.append(TupleComponent(alias: alias, name: name, type: type))
-                } while consumeToken(.delimiter(.comma))
-                try consumeTokenOrBail(.delimiter(.tupleClose))
-            }
-            
-            switch currentToken {
-            case .delimiter(.closureArrow):
-                consumeToken()
-                let returnType = try parse()
-                type = .closure(Closure(tuple: parameters, returnType: returnType))
-
-            case .none:
-                type = .tuple(parameters)
-
-            case .delimiter(let delimiter):
-                throw TokenError.invalidTokenInType(type: string, token: delimiter.rawValue)
-
-            case .typeName(let name):
-                throw TokenError.invalidTokenInType(type: string, token: name)
-            }
+            type = try parseTupleOrClosure()
             
         case .delimiter(let delimiter):
             throw TokenError.invalidTokenInType(type: string, token: delimiter.rawValue)
@@ -368,6 +300,82 @@ private final class TypeParser {
 
         case .none:
             throw TokenError.invalidTokenInType(type: string, token: nil)
+        }
+    }
+    
+    private func parseArrayOrDictionary() throws -> CompositeType {
+        let elementType = try parse()
+        switch currentToken {
+        case .delimiter(.arrayOrDictClose):
+            consumeToken()
+            return .components([AnyType(name: "Array", parameterTypes: [elementType])])
+        
+        case .delimiter(.colon):
+            consumeToken()
+            let keyType = elementType
+            let valueType = try parse()
+            try consumeTokenOrBail(.delimiter(.arrayOrDictClose))
+            return .components([AnyType(name: "Dictionary", parameterTypes: [keyType, valueType])])
+
+        case .delimiter(let delimiter):
+            throw TokenError.invalidTokenInType(type: string, token: delimiter.rawValue)
+
+        case .typeName(let typename):
+            throw TokenError.invalidTokenInType(type: string, token: typename)
+
+        case .none:
+            throw TokenError.invalidTokenInType(type: string, token: nil)
+        }
+    }
+    
+    private func parseTupleOrClosure() throws -> CompositeType {
+        var parameters = [TupleComponent]()
+        if consumeToken(.delimiter(.tupleClose)) == false {
+            repeat {
+                var alias: String?
+                var name: String?
+                if case .typeName(let value) = currentToken {
+                    consumeToken()
+                    alias = value
+                }
+                if currentToken == .delimiter(.tupleClose) ||
+                   currentToken == .delimiter(.comma) ||
+                   currentToken == .delimiter(.colon) {
+                    alias = nil
+                    revertToken()
+                }
+                if case .typeName(let value) = currentToken {
+                    consumeToken()
+                    name = value
+                }
+                if currentToken == .delimiter(.tupleClose) ||
+                   currentToken == .delimiter(.comma) {
+                    name = nil
+                    revertToken()
+                }
+                if name != nil {
+                    try consumeTokenOrBail(.delimiter(.colon))
+                }
+                let type = try parse()
+                parameters.append(TupleComponent(alias: alias, name: name, type: type))
+            } while consumeToken(.delimiter(.comma))
+            try consumeTokenOrBail(.delimiter(.tupleClose))
+        }
+        
+        switch currentToken {
+        case .delimiter(.closureArrow):
+            consumeToken()
+            let returnType = try parse()
+            return .closure(Closure(tuple: parameters, returnType: returnType))
+
+        case .none:
+            return .tuple(parameters)
+
+        case .delimiter(let delimiter):
+            throw TokenError.invalidTokenInType(type: string, token: delimiter.rawValue)
+
+        case .typeName(let name):
+            throw TokenError.invalidTokenInType(type: string, token: name)
         }
     }
     
