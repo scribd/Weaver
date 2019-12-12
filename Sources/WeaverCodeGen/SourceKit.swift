@@ -20,7 +20,8 @@ struct SourceKitDependencyAnnotation {
     let length: Int
     let name: String
     let type: ConcreteType?
-    let abstractTypes: Set<AbstractType>
+    let abstractType: AbstractType
+    let expectedParametersCount: Int
     let dependencyKind: Dependency.Kind?
     let accessLevel: AccessLevel
     private(set) var configurationAttributes = [ConfigurationAttribute]()
@@ -54,7 +55,7 @@ struct SourceKitDependencyAnnotation {
         guard let typename = dictionary[SwiftDocKey.typeName.rawValue] as? String else {
             return nil
         }
-                
+        
         if let accessLevelString = dictionary["key.accessibility"] as? String {
             accessLevel = AccessLevel(accessLevelString)
         } else {
@@ -80,30 +81,25 @@ struct SourceKitDependencyAnnotation {
             configurationAttributes.append(ConfigurationAttribute.doesSupportObjc(value: true))
         }
         
+        abstractType = try AbstractType(value: CompositeType(typename))
+
         let annotationString = lines[annotationLineStartIndex...annotationLineEndIndex]
             .map { $0.content.trimmingCharacters(in: .whitespaces) }
             .joined(separator: " ")
         self.annotationString = annotationString
-
-        switch try CompositeType(typename) {
-        case .components(let components):
-            abstractTypes = Set(components.lazy.map {  AbstractType(value: $0) })
-        case .closure(let closure):
-            abstractTypes = try closure.returnType.components(or: TokenError.invalidAnnotation(annotationString))
-        case .tuple:
-            throw TokenError.invalidAnnotation(annotationString)
-        }
-        
+                
         guard let annotationBuilder = try SourceKitDependencyAnnotation.parseBuilder(annotationString) else {
             return nil
         }
 
+        expectedParametersCount = annotationBuilder.expectedParametersCount
         dependencyKind = annotationBuilder.dependencyKind
         type = annotationBuilder.concreteType
         configurationAttributes += annotationBuilder.configurationAttributes
     }
     
     private static func parseBuilder(_ annotationString: String) throws -> (
+        expectedParametersCount: Int,
         dependencyKind: Dependency.Kind?,
         concreteType: ConcreteType?,
         configurationAttributes: [ConfigurationAttribute]
@@ -122,7 +118,8 @@ struct SourceKitDependencyAnnotation {
         
         guard let annotationTypeString = structure[SwiftDocKey.name.rawValue] as? String else { return nil }
         guard annotationTypeString.lowercased().hasPrefix("weaver") else { return nil }
-
+        
+        let expectedParametersCount = Int(annotationTypeString.lowercased().replacingOccurrences(of: "weaverp", with: "")) ?? 0
         var concreteType: ConcreteType?
         var configurationAttributes = [ConfigurationAttribute]()
         var dependencyKind: Dependency.Kind?
@@ -149,7 +146,7 @@ struct SourceKitDependencyAnnotation {
 
                 if attributeName == "type" {
                     let value = value.replacingOccurrences(of: ".self", with: "")
-                    concreteType = try CompositeType(value).singleType(or: TokenError.invalidAnnotation(annotationString))
+                    concreteType = try ConcreteType(value: CompositeType(value))
                 } else {
                     configurationAttributes.append(
                         try ConfigurationAttribute(name: attributeName, valueString: value)
@@ -163,7 +160,7 @@ struct SourceKitDependencyAnnotation {
             }
         }
         
-        return (dependencyKind, concreteType, configurationAttributes)
+        return (expectedParametersCount, dependencyKind, concreteType, configurationAttributes)
     }
 }
 
@@ -219,7 +216,7 @@ struct SourceKitTypeDeclaration {
                 typeString += components[1]
             }
             
-            type = try CompositeType(typeString).singleType(or: TokenError.invalidAnnotation(lineString))
+            type = try ConcreteType(value: CompositeType(typeString))
         } catch {
             return nil
         }
@@ -242,7 +239,7 @@ private extension Int {
 }
 
 extension SourceKitDependencyAnnotation {
-    
+        
     func toTokens() throws -> [AnyTokenBox] {
         let tokenBox: AnyTokenBox
         switch dependencyKind {
@@ -252,17 +249,19 @@ extension SourceKitDependencyAnnotation {
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
             
+            let abstractType = try buildAbstractType()
             let annotation = RegisterAnnotation(style: .propertyWrapper,
                                                 name: name,
                                                 type: type,
-                                                abstractTypes: abstractTypes)
+                                                abstractType: abstractType.0,
+                                                closureParameters: abstractType.1)
  
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
                                 line: line)
         case .parameter?:
-            guard let type = abstractTypes.first, abstractTypes.count == 1 else {
+            guard let type = abstractType.first, abstractType.count == 1 else {
                 throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
@@ -275,13 +274,16 @@ extension SourceKitDependencyAnnotation {
                                 line: line)
             
         case .reference?:
-            guard abstractTypes.isEmpty == false else {
+            guard abstractType.isEmpty == false else {
                 throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
+            
+            let abstractType = try buildAbstractType()
             let annotation = ReferenceAnnotation(style: .propertyWrapper,
                                                  name: name,
-                                                 types: abstractTypes)
+                                                 type: abstractType.0,
+                                                 closureParameters: abstractType.1)
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
@@ -300,6 +302,23 @@ extension SourceKitDependencyAnnotation {
                             line: line)
         }
     }
+    
+    private func buildAbstractType() throws -> (AbstractType, [TupleComponent]) {
+        if let closure = self.abstractType.value.closure, expectedParametersCount > 0 {
+            let abstractType = AbstractType(value: closure.returnType)
+            let closureParameters = closure.tuple
+            
+            guard closureParameters.count == expectedParametersCount else {
+                throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
+                                                   underlyingError: TokenError.invalidAnnotation(annotationString))
+            }
+            
+            return (abstractType, closureParameters)
+        } else {
+            return (abstractType, [])
+        }
+    }
+
 }
 
 extension SourceKitTypeDeclaration {

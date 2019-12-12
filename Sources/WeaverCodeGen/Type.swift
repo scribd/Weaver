@@ -14,9 +14,13 @@ public enum AbstractTypeKind: TypeKind {}
 public typealias ConcreteType = TypeWrapper<ConcreteTypeKind>
 public typealias AbstractType = TypeWrapper<AbstractTypeKind>
 
-public struct TypeWrapper<T: TypeKind>: Hashable, CustomStringConvertible {
+public struct TypeWrapper<T: TypeKind>: Hashable, Sequence, CustomStringConvertible {
 
-    let value: AnyType
+    var value: CompositeType
+    
+    init(value: CompositeType = .components(Set())) {
+        self.value = value
+    }
     
     public var description: String {
         return value.description
@@ -28,6 +32,48 @@ public struct TypeWrapper<T: TypeKind>: Hashable, CustomStringConvertible {
     
     var concreteType: ConcreteType {
         return ConcreteType(value: value)
+    }
+    
+    func union(_ other: TypeWrapper) -> TypeWrapper {
+        return TypeWrapper(value: value.union(other.value))
+    }
+    
+    mutating func formUnion(with other: TypeWrapper) {
+        value = value.union(other.value)
+    }
+    
+    func isSubset(of other: TypeWrapper) -> Bool {
+        return value.isSubset(of: other.value)
+    }
+    
+    func isSuperset(of other: TypeWrapper) -> Bool {
+        return value.isSuperset(of: other.value)
+    }
+    
+    var isEmpty: Bool {
+        return value.isEmpty
+    }
+    
+    var first: TypeWrapper? {
+        return value.first.flatMap { TypeWrapper(value: $0) }
+    }
+    
+    var count: Int {
+        return value.count
+    }
+    
+    public func makeIterator() -> Array<TypeWrapper<T>>.Iterator {
+        return value.map { TypeWrapper(value: $0) }.makeIterator()
+    }
+}
+
+extension TypeWrapper where T == AbstractTypeKind {
+    
+    func isSuperset(of other: ConcreteType?) -> Bool {
+        guard let other = other else {
+            return false
+        }
+        return isSuperset(of: other.abstractType)
     }
 }
 
@@ -65,15 +111,102 @@ struct TupleComponent: Hashable, CustomStringConvertible {
     let type: CompositeType
 }
 
-indirect enum CompositeType: Hashable, CustomStringConvertible {
+indirect enum CompositeType: Hashable, Sequence, CustomStringConvertible {
     
-    case components([AnyType])
+    case components(Set<AnyType>)
     case closure(Closure)
     case tuple([TupleComponent])
     
     init(_ stringValue: String) throws {
         let parser = try TypeParser(stringValue)
         self = try parser.parse()
+    }
+    
+    var closure: Closure? {
+        switch first {
+        case .closure(let closure):
+            return closure
+        default:
+            return nil
+        }
+    }
+    
+    var isOptional: Bool {
+        return first?.isOptional ?? false
+    }
+    
+    func union(_ other: CompositeType) -> CompositeType {
+        switch (self, other) {
+        case (.components(let lhs), .components(let rhs)):
+            return .components(lhs.union(rhs))
+        default:
+            return self
+        }
+    }
+    
+    func isSubset(of other: CompositeType) -> Bool {
+        switch (self, other) {
+        case (.components(let lhs), .components(let rhs)):
+            return lhs.isSubset(of: rhs)
+        case (.tuple(let lhs), .tuple(let rhs)):
+            return lhs == rhs
+        case (.closure(let lhs), .closure(let rhs)):
+            return lhs == rhs
+        default:
+            return false
+        }
+    }
+    
+    func isSuperset(of other: CompositeType) -> Bool {
+        switch (self, other) {
+        case (.components(let lhs), .components(let rhs)):
+            return lhs.isSuperset(of: rhs)
+        case (.tuple(let lhs), .tuple(let rhs)):
+            return lhs == rhs
+        case (.closure(let lhs), .closure(let rhs)):
+            return lhs == rhs
+        default:
+            return false
+        }
+    }
+    
+    func makeIterator() -> Array<CompositeType>.Iterator {
+        switch self {
+        case .components(let components):
+            return components.map { CompositeType.components(Set([$0])) }.makeIterator()
+        case .closure,
+             .tuple:
+            return [self].makeIterator()
+        }
+    }
+    
+    var isEmpty: Bool {
+        switch self {
+        case .components(let components):
+            return components.isEmpty
+        default:
+            return false
+        }
+    }
+    
+    var count: Int {
+        switch self {
+        case .components(let components):
+            return components.count
+        default:
+            return 1
+        }
+    }
+    
+    var first: CompositeType? {
+        switch self {
+        case .components(let components) where components.count == 1:
+            return .components(Set([components.first!]))
+        case .components:
+            return nil
+        default:
+            return self
+        }
     }
 }
 
@@ -113,27 +246,6 @@ extension CompositeType {
             return components.lazy.map { $0.description }.sorted().joined(separator: " & ")
         case .tuple(let parameters):
             return "(\(parameters.lazy.map { $0.description }.joined(separator: ", ")))"
-        }
-    }
-    
-    func singleType<T>(or error: Error) throws -> TypeWrapper<T> {
-        switch self {
-        case .components(let components) where components.count == 1:
-            return TypeWrapper(value: components.first!)
-        case .tuple,
-             .closure,
-             .components:
-            throw error
-        }
-    }
-    
-    func components<T>(or error: Error) throws -> Set<TypeWrapper<T>> {
-        switch self {
-        case .components(let components):
-            return Set(components.lazy.map { TypeWrapper(value: $0) })
-        case .closure,
-             .tuple:
-            throw error
         }
     }
 }
@@ -258,9 +370,9 @@ private final class TypeParser {
 
         switch currentToken {
         case .typeName:
-            var components = [AnyType]()
+            var components = Set<AnyType>()
             repeat {
-                components.append(try parseComponent())
+                components.insert(try parseComponent())
             } while consumeToken(.delimiter(.and))
             type = .components(components)
             

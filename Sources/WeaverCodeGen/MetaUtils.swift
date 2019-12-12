@@ -43,15 +43,21 @@ extension TypeWrapper {
     }
 
     var dependencyResolverTypeID: TypeIdentifier {
-        return TypeIdentifier(name: "\(value.name)DependencyResolver")
+        let valueTypeName = value.toTypeName
+        let underscore = valueTypeName.contains("_") ? "_" : String()
+        return TypeIdentifier(name: "\(value.toTypeName)\(underscore)DependencyResolver")
     }
     
     var dependencyResolverProxyTypeID: TypeIdentifier {
-        return TypeIdentifier(name: "\(value.name)DependencyResolverProxy")
+        let valueTypeName = value.toTypeName
+        let underscore = valueTypeName.contains("_") ? "_" : String()
+        return TypeIdentifier(name: "\(valueTypeName)\(underscore)DependencyResolverProxy")
     }
 
     var dependencyResolverVariable: Variable {
-        return Variable(name: "\(value.name.variableCased)DependencyResolver")
+        let valueTypeName = value.toTypeName
+        let underscore = valueTypeName.contains("_") ? "_" : String()
+        return Variable(name: "\(valueTypeName.variableCased)\(underscore)DependencyResolver")
     }
     
     var publicDependencyResolverVariable: Variable {
@@ -59,7 +65,9 @@ extension TypeWrapper {
     }
     
     var inputDependencyResolverTypeID: TypeIdentifier {
-        return TypeIdentifier(name: "\(value.name)InputDependencyResolver")
+        let valueTypeName = value.toTypeName
+        let underscore = valueTypeName.contains("_") ? "_" : String()
+        return TypeIdentifier(name: "\(valueTypeName)\(underscore)InputDependencyResolver")
     }
      
     var toTypeName: String {
@@ -67,7 +75,7 @@ extension TypeWrapper {
     }
 }
 
-extension AnyType {
+private extension AnyType {
     
     var toTypeName: String {
         let genericNames = parameterTypes.isEmpty == false ?
@@ -110,9 +118,9 @@ extension Dependency.`Type` {
     
     var abstractTypeID: TypeIdentifier? {
         switch self {
-        case .abstract(let types),
-             .full(_, let types):
-            return .and(types.lazy.sorted { $0.description < $1.description }.map { $0.typeID })
+        case .abstract(let type),
+             .full(_, let type):
+            return type.typeID
         case .concrete:
             return nil
         }

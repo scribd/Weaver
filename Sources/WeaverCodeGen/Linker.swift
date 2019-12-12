@@ -129,13 +129,16 @@ final class Dependency: Encodable, CustomDebugStringConvertible {
     let dependencyName: String
 
     enum `Type`: Hashable, CustomStringConvertible {
-        case abstract(Set<AbstractType>) // Reference only
+        case abstract(AbstractType) // Reference only
         case concrete(ConcreteType) // Reference, registration or parameter
-        case full(ConcreteType, Set<AbstractType>) // Registration only
+        case full(ConcreteType, AbstractType) // Registration only
     }
     
     /// Type which was used to declare the dependency.
     let type: `Type`
+    
+    /// Contains parameters used when declared. For property wrappers only.
+    let closureParameters: [TupleComponent]
     
     /// Configuration built based on the configuration annotations
     /// associated to the same dependency name.
@@ -153,6 +156,7 @@ final class Dependency: Encodable, CustomDebugStringConvertible {
     init(kind: Kind,
          dependencyName: String,
          type: `Type`,
+         closureParameters: [TupleComponent],
          source: ConcreteType,
          annotationStyle: AnnotationStyle,
          fileLocation: FileLocation) {
@@ -160,6 +164,7 @@ final class Dependency: Encodable, CustomDebugStringConvertible {
         self.kind = kind
         self.dependencyName = dependencyName
         self.type = type
+        self.closureParameters = closureParameters
         self.annotationStyle = annotationStyle
         self.source = source
         self.fileLocation = fileLocation
@@ -188,7 +193,7 @@ public final class DependencyGraph {
     fileprivate(set) var imports = Set<String>()
     
     /// Abstract types by concrete type.
-    fileprivate(set) var abstractTypes = [ConcreteType: Set<AbstractType>]()
+    fileprivate(set) var abstractTypes = [ConcreteType: AbstractType]()
     
     /// Concrete types by abtract type.
     fileprivate(set) var concreteTypes = [AbstractType: [String: ConcreteType]]()
@@ -285,7 +290,7 @@ private extension Linker {
                 
             case .referenceAnnotation(let token):
                 let location = FileLocation(line: token.line, file: file)
-                let dependencyType = dependencyGraph.dependencyType(for: token.value.types,
+                let dependencyType = dependencyGraph.dependencyType(for: token.value.type,
                                                                     dependencyName: token.value.name)
                 
                 let concreteType = try dependencyGraph.concreteType(for: dependencyType,
@@ -342,15 +347,15 @@ private extension Linker {
         
         for (expr, _, _) in ExprSequence(exprs: syntaxTrees) {
             if let token = expr.toRegisterAnnotation() {
-                if token.value.abstractTypes.isEmpty == false {
-                    for abstractType in token.value.abstractTypes {
+                if token.value.abstractType.isEmpty == false {
+                    for abstractType in token.value.abstractType {
                         var concreteTypes = dependencyGraph.concreteTypes[abstractType] ?? [:]
                         concreteTypes[token.value.name] = token.value.type
                         dependencyGraph.concreteTypes[abstractType] = concreteTypes
                         
-                        var abstractTypes = dependencyGraph.abstractTypes[token.value.type] ?? Set()
-                        abstractTypes.insert(abstractType)
-                        dependencyGraph.abstractTypes[token.value.type] = abstractTypes
+                        var abstractType = dependencyGraph.abstractTypes[token.value.type] ?? AbstractType(value: .components(Set()))
+                        abstractType.formUnion(with: abstractType)
+                        dependencyGraph.abstractTypes[token.value.type] = abstractType
                     }
                 } else {
                     var concreteTypes = dependencyGraph.orphinConcreteTypes[token.value.name] ?? Set()
@@ -380,7 +385,8 @@ private extension Linker {
 
                 let dependency = Dependency(kind: .registration,
                                             dependencyName: token.value.name,
-                                            type: .init(token.value.type, token.value.abstractTypes),
+                                            type: .init(token.value.type, token.value.abstractType),
+                                            closureParameters: token.value.closureParameters,
                                             source: source,
                                             annotationStyle: token.value.style,
                                             fileLocation: location)
@@ -401,11 +407,12 @@ private extension Linker {
                     throw LinkerError.unknownType(location, type: source.value)
                 }
 
-                let dependencyType = dependencyGraph.dependencyType(for: token.value.types,
+                let dependencyType = dependencyGraph.dependencyType(for: token.value.type,
                                                                     dependencyName: token.value.name)
                 let dependency = Dependency(kind: .reference,
                                             dependencyName: token.value.name,
                                             type: dependencyType,
+                                            closureParameters: token.value.closureParameters,
                                             source: source,
                                             annotationStyle: token.value.style,
                                             fileLocation: location)
@@ -426,6 +433,7 @@ private extension Linker {
                 let dependency = Dependency(kind: .parameter,
                                             dependencyName: token.value.name,
                                             type: .concrete(token.value.type),
+                                            closureParameters: [],
                                             source: source,
                                             annotationStyle: token.value.style,
                                             fileLocation: location)
@@ -479,7 +487,7 @@ private extension DependencyContainer {
             dependencyNamesByConcreteType[concreteType] = dependencyNames
         }
         
-        for abstractType in dependency.type.abstractTypes {
+        for abstractType in dependency.type.abstractType {
             var dependencyNames = dependencyNamesByAbstractType[abstractType] ?? Set()
             dependencyNames.insert(dependency.dependencyName)
             dependencyNamesByAbstractType[abstractType] = dependencyNames
@@ -542,9 +550,9 @@ extension DependencyGraph {
                       at location: FileLocation? = nil) throws -> ConcreteType {
         
         switch dependencyType {
-        case .abstract(let abstractTypes):
+        case .abstract(let abstractType):
             var candidates = [String: ConcreteType]()
-            let concreteTypes = Set(abstractTypes.lazy.map { abstractType -> ConcreteType in
+            let concreteTypes = Set(abstractType.lazy.map { abstractType -> ConcreteType in
                 guard let concreteTypes = self.concreteTypes[abstractType] else {
                     return abstractType.concreteType
                 }
@@ -562,7 +570,7 @@ extension DependencyGraph {
             })
             guard concreteTypes.count == 1 else {
                 let candidates = candidates.lazy.map { ($0, $1) }.sorted { $0.0 < $1.0 }
-                throw DependencyGraphError.invalidAbstractTypeComposition(location, types: abstractTypes, candidates: candidates)
+                throw DependencyGraphError.invalidAbstractTypeComposition(location, type: abstractType, candidates: candidates)
             }
             return concreteTypes.first!
             
@@ -572,18 +580,18 @@ extension DependencyGraph {
         }
     }
     
-    func dependencyType(for types: Set<AbstractType>,
+    func dependencyType(for type: AbstractType,
                         dependencyName: String) -> Dependency.`Type` {
         
-        guard types.count == 1 else { return .abstract(types) }
+        guard type.value.count == 1 else { return .abstract(type) }
         
-        let type = types.first!
+        let type = type.first!
         if self.abstractTypes[type.concreteType] != nil {
             return .concrete(type.concreteType)
         } else if let concreteTypes = orphinConcreteTypes[dependencyName], concreteTypes.contains(type.concreteType) {
             return .concrete(type.concreteType)
         } else if concreteTypes[type] != nil {
-            return .abstract(Set([type]))
+            return .abstract(AbstractType().union(type))
         } else {
             return .concrete(type.concreteType)
         }
@@ -626,14 +634,13 @@ extension Dependency.Kind {
 
 extension Dependency.`Type` {
     
-    var abstractTypes: Set<AbstractType> {
+    var abstractType: AbstractType {
         switch self {
-        case .full(_, let types):
-            return types
-        case .abstract(let types):
-            return types
+        case .full(_, let type),
+             .abstract(let type):
+            return type
         case .concrete:
-            return Set()
+            return AbstractType(value: .components(Set()))
         }
     }
     
@@ -647,21 +654,20 @@ extension Dependency.`Type` {
         }
     }
     
-    var types: Set<AnyType> {
+    var anyType: CompositeType {
         switch self {
-        case .full(let concreteType, let abstractTypes):
-            return abstractTypes.isEmpty ?
-                Set([concreteType.value]) : Set(abstractTypes.lazy.map { $0.value })
-        case .abstract(let types):
-            return Set(types.lazy.map { $0.value })
+        case .full(let concreteType, let abstractType):
+            return abstractType.isEmpty ? concreteType.value : abstractType.value
+        case .abstract(let type):
+            return type.value
         case .concrete(let type):
-            return Set([type.value])
+            return type.value
         }
     }
     
-    init(_ concreteType: ConcreteType, _ abstractTypes: Set<AbstractType>) {
-        if abstractTypes.isEmpty == false {
-            self = .full(concreteType, abstractTypes)
+    init(_ concreteType: ConcreteType, _ abstractType: AbstractType) {
+        if abstractType.isEmpty == false {
+            self = .full(concreteType, abstractType)
         } else {
             self = .concrete(concreteType)
         }
@@ -686,16 +692,6 @@ extension Dependency.`Type` {
              (.full, _):
             return false
         }
-    }
-}
-
-extension Set where Element == AbstractType {
-    
-    func contains(_ member: ConcreteType?) -> Bool {
-        guard let member = member else {
-            return false
-        }
-        return contains(member.abstractType)
     }
 }
 

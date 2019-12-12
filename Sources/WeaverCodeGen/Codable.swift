@@ -230,7 +230,7 @@ extension CompositeType: Codable {
         let container = try decoder.container(keyedBy: Key.self)
         switch try container.decode(ValueKey.self, forKey: .key) {
         case .components:
-            self = .components(try container.decode([AnyType].self, forKey: .value))
+            self = .components(try container.decode(Set<AnyType>.self, forKey: .value))
         case .closure:
             self = .closure(try container.decode(Closure.self, forKey: .value))
         case .tuple:
@@ -393,17 +393,17 @@ extension RegisterAnnotation {
         case style = "s"
         case name = "n"
         case type = "t"
-        case abstractTypes = "a"
+        case abstractType = "a"
+        case closureParameters = "c"
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
-        type = TypeWrapper(value: try container.decode(AnyType.self, forKey: .type))
-        abstractTypes = Set(try container.decode(Set<AnyType>.self, forKey: .abstractTypes).lazy.map {
-            TypeWrapper(value: $0)
-        })
+        type = TypeWrapper(value: try container.decode(CompositeType.self, forKey: .type))
+        abstractType = AbstractType(value: try container.decode(CompositeType.self, forKey: .abstractType))
+        closureParameters = try container.decode([TupleComponent].self, forKey: .closureParameters)
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -411,7 +411,8 @@ extension RegisterAnnotation {
         try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
         try container.encode(type.value, forKey: .type)
-        try container.encode(abstractTypes.map { $0.value }, forKey: .abstractTypes)
+        try container.encode(abstractType.value, forKey: .abstractType)
+        try container.encode(closureParameters, forKey: .closureParameters)
     }
 }
 
@@ -420,23 +421,24 @@ extension ReferenceAnnotation {
     private enum Key: String, CodingKey {
         case style = "s"
         case name = "n"
-        case types = "t"
+        case type = "t"
+        case closureParameters = "c"
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
-        types = Set(try container.decode(Set<AnyType>.self, forKey: .types).lazy.map {
-            TypeWrapper(value: $0)
-        })
+        type = try AbstractType(value: container.decode(CompositeType.self, forKey: .type))
+        closureParameters = try container.decode([TupleComponent].self, forKey: .closureParameters)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
-        try container.encode(types.map { $0.value }, forKey: .types)
+        try container.encode(type.value, forKey: .type)
+        try container.encode(closureParameters, forKey: .closureParameters)
     }
 }
 
@@ -452,7 +454,7 @@ extension ParameterAnnotation {
         let container = try decoder.container(keyedBy: Key.self)
         style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
-        type = TypeWrapper(value: try container.decode(AnyType.self, forKey: .type))
+        type = ConcreteType(value: try container.decode(CompositeType.self, forKey: .type))
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -505,7 +507,7 @@ extension InjectableType {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
-        type = TypeWrapper(value: try container.decode(AnyType.self, forKey: .type))
+        type = ConcreteType(value: try container.decode(CompositeType.self, forKey: .type))
         accessLevel = try container.decode(AccessLevel.self, forKey: .accessLevel)
     }
     

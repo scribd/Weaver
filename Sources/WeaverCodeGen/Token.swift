@@ -43,7 +43,8 @@ public struct RegisterAnnotation: Token, Hashable {
     let style: AnnotationStyle
     let name: String
     let type: ConcreteType
-    let abstractTypes: Set<AbstractType>
+    let abstractType: AbstractType
+    let closureParameters: [TupleComponent]
     
     public static func create(fromComment annotation: String) throws -> RegisterAnnotation? {
         guard let matches = NSRegularExpression.register.matches(in: annotation) else {
@@ -60,26 +61,26 @@ public struct RegisterAnnotation: Token, Hashable {
             return nil
         }
 
-        let type: ConcreteType = try CompositeType(valueComponents[0])
-            .singleType(or: TokenError.invalidAnnotation(annotation))
+        let type = try ConcreteType(value: CompositeType(valueComponents[0]))
 
-        let abstractTypes: Set<AbstractType>
+        let abstractType: AbstractType
         if valueComponents.count > 1 {
-            abstractTypes = try CompositeType(valueComponents[1]).components(or: TokenError.invalidAnnotation(annotation))
+            abstractType = try AbstractType(value: CompositeType(valueComponents[1]))
         } else {
-            abstractTypes = Set()
+            abstractType = AbstractType()
         }
         
         return RegisterAnnotation(style: .comment,
                                   name: matches[0],
                                   type: type,
-                                  abstractTypes: abstractTypes)
+                                  abstractType: abstractType,
+                                  closureParameters: [])
     }
     
     public var description: String {
         var s = "\(name) = \(type.description)"
-        if abstractTypes.isEmpty == false {
-            s += " <- \(abstractTypes.map { $0.description }.sorted().joined(separator: " & "))"
+        if abstractType.isEmpty == false {
+            s += " <- \(abstractType.description)"
         }
         return s
     }
@@ -87,25 +88,26 @@ public struct RegisterAnnotation: Token, Hashable {
 
 public struct ReferenceAnnotation: Token, Hashable {
     
-    public let style: AnnotationStyle
-    public let name: String
-    public let types: Set<AbstractType>
+    let style: AnnotationStyle
+    let name: String
+    let type: AbstractType
+    let closureParameters: [TupleComponent]
     
     public static func create(fromComment annotation: String) throws -> ReferenceAnnotation? {
         guard let matches = NSRegularExpression.reference.matches(in: annotation) else {
             return nil
         }
         
-        let types: Set<AbstractType> = try CompositeType(matches[1])
-            .components(or: TokenError.invalidAnnotation(annotation))
+        let type = try AbstractType(value: CompositeType(matches[1]))
         
         return ReferenceAnnotation(style: .comment,
                                    name: matches[0],
-                                   types: types)
+                                   type: type,
+                                   closureParameters: [])
     }
     
     public var description: String {
-        return "\(name) <- \(types.map { $0.description }.sorted().joined(separator: " & "))"
+        return "\(name) <- \(type.description)"
     }
 }
 
@@ -122,8 +124,7 @@ public struct ParameterAnnotation: Token, Hashable {
 
         print(matches[1])
         
-        let type: ConcreteType = try CompositeType(matches[1])
-            .singleType(or: TokenError.invalidAnnotation(annotation))
+        let type = try ConcreteType(value: CompositeType(matches[1]))
         
         return ParameterAnnotation(style: .comment,
                                    name: matches[0],

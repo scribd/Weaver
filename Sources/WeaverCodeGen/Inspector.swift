@@ -23,6 +23,7 @@ public final class Inspector {
     public func validate() throws {
         for dependency in dependencyGraph.dependencies where dependency.kind.isResolvable {
             try validateConfiguration(of: dependency)
+            try validatePropertyWrapper(of: dependency)
             try resolve(dependency)
             try build(dependency)
         }
@@ -142,8 +143,8 @@ private extension Inspector {
         var _dependencyNames: Set<String>?
         if let concreteType = dependency.type.concreteType {
             _dependencyNames = dependencyContainer.dependencyNamesByConcreteType[concreteType]
-        } else if dependency.type.abstractTypes.isEmpty == false {
-            let dependencyNames = Set(dependency.type.abstractTypes.flatMap { abstractType in
+        } else if dependency.type.abstractType.isEmpty == false {
+            let dependencyNames = Set(dependency.type.abstractType.flatMap { abstractType in
                 dependencyContainer.dependencyNamesByAbstractType[abstractType] ?? []
             })
             if dependencyNames.isEmpty == false {
@@ -182,8 +183,8 @@ private extension Inspector {
                         $0.kind != .reference
                     }.filter {
                         $0.type.concreteType == dependency.type.concreteType ||
-                        dependency.type.abstractTypes.contains($0.type.concreteType) ||
-                        $0.type.abstractTypes.contains(dependency.type.concreteType)
+                        dependency.type.abstractType.isSuperset(of: $0.type.concreteType) ||
+                        $0.type.abstractType.isSuperset(of: dependency.type.concreteType)
                     }.first
                     
                     if let candidate = _candidate {
@@ -198,7 +199,7 @@ private extension Inspector {
             
         } else {
             
-            let concreteTypes = Set(dependency.type.abstractTypes.flatMap { type -> [ConcreteType] in
+            let concreteTypes = Set(dependency.type.abstractType.flatMap { type -> [ConcreteType] in
                 guard let concreteTypes = dependencyGraph.concreteTypes[type] else { return [] }
                 return Array(concreteTypes.values)
             })
@@ -212,7 +213,7 @@ private extension Inspector {
                 throw InspectorAnalysisHistoryRecord.implicitType(dependency, candidates: candidates)
             } else if let concreteType = dependency.type.concreteType,
                 let abstractTypes = dependencyGraph.abstractTypes[concreteType],
-                abstractTypes.isEmpty == false {
+                abstractTypes.value.isEmpty == false {
                 
                 let candidates = abstractTypes.flatMap { type -> [Dependency] in
                     guard let dependencyNames = dependencyContainer.dependencyNamesByAbstractType[type] else { return [] }
@@ -329,6 +330,27 @@ private extension Inspector {
              .weak,
              .transient:
             break
+        }
+    }
+}
+
+// MARK: - Property Wrappers check
+
+private extension Inspector {
+    
+    func validatePropertyWrapper(of dependency: Dependency) throws {
+        guard dependency.annotationStyle == .propertyWrapper else { return }
+
+        let target = try dependencyGraph.dependencyContainer(for: dependency)
+        guard dependency.closureParameters.count == target.parameters.count else {
+            throw InspectorError.invalidDependencyGraph(dependency, underlyingError: InspectorAnalysisError.typeMismatch)
+        }
+        
+        for (index, closureParameter) in dependency.closureParameters.enumerated() {
+            let parameter = target.parameters[index]
+            guard parameter.type.anyType == closureParameter.type else {
+                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: InspectorAnalysisError.typeMismatch)
+            }
         }
     }
 }

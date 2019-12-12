@@ -32,13 +32,13 @@ enum ParserError: Error {
 
 enum LinkerError: Error {
     case foundAnnotationOutsideOfType(FileLocation)
-    case unknownType(FileLocation?, type: AnyType)
+    case unknownType(FileLocation?, type: CompositeType)
     case dependencyNotFound(FileLocation?, dependencyName: String)
 }
 
 enum DependencyGraphError: Error {
-    case dependencyContainerNotFound(FileLocation?, type: AnyType?)
-    case invalidAbstractTypeComposition(FileLocation?, types: Set<AbstractType>, candidates: [(String, ConcreteType)])
+    case dependencyContainerNotFound(FileLocation?, type: CompositeType?)
+    case invalidAbstractTypeComposition(FileLocation?, type: AbstractType, candidates: [(String, ConcreteType)])
 }
 
 enum SwiftGeneratorError: Error {
@@ -57,7 +57,7 @@ enum InspectorError: Error {
 enum InspectorAnalysisError: Error {
     case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
-    case isolatedResolverCannotHaveReferents(type: AnyType?, referents: [DependencyContainer])
+    case isolatedResolverCannotHaveReferents(type: CompositeType?, referents: [DependencyContainer])
     case typeMismatch
 }
 
