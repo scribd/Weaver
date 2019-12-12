@@ -315,7 +315,7 @@ private var api: APIRequest<T, P>
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1].description, "api = Request<T, P> <- APIRequest<T, P> - 99[25] - at line: 2")
+                XCTAssertEqual(tokens[1].description, "api = Request<T, P> <- APIRequest<T, P> - 91[25] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -487,7 +487,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1].description, "request <- Request<T, P> - 65[26] - at line: 2")
+                XCTAssertEqual(tokens[1].description, "request <- Request<T, P> - 64[26] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -530,7 +530,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1].description, "request <- Optional<Request<T, P>> - 65[27] - at line: 2")
+                XCTAssertEqual(tokens[1].description, "request <- Optional<Request<T, P>> - 64[27] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
