@@ -29,7 +29,7 @@ struct SourceKitDependencyAnnotation {
           lines: [(content: String, range: NSRange)],
           file: String?,
           line: Int) throws {
-        
+
         guard let kindString = dictionary[SwiftDocKey.kind.rawValue] as? String,
               let kind = SwiftDeclarationKind(rawValue: kindString),
               kind == .varInstance else {
@@ -93,7 +93,6 @@ struct SourceKitDependencyAnnotation {
         case .tuple:
             throw TokenError.invalidAnnotation(annotationString)
         }
-        
         
         guard let annotationBuilder = try SourceKitDependencyAnnotation.parseBuilder(annotationString) else {
             return nil

@@ -177,4 +177,13 @@ final class AnyTypeTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_init_should_build_correctly_with_closure_taking_a_tuple_as_a_parameter() {
+        do {
+            let type = try CompositeType("((foo: Int, bar: Int)) -> ()")
+            XCTAssertEqual(type.description, "((foo: Int, bar: Int)) -> ()")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }

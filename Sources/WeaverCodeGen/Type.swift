@@ -329,47 +329,17 @@ private final class TypeParser {
     }
     
     private func parseTupleOrClosure() throws -> CompositeType {
-        var parameters = [TupleComponent]()
-        if consumeToken(.delimiter(.tupleClose)) == false {
-            repeat {
-                var alias: String?
-                var name: String?
-                if case .typeName(let value) = currentToken {
-                    consumeToken()
-                    alias = value
-                }
-                if currentToken == .delimiter(.tupleClose) ||
-                   currentToken == .delimiter(.comma) ||
-                   currentToken == .delimiter(.colon) {
-                    alias = nil
-                    revertToken()
-                }
-                if case .typeName(let value) = currentToken {
-                    consumeToken()
-                    name = value
-                }
-                if currentToken == .delimiter(.tupleClose) ||
-                   currentToken == .delimiter(.comma) {
-                    name = nil
-                    revertToken()
-                }
-                if name != nil {
-                    try consumeTokenOrBail(.delimiter(.colon))
-                }
-                let type = try parse()
-                parameters.append(TupleComponent(alias: alias, name: name, type: type))
-            } while consumeToken(.delimiter(.comma))
-            try consumeTokenOrBail(.delimiter(.tupleClose))
-        }
-        
+        let tuple = try parseTuple()
+
         switch currentToken {
         case .delimiter(.closureArrow):
             consumeToken()
             let returnType = try parse()
-            return .closure(Closure(tuple: parameters, returnType: returnType))
+            return .closure(Closure(tuple: tuple, returnType: returnType))
 
-        case .none:
-            return .tuple(parameters)
+        case .none,
+             .delimiter(.tupleClose):
+            return .tuple(tuple)
 
         case .delimiter(let delimiter):
             throw TokenError.invalidTokenInType(type: string, token: delimiter.rawValue)
@@ -377,6 +347,54 @@ private final class TypeParser {
         case .typeName(let name):
             throw TokenError.invalidTokenInType(type: string, token: name)
         }
+    }
+    
+    private func parseTuple() throws -> [TupleComponent] {
+
+        guard currentToken != .delimiter(.tupleClose) else {
+            consumeToken()
+            return []
+        }
+
+        var parameters = [TupleComponent]()
+        repeat {
+            var alias: String?
+            var name: String?
+            
+            if case .typeName(let value) = currentToken {
+                consumeToken()
+                alias = value
+                
+                if currentToken == .delimiter(.tupleClose) ||
+                   currentToken == .delimiter(.comma) ||
+                   currentToken == .delimiter(.colon) {
+                    alias = nil
+                    revertToken()
+                }
+            }
+            
+            if case .typeName(let value) = currentToken {
+                consumeToken()
+                name = value
+                
+                if currentToken == .delimiter(.tupleClose) ||
+                   currentToken == .delimiter(.comma) {
+                    name = nil
+                    revertToken()
+                }
+            }
+            
+            if name != nil {
+                try consumeTokenOrBail(.delimiter(.colon))
+            }
+
+            let type = try parse()
+            parameters.append(TupleComponent(alias: alias, name: name, type: type))
+
+        } while consumeToken(.delimiter(.comma))
+
+        try consumeTokenOrBail(.delimiter(.tupleClose))
+        return parameters
     }
     
     private func parseUnwraps(for type: CompositeType) -> CompositeType {

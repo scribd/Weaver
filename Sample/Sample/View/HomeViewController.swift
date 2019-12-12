@@ -24,7 +24,7 @@ final class HomeViewController: UIViewController {
 
     @WeaverP2(.registration, type: MovieViewController.self, scope: .weak)
     private var movieController: (UInt, String) -> UIViewController
-        
+
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .white
