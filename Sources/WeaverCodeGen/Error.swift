@@ -13,6 +13,7 @@ enum TokenError: Error {
     case invalidConfigurationAttributeValue(value: String, expected: String)
     case invalidConfigurationAttributeTarget(name: String, target: ConfigurationAttributeTarget)
     case unknownConfigurationAttribute(name: String)
+    case invalidTokenInType(type: String, token: String?)
 }
 
 enum LexerError: Error {
@@ -30,12 +31,12 @@ enum ParserError: Error {
 
 enum LinkerError: Error {
     case foundAnnotationOutsideOfType(FileLocation)
-    case unknownType(FileLocation?, type: AnyType)
+    case unknownType(FileLocation?, type: AnyType<Void>)
     case dependencyNotFound(FileLocation?, dependencyName: String)
 }
 
 enum DependencyGraphError: Error {
-    case dependencyContainerNotFound(FileLocation?, type: AnyType?)
+    case dependencyContainerNotFound(FileLocation?, type: AnyType<Void>?)
     case invalidAbstractTypeComposition(FileLocation?, types: Set<AbstractType>, candidates: [(String, ConcreteType)])
 }
 
@@ -55,7 +56,7 @@ enum InspectorError: Error {
 enum InspectorAnalysisError: Error {
     case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
-    case isolatedResolverCannotHaveReferents(type: AnyType?, referents: [DependencyContainer])
+    case isolatedResolverCannotHaveReferents(type: AnyType<Void>?, referents: [DependencyContainer])
     case typeMismatch
 }
 
@@ -121,6 +122,8 @@ extension TokenError: CustomStringConvertible {
             return "Can't assign configuration attribute '\(name)' on '\(target)'"
         case .unknownConfigurationAttribute(let name):
             return "Unknown configuration attribute: '\(name)'"
+        case .invalidTokenInType(let type, let token):
+            return "Invalid token '\(token ?? "eot")' in type '\(type)'"
         }
     }
 }
@@ -166,7 +169,7 @@ extension DependencyGraphError: CustomStringConvertible {
             }
         case .invalidAbstractTypeComposition(let location, let types, let candidates):
             let message = "Invalid type composition: '\(types.lazy.map { $0.description }.sorted().joined(separator: " & "))'"
-            let note = "Found candidates: '\(candidates.map { "\($0): \($1)" }.joined(separator: ", "))'"
+            let note = "Found candidates: '\(candidates.map { "\($0): \($1.description)" }.joined(separator: ", "))'"
             if let location = location {
                 return [
                     location.xcodeLogString(.error, message),
@@ -203,9 +206,9 @@ extension InspectorError: CustomStringConvertible {
     var description: String {
         switch self {
         case .invalidAST(let location, let token):
-            return location.xcodeLogString(.error, "Invalid AST because of token: \(token)")
+            return location.xcodeLogString(.error, "Invalid AST because of token: \(token.description)")
         case .invalidDependencyGraph(let dependency, let underlyingIssue):
-            var description = dependency.xcodeLogString(.error, "Invalid dependency: '\(dependency.dependencyName): \(dependency.type)'. \(underlyingIssue)")
+            var description = dependency.xcodeLogString(.error, "Invalid dependency: '\(dependency.dependencyName): \(dependency.type.description)'. \(underlyingIssue)")
             if let notes = underlyingIssue.notes {
                 description = ([description] + notes.map { $0.description }).joined(separator: "\n")
             }
@@ -239,7 +242,7 @@ extension InspectorAnalysisError: CustomStringConvertible {
             return history
         case .isolatedResolverCannotHaveReferents(let type, let referents):
             return referents.map { referent in
-                let message = "'\(referent.type)' " +
+                let message = "'\(referent.type.description)' " +
                     "cannot depend on '\(type?.description ?? "_")' because it is flagged as 'isolated'. " +
                     "You may want to set '\(type?.description ?? "_").isIsolated' to 'false'"
                 return referent.xcodeLogString(.error, message)
@@ -255,17 +258,17 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
     var description: String {
         switch self {
         case .dependencyNotFound(let dependency, let dependencyContainer):
-            return dependencyContainer.xcodeLogString(.warning, "Could not find the dependency '\(dependency.dependencyName)' in '\(dependencyContainer.type)'. You may want to register it here to solve this issue")
+            return dependencyContainer.xcodeLogString(.warning, "Could not find the dependency '\(dependency.dependencyName)' in '\(dependencyContainer.type.description)'. You may want to register it here to solve this issue")
         case .triedToBuildType(let dependencyContainer, let stepCount):
-            return dependencyContainer.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(dependencyContainer.type)'")
+            return dependencyContainer.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(dependencyContainer.type.description)'")
         case .triedToResolveDependencyInType(let dependency, let stepCount):
-            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.dependencyName)' in type '\(dependency.source)'")
+            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.dependencyName)' in type '\(dependency.source.description)'")
         case .triedToResolveDependencyInRootType(let dependencyContainer):
-            return dependencyContainer.xcodeLogString(.warning, "Type '\(dependencyContainer.type)' doesn't seem to be attached to the dependency graph. You might have to use `self.isIsolated = true` or register it somewhere")
+            return dependencyContainer.xcodeLogString(.warning, "Type '\(dependencyContainer.type.description)' doesn't seem to be attached to the dependency graph. You might have to use `self.isIsolated = true` or register it somewhere")
         case .typeMismatch(let dependency, let candidate):
             return """
-            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' has a mismatching type '\(dependency.type)'"))
-            \(candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type)'"))
+            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' has a mismatching type '\(dependency.type.description)'"))
+            \(candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type.description)'"))
             """
         case .implicitDependency(let dependency, let candidates):
             return """
@@ -276,9 +279,9 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
             """
         case .implicitType(let dependency, let candidates):
             return """
-            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' has an implicit type '\(dependency.type)'.")) You can desambiguate by using one of the candidate dependency names.
+            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' has an implicit type '\(dependency.type.description)'.")) You can desambiguate by using one of the candidate dependency names.
             \(candidates.map { candidate in
-                candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type)'")
+            candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type.description)'")
             }.joined(separator: ".\n"))
             """
         }

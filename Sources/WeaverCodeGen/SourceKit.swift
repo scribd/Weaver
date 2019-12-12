@@ -54,18 +54,7 @@ struct SourceKitDependencyAnnotation {
         guard let typename = dictionary[SwiftDocKey.typeName.rawValue] as? String else {
             return nil
         }
-        
-        abstractTypes = Set(try typename.split(separator: "&").lazy.map {
-            $0.trimmingCharacters(in: .whitespacesAndNewlines)
-        }.compactMap { typeString in
-            let components = typeString.split(separator: " ").map { $0.trimmingCharacters(in: .whitespaces) }
-            if let lastComponent = components.last {
-                return try AbstractType(lastComponent)
-            } else {
-                return try AbstractType(typeString)
-            }
-        })
-        
+                
         if let accessLevelString = dictionary["key.accessibility"] as? String {
             accessLevel = AccessLevel(accessLevelString)
         } else {
@@ -95,6 +84,16 @@ struct SourceKitDependencyAnnotation {
             .map { $0.content.trimmingCharacters(in: .whitespaces) }
             .joined(separator: " ")
         self.annotationString = annotationString
+
+        switch try CompositeType(typename) {
+        case .components(let components):
+            abstractTypes = Set(components.lazy.map {  $0.abstractType })
+        case .closure(let closure):
+            abstractTypes = try closure.returnType.components(or: TokenError.invalidAnnotation(annotationString))
+        case .tuple:
+            throw TokenError.invalidAnnotation(annotationString)
+        }
+        
         
         guard let annotationBuilder = try SourceKitDependencyAnnotation.parseBuilder(annotationString) else {
             return nil
@@ -123,7 +122,7 @@ struct SourceKitDependencyAnnotation {
         guard let structure = structures.first else { return nil }
         
         guard let annotationTypeString = structure[SwiftDocKey.name.rawValue] as? String else { return nil }
-        guard annotationTypeString.hasPrefix("Weaver") else { return nil }
+        guard annotationTypeString.lowercased().hasPrefix("weaver") else { return nil }
 
         var concreteType: ConcreteType?
         var configurationAttributes = [ConfigurationAttribute]()
@@ -150,7 +149,8 @@ struct SourceKitDependencyAnnotation {
                 guard let value = keyValue.last else { continue }
 
                 if attributeName == "type" {
-                    concreteType = try ConcreteType(value.replacingOccurrences(of: ".self", with: ""))
+                    let value = value.replacingOccurrences(of: ".self", with: "")
+                    concreteType = try CompositeType(value).singleType(or: TokenError.invalidAnnotation(annotationString))
                 } else {
                     configurationAttributes.append(
                         try ConfigurationAttribute(name: attributeName, valueString: value)
@@ -211,17 +211,16 @@ struct SourceKitTypeDeclaration {
         }
 
         do {
-            guard let typeString = dictionary[SwiftDocKey.name.rawValue] as? String,
-                  let type = try ConcreteType(typeString) else {
+            guard var typeString = dictionary[SwiftDocKey.name.rawValue] as? String else {
                 return nil
             }
-
-            if let matches = try NSRegularExpression(pattern: "(\(type.name)<.*>)").matches(in: lineString),
-               let _type = try ConcreteType(matches[0]) {
-                self.type = _type
-            } else {
-                self.type = type
+            
+            let components = lineString.components(separatedBy: typeString)
+            if components.count > 1 {
+                typeString += components[1].trimmingCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: "{")))
             }
+            
+            type = try CompositeType(typeString).singleType(or: TokenError.invalidAnnotation(lineString))
         } catch {
             return nil
         }
@@ -257,7 +256,7 @@ extension SourceKitDependencyAnnotation {
             let annotation = RegisterAnnotation(style: .propertyWrapper,
                                                 name: name,
                                                 type: type,
-                                                protocolTypes: abstractTypes)
+                                                abstractTypes: abstractTypes)
  
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,

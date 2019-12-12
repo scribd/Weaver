@@ -16,7 +16,7 @@ public protocol AnyTokenBox: Codable, CustomStringConvertible {
     var line: Int { get set }
 }
 
-public struct TokenBox<T: Token & Hashable>: AnyTokenBox, Hashable {
+public struct TokenBox<T>: AnyTokenBox, Hashable where T: Token, T: Hashable {
     let value: T
     public let offset: Int
     public let length: Int
@@ -28,7 +28,7 @@ public struct TokenBox<T: Token & Hashable>: AnyTokenBox, Hashable {
 }
 
 public protocol Token: CustomStringConvertible, Codable {
-    static func create(_ string: String) throws -> Self?
+    static func create(fromComment annotation: String) throws -> Self?
 }
 
 public enum AnnotationStyle: String, Hashable {
@@ -43,41 +43,43 @@ public struct RegisterAnnotation: Token, Hashable {
     let style: AnnotationStyle
     let name: String
     let type: ConcreteType
-    let protocolTypes: Set<AbstractType>
+    let abstractTypes: Set<AbstractType>
     
-    public static func create(_ string: String) throws -> RegisterAnnotation? {
-        guard let matches = NSRegularExpression.register.matches(in: string) else {
+    public static func create(fromComment annotation: String) throws -> RegisterAnnotation? {
+        guard let matches = NSRegularExpression.register.matches(in: annotation) else {
+            return nil
+        }
+        
+        let valueComponents = matches[1]
+            .replacingOccurrences(of: "<-", with: "|")
+            .lazy
+            .split(separator: "|")
+            .map { String($0) }
+
+        guard valueComponents.isEmpty == false && valueComponents.count <= 2 else {
             return nil
         }
 
-        var protocolTypes = [AbstractType]()
-        let arrowIndex = matches.firstIndex { $0.hasPrefix("<-") }
-        if let arrowIndex = arrowIndex, arrowIndex + 1 < matches.count, let type = try AbstractType(matches[arrowIndex + 1]) {
-            protocolTypes.append(type)
-            
-            for (index, match) in matches.enumerated() where match.hasPrefix("&") {
-                if let type = try AbstractType(matches[index + 1]) {
-                    protocolTypes.append(type)
-                } else {
-                    return nil
-                }
-            }
-        }
-        
-        guard let type = try ConcreteType(matches[1]) else {
-            return nil
+        let type: ConcreteType = try CompositeType(valueComponents[0])
+            .singleType(or: TokenError.invalidAnnotation(annotation))
+
+        let abstractTypes: Set<AbstractType>
+        if valueComponents.count > 1 {
+            abstractTypes = try CompositeType(valueComponents[1]).components(or: TokenError.invalidAnnotation(annotation))
+        } else {
+            abstractTypes = Set()
         }
         
         return RegisterAnnotation(style: .comment,
                                   name: matches[0],
                                   type: type,
-                                  protocolTypes: Set(protocolTypes))
+                                  abstractTypes: abstractTypes)
     }
     
     public var description: String {
-        var s = "\(name) = \(type)"
-        if protocolTypes.isEmpty == false {
-            s += " <- \(protocolTypes.lazy.map { $0.description }.sorted())"
+        var s = "\(name) = \(type.description)"
+        if abstractTypes.isEmpty == false {
+            s += " <- \(abstractTypes.map { $0.description }.sorted().joined(separator: " & "))"
         }
         return s
     }
@@ -89,26 +91,21 @@ public struct ReferenceAnnotation: Token, Hashable {
     public let name: String
     public let types: Set<AbstractType>
     
-    public static func create(_ string: String) throws -> ReferenceAnnotation? {
-        guard let matches = NSRegularExpression.reference.matches(in: string) else {
+    public static func create(fromComment annotation: String) throws -> ReferenceAnnotation? {
+        guard let matches = NSRegularExpression.reference.matches(in: annotation) else {
             return nil
         }
-        guard let firstType = try AbstractType(matches[1]) else {
-            return nil
-        }
-        var types = [firstType]
-        for (index, match) in matches.enumerated() where match.hasPrefix("&") {
-            if let type = try AbstractType(matches[index + 1]) {
-                types.append(type)
-            } else {
-                return nil
-            }
-        }
-        return ReferenceAnnotation(style: .comment, name: matches[0], types: Set(types))
+        
+        let types: Set<AbstractType> = try CompositeType(matches[1])
+            .components(or: TokenError.invalidAnnotation(annotation))
+        
+        return ReferenceAnnotation(style: .comment,
+                                   name: matches[0],
+                                   types: types)
     }
     
     public var description: String {
-        return "\(name) <- \(types.lazy.map { $0.description }.sorted())"
+        return "\(name) <- \(types.map { $0.description }.sorted().joined(separator: " & "))"
     }
 }
 
@@ -118,18 +115,21 @@ public struct ParameterAnnotation: Token, Hashable {
     public let name: String
     public let type: ConcreteType
     
-    public static func create(_ string: String) throws -> ParameterAnnotation? {
-        guard let matches = NSRegularExpression.parameter.matches(in: string) else {
+    public static func create(fromComment annotation: String) throws -> ParameterAnnotation? {
+        guard let matches = NSRegularExpression.parameter.matches(in: annotation) else {
             return nil
         }
-        guard let type = try ConcreteType(matches[1]) else {
-            return nil
-        }
-        return ParameterAnnotation(style: .comment, name: matches[0], type: type)
+
+        let type: ConcreteType = try CompositeType(matches[1])
+            .singleType(or: TokenError.invalidAnnotation(annotation))
+
+        return ParameterAnnotation(style: .comment,
+                                   name: matches[0],
+                                   type: type)
     }
     
     public var description: String {
-        return "\(name) <= \(type)"
+        return "\(name) <= \(type.description)"
     }
 }
 
@@ -148,8 +148,8 @@ public struct ConfigurationAnnotation: Token, Hashable {
         return UniqueIdentifier(name: attribute.name, target: target)
     }
     
-    public static func create(_ string: String) throws -> ConfigurationAnnotation? {
-        guard let matches = NSRegularExpression.configuration.matches(in: string) else {
+    public static func create(fromComment annotation: String) throws -> ConfigurationAnnotation? {
+        guard let matches = NSRegularExpression.configuration.matches(in: annotation) else {
             return nil
         }
         
@@ -172,7 +172,7 @@ public struct ConfigurationAnnotation: Token, Hashable {
     }
     
     public var description: String {
-        return "\(target).\(attribute)"
+        return "\(target.description).\(attribute.description)"
     }
 }
 
@@ -180,8 +180,8 @@ public struct ImportDeclaration: Token, Hashable {
     
     let moduleName: String
     
-    public static func create(_ string: String) throws -> ImportDeclaration? {
-        guard let matches = NSRegularExpression.import.matches(in: string) else {
+    public static func create(fromComment annotation: String) throws -> ImportDeclaration? {
+        guard let matches = NSRegularExpression.import.matches(in: annotation) else {
             return nil
         }
         
@@ -205,7 +205,7 @@ public struct InjectableType: Token, Hashable {
     }
     
     public var description: String {
-        return "\(accessLevel.rawValue) \(type) {"
+        return "\(accessLevel.rawValue) \(type.description) {"
     }
 }
 
@@ -259,19 +259,19 @@ public enum TokenBuilder {
             return TokenBox(value: token, offset: offset, length: length, line: line)
         }
         
-        if let token = try ConfigurationAnnotation.create(body) {
+        if let token = try ConfigurationAnnotation.create(fromComment: body) {
             return makeTokenBox(token)
         }
-        if let token = try RegisterAnnotation.create(body) {
+        if let token = try RegisterAnnotation.create(fromComment: body) {
             return makeTokenBox(token)
         }
-        if let token = try ReferenceAnnotation.create(body) {
+        if let token = try ReferenceAnnotation.create(fromComment: body) {
             return makeTokenBox(token)
         }
-        if let token = try ParameterAnnotation.create(body) {
+        if let token = try ParameterAnnotation.create(fromComment: body) {
             return makeTokenBox(token)
         }
-        if let token = try ImportDeclaration.create(body) {
+        if let token = try ImportDeclaration.create(fromComment: body) {
             return makeTokenBox(token)
         }
         throw TokenError.invalidAnnotation(annotation)
@@ -281,7 +281,7 @@ public enum TokenBuilder {
 // MARK: - Default implementations
 
 extension Token {
-    public static func create(_ string: String) throws -> Self? {
+    public static func create(fromComment annotation: String) throws -> Self? {
         return nil
     }
 }

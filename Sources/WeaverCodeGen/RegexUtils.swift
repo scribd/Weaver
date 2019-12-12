@@ -53,37 +53,16 @@ extension NSTextCheckingResult {
 // MARK: - Patterns
 
 private enum Patterns {
-    private static let spaces = "\\s*"
-    private static let equal = "\(spaces)=\(spaces)"
-    private static let arrow = "\(spaces)<-\(spaces)"
-    private static let doubleArrow = "\(spaces)<=\(spaces)"
-    private static let name = "\\w+"
-    private static let typeNamePart = "\(name)(\\.\(name))*"
-
-    private static let typeName = "(\(genericType))|(\(arrayType))|(\(dictType))"
-    private static let arrayType = "\\[\(spaces)(\(genericType)\\??)\(spaces)\\]\\??"
-    private static let dictType = "\\[\(spaces)(\(genericType)\\??)\(spaces):\(spaces)(\(genericType)\\??)\(spaces)\\]\\??"
-    private static let variadicTypes = "(&\(spaces)\(typeName)\(spaces))*"
-
-    static let arrayTypeWithNamedGroups = "\\[\(spaces)(?<value>\(genericType)\\??)\(spaces)\\]\\??"
-    static let dictTypeWithNamedGroups = "\\[\(spaces)(?<key>\(genericType)\\??)\(spaces):\(spaces)(?<value>\(genericType)\\??)\(spaces)\\]\\??"
-    static let genericTypePart = "<\(typeNamePart)(\(spaces),\(spaces)\(typeNamePart))*>"
-    static let genericType = "(\(typeNamePart))(\(genericTypePart))?\\??"
-
-    static let register = "^(\(name))\(equal)(\(typeName))\(spaces)(\(arrow)(\(typeName))\(spaces)\(variadicTypes))?$"
-    static let reference = "^(\(name))\(arrow)(\(typeName))\(spaces)\(variadicTypes)$"
-    static let parameter = "^(\(name))\(doubleArrow)(\(typeName))\(spaces)$"
-    static let scope = "^(\(name))\\.scope\(equal)\\.(\(name))\(spaces)$"
-    static let configuration = "^(\(name))\\.(\(name))\(equal)(.*)\(spaces)$"
-    static let `import` = "^import\\s+(\(name))\(spaces)$"
+    static let register = "^(\\w+)\\s*=\\s*(.+)?"
+    static let reference = "^(\\w+)\\s*<-\\s*(.+)"
+    static let parameter = "^(\\w+)\\s*<=\\s*(.+)"
+    static let scope = "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)"
+    static let configuration = "^(\\w+)\\.(\\w+)\\s*=\\s*(.+)"
+    static let `import` = "^import\\s+(\\w+)"
     static let snakeCased = "([a-z0-9])([A-Z])"
 }
 
 extension NSRegularExpression {
-    static let arrayTypeWithNamedGroups = try! NSRegularExpression(pattern: "^(\(Patterns.arrayTypeWithNamedGroups))$")
-    static let dictTypeWithNamedGroups = try! NSRegularExpression(pattern: "^(\(Patterns.dictTypeWithNamedGroups))$")
-    static let genericTypePart = try! NSRegularExpression(pattern: "(\(Patterns.genericTypePart))")
-    static let genericType = try! NSRegularExpression(pattern: "^(\(Patterns.genericType))$")
     static let register = try! NSRegularExpression(pattern: Patterns.register)
     static let reference = try! NSRegularExpression(pattern: Patterns.reference)
     static let parameter = try! NSRegularExpression(pattern: Patterns.parameter)

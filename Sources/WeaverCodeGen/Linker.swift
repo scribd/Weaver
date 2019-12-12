@@ -342,8 +342,8 @@ private extension Linker {
         
         for (expr, _, _) in ExprSequence(exprs: syntaxTrees) {
             if let token = expr.toRegisterAnnotation() {
-                if token.value.protocolTypes.isEmpty == false {
-                    for abstractType in token.value.protocolTypes {
+                if token.value.abstractTypes.isEmpty == false {
+                    for abstractType in token.value.abstractTypes {
                         var concreteTypes = dependencyGraph.concreteTypes[abstractType] ?? [:]
                         concreteTypes[token.value.name] = token.value.type
                         dependencyGraph.concreteTypes[abstractType] = concreteTypes
@@ -375,12 +375,12 @@ private extension Linker {
                 }
                 
                 guard let sourceDependencyContainer = dependencyGraph.dependencyContainers[source] else {
-                    throw LinkerError.unknownType(location, type: source)
+                    throw LinkerError.unknownType(location, type: source.voidType)
                 }
 
                 let dependency = Dependency(kind: .registration,
                                             dependencyName: token.value.name,
-                                            type: .init(token.value.type, token.value.protocolTypes),
+                                            type: .init(token.value.type, token.value.abstractTypes),
                                             source: source,
                                             annotationStyle: token.value.style,
                                             fileLocation: location)
@@ -398,7 +398,7 @@ private extension Linker {
                 }
                 
                 guard let sourceDependencyContainer = dependencyGraph.dependencyContainers[source] else {
-                    throw LinkerError.unknownType(location, type: source)
+                    throw LinkerError.unknownType(location, type: source.voidType)
                 }
 
                 let dependencyType = dependencyGraph.dependencyType(for: token.value.types,
@@ -420,7 +420,7 @@ private extension Linker {
                 }
 
                 guard let sourceDependencyContainer = dependencyGraph.dependencyContainers[source] else {
-                    throw LinkerError.unknownType(location, type: source)
+                    throw LinkerError.unknownType(location, type: source.voidType)
                 }
 
                 let dependency = Dependency(kind: .parameter,
@@ -456,7 +456,7 @@ private extension Linker {
         for (type, attributes) in configurationAnnotations {
             
             guard let dependencyContainer = dependencyGraph.dependencyContainers[type] else {
-                throw LinkerError.unknownType(nil, type: type)
+                throw LinkerError.unknownType(nil, type: type.voidType)
             }
             
             for (dependencyName, attributes) in attributes {
@@ -500,7 +500,7 @@ extension Dependency.`Type` {
         case .concrete(let type):
             return type.description
         case .full(let concreteType, let abstractTypes):
-            return "\(concreteType) <- \(abstractTypes.map { $0.description }.joined(separator: " & "))"
+            return "\(concreteType.description) <- \(abstractTypes.map { $0.description }.joined(separator: " & "))"
         }
     }
 }
@@ -511,7 +511,7 @@ extension DependencyGraph {
     
     func dependencyContainer(for concreteType: ConcreteType, at location: FileLocation? = nil) throws -> DependencyContainer {
         guard let value = dependencyContainers[concreteType] else {
-            throw DependencyGraphError.dependencyContainerNotFound(location, type: concreteType)
+            throw DependencyGraphError.dependencyContainerNotFound(location, type: concreteType.voidType)
         }
         return value
     }
@@ -520,7 +520,7 @@ extension DependencyGraph {
         let concreteType = try self.concreteType(for: dependency)
         
         guard let dependencyContainer = dependencyContainers[concreteType] else {
-            throw DependencyGraphError.dependencyContainerNotFound(dependency.fileLocation, type: concreteType)
+            throw DependencyGraphError.dependencyContainerNotFound(dependency.fileLocation, type: concreteType.voidType)
         }
         
         return dependencyContainer
@@ -647,14 +647,15 @@ extension Dependency.`Type` {
         }
     }
     
-    var types: Set<AnyType> {
+    var types: Set<AnyType<Void>> {
         switch self {
         case .full(let concreteType, let abstractTypes):
-            return abstractTypes.isEmpty ? Set([concreteType]) : abstractTypes
+            return abstractTypes.isEmpty ?
+                Set([concreteType.voidType]) : Set(abstractTypes.lazy.map { $0.voidType })
         case .abstract(let types):
-            return types
+            return Set(types.lazy.map { $0.voidType })
         case .concrete(let type):
-            return Set([type])
+            return Set([type.voidType])
         }
     }
     
@@ -698,7 +699,7 @@ extension Set where Element == AbstractType {
     }
 }
 
-extension Sequence where Element: AnyType {
+extension Sequence where Element: CustomStringConvertible {
     
     var sorted: [Element] {
         return sorted { $0.description < $1.description }

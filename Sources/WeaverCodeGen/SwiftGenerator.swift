@@ -96,11 +96,11 @@ private final class MetaDependencyDeclaration: Hashable {
         var desambiguationString = String()
         if includeParametersInName {
             desambiguationString += parameters.map { parameter in
-                parameter.dependencyName + parameter.type.types.sorted.map { $0.toTypeName }.joined()
+                parameter.dependencyName + parameter.type.types.map { $0.toTypeName }.sorted().joined()
             }.joined()
         }
         if includeTypeInName {
-            desambiguationString += type.types.sorted.map { $0.toTypeName }.joined()
+            desambiguationString += type.types.map { $0.toTypeName }.sorted().joined()
         }
         guard desambiguationString.isEmpty == false else {
             return nil

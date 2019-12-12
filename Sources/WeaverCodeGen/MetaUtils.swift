@@ -39,12 +39,7 @@ extension Variable {
 extension AnyType {
     
     var typeID: TypeIdentifier {
-        let value = TypeIdentifier(name: name).with(genericParameters: genericNames.map { TypeIdentifier(name: $0) })
-        if isOptional {
-            return .optional(wrapped: value)
-        } else {
-            return value
-        }
+        return TypeIdentifier(name: .custom(description))
     }
 
     var dependencyResolverTypeID: TypeIdentifier {
@@ -68,10 +63,39 @@ extension AnyType {
     }
         
     var toTypeName: String {
-        let optional = isOptional ? "Optional_" : String()
-        let genericNames = self.genericNames.isEmpty == false ?
-            "_\(self.genericNames.joined(separator: "_"))" : String()
-        return "\(optional)\(name)\(genericNames)"
+        let genericNames = parameterTypes.isEmpty == false ?
+            "_\(parameterTypes.map { $0.toTypeName }.joined(separator: "_"))" : String()
+        return "\(name)\(genericNames)"
+    }
+}
+
+extension CompositeType {
+    
+    var toTypeName: String {
+        switch self {
+        case .components(let components):
+            return components.lazy.map { $0.toTypeName }.joined(separator: "_")
+        case .closure(let closure):
+            return closure.toTypeName
+        case .tuple(let parameters):
+            return parameters.lazy.map { $0.toTypeName }.joined(separator: "_")
+        }
+    }
+}
+
+extension CompositeType.Closure {
+    
+    var toTypeName: String {
+        return tuple.lazy.map { $0.toTypeName }.joined(separator: "_") + returnType.toTypeName
+    }
+}
+
+extension CompositeType.TupleParameter {
+    
+    var toTypeName: String {
+        let alias = self.alias.flatMap { "\($0)_" } ?? String()
+        let name = self.name.flatMap { "\($0)_" } ?? String()
+        return "\(alias)\(name)\(type)"
     }
 }
 

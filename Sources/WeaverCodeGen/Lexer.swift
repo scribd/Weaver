@@ -82,7 +82,7 @@ private extension Lexer {
             return try annotation.toTokens()
         }
 
-        let typeDeclaration = SourceKitTypeDeclaration(sourceKitAST)
+        let typeDeclaration = SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content)
         
         if let typeDeclaration = typeDeclaration {
             var startToken = typeDeclaration.toToken
@@ -152,7 +152,7 @@ private extension Lexer {
     func tokenize(from lines: [Line]) throws -> [AnyTokenBox] {
         return try (0..<lines.count).compactMap { index in
             let line = lines[index]
-            guard let token = try ImportDeclaration.create(line.content) else {
+            guard let token = try ImportDeclaration.create(fromComment: line.content) else {
                 return nil
             }
             return TokenBox<ImportDeclaration>(value: token,

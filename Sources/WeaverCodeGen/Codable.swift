@@ -213,56 +213,110 @@ extension AccessLevel: Codable {
     }
 }
 
-extension ConcreteType: Codable {
+extension CompositeType: Codable {
+    
+    private enum Key: String, CodingKey {
+        case key = "k"
+        case value = "v"
+    }
+    
+    private enum ValueKey: String, Codable {
+        case components = "c"
+        case closure = "cl"
+        case tuple = "t"
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: Key.self)
+        switch try container.decode(ValueKey.self, forKey: .key) {
+        case .components:
+            self = .components(try container.decode([AnyType<Void>].self, forKey: .value))
+        case .closure:
+            self = .closure(try container.decode(Closure.self, forKey: .value))
+        case .tuple:
+            self = .tuple(try container.decode([TupleParameter].self, forKey: .value))
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: Key.self)
+        switch self {
+        case .closure(let closure):
+            try container.encode(ValueKey.closure, forKey: .key)
+            try container.encode(closure, forKey: .value)
+        case .components(let components):
+            try container.encode(ValueKey.components, forKey: .key)
+            try container.encode(components, forKey: .value)
+        case .tuple(let parameters):
+            try container.encode(ValueKey.tuple, forKey: .key)
+            try container.encode(parameters, forKey: .value)
+        }
+    }
+}
+
+extension AnyType: Codable {
     
     private enum Key: String, CodingKey {
         case name = "n"
-        case genericNames = "g"
+        case parameterTypes = "g"
         case isOptional = "o"
     }
-    
-    public convenience init(from decoder: Decoder) throws {
+
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
-        self.init(
-            name: try container.decode(String.self, forKey: .name),
-            genericNames: try container.decode([String].self, forKey: .genericNames),
-            isOptional: try container.decode(Bool.self, forKey: .isOptional)
-        )
+        name = try container.decode(String.self, forKey: .name)
+        parameterTypes = try container.decode([CompositeType].self, forKey: .parameterTypes)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(name, forKey: .name)
-        try container.encode(genericNames, forKey: .genericNames)
-        try container.encode(isOptional, forKey: .isOptional)
+        try container.encode(parameterTypes, forKey: .parameterTypes)
     }
 }
 
-extension AbstractType: Codable {
+extension CompositeType.Closure: Codable {
     
     private enum Key: String, CodingKey {
-        case name = "n"
-        case genericNames = "g"
-        case isOptional = "o"
+        case tuple = "t"
+        case returnType = "r"
     }
     
-    public convenience init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
-        self.init(
-            name: try container.decode(String.self, forKey: .name),
-            genericNames: try container.decode([String].self, forKey: .genericNames),
-            isOptional: try container.decode(Bool.self, forKey: .isOptional)
-        )
+        tuple = try container.decode([CompositeType.TupleParameter].self, forKey: .tuple)
+        returnType = try container.decode(CompositeType.self, forKey: .returnType)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
-        try container.encode(name, forKey: .name)
-        try container.encode(genericNames, forKey: .genericNames)
-        try container.encode(isOptional, forKey: .isOptional)
+        try container.encode(tuple, forKey: .tuple)
+        try container.encode(returnType, forKey: .returnType)
     }
 }
 
+extension CompositeType.TupleParameter: Codable {
+    
+    private enum Key: String, CodingKey {
+        case alias = "a"
+        case name = "n"
+        case type = "t"
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: Key.self)
+        alias = try container.decodeIfPresent(String.self, forKey: .alias)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        type = try container.decode(CompositeType.self, forKey: .type)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: Key.self)
+        try container.encode(alias, forKey: .alias)
+        try container.encode(name, forKey: .name)
+        try container.encode(type, forKey: .type)
+    }
+}
 
 extension TokenBox: Codable {
     
@@ -332,7 +386,7 @@ extension RegisterAnnotation {
         case style = "s"
         case name = "n"
         case type = "t"
-        case protocolTypes = "p"
+        case abstractTypes = "a"
     }
     
     public init(from decoder: Decoder) throws {
@@ -340,7 +394,7 @@ extension RegisterAnnotation {
         style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
         type = try container.decode(ConcreteType.self, forKey: .type)
-        protocolTypes = try container.decode(Set<AbstractType>.self, forKey: .protocolTypes)
+        abstractTypes = try container.decode(Set<AbstractType>.self, forKey: .abstractTypes)
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -348,7 +402,7 @@ extension RegisterAnnotation {
         try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
         try container.encode(type, forKey: .type)
-        try container.encode(protocolTypes, forKey: .protocolTypes)
+        try container.encode(abstractTypes, forKey: .abstractTypes)
     }
 }
 

@@ -67,21 +67,21 @@ extension Expr: CustomStringConvertible {
         case .file(let types, let name, _):
             return """
             File[\(name)]
-            \(types.map { " \($0)" }.joined(separator: "\n"))
+            \(types.map { "|- \($0.description)" }.joined(separator: "\n"))
             """
         case .registerAnnotation(let token):
-            return "Register - \(token)"
+            return "Register - \(token.description)"
         case .typeDeclaration(let type, let children):
             return """
-            \(type)
-            \(children.map { "   \($0)" }.joined(separator: "\n"))
+            \(type.description)
+            \(children.map { "|-- \($0.description)" }.joined(separator: "\n"))
             """
         case .referenceAnnotation(let token):
-            return "Reference - \(token)"
+            return "Reference - \(token.description)"
         case .parameterAnnotation(let token):
-            return "Parameter - \(token)"
+            return "Parameter - \(token.description)"
         case .configurationAnnotation(let token):
-            return "Configuration - \(token)"
+            return "Configuration - \(token.description)"
         }
     }
 }

@@ -46,7 +46,7 @@ final class CommandTests: XCTestCase {
     
     func test_weaver_swift_should_create_cache_file() throws {
         try run(command: "swift", with: ".sample.weaver.yaml")
-        XCTAssertEqual(try Constants.cachePath.read().count, 24661)
+        XCTAssertEqual(try Constants.cachePath.read().count, 23434)
     }
     
     func test_weaver_clean_should_remove_cache_file() throws {
