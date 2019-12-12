@@ -31,11 +31,11 @@ public struct TypeWrapper<T: TypeKind>: Hashable, CustomStringConvertible {
     }
 }
 
-public struct AnyType: Hashable {
+struct AnyType: Hashable {
     
-    public let name: String
+    let name: String
     
-    public let parameterTypes: [CompositeType]
+    let parameterTypes: [CompositeType]
     
     init(name: String,
          parameterTypes: [CompositeType] = []) {
@@ -49,23 +49,23 @@ public struct AnyType: Hashable {
     }
 }
 
-public struct Closure: Hashable, CustomStringConvertible {
+struct Closure: Hashable, CustomStringConvertible {
     
-    public let tuple: [TupleComponent]
+    let tuple: [TupleComponent]
     
-    public let returnType: CompositeType
+    let returnType: CompositeType
 }
 
-public struct TupleComponent: Hashable, CustomStringConvertible {
+struct TupleComponent: Hashable, CustomStringConvertible {
     
-    public let alias: String?
+    let alias: String?
     
-    public let name: String?
+    let name: String?
     
-    public let type: CompositeType
+    let type: CompositeType
 }
 
-public indirect enum CompositeType: Hashable, CustomStringConvertible {
+indirect enum CompositeType: Hashable, CustomStringConvertible {
     
     case components([AnyType])
     case closure(Closure)
@@ -81,7 +81,7 @@ public indirect enum CompositeType: Hashable, CustomStringConvertible {
 
 extension AnyType {
 
-    public var description: String {
+    var description: String {
         let generics = "\(parameterTypes.isEmpty ? "" : "<\(parameterTypes.map { $0.description }.joined(separator: ", "))>")"
         return "\(name)\(generics)"
     }
@@ -89,7 +89,7 @@ extension AnyType {
 
 extension TupleComponent {
     
-    public var description: String {
+    var description: String {
         let alias = self.alias.flatMap { "\($0) " } ?? String()
         let name = self.name.flatMap { "\($0): " } ?? String()
         return "\(alias)\(name)\(type)"
@@ -98,14 +98,14 @@ extension TupleComponent {
 
 extension Closure {
     
-    public var description: String {
+    var description: String {
         return "(\(tuple.map { $0.description }.joined(separator: ", "))) -> \(returnType)"
     }
 }
 
 extension CompositeType {
     
-    public var description: String {
+    var description: String {
         switch self {
         case .closure(let closure):
             return closure.description

@@ -226,7 +226,7 @@ extension CompositeType: Codable {
         case tuple = "t"
     }
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         switch try container.decode(ValueKey.self, forKey: .key) {
         case .components:
@@ -238,7 +238,7 @@ extension CompositeType: Codable {
         }
     }
     
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         switch self {
         case .closure(let closure):
@@ -261,13 +261,13 @@ extension AnyType: Codable {
         case parameterTypes = "g"
     }
 
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         name = try container.decode(String.self, forKey: .name)
         parameterTypes = try container.decode([CompositeType].self, forKey: .parameterTypes)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(name, forKey: .name)
         try container.encode(parameterTypes, forKey: .parameterTypes)
@@ -289,13 +289,13 @@ extension Closure: Codable {
         case returnType = "r"
     }
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         tuple = try container.decode([TupleComponent].self, forKey: .tuple)
         returnType = try container.decode(CompositeType.self, forKey: .returnType)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(tuple, forKey: .tuple)
         try container.encode(returnType, forKey: .returnType)
@@ -310,14 +310,14 @@ extension TupleComponent: Codable {
         case type = "t"
     }
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         alias = try container.decodeIfPresent(String.self, forKey: .alias)
         name = try container.decodeIfPresent(String.self, forKey: .name)
         type = try container.decode(CompositeType.self, forKey: .type)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(alias, forKey: .alias)
         try container.encode(name, forKey: .name)
