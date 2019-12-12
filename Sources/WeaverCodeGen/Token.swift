@@ -122,8 +122,6 @@ public struct ParameterAnnotation: Token, Hashable {
             return nil
         }
 
-        print(matches[1])
-        
         let type = try ConcreteType(value: CompositeType(matches[1]))
         
         return ParameterAnnotation(style: .comment,
