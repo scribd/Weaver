@@ -374,7 +374,7 @@ private final class TypeParser {
     private func parseUnwraps(for type: CompositeType) -> CompositeType {
         var type = type
         while consumeToken(.delimiter(.unwrap)) {
-            type = .components([AnyType(name: "Optional", parameterTypes: [parseUnwraps(for: type)])])
+            type = .components([AnyType(name: "Optional", parameterTypes: [type])])
         }
         return type
     }

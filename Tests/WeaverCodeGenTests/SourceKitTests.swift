@@ -97,7 +97,7 @@ final class SourceKitDependencyAnnotationTests: XCTestCase {
     
     func test_init_should_set_abtract_types() throws {
         let model = try makeModel(abstractTypes: "FakeProtocol1 & FakeProtocol2")
-        XCTAssertEqual(model?.abstractTypes.description, "[FakeProtocol1, FakeProtocol2]")
+        XCTAssertEqual(model!.abstractTypes.sorted { $0.description < $1.description }.description, "[FakeProtocol1, FakeProtocol2]")
     }
     
     func test_init_should_set_dependency_kind_to_references() throws {
