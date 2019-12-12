@@ -120,9 +120,11 @@ public struct ParameterAnnotation: Token, Hashable {
             return nil
         }
 
+        print(matches[1])
+        
         let type: ConcreteType = try CompositeType(matches[1])
             .singleType(or: TokenError.invalidAnnotation(annotation))
-
+        
         return ParameterAnnotation(style: .comment,
                                    name: matches[0],
                                    type: type)

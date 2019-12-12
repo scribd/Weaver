@@ -92,15 +92,12 @@ final class SourceKitDependencyAnnotationTests: XCTestCase {
     
     func test_init_should_set_type() throws {
         let model = try makeModel(type: "FakeType")
-        XCTAssertEqual(model?.type, ConcreteType(name: "FakeType"))
+        XCTAssertEqual(model?.type?.description, "FakeType")
     }
     
     func test_init_should_set_abtract_types() throws {
         let model = try makeModel(abstractTypes: "FakeProtocol1 & FakeProtocol2")
-        XCTAssertEqual(
-            model?.abstractTypes,
-            [AbstractType(name: "FakeProtocol1"), AbstractType(name: "FakeProtocol2")]
-        )
+        XCTAssertEqual(model?.abstractTypes.description, "[FakeProtocol1, FakeProtocol2]")
     }
     
     func test_init_should_set_dependency_kind_to_references() throws {
@@ -234,7 +231,7 @@ final class SourceKitTypeDeclarationTests: XCTestCase {
     func test_init_should_set_name() {
      
         let model = makeModel(name: "fake_name")
-        XCTAssertEqual(model?.type, AnyType(name: "fake_name"))
+        XCTAssertEqual(model?.type.description, "fake_name")
     }
     
     // MARK: - isInjectable

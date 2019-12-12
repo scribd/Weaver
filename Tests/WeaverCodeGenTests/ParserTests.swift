@@ -538,4 +538,26 @@ final class MyService {
             XCTFail("Unexpected error: \(error).")
         }
     }
+    
+    func test_parser_should_generate_a_parser_error_when_trying_to_use_an_incompatible_attribute() {
+        let file = File(contents: """
+final class MyService {
+  // weaver: api <- APIProtocol
+  // weaver: api.objc = true
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            
+            _ = try parser.parse()
+            XCTFail("An error was expected.")
+        } catch let error as ParserError {
+            XCTAssertEqual(error.description, "test.swift:3: error: Configuration attribute 'doesSupportObjc' cannot be used on dependency 'api'.")
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
 }

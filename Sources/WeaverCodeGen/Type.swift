@@ -8,14 +8,30 @@
 import Foundation
 
 public protocol TypeKind {}
-public enum Void: TypeKind {}
 public enum ConcreteTypeKind: TypeKind {}
 public enum AbstractTypeKind: TypeKind {}
 
-public typealias ConcreteType = AnyType<ConcreteTypeKind>
-public typealias AbstractType = AnyType<AbstractTypeKind>
+public typealias ConcreteType = TypeWrapper<ConcreteTypeKind>
+public typealias AbstractType = TypeWrapper<AbstractTypeKind>
 
-public struct AnyType<T: TypeKind>: Hashable {
+public struct TypeWrapper<T: TypeKind>: Hashable, CustomStringConvertible {
+
+    let value: AnyType
+    
+    public var description: String {
+        return value.description
+    }
+    
+    var abstractType: AbstractType {
+        return AbstractType(value: value)
+    }
+    
+    var concreteType: ConcreteType {
+        return ConcreteType(value: value)
+    }
+}
+
+public struct AnyType: Hashable {
     
     public let name: String
     
@@ -33,42 +49,27 @@ public struct AnyType<T: TypeKind>: Hashable {
     }
 }
 
-extension AnyType {
+public struct Closure: Hashable, CustomStringConvertible {
     
-    var abstractType: AbstractType {
-        return AbstractType(name: name, parameterTypes: parameterTypes)
-    }
+    public let tuple: [TupleComponent]
     
-    var concreteType: ConcreteType {
-        return ConcreteType(name: name, parameterTypes: parameterTypes)
-    }
+    public let returnType: CompositeType
+}
+
+public struct TupleComponent: Hashable, CustomStringConvertible {
     
-    var voidType: AnyType<Void> {
-        return AnyType<Void>(name: name, parameterTypes: parameterTypes)
-    }
+    public let alias: String?
+    
+    public let name: String?
+    
+    public let type: CompositeType
 }
 
 public indirect enum CompositeType: Hashable, CustomStringConvertible {
     
-    public struct Closure: Hashable, CustomStringConvertible {
-        
-        public let tuple: [TupleParameter]
-        
-        public let returnType: CompositeType
-    }
-
-    public struct TupleParameter: Hashable, CustomStringConvertible {
-        
-        public let alias: String?
-        
-        public let name: String?
-        
-        public let type: CompositeType
-    }
-    
-    case components([AnyType<Void>])
+    case components([AnyType])
     case closure(Closure)
-    case tuple([TupleParameter])
+    case tuple([TupleComponent])
     
     init(_ stringValue: String) throws {
         let parser = try TypeParser(stringValue)
@@ -86,7 +87,7 @@ extension AnyType {
     }
 }
 
-extension CompositeType.TupleParameter {
+extension TupleComponent {
     
     public var description: String {
         let alias = self.alias.flatMap { "\($0) " } ?? String()
@@ -95,7 +96,7 @@ extension CompositeType.TupleParameter {
     }
 }
 
-extension CompositeType.Closure {
+extension Closure {
     
     public var description: String {
         return "(\(tuple.map { $0.description }.joined(separator: ", "))) -> \(returnType)"
@@ -115,10 +116,10 @@ extension CompositeType {
         }
     }
     
-    func singleType<T>(or error: Error) throws -> AnyType<T> {
+    func singleType<T>(or error: Error) throws -> TypeWrapper<T> {
         switch self {
         case .components(let components) where components.count == 1:
-            return AnyType<T>(name: components.first!.name, parameterTypes: components.first!.parameterTypes)
+            return TypeWrapper(value: components.first!)
         case .tuple,
              .closure,
              .components:
@@ -126,10 +127,10 @@ extension CompositeType {
         }
     }
     
-    func components<T>(or error: Error) throws -> Set<AnyType<T>> {
+    func components<T>(or error: Error) throws -> Set<TypeWrapper<T>> {
         switch self {
         case .components(let components):
-            return Set(components.lazy.map { AnyType<T>(name: $0.name, parameterTypes: $0.parameterTypes) })
+            return Set(components.lazy.map { TypeWrapper(value: $0) })
         case .closure,
              .tuple:
             throw error
@@ -203,7 +204,7 @@ private final class TypeParser {
             } else if acceptedNameChars.isStrictSuperset(of: CharacterSet(charactersIn: String(currentChar))) {
                 currentTypeName += String(currentChar)
             } else {
-                throw TokenError.invalidTokenInType(type: string, token: String(currentChar))
+                break
             }
         }
         
@@ -257,7 +258,7 @@ private final class TypeParser {
 
         switch currentToken {
         case .typeName:
-            var components = [AnyType<Void>]()
+            var components = [AnyType]()
             repeat {
                 components.append(try parseComponent())
             } while consumeToken(.delimiter(.and))
@@ -290,7 +291,7 @@ private final class TypeParser {
             
         case .delimiter(.tupleOpen):
             consumeToken()
-            var parameters = [CompositeType.TupleParameter]()
+            var parameters = [TupleComponent]()
             if consumeToken(.delimiter(.tupleClose)) == false {
                 repeat {
                     var alias: String?
@@ -318,7 +319,7 @@ private final class TypeParser {
                         try consumeTokenOrBail(.delimiter(.colon))
                     }
                     let type = try parse()
-                    parameters.append(CompositeType.TupleParameter(alias: alias, name: name, type: type))
+                    parameters.append(TupleComponent(alias: alias, name: name, type: type))
                 } while consumeToken(.delimiter(.comma))
                 try consumeTokenOrBail(.delimiter(.tupleClose))
             }
@@ -327,7 +328,7 @@ private final class TypeParser {
             case .delimiter(.closureArrow):
                 consumeToken()
                 let returnType = try parse()
-                type = .closure(CompositeType.Closure(tuple: parameters, returnType: returnType))
+                type = .closure(Closure(tuple: parameters, returnType: returnType))
 
             case .none:
                 type = .tuple(parameters)
@@ -349,7 +350,7 @@ private final class TypeParser {
         return parseUnwraps(for: type)
     }
     
-    private func parseComponent() throws -> AnyType<Void> {
+    private func parseComponent() throws -> AnyType {
         switch currentToken {
         case .typeName(let name):
             consumeToken()
@@ -371,10 +372,10 @@ private final class TypeParser {
     }
     
     private func parseUnwraps(for type: CompositeType) -> CompositeType {
-        if consumeToken(.delimiter(.unwrap)) {
-            return .components([AnyType<Void>(name: "Optional", parameterTypes: [parseUnwraps(for: type)])])
-        } else {
-            return type
+        var type = type
+        while consumeToken(.delimiter(.unwrap)) {
+            type = .components([AnyType(name: "Optional", parameterTypes: [parseUnwraps(for: type)])])
         }
+        return type
     }
 }

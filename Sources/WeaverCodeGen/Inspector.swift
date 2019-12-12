@@ -247,7 +247,7 @@ private extension Inspector {
             
         case (false, true) where connectedSources.isEmpty == false:
             throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(
-                type: dependencyContainer.type.voidType,
+                type: dependencyContainer.type.value,
                 referents: connectedSources
             )
 

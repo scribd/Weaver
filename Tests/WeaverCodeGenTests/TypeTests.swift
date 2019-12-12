@@ -168,4 +168,13 @@ final class AnyTypeTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_init_should_parse_until_not_a_type_anymore() {
+        do {
+            let type = try CompositeType("Foo<Int, Int>: SomeProtocol")
+            XCTAssertEqual(type.description, "Foo<Int, Int>")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }

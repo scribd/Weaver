@@ -230,11 +230,11 @@ extension CompositeType: Codable {
         let container = try decoder.container(keyedBy: Key.self)
         switch try container.decode(ValueKey.self, forKey: .key) {
         case .components:
-            self = .components(try container.decode([AnyType<Void>].self, forKey: .value))
+            self = .components(try container.decode([AnyType].self, forKey: .value))
         case .closure:
             self = .closure(try container.decode(Closure.self, forKey: .value))
         case .tuple:
-            self = .tuple(try container.decode([TupleParameter].self, forKey: .value))
+            self = .tuple(try container.decode([TupleComponent].self, forKey: .value))
         }
     }
     
@@ -259,7 +259,6 @@ extension AnyType: Codable {
     private enum Key: String, CodingKey {
         case name = "n"
         case parameterTypes = "g"
-        case isOptional = "o"
     }
 
     public init(from decoder: Decoder) throws {
@@ -275,7 +274,15 @@ extension AnyType: Codable {
     }
 }
 
-extension CompositeType.Closure: Codable {
+extension TypeWrapper: Encodable {
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(description)
+    }
+}
+
+extension Closure: Codable {
     
     private enum Key: String, CodingKey {
         case tuple = "t"
@@ -284,7 +291,7 @@ extension CompositeType.Closure: Codable {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
-        tuple = try container.decode([CompositeType.TupleParameter].self, forKey: .tuple)
+        tuple = try container.decode([TupleComponent].self, forKey: .tuple)
         returnType = try container.decode(CompositeType.self, forKey: .returnType)
     }
     
@@ -295,7 +302,7 @@ extension CompositeType.Closure: Codable {
     }
 }
 
-extension CompositeType.TupleParameter: Codable {
+extension TupleComponent: Codable {
     
     private enum Key: String, CodingKey {
         case alias = "a"
@@ -393,16 +400,18 @@ extension RegisterAnnotation {
         let container = try decoder.container(keyedBy: Key.self)
         style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
-        type = try container.decode(ConcreteType.self, forKey: .type)
-        abstractTypes = try container.decode(Set<AbstractType>.self, forKey: .abstractTypes)
+        type = TypeWrapper(value: try container.decode(AnyType.self, forKey: .type))
+        abstractTypes = Set(try container.decode(Set<AnyType>.self, forKey: .abstractTypes).lazy.map {
+            TypeWrapper(value: $0)
+        })
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
-        try container.encode(type, forKey: .type)
-        try container.encode(abstractTypes, forKey: .abstractTypes)
+        try container.encode(type.value, forKey: .type)
+        try container.encode(abstractTypes.map { $0.value }, forKey: .abstractTypes)
     }
 }
 
@@ -418,14 +427,16 @@ extension ReferenceAnnotation {
         let container = try decoder.container(keyedBy: Key.self)
         style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
-        types = try container.decode(Set<AbstractType>.self, forKey: .types)
+        types = Set(try container.decode(Set<AnyType>.self, forKey: .types).lazy.map {
+            TypeWrapper(value: $0)
+        })
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
-        try container.encode(types, forKey: .types)
+        try container.encode(types.map { $0.value }, forKey: .types)
     }
 }
 
@@ -441,14 +452,14 @@ extension ParameterAnnotation {
         let container = try decoder.container(keyedBy: Key.self)
         style = try container.decode(AnnotationStyle.self, forKey: .style)
         name = try container.decode(String.self, forKey: .name)
-        type = try container.decode(ConcreteType.self, forKey: .type)
+        type = TypeWrapper(value: try container.decode(AnyType.self, forKey: .type))
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(style, forKey: .style)
         try container.encode(name, forKey: .name)
-        try container.encode(type, forKey: .type)
+        try container.encode(type.value, forKey: .type)
     }
 }
 
@@ -494,13 +505,13 @@ extension InjectableType {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
-        type = try container.decode(ConcreteType.self, forKey: .type)
+        type = TypeWrapper(value: try container.decode(AnyType.self, forKey: .type))
         accessLevel = try container.decode(AccessLevel.self, forKey: .accessLevel)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
-        try container.encode(type, forKey: .type)
+        try container.encode(type.value, forKey: .type)
         try container.encode(accessLevel, forKey: .accessLevel)
     }
 }
@@ -676,6 +687,7 @@ extension DependencyGraph: Encodable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         try container.encode(imports, forKey: .imports)
+        
         try container.encode(abstractTypes, forKey: .abstractTypes)
         try container.encode(concreteTypes, forKey: .concreteTypes)
         try container.encode(orphinConcreteTypes, forKey: .orphinConcreteTypes)

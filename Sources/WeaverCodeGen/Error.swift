@@ -27,16 +27,17 @@ enum ParserError: Error {
     case unknownDependency(String, FileLocation)
     case dependencyDoubleDeclaration(String, FileLocation)
     case configurationAttributeDoubleAssignation(FileLocation, attribute: ConfigurationAttribute)
+    case incompatibleConfigurationAttribute(FileLocation, attribute: ConfigurationAttribute, dependencyName: String)
 }
 
 enum LinkerError: Error {
     case foundAnnotationOutsideOfType(FileLocation)
-    case unknownType(FileLocation?, type: AnyType<Void>)
+    case unknownType(FileLocation?, type: AnyType)
     case dependencyNotFound(FileLocation?, dependencyName: String)
 }
 
 enum DependencyGraphError: Error {
-    case dependencyContainerNotFound(FileLocation?, type: AnyType<Void>?)
+    case dependencyContainerNotFound(FileLocation?, type: AnyType?)
     case invalidAbstractTypeComposition(FileLocation?, types: Set<AbstractType>, candidates: [(String, ConcreteType)])
 }
 
@@ -56,7 +57,7 @@ enum InspectorError: Error {
 enum InspectorAnalysisError: Error {
     case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
-    case isolatedResolverCannotHaveReferents(type: AnyType<Void>?, referents: [DependencyContainer])
+    case isolatedResolverCannotHaveReferents(type: AnyType?, referents: [DependencyContainer])
     case typeMismatch
 }
 
@@ -152,6 +153,8 @@ extension ParserError: CustomStringConvertible {
             return location.xcodeLogString(.error, "Unknown dependency: '\(dependencyName)'")
         case .configurationAttributeDoubleAssignation(let location, let attribute):
             return location.xcodeLogString(.error, "Configuration attribute '\(attribute.name)' was already set")
+        case .incompatibleConfigurationAttribute(let location, let attribute, let dependencyName):
+            return location.xcodeLogString(.error, "Configuration attribute '\(attribute.name)' cannot be used on dependency '\(dependencyName)'")
         }
     }
 }

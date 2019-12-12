@@ -155,14 +155,14 @@ private extension Parser {
                 .reference : registrationNames.contains(name) ?
                 .registration : nil
             
-            let error = ParserError.unknownDependency(name, FileLocation(line: configurationAnnotation.line, file: fileName))
+            let fileLocation = FileLocation(line: configurationAnnotation.line, file: fileName)
             if let dependencyKind = _dependencyKind {
-                if !ConfigurationAnnotation.validate(configurationAttribute: configurationAnnotation.value.attribute,
-                                                     with: dependencyKind) {
-                    throw error
+                let attribute = configurationAnnotation.value.attribute
+                guard ConfigurationAnnotation.validate(configurationAttribute: attribute, with: dependencyKind) else {
+                    throw ParserError.incompatibleConfigurationAttribute(fileLocation, attribute: attribute, dependencyName: name)
                 }
             } else {
-                throw error
+                throw ParserError.unknownDependency(name, fileLocation)
             }
             
         case .`self`:

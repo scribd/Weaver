@@ -1027,7 +1027,7 @@ private extension MetaWeaverFile {
                 return [
                     EmptyLine(),
                     PlainCode(code: """
-                    var \(doubleVariable.name): \(concreteType.typeID.swiftString)\(concreteType.isOptional ? " = nil" : "!")
+                        var \(doubleVariable.name): \(concreteType.typeID.swiftString)\(concreteType.value.isOptional ? " = nil" : "!")
                     """),
                     ComputedProperty(variable: Variable(name: declaration.declarationName)
                         .with(type: declaration.type.typeID))

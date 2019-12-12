@@ -36,22 +36,22 @@ extension Variable {
     static let dynamicResolversLock = Variable(name: "dynamicResolversLock")
 }
 
-extension AnyType {
+extension TypeWrapper {
     
     var typeID: TypeIdentifier {
         return TypeIdentifier(name: .custom(description))
     }
 
     var dependencyResolverTypeID: TypeIdentifier {
-        return TypeIdentifier(name: "\(name)DependencyResolver")
+        return TypeIdentifier(name: "\(value.name)DependencyResolver")
     }
     
     var dependencyResolverProxyTypeID: TypeIdentifier {
-        return TypeIdentifier(name: "\(name)DependencyResolverProxy")
+        return TypeIdentifier(name: "\(value.name)DependencyResolverProxy")
     }
 
     var dependencyResolverVariable: Variable {
-        return Variable(name: "\(name.variableCased)DependencyResolver")
+        return Variable(name: "\(value.name.variableCased)DependencyResolver")
     }
     
     var publicDependencyResolverVariable: Variable {
@@ -59,9 +59,16 @@ extension AnyType {
     }
     
     var inputDependencyResolverTypeID: TypeIdentifier {
-        return TypeIdentifier(name: "\(name)InputDependencyResolver")
+        return TypeIdentifier(name: "\(value.name)InputDependencyResolver")
     }
-        
+     
+    var toTypeName: String {
+        return value.toTypeName
+    }
+}
+
+extension AnyType {
+    
     var toTypeName: String {
         let genericNames = parameterTypes.isEmpty == false ?
             "_\(parameterTypes.map { $0.toTypeName }.joined(separator: "_"))" : String()
@@ -83,14 +90,14 @@ extension CompositeType {
     }
 }
 
-extension CompositeType.Closure {
+extension Closure {
     
     var toTypeName: String {
         return tuple.lazy.map { $0.toTypeName }.joined(separator: "_") + returnType.toTypeName
     }
 }
 
-extension CompositeType.TupleParameter {
+extension TupleComponent {
     
     var toTypeName: String {
         let alias = self.alias.flatMap { "\($0)_" } ?? String()

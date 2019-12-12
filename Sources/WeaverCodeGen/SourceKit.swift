@@ -87,7 +87,7 @@ struct SourceKitDependencyAnnotation {
 
         switch try CompositeType(typename) {
         case .components(let components):
-            abstractTypes = Set(components.lazy.map {  $0.abstractType })
+            abstractTypes = Set(components.lazy.map {  AbstractType(value: $0) })
         case .closure(let closure):
             abstractTypes = try closure.returnType.components(or: TokenError.invalidAnnotation(annotationString))
         case .tuple:
@@ -217,7 +217,7 @@ struct SourceKitTypeDeclaration {
             
             let components = lineString.components(separatedBy: typeString)
             if components.count > 1 {
-                typeString += components[1].trimmingCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: "{")))
+                typeString += components[1]
             }
             
             type = try CompositeType(typeString).singleType(or: TokenError.invalidAnnotation(lineString))
