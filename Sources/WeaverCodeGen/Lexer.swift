@@ -83,14 +83,14 @@ private extension Lexer {
                 return try annotation.toTokens()
             }
 
-            let typeDeclaration = SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content)
+            let typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content)
             
             if let typeDeclaration = typeDeclaration {
                 var startToken = typeDeclaration.toToken
 
                 if let nextLine = findNextLine(after: line, containing: Int(startToken.offset)) {
                     line = nextLine
-                    if let _typeDeclaration = SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content) {
+                    if let _typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content) {
                         startToken = _typeDeclaration.toToken
                     }
                     startToken.line = line

@@ -8,6 +8,18 @@
 import Foundation
 import SourceKittenFramework
 
+private enum Key: String {
+    case accessibility = "key.accessibility"
+    case attributes = "key.attributes"
+    case attribute = "key.attribute"
+}
+
+private enum Value: String {
+    case propertyWrapper = "source.decl.attribute._custom"
+    case objc = "source.decl.attribute.objc"
+    case argument = "source.lang.swift.expr.argument"
+}
+
 // MARK: - Annotation
 
 struct SourceKitDependencyAnnotation {
@@ -19,11 +31,12 @@ struct SourceKitDependencyAnnotation {
     let offset: Int
     let length: Int
     let name: String
-    let type: ConcreteType?
     let abstractType: AbstractType
-    let expectedParametersCount: Int
-    let dependencyKind: Dependency.Kind?
-    let accessLevel: AccessLevel
+    
+    private(set) var type: ConcreteType?
+    private(set) var expectedParametersCount = 0
+    private(set) var dependencyKind: Dependency.Kind?
+    private(set) var accessLevel: AccessLevel = .default
     private(set) var configurationAttributes = [ConfigurationAttribute]()
     
     init?(_ dictionary: [String: Any],
@@ -56,17 +69,17 @@ struct SourceKitDependencyAnnotation {
             return nil
         }
         
-        if let accessLevelString = dictionary["key.accessibility"] as? String {
+        if let accessLevelString = dictionary[Key.accessibility.rawValue] as? String {
             accessLevel = AccessLevel(accessLevelString)
         } else {
             accessLevel = .default
         }
         
-        guard let attributes = dictionary["key.attributes"] as? [[String: Any]] else {
+        guard let attributes = dictionary[Key.attributes.rawValue] as? [[String: Any]] else {
             return nil
         }
         
-        guard let annotation = attributes.first(where: { $0["key.attribute"] as? String == "source.decl.attribute._custom" }),
+        guard let annotation = attributes.first(where: { $0[Key.attribute.rawValue] as? String == Value.propertyWrapper.rawValue }),
               let annotationOffset = annotation[SwiftDocKey.offset.rawValue] as? Int64,
               let annotationLength = annotation[SwiftDocKey.length.rawValue] as? Int64,
               let annotationLineStartIndex = lines.firstIndex(where: { $0.range.contains(Int(annotationOffset)) }),
@@ -77,7 +90,7 @@ struct SourceKitDependencyAnnotation {
         self.file = file
         self.line = line + annotationLineStartIndex
         
-        if attributes.contains(where: { $0["key.attribute"] as? String == "source.decl.attribute.objc" }) {
+        if attributes.contains(where: { $0[Key.attribute.rawValue] as? String == Value.objc.rawValue }) {
             configurationAttributes.append(ConfigurationAttribute.doesSupportObjc(value: true))
         }
         
@@ -88,41 +101,26 @@ struct SourceKitDependencyAnnotation {
             .joined(separator: " ")
         self.annotationString = annotationString
                 
-        guard let annotationBuilder = try SourceKitDependencyAnnotation.parseBuilder(annotationString) else {
-            return nil
-        }
-
-        expectedParametersCount = annotationBuilder.expectedParametersCount
-        dependencyKind = annotationBuilder.dependencyKind
-        type = annotationBuilder.concreteType
-        configurationAttributes += annotationBuilder.configurationAttributes
+        guard try parseBuilder(annotationString) else { return nil }
     }
     
-    private static func parseBuilder(_ annotationString: String) throws -> (
-        expectedParametersCount: Int,
-        dependencyKind: Dependency.Kind?,
-        concreteType: ConcreteType?,
-        configurationAttributes: [ConfigurationAttribute]
-    )? {
-        guard var startIndex = annotationString.firstIndex(where: { $0 == "@" }) else { return nil }
-        guard var endIndex = annotationString.firstIndex(where: { $0 == ")" }) else { return nil }
-        guard annotationString[startIndex] == "@" else { return nil }
+    private mutating func parseBuilder(_ annotationString: String) throws -> Bool {
+        guard var startIndex = annotationString.firstIndex(where: { $0 == "@" }) else { return false }
+        guard var endIndex = annotationString.firstIndex(where: { $0 == ")" }) else { return false }
+        guard annotationString[startIndex] == "@" else { return false }
         startIndex = annotationString.index(after: startIndex)
         endIndex = annotationString.index(after: endIndex)
-        guard startIndex < endIndex, endIndex <= annotationString.endIndex else { return nil }
+        guard startIndex < endIndex, endIndex <= annotationString.endIndex else { return false }
         let annotationString = String(annotationString[startIndex..<endIndex])
 
         let dictionary = try Structure(file: File(contents: annotationString)).dictionary
-        guard let structures = dictionary[SwiftDocKey.substructure.rawValue] as? [[String: Any]] else { return nil }
-        guard let structure = structures.first else { return nil }
+        guard let structures = dictionary[SwiftDocKey.substructure.rawValue] as? [[String: Any]] else { return false }
+        guard let structure = structures.first else { return false }
         
-        guard let annotationTypeString = structure[SwiftDocKey.name.rawValue] as? String else { return nil }
-        guard annotationTypeString.lowercased().hasPrefix("weaver") else { return nil }
+        guard let annotationTypeString = structure[SwiftDocKey.name.rawValue] as? String else { return false }
+        guard annotationTypeString.lowercased().hasPrefix("weaver") else { return false }
         
-        let expectedParametersCount = Int(annotationTypeString.lowercased().replacingOccurrences(of: "weaverp", with: "")) ?? 0
-        var concreteType: ConcreteType?
-        var configurationAttributes = [ConfigurationAttribute]()
-        var dependencyKind: Dependency.Kind?
+        expectedParametersCount = Int(annotationTypeString.lowercased().replacingOccurrences(of: "weaverp", with: "")) ?? 0
 
         let arguments = (structure[SwiftDocKey.substructure.rawValue] as? [[String: Any]]) ?? []
         if arguments.isEmpty {
@@ -133,7 +131,7 @@ struct SourceKitDependencyAnnotation {
         }
 
         for argument in arguments {
-            guard argument[SwiftDocKey.kind.rawValue] as? String == "source.lang.swift.expr.argument" else { continue }
+            guard argument[SwiftDocKey.kind.rawValue] as? String == Value.argument.rawValue else { continue }
             guard let offset = argument[SwiftDocKey.offset.rawValue] as? Int64 else { continue }
             guard let length = argument[SwiftDocKey.length.rawValue] as? Int64 else { continue }
 
@@ -146,7 +144,7 @@ struct SourceKitDependencyAnnotation {
 
                 if attributeName == "type" {
                     let value = value.replacingOccurrences(of: ".self", with: "")
-                    concreteType = try ConcreteType(value: CompositeType(value))
+                    type = try ConcreteType(value: CompositeType(value))
                 } else {
                     configurationAttributes.append(
                         try ConfigurationAttribute(name: attributeName, valueString: value)
@@ -160,7 +158,7 @@ struct SourceKitDependencyAnnotation {
             }
         }
         
-        return (expectedParametersCount, dependencyKind, concreteType, configurationAttributes)
+        return true
     }
 }
 
@@ -175,7 +173,7 @@ struct SourceKitTypeDeclaration {
     let accessLevel: AccessLevel
     let isInjectable: Bool
     
-    init?(_ dictionary: [String: Any], lineString: String = "") {
+    init?(_ dictionary: [String: Any], lineString: String) throws {
         
         guard let kindString = dictionary[SwiftDocKey.kind.rawValue] as? String,
               let kind = SwiftDeclarationKind(rawValue: kindString) else {
@@ -187,7 +185,6 @@ struct SourceKitTypeDeclaration {
         }
         self.offset = Int(offset)
         
-        
         guard let length = dictionary[SwiftDocKey.length.rawValue] as? Int64 else {
             return nil
         }
@@ -197,34 +194,28 @@ struct SourceKitTypeDeclaration {
         case .class,
              .struct:
             isInjectable = true
-
         case .enum,
              .extension:
             isInjectable = false
-            
         default:
             return nil
         }
 
-        do {
-            guard var typeString = dictionary[SwiftDocKey.name.rawValue] as? String else {
-                return nil
-            }
-            
-            let components = lineString.components(separatedBy: typeString)
-            if components.count > 1 {
-                typeString += components[1]
-            }
-            
-            type = try ConcreteType(value: CompositeType(typeString))
-        } catch {
+        guard var typeString = dictionary[SwiftDocKey.name.rawValue] as? String else {
             return nil
         }
         
+        let components = lineString.components(separatedBy: typeString)
+        if components.count > 1 {
+            typeString += components[1]
+        }
+        
+        type = try ConcreteType(value: CompositeType(typeString))
+        
         hasBody = dictionary.keys.contains(SwiftDocKey.bodyOffset.rawValue)
         
-        if let attributeKindString = dictionary["key.accessibility"] as? String {
-            self.accessLevel = AccessLevel(attributeKindString)
+        if let attributeKindString = dictionary[Key.accessibility.rawValue] as? String {
+            accessLevel = AccessLevel(attributeKindString)
         } else {
             accessLevel = .default
         }

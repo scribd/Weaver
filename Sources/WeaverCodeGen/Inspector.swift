@@ -342,15 +342,32 @@ private extension Inspector {
         guard dependency.annotationStyle == .propertyWrapper else { return }
 
         let target = try dependencyGraph.dependencyContainer(for: dependency)
-        guard dependency.closureParameters.count == target.parameters.count else {
-            throw InspectorError.invalidDependencyGraph(dependency, underlyingError: InspectorAnalysisError.typeMismatch)
+        
+        let expectedType: CompositeType
+        if target.parameters.isEmpty == false {
+            expectedType = .closure(Closure(
+                tuple: target.parameters.map { TupleComponent(alias: nil, name: nil, type: $0.type.anyType) },
+                returnType: dependency.type.anyType
+            ))
+        } else {
+            expectedType = dependency.type.anyType
+        }
+
+        let actualType: CompositeType
+        if dependency.closureParameters.isEmpty == false {
+            actualType = .closure(Closure(
+                tuple: dependency.closureParameters.map { TupleComponent(alias: nil, name: nil, type: $0.type) },
+                returnType: dependency.type.anyType
+            ))
+        } else {
+            actualType = dependency.type.anyType
         }
         
-        for (index, closureParameter) in dependency.closureParameters.enumerated() {
-            let parameter = target.parameters[index]
-            guard parameter.type.anyType == closureParameter.type else {
-                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: InspectorAnalysisError.typeMismatch)
-            }
+        guard expectedType == actualType else {
+            throw InspectorError.invalidDependencyGraph(
+                dependency,
+                underlyingError: .resolverTypeMismatch(expectedType: expectedType, actualType: actualType)
+            )
         }
     }
 }

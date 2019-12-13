@@ -203,7 +203,7 @@ final class SourceKitTypeDeclarationTests: XCTestCase {
                 XCTFail("Failed to dictionary from json: \(jsonString)")
                 return nil
             }
-            return SourceKitTypeDeclaration(jsonObject)
+            return try SourceKitTypeDeclaration(jsonObject, lineString: "")
         } catch {
             XCTFail("Unexpected json parsing error: \(error)")
             return nil

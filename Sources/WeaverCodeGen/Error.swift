@@ -59,6 +59,7 @@ enum InspectorAnalysisError: Error {
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
     case isolatedResolverCannotHaveReferents(type: CompositeType?, referents: [DependencyContainer])
     case typeMismatch
+    case resolverTypeMismatch(expectedType: CompositeType, actualType: CompositeType)
 }
 
 enum InspectorAnalysisHistoryRecord: Error {
@@ -235,6 +236,8 @@ extension InspectorAnalysisError: CustomStringConvertible {
             return "This type is flagged as isolated. It cannot have any connected referent"
         case .typeMismatch:
             return "Type mismatch"
+        case .resolverTypeMismatch(let expectedType, let actualType):
+            return "Resolver type mismatch. Expected '\(expectedType)' but got '\(actualType)'"
         }
     }
     
@@ -250,7 +253,8 @@ extension InspectorAnalysisError: CustomStringConvertible {
                     "You may want to set '\(type?.description ?? "_").isIsolated' to 'false'"
                 return referent.xcodeLogString(.error, message)
             }
-        case .typeMismatch:
+        case .typeMismatch,
+             .resolverTypeMismatch:
             return nil
         }
     }
@@ -275,10 +279,10 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
             """
         case .implicitDependency(let dependency, let candidates):
             return """
-            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' is implicit."))
+            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' is implicit"))
             \(candidates.map { candidate in
                 candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName)'")
-            }.joined(separator: ".\n"))
+            }.joined(separator: "\n"))
             """
         case .implicitType(let dependency, let candidates):
             return """
