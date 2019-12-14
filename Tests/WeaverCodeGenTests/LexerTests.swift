@@ -229,7 +229,7 @@ final class MovieManager {
                 let tokens = try lexer.tokenize()
                 
                 if tokens.count == 3 {
-                    XCTAssertEqual(tokens[1].description, "api = API <- API - 83[12] - at line: 2")
+                    XCTAssertEqual(tokens[1].description, "api = API - 83[12] - at line: 2")
                 } else {
                     XCTFail("Unexpected amount of tokens: \(tokens.count).")
                 }

@@ -238,9 +238,9 @@ import UIKit
     private func homeViewControllerDependencyResolver() -> HomeViewControllerDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["imageManager"] = _self.builder(imageManager)
+        _self.builders["logger"] = _self.builder(logger)
         _self.builders["movieManager"] = _self.builder(movieManager)
         _self.builders["reviewManager"] = _self.builder(reviewManager)
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _self.builders["movieController"] = weakLazyBuilder { [weak _self] (copyParameters: Optional<ParametersCopier>) -> UIViewController in
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
             MainDependencyContainer._dynamicResolversLock.lock()
@@ -251,10 +251,9 @@ import UIKit
             copyParameters?(__self as! MainDependencyContainer)
             return MovieViewController(injecting: __self)
         }
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
-        MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieManager })
         MainDependencyContainer._pushDynamicResolver(_self.movieController)
+        MainDependencyContainer._pushDynamicResolver({ _self.logger })
         return _self
     }
 
@@ -263,15 +262,12 @@ import UIKit
         _self.builders["imageManager"] = _self.builder(imageManager)
         _self.builders["movieManager"] = _self.builder(movieManager)
         _self.builders["reviewManager"] = _self.builder(reviewManager)
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _self.builders["reviewController"] = weakLazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> WSReviewViewController in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return WSReviewViewController.make(_self as WSReviewViewControllerInputDependencyResolver)
         }
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
-        MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieID })
         MainDependencyContainer._pushDynamicResolver({ _self.movieTitle })
         MainDependencyContainer._pushDynamicResolver({ _self.movieManager })
@@ -339,9 +335,9 @@ typealias PersonManagerDependencyResolver = LoggerResolver & MovieAPIResolver
 
 typealias ReviewManagerDependencyResolver = LoggerResolver & MovieAPIResolver
 
-typealias HomeViewControllerDependencyResolver = LoggerResolver & MovieManagerResolver & MovieControllerResolver
+typealias HomeViewControllerDependencyResolver = MovieManagerResolver & MovieControllerResolver & LoggerResolver
 
-typealias MovieViewControllerDependencyResolver = LoggerResolver & MovieIDResolver & MovieTitleResolver & MovieManagerResolver & ImageManagerResolver & ReviewManagerResolver & ReviewControllerResolver
+typealias MovieViewControllerDependencyResolver = MovieIDResolver & MovieTitleResolver & MovieManagerResolver & ImageManagerResolver & ReviewManagerResolver & ReviewControllerResolver
 
 typealias MovieAPIInputDependencyResolver = HomeViewControllerResolver & ImageManagerResolver & LoggerResolver & MovieAPIResolver & MovieManagerResolver & ReviewManagerResolver & UrlSessionResolver
 
@@ -349,7 +345,7 @@ typealias MovieManagerInputDependencyResolver = HomeViewControllerResolver & Ima
 
 typealias URLSessionInputDependencyResolver = HomeViewControllerResolver & ImageManagerResolver & LoggerResolver & MovieAPIResolver & MovieManagerResolver & ReviewManagerResolver & UrlSessionResolver
 
-typealias WSReviewViewControllerInputDependencyResolver = ImageManagerResolver & LoggerResolver & MovieIDResolver & MovieManagerResolver & MovieTitleResolver & ReviewControllerResolver & ReviewManagerResolver
+typealias WSReviewViewControllerInputDependencyResolver = ImageManagerResolver & MovieIDResolver & MovieManagerResolver & MovieTitleResolver & ReviewControllerResolver & ReviewManagerResolver
 
 @propertyWrapper
 struct Weaver<ConcreteType, AbstractType> {

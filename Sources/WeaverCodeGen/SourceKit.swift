@@ -235,24 +235,22 @@ extension SourceKitDependencyAnnotation {
         let tokenBox: AnyTokenBox
         switch dependencyKind {
         case .registration?:
-            guard let type = type else {
-                throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
-                                                   underlyingError: TokenError.invalidAnnotation(annotationString))
-            }
+            let (_abstractType, closureParameters) = try buildAbstractType()
+            let concreteType = type ?? _abstractType.concreteType
+            let abstractType = _abstractType.concreteType != concreteType ? _abstractType : AbstractType()
             
-            let abstractType = try buildAbstractType()
             let annotation = RegisterAnnotation(style: .propertyWrapper,
                                                 name: name,
-                                                type: type,
-                                                abstractType: abstractType.0,
-                                                closureParameters: abstractType.1)
+                                                type: concreteType,
+                                                abstractType: abstractType,
+                                                closureParameters: closureParameters)
  
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,
                                 line: line)
         case .parameter?:
-            guard let type = abstractType.first, abstractType.count == 1 else {
+            guard let type = abstractType.first, abstractType.count == 1, self.type == nil else {
                 throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
@@ -265,16 +263,17 @@ extension SourceKitDependencyAnnotation {
                                 line: line)
             
         case .reference?:
-            guard abstractType.isEmpty == false else {
+            let (abstractType, closureParameters) = try buildAbstractType()
+
+            guard abstractType.isEmpty == false, type == nil else {
                 throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
             }
             
-            let abstractType = try buildAbstractType()
             let annotation = ReferenceAnnotation(style: .propertyWrapper,
                                                  name: name,
-                                                 type: abstractType.0,
-                                                 closureParameters: abstractType.1)
+                                                 type: abstractType,
+                                                 closureParameters: closureParameters)
             tokenBox = TokenBox(value: annotation,
                                 offset: offset,
                                 length: length,

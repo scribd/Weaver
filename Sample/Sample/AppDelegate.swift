@@ -16,22 +16,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     private let dependencies = MainDependencyContainer.appDelegateDependencyResolver()
     
-    @Weaver(.registration, type: Logger.self, scope: .container)
+    @Weaver(.registration)
     private var logger: Logger
     
-    @Weaver(.registration, type: URLSession.self, scope: .container, builder: AppDelegate.makeURLSession)
+    @Weaver(.registration, builder: AppDelegate.makeURLSession)
     private var urlSession: URLSession
     
-    @Weaver(.registration, type: MovieAPI.self, scope: .container, builder: AppDelegate.makeMovieAPI)
+    @Weaver(.registration, type: MovieAPI.self, builder: AppDelegate.makeMovieAPI)
     private var movieAPI: APIProtocol
     
-    @Weaver(.registration, type: ImageManager.self, scope: .container)
+    @Weaver(.registration, type: ImageManager.self)
     private var imageManager: ImageManaging
     
-    @Weaver(.registration, type: MovieManager.self, scope: .container, builder: AppDelegate.makeMovieManager)
+    @Weaver(.registration, type: MovieManager.self, builder: AppDelegate.makeMovieManager)
     private var movieManager: MovieManaging
 
-    @Weaver(.registration, type: HomeViewController.self, scope: .container)
+    @Weaver(.registration, type: HomeViewController.self)
     @objc private var homeViewController: UIViewController
 
     // weaver: reviewManager = ReviewManager <- ReviewManaging
@@ -58,6 +58,6 @@ extension AppDelegate {
     }
     
     static func makeMovieManager(_ dependencies: MovieManagerInputDependencyResolver) -> MovieManaging {
-        return MovieManager(host: "https://api.themoviedb.org/3", logger: dependencies.logger)
+        return MovieManager(host: "https://api.themoviedb.org/3", logger: Logger())
     }
 }

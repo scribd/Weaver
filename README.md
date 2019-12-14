@@ -6,11 +6,11 @@
 [![codecov](https://codecov.io/gh/scribd/Weaver/branch/master/graph/badge.svg)](https://codecov.io/gh/scribd/Weaver) 
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/scribd-weaver/Lobby)
 
-![demo](weaver.gif)
+[![Watch the video](weaver.gif)](https://youtu.be/Rxhc9VJBoOI)
 
 ## Features
 
-- [x] Dependency declaration via annotations (no config file needed)
+- [x] Dependency declaration via property wrappers or comments
 - [x] DI Containers auto-generation
 - [x] Dependency Graph compile time validation
 - [x] ObjC support
@@ -19,7 +19,7 @@
 - [x] Injection with arguments
 - [x] Registration Scopes
 - [x] DI Container hierarchy
-- [x] Thread safety
+- [x] Thread safe
 
 ## Talks
 - [SF SLUG meet-up @Lyft: Maintaining a dependency graph with Weaver](https://www.youtube.com/watch?v=h3CMMbgozG0)
@@ -329,7 +329,7 @@ Weaver allows you to declare dependencies by annotating the code with comments l
 
 It currently supports the following annotations:
 
-#### - Dependency Registration Annotation
+#### - Registration
 
 - Adds the dependency builder to the container.
 
@@ -348,7 +348,7 @@ or
 ```swift
 // weaver: dependencyName = DependencyConcreteType
 
-@Weaver(.registration, type: DependencyConcreteType.self) 
+@Weaver(.registration) 
 var dependencyName: DependencyConcreteType
 ```
 
@@ -358,7 +358,34 @@ var dependencyName: DependencyConcreteType
 
 - `DependencyProtocol`: Dependency's `protocol` if any. Optional, you can register a dependency with its concrete type only.
 
-#### - Scope Annotation
+#### - Reference
+
+Adds an accessor for the dependency to the container's protocol.
+
+Example:
+```swift
+// weaver: dependencyName <- DependencyType
+
+@Weaver(.reference) 
+var dependencyName: DependencyType
+```
+
+`DependencyType`: Either the concrete or abstract type of the dependency. This also defines the type the dependency's accessor returns.
+
+#### - Parameter
+
+Adds a parameter to the container's resolver protocol. This means that the generated container needs to take these parameter at initialisation. It also means that all the concerned dependency accessors need to take this parameter.
+
+Example:
+
+```swift
+// weaver: parameterName <= ParameterType
+
+@Weaver(.parameter) 
+var parameterName: ParameterType
+```
+
+#### - Scope
 
 Sets the scope of a dependency. The default scope being `container`. Only works along with a registration annotation.
 
@@ -377,27 +404,13 @@ Example:
 ```swift
 // weaver: dependencyName.scope = .scopeValue
 
-@Weaver(.registration, type: DependencyType.self, scope: .scopeValue)
+@Weaver(.registration, scope: .scopeValue)
 var dependencyName: DependencyType
 ```
 
 `scopeValue`: Value of the scope. It can be one of the values described above.
 
-#### - Dependency Reference Annotation
-
-Adds an accessor for the dependency to the container's protocol.
-
-Example:
-```swift
-// weaver: dependencyName <- DependencyType
-
-@Weaver(.reference) 
-var dependencyName: DependencyType
-```
-
-`DependencyType`: Either the concrete or abstract type of the dependency. This also defines the type the dependency's accessor returns.
-
-#### - Custom Builder Annotation
+#### - Custom Builder
 
 Overrides a dependency's default initialization code.
 
@@ -407,7 +420,7 @@ Example:
 ```swift
 // weaver: dependencyName.builder = DependencyType.make
 
-@Weaver(.registration, type: DependencyType.self, builder: DependencyType.make) 
+@Weaver(.registration, builder: DependencyType.make) 
 var dependencyName: DependencyType
 ```
 
@@ -415,20 +428,7 @@ var dependencyName: DependencyType
 
 **Warning - Make sure you don't do anything unsafe with the `DependencyResolver` parameter passed down in this method since it won't be caught by the dependency graph validator.**
 
-#### - Parameter Annotation
-
-Adds a parameter to the container's resolver protocol. This means that the generated container needs to take these parameter at initialisation. It also means that all the concerned dependency accessors need to take this parameter.
-
-Example:
-
-```swift
-// weaver: parameterName <= ParameterType
-
-@Weaver(.parameter) 
-var parameterName: ParameterType
-```
-
-#### - Configuration Annotation
+#### - Configuration
 
 Sets a configuration attribute to the concerned object.
 
@@ -447,7 +447,7 @@ var dependencyName: DependencyType
 
 - `setter: Bool` (default: `false`): generates a setter (`setDependencyName(dependency)`) in the dependency container. **Note that a dependency using a setter has to be set manually before being accessed through a dependency resolver or it will crash.** 
 
-- `objc: Bool` (default: `false`): generates an ObjC compliant resolver for a given dependency, allowing it be accessed from ObjC code. 
+- `objc: Bool` (default: `false`): generates an ObjC compliant resolver for a given dependency, allowing it be accessed from ObjC code.
 
 #### Using protperty wrappers with parameters:
 
@@ -467,7 +467,7 @@ final class MovieViewController {
 And how that same type can be registered and referenced:
 
 ```swift
-@WeaverP2(.registration, type: MovieViewController.self)
+@WeaverP2(.registration)
 private var movieViewController: (Int, String) -> MovieViewController
 
 @WeaverP2(.reference)
@@ -475,6 +475,38 @@ private var moviewViewController: (Int, String) -> MovieViewController
 ```
 
 Note that Weaver generates one property wrapper per amount of input parameters, so if a type takes one parameter `WeaverP1` shall be used, for two parameters, `WeaverP2`, and so on.
+
+#### Writing tests:
+
+Weaver can also generate a dependency container stub which can be used for testing. This feature is accessible by adding the option `--tests` to the command (e.g. `weaver swift --tests`).
+
+**To compile, the stub expects certain type doubles to be implemented.**
+
+For example, given the following code:
+
+```swift
+final class MovieViewController {
+   @Weaver(.reference) private var movieManager: MovieManaging
+}
+```
+
+The generated stub expects `MovieManagingDouble` to be implemented in order to compile.
+
+Testing `MoviewViewController` can then be written like the following:
+
+```swift
+final class MovieViewControllerTests: XCTestCase {
+
+	func test_view_controller() {
+		let dependencies = MainDependencyResolverStub()
+		let viewController = dependencies.buildMovieViewController()
+		
+		viewController.viewDidLoad()
+		
+		XCTAssertEqual(dependencies.movieManagerDouble.didRequestMovies, true)
+	}
+}
+```
 
 ## Generate Swift Files
 

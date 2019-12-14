@@ -914,8 +914,41 @@ final class MovieManager {
             XCTFail("Expected error.")
         } catch let error as InspectorError {
             XCTAssertEqual(error.description, """
-test.swift:2: error: Invalid dependency: 'movieManager: MovieManager <- MovieManager'. Resolver type mismatch. Expected '(Int) -> MovieManager' but got 'MovieManager'.
+test.swift:2: error: Invalid dependency: 'movieManager: MovieManager'. Resolver type mismatch. Expected '(Int) -> MovieManager' but got 'MovieManager'.
 """)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_a_valid_dependency_graph_with_property_wrapper_registration_and_reference_with_no_abstract_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    @Weaver(.reference)
+    private var movieManager: MovieManager
+}
+
+final class HomeViewController {
+    @Weaver(.registration)
+    private var movieViewController: MovieViewController
+
+    @Weaver(.registration, type: MovieManager.self)
+    private var movieManager: MovieManager
+}
+
+final class MovieManager {
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
