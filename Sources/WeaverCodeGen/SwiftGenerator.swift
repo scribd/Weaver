@@ -260,17 +260,17 @@ private final class MetaWeaverFile {
     
     // MARK: - Tests File
 
-    func metaTests() -> Meta.File {
+    func metaTests() throws -> Meta.File {
         let imports = dependencyGraph.imports.subtracting(testableImports ?? [])
         return File(name: "WeaverTest.swift")
             .adding(members: MetaWeaverFile.header(version))
             .adding(imports: imports.sorted().map { Import(name: $0) })
             .adding(imports: testableImports?.sorted().map { Import(name: $0, testable: true) } ?? [])
-            .adding(members: bodyTests())
+            .adding(members: try bodyTests())
     }
     
-    private func bodyTests() -> [FileBodyMember] {
-        return [
+    private func bodyTests() throws -> [FileBodyMember] {
+        return try [
             EmptyLine(),
             mainDependencyResolverStub(),
             EmptyLine(),
@@ -354,18 +354,18 @@ private static func fatalBuilder<T>() -> Builder<T> {
 """))
             .adding(member: dependencyGraph.hasPropertyWrapperAnnotations ? PlainCode(code: """
 
-private static var dynamicResolvers = [Any]()
-private static var dynamicResolversLock = NSRecursiveLock()
+private static var _dynamicResolvers = [Any]()
+private static var _dynamicResolversLock = NSRecursiveLock()
 
-fileprivate static func popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
-    guard let dynamicResolver = dynamicResolvers.removeFirst() as? Resolver else {
+fileprivate static func _popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
+    guard let dynamicResolver = _dynamicResolvers.removeFirst() as? Resolver else {
         MainDependencyContainer.fatalError()
     }
     return dynamicResolver
 }
 
-fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
-    dynamicResolvers.append(resolver)
+static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
+    _dynamicResolvers.append(resolver)
 }
 """) : nil)
             .adding(members: dependencyGraph.hasPropertyWrapperAnnotations ? [
@@ -432,7 +432,7 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 .adding(member: EmptyLine())
                 .adding(member: resolverTypealias)
                 .adding(member: Property(variable: Variable.resolver)
-                    .with(value: TypeIdentifier.mainDependencyContainer.reference + .named("popDynamicResolver") | .call(Tuple()
+                    .with(value: TypeIdentifier.mainDependencyContainer.reference + .named("_popDynamicResolver") | .call(Tuple()
                         .adding(parameter: TupleParameter(value: Reference.named(resolverTypealias.identifier.swiftString) + .named(.`self`)))
                     )
                 ))
@@ -492,13 +492,12 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 members += [
                     Function(kind: .named(declaration.declarationName))
                         .with(resultType: declaration.type.typeID)
-                        .adding(parameters: declaration.parameters.compactMap { parameter in
-                            guard let concreteType = parameter.type.concreteType else { return nil }
-                            return FunctionParameter(name: parameter.dependencyName, type: concreteType.typeID)
+                        .adding(parameters: declaration.parameters.map { parameter in
+                            FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
                         })
                         .adding(member: Return(value: .named("_\(declaration.declarationName)") | .block(FunctionBody()
                             .adding(parameter: FunctionBodyParameter(name: Variable._self.name))
-                            .adding(members: try declaration.parameters.compactMap { parameter in
+                            .adding(members: try declaration.parameters.map { parameter in
                                 let declaration = try self.declaration(for: parameter)
                                 return Assignment(
                                     variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
@@ -527,9 +526,8 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         ProtocolProperty(name: declaration.declarationName, type: declaration.type.typeID) :
                         ProtocolFunction(name: declaration.declarationName)
                             .with(resultType: declaration.type.typeID)
-                            .adding(parameters: declaration.parameters.compactMap { parameter in
-                                guard let concreteType = parameter.type.concreteType else { return nil }
-                                return FunctionParameter(name: parameter.dependencyName, type: concreteType.typeID)
+                            .adding(parameters: declaration.parameters.map { parameter in
+                                FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
                             })
                     )
             ]
@@ -745,7 +743,7 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 .adding(members: try dependencyContainer.dependencies.orderedValues.compactMap { dependency in
                     guard dependency.annotationStyle == .propertyWrapper else { return nil }
                     let declaration = try self.declaration(for: dependency)
-                    return TypeIdentifier.mainDependencyContainer.reference + .named("pushDynamicResolver") | .call(Tuple()
+                    return TypeIdentifier.mainDependencyContainer.reference + .named("_pushDynamicResolver") | .call(Tuple()
                         .adding(parameter: TupleParameter(value: declaration.parameters.isEmpty ?
                             Reference.named("{ \(Variable._self.name).\(declaration.declarationName) }") :
                             Variable._self.reference + .named(declaration.declarationName)
@@ -863,8 +861,8 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             .adding(parameter: FunctionBodyParameter(name: hasParameters ? "copyParameters" : "_"))
             .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
             .adding(member: targetHasPropertyWrapperAnnotations ? PlainCode(code: """
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
+            defer { MainDependencyContainer._dynamicResolversLock.unlock() }
+            MainDependencyContainer._dynamicResolversLock.lock()
             """) : nil)
             .adding(member: hasInputDependencies ?
                 Guard(assignment: Assignment(variable: Variable._self, value: Variable._self.reference))
@@ -945,9 +943,8 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                             members += [
                                 Function(kind: .named(declaration.name))
                                     .with(resultType: declaration.type.typeID)
-                                    .adding(parameters: declaration.parameters.compactMap { parameter in
-                                        guard let concreteType = parameter.type.concreteType else { return nil }
-                                        return FunctionParameter(name: parameter.dependencyName, type: concreteType.typeID)
+                                    .adding(parameters: declaration.parameters.map { parameter in
+                                        FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
                                     })
                                     .adding(member: Return(value: Variable.proxySelf.reference + .named(declaration.declarationName) | .call(Tuple()
                                         .adding(parameters: declaration.parameters.map { parameter in
@@ -1005,7 +1002,7 @@ fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
 
 private extension MetaWeaverFile {
     
-    func mainDependencyResolverStub() -> Type {
+    func mainDependencyResolverStub() throws -> Type {
         return Type(identifier: .mainDependencyResolverStub)
             .with(kind: .class(final: false))
             .with(objc: doesSupportObjc)
@@ -1016,6 +1013,7 @@ private extension MetaWeaverFile {
                 .with(override: doesSupportObjc)
             )
             .adding(members: settersStubImplementation())
+            .adding(members: try dependencyBuilders())
     }
     
     func resolversStubImplementation() -> [TypeBodyMember] {
@@ -1051,9 +1049,8 @@ private extension MetaWeaverFile {
                     members += [
                         Function(kind: .named(declaration.declarationName))
                             .with(resultType: declaration.type.typeID)
-                            .adding(parameters: declaration.parameters.compactMap { parameter in
-                                guard let concreteType = parameter.type.concreteType else { return nil }
-                                return FunctionParameter(name: parameter.dependencyName, type: concreteType.typeID)
+                            .adding(parameters: declaration.parameters.map { parameter in
+                                FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
                             })
                             .adding(member: Return(value: doubleVariable.reference))
                     ]
@@ -1087,6 +1084,50 @@ private extension MetaWeaverFile {
             .adding(inheritedTypes: setterDeclarations.map { declaration in
                 TypeIdentifier(name: declaration.setterTypeName)
             })
+    }
+    
+    func dependencyBuilders() throws -> [TypeBodyMember] {
+        return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [TypeBodyMember] in
+            guard dependencyContainer.declarationSource == .type else { return [] }
+            guard dependencyContainer.parameters.isEmpty == false || dependencyContainer.references.isEmpty == false else { return [] }
+            let containsAmbiguousDeclarations = try self.containsAmbiguousDeclarations(in: dependencyContainer)
+            return [
+                EmptyLine(),
+                Function(kind: .named(dependencyContainer.type.dependencyBuilderVariable.name))
+                    .adding(parameters: dependencyContainer.parameters.map { parameter in
+                        FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
+                    })
+                    .with(resultType: dependencyContainer.type.typeID)
+                    .adding(members: try dependencyContainer.parameters.map { parameter in
+                        let declaration = try self.declaration(for: parameter)
+                        let doubleVariable = Variable(name: declaration.declarationDoubleName)
+                        return Assignment(
+                            variable: doubleVariable.reference,
+                            value: Reference.named(parameter.dependencyName)
+                        )
+                    })
+                    .adding(members: try dependencyContainer.dependencies.orderedValues.compactMap { dependency in
+                        guard dependency.annotationStyle == .propertyWrapper else { return nil }
+                        let declaration = try self.declaration(for: dependency)
+                        return TypeIdentifier.mainDependencyContainer.reference + .named("_pushDynamicResolver") | .call(Tuple()
+                            .adding(parameter: TupleParameter(value: declaration.parameters.isEmpty ?
+                                Reference.named("{ self.\(declaration.declarationName) }") :
+                                Variable._self.reference + .named(declaration.declarationName)
+                            ))
+                        )
+                    })
+                    .adding(member: Return(value: dependencyContainer.type.typeID.reference | .call(Tuple()
+                        .adding(parameter: TupleParameter(
+                            name: "injecting",
+                            value: containsAmbiguousDeclarations == false ?
+                                Reference.named(.`self`) :
+                                dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
+                                    .adding(parameter: TupleParameter(value: Reference.named(.`self`)))
+                                )
+                        ))
+                    )))
+            ]
+        }
     }
 }
 

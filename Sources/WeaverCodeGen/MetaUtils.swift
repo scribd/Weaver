@@ -32,8 +32,6 @@ extension Variable {
     static let value = Variable(name: "_value")
     static let proxySelf = Variable(name: "value")
     static let resolver = Variable(name: "resolver")
-    static let dynamicResolvers = Variable(name: "dynamicResolvers")
-    static let dynamicResolversLock = Variable(name: "dynamicResolversLock")
 }
 
 extension TypeWrapper {
@@ -68,6 +66,10 @@ extension TypeWrapper {
         let valueTypeName = value.toTypeName
         let underscore = valueTypeName.contains("_") ? "_" : String()
         return TypeIdentifier(name: "\(valueTypeName)\(underscore)InputDependencyResolver")
+    }
+    
+    var dependencyBuilderVariable: Variable {
+        return Variable(name: "build\(name ?? toTypeName)")
     }
      
     var toTypeName: String {

@@ -26,6 +26,7 @@ private extension Linker {
         var didChange = false
         try self.init(inputPaths,
                       cachePath: cachePath,
+                      shouldLog: shouldLog,
                       didChange: &didChange)
         _ = didChange
     }

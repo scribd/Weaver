@@ -26,6 +26,15 @@ public struct TypeWrapper<T: TypeKind>: Hashable, Sequence, CustomStringConverti
         return value.description
     }
     
+    var name: String? {
+        switch value {
+        case .components(let components) where components.count == 1:
+            return components.first!.name
+        default:
+            return nil
+        }
+    }
+    
     var abstractType: AbstractType {
         return AbstractType(value: value)
     }
