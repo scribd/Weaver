@@ -42,7 +42,7 @@
         "repositoryURL": "https://github.com/scribd/Meta.git",
         "state": {
           "branch": "master",
-          "revision": "9531f023a593e084a47a9878ee69b0ee2cb22e2f",
+          "revision": "177a8ddc1f4e5329563af738e825f6240360e134",
           "version": null
         }
       },
@@ -87,8 +87,8 @@
         "repositoryURL": "https://github.com/JohnSundell/ShellOut.git",
         "state": {
           "branch": null,
-          "revision": "d3d54ce662dfee7fef619330b71d251b8d4869f9",
-          "version": "2.2.0"
+          "revision": "4ebf25863deb9c3c02696704fc3d39736183f258",
+          "version": "2.2.1"
         }
       },
       {

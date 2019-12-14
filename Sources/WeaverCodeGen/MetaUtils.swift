@@ -32,6 +32,7 @@ extension Variable {
     static let value = Variable(name: "_value")
     static let proxySelf = Variable(name: "value")
     static let resolver = Variable(name: "resolver")
+    static let builders = Variable(name: "builders")
 }
 
 extension TypeWrapper {

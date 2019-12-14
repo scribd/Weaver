@@ -351,6 +351,14 @@ private static func fatalBuilder<T>() -> Builder<T> {
         \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
     }
 }
+
+private var builders = Dictionary<String, Any>()
+private func getBuilder<T>(for name: String, type _: T.Type) -> Builder<T> {
+    guard let builder = builders[name] as? Builder<T> else {
+        return \(TypeIdentifier.mainDependencyContainer.swiftString).fatalBuilder()
+    }
+    return builder
+}
 """))
             .adding(member: dependencyGraph.hasPropertyWrapperAnnotations ? PlainCode(code: """
 
@@ -359,7 +367,7 @@ private static var _dynamicResolversLock = NSRecursiveLock()
 
 fileprivate static func _popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
     guard let dynamicResolver = _dynamicResolvers.removeFirst() as? Resolver else {
-        MainDependencyContainer.fatalError()
+        \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
     }
     return dynamicResolver
 }
@@ -371,11 +379,11 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             .adding(members: dependencyGraph.hasPropertyWrapperAnnotations ? [
                 EmptyLine(),
                 Type(identifier: TypeIdentifier(name: "Scope"))
-                    .with(kind: .enum)
+                    .with(kind: .enum(indirect: false))
                     .adding(members: Scope.allCases.map { Case(name: $0.rawValue) }),
                 EmptyLine(),
                 Type(identifier: TypeIdentifier(name: "DependencyKind"))
-                    .with(kind: .enum)
+                    .with(kind: .enum(indirect: false))
                     .adding(members: Dependency.Kind.allCases.map { Case(name: $0.rawValue) }),
             ] : [])
             .adding(members: try resolversImplementation())
@@ -471,20 +479,16 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
     
     func resolversImplementation() throws -> [TypeBodyMember] {
         return try orderedDeclarations.flatMap { declaration -> [TypeBodyMember] in
-            var members: [TypeBodyMember] = [
-                EmptyLine(),
-                Property(variable: Variable(name: "_\(declaration.declarationName)")
-                    .with(type: .builder(of: declaration.type.typeID))
-                    .with(immutable: false))
-                    .with(accessLevel: .private)
-                    .with(value: TypeIdentifier.mainDependencyContainer.reference + .named("fatalBuilder") | .call()),
-            ]
+            var members: [TypeBodyMember] = [EmptyLine()]
             
             if declaration.parameters.isEmpty {
                 members += [
                     ComputedProperty(variable: Variable(name: declaration.declarationName)
                         .with(type: declaration.type.typeID))
-                        .adding(member: Return(value: .named("_\(declaration.declarationName)") | .call(Tuple()
+                        .adding(member: Return(value: .named("getBuilder") | .call(Tuple()
+                            .adding(parameter: TupleParameter(name: "for", value: Value.string(declaration.declarationName)))
+                            .adding(parameter: TupleParameter(name: "type", value: declaration.type.typeID.reference + .named(.`self`)))
+                        ) | .call(Tuple()
                             .adding(parameter: TupleParameter(value: Value.nil))
                         )))
                 ]
@@ -495,12 +499,19 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         .adding(parameters: declaration.parameters.map { parameter in
                             FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
                         })
-                        .adding(member: Return(value: .named("_\(declaration.declarationName)") | .block(FunctionBody()
+                        .adding(member: Assignment(
+                            variable: Variable(name: "builder").with(type: TypeIdentifier.builder(of: declaration.type.typeID)),
+                            value: .named("getBuilder") | .call(Tuple()
+                                .adding(parameter: TupleParameter(name: "for", value: Value.string(declaration.declarationName)))
+                                .adding(parameter: TupleParameter(name: "type", value: declaration.type.typeID.reference + .named(.`self`)))
+                            )
+                        ))
+                        .adding(member: Return(value: .named("builder") | .block(FunctionBody()
                             .adding(parameter: FunctionBodyParameter(name: Variable._self.name))
                             .adding(members: try declaration.parameters.map { parameter in
                                 let declaration = try self.declaration(for: parameter)
                                 return Assignment(
-                                    variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
+                                    variable: Variable._self.reference + .named("builders[\"\(declaration.declarationName)\"]"),
                                     value: Variable._self.reference + .named("builder") | .call(Tuple()
                                         .adding(parameter: TupleParameter(value:  Reference.named(parameter.dependencyName)))
                                     )
@@ -691,7 +702,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
 
                     let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
                         Assignment(
-                            variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
+                            variable: Variable._self.reference + .named("builders[\"\(declaration.declarationName)\"]"),
                             value: Variable._self.reference + .named("builder") | .call(Tuple()
                                 .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
                             )
@@ -730,7 +741,10 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         let declaration = try self.declaration(for: registration)
                         return Assignment(
                             variable: Reference.named("_"),
-                            value: Variable._self.reference + .named("_\(declaration.declarationName)") | .call(Tuple()
+                            value: Variable._self.reference + .named("getBuilder") | .call(Tuple()
+                                .adding(parameter: TupleParameter(name: "for", value: Value.string(declaration.declarationName)))
+                                .adding(parameter: TupleParameter(name: "type", value: declaration.type.typeID.reference + .named(.`self`)))
+                            ) | .call(Tuple()
                                 .adding(parameter: TupleParameter(value: Value.nil))
                             )
                         )
@@ -859,6 +873,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         
         builderReference = builderFunction | .block(FunctionBody()
             .adding(parameter: FunctionBodyParameter(name: hasParameters ? "copyParameters" : "_"))
+            .with(resultType: declaration.type.typeID)
             .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
             .adding(member: targetHasPropertyWrapperAnnotations ? PlainCode(code: """
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
@@ -906,7 +921,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         )
         
         return Assignment(
-            variable: Variable._self.reference + .named("_\(declaration.declarationName)"),
+            variable: Variable._self.reference + .named("builders[\"\(declaration.declarationName)\"]"),
             value: builderReference
         )
     }

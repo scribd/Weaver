@@ -68,18 +68,26 @@ import UIKit
         }
     }
 
-    private static var dynamicResolvers = [Any]()
-    private static var dynamicResolversLock = NSRecursiveLock()
+    private var builders = Dictionary<String, Any>()
+    private func getBuilder<T>(for name: String, type _: T.Type) -> Builder<T> {
+        guard let builder = builders[name] as? Builder<T> else {
+            return MainDependencyContainer.fatalBuilder()
+        }
+        return builder
+    }
 
-    fileprivate static func popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
-        guard let dynamicResolver = dynamicResolvers.removeFirst() as? Resolver else {
+    private static var _dynamicResolvers = [Any]()
+    private static var _dynamicResolversLock = NSRecursiveLock()
+
+    fileprivate static func _popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
+        guard let dynamicResolver = _dynamicResolvers.removeFirst() as? Resolver else {
             MainDependencyContainer.fatalError()
         }
         return dynamicResolver
     }
 
-    fileprivate static func pushDynamicResolver<Resolver>(_ resolver: Resolver) {
-        dynamicResolvers.append(resolver)
+    static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
+        _dynamicResolvers.append(resolver)
     }
 
     enum Scope {
@@ -95,63 +103,53 @@ import UIKit
         case parameter
     }
 
-    private var _homeViewController: Builder<UIViewController> = MainDependencyContainer.fatalBuilder()
     var homeViewController: UIViewController {
-        return _homeViewController(nil)
+        return getBuilder(for: "homeViewController", type: UIViewController.self)(nil)
     }
 
-    private var _imageManager: Builder<ImageManaging> = MainDependencyContainer.fatalBuilder()
     var imageManager: ImageManaging {
-        return _imageManager(nil)
+        return getBuilder(for: "imageManager", type: ImageManaging.self)(nil)
     }
 
-    private var _logger: Builder<Logger> = MainDependencyContainer.fatalBuilder()
     var logger: Logger {
-        return _logger(nil)
+        return getBuilder(for: "logger", type: Logger.self)(nil)
     }
 
-    private var _movieAPI: Builder<APIProtocol> = MainDependencyContainer.fatalBuilder()
     var movieAPI: APIProtocol {
-        return _movieAPI(nil)
+        return getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
     }
 
-    private var _movieController: Builder<UIViewController> = MainDependencyContainer.fatalBuilder()
     func movieController(movieID: UInt,
                          movieTitle: String) -> UIViewController {
-        return _movieController { _self in
-            _self._movieID = _self.builder(movieID)
-            _self._movieTitle = _self.builder(movieTitle)
+        let builder: Builder<UIViewController> = getBuilder(for: "movieController", type: UIViewController.self)
+        return builder { _self in
+            _self.builders["movieID"] = _self.builder(movieID)
+            _self.builders["movieTitle"] = _self.builder(movieTitle)
         }
     }
 
-    private var _movieID: Builder<UInt> = MainDependencyContainer.fatalBuilder()
     var movieID: UInt {
-        return _movieID(nil)
+        return getBuilder(for: "movieID", type: UInt.self)(nil)
     }
 
-    private var _movieManager: Builder<MovieManaging> = MainDependencyContainer.fatalBuilder()
     var movieManager: MovieManaging {
-        return _movieManager(nil)
+        return getBuilder(for: "movieManager", type: MovieManaging.self)(nil)
     }
 
-    private var _movieTitle: Builder<String> = MainDependencyContainer.fatalBuilder()
     var movieTitle: String {
-        return _movieTitle(nil)
+        return getBuilder(for: "movieTitle", type: String.self)(nil)
     }
 
-    private var _reviewController: Builder<WSReviewViewController> = MainDependencyContainer.fatalBuilder()
     var reviewController: WSReviewViewController {
-        return _reviewController(nil)
+        return getBuilder(for: "reviewController", type: WSReviewViewController.self)(nil)
     }
 
-    private var _reviewManager: Builder<ReviewManaging> = MainDependencyContainer.fatalBuilder()
     var reviewManager: ReviewManaging {
-        return _reviewManager(nil)
+        return getBuilder(for: "reviewManager", type: ReviewManaging.self)(nil)
     }
 
-    private var _urlSession: Builder<URLSession> = MainDependencyContainer.fatalBuilder()
     var urlSession: URLSession {
-        return _urlSession(nil)
+        return getBuilder(for: "urlSession", type: URLSession.self)(nil)
     }
 
     fileprivate override init() {
@@ -159,57 +157,57 @@ import UIKit
 
     fileprivate func appDelegateDependencyResolver() -> AppDelegateDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _self._urlSession = lazyBuilder { [weak _self] _ in
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
-        _self._movieAPI = lazyBuilder { [weak _self] _ in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeMovieAPI(_self as MovieAPIInputDependencyResolver)
         }
-        _self._imageManager = lazyBuilder { _ in return ImageManager() }
-        _self._movieManager = lazyBuilder { [weak _self] _ in
+        _self.builders["imageManager"] = lazyBuilder { _ -> ImageManaging in return ImageManager() }
+        _self.builders["movieManager"] = lazyBuilder { [weak _self] _ -> MovieManaging in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeMovieManager(_self as MovieManagerInputDependencyResolver)
         }
-        _self._homeViewController = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
+        _self.builders["homeViewController"] = lazyBuilder { [weak _self] _ -> UIViewController in
+            defer { MainDependencyContainer._dynamicResolversLock.unlock() }
+            MainDependencyContainer._dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             let __self = _self.homeViewControllerDependencyResolver()
             return HomeViewController(injecting: __self)
         }
-        _self._reviewManager = lazyBuilder { [weak _self] _ in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
+        _self.builders["reviewManager"] = lazyBuilder { [weak _self] _ -> ReviewManaging in
+            defer { MainDependencyContainer._dynamicResolversLock.unlock() }
+            MainDependencyContainer._dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             let __self = _self.reviewManagerDependencyResolver()
             return ReviewManager(injecting: __self)
         }
-        _ = _self._logger(nil)
-        _ = _self._urlSession(nil)
-        _ = _self._movieAPI(nil)
-        _ = _self._imageManager(nil)
-        _ = _self._movieManager(nil)
-        _ = _self._homeViewController(nil)
-        _ = _self._reviewManager(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.urlSession })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
-        MainDependencyContainer.pushDynamicResolver({ _self.imageManager })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieManager })
-        MainDependencyContainer.pushDynamicResolver({ _self.homeViewController })
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
+        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
+        _ = _self.getBuilder(for: "imageManager", type: ImageManaging.self)(nil)
+        _ = _self.getBuilder(for: "movieManager", type: MovieManaging.self)(nil)
+        _ = _self.getBuilder(for: "homeViewController", type: UIViewController.self)(nil)
+        _ = _self.getBuilder(for: "reviewManager", type: ReviewManaging.self)(nil)
+        MainDependencyContainer._pushDynamicResolver({ _self.logger })
+        MainDependencyContainer._pushDynamicResolver({ _self.urlSession })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
+        MainDependencyContainer._pushDynamicResolver({ _self.imageManager })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieManager })
+        MainDependencyContainer._pushDynamicResolver({ _self.homeViewController })
         return _self
     }
 
@@ -220,32 +218,32 @@ import UIKit
 
     private func personManagerDependencyResolver() -> PersonManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _ = _self._logger(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        MainDependencyContainer._pushDynamicResolver({ _self.logger })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
         return _self
     }
 
     private func reviewManagerDependencyResolver() -> ReviewManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._movieAPI = _self.builder(movieAPI)
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _ = _self._logger(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieAPI })
+        _self.builders["movieAPI"] = _self.builder(movieAPI)
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        MainDependencyContainer._pushDynamicResolver({ _self.logger })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
         return _self
     }
 
     private func homeViewControllerDependencyResolver() -> HomeViewControllerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._imageManager = _self.builder(imageManager)
-        _self._movieManager = _self.builder(movieManager)
-        _self._reviewManager = _self.builder(reviewManager)
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _self._movieController = weakLazyBuilder { [weak _self] copyParameters in
-            defer { MainDependencyContainer.dynamicResolversLock.unlock() }
-            MainDependencyContainer.dynamicResolversLock.lock()
+        _self.builders["imageManager"] = _self.builder(imageManager)
+        _self.builders["movieManager"] = _self.builder(movieManager)
+        _self.builders["reviewManager"] = _self.builder(reviewManager)
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["movieController"] = weakLazyBuilder { [weak _self] copyParameters -> UIViewController in
+            defer { MainDependencyContainer._dynamicResolversLock.unlock() }
+            MainDependencyContainer._dynamicResolversLock.lock()
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
@@ -253,33 +251,33 @@ import UIKit
             copyParameters?(__self as! MainDependencyContainer)
             return MovieViewController(injecting: __self)
         }
-        _ = _self._logger(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieManager })
-        MainDependencyContainer.pushDynamicResolver(_self.movieController)
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        MainDependencyContainer._pushDynamicResolver({ _self.logger })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieManager })
+        MainDependencyContainer._pushDynamicResolver(_self.movieController)
         return _self
     }
 
     private func movieViewControllerDependencyResolver() -> MovieViewControllerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._imageManager = _self.builder(imageManager)
-        _self._movieManager = _self.builder(movieManager)
-        _self._reviewManager = _self.builder(reviewManager)
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _self._reviewController = weakLazyBuilder { [weak _self] _ in
+        _self.builders["imageManager"] = _self.builder(imageManager)
+        _self.builders["movieManager"] = _self.builder(movieManager)
+        _self.builders["reviewManager"] = _self.builder(reviewManager)
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["reviewController"] = weakLazyBuilder { [weak _self] _ -> WSReviewViewController in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return WSReviewViewController.make(_self as WSReviewViewControllerInputDependencyResolver)
         }
-        _ = _self._logger(nil)
-        MainDependencyContainer.pushDynamicResolver({ _self.logger })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieID })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieTitle })
-        MainDependencyContainer.pushDynamicResolver({ _self.movieManager })
-        MainDependencyContainer.pushDynamicResolver({ _self.imageManager })
-        MainDependencyContainer.pushDynamicResolver({ _self.reviewManager })
-        MainDependencyContainer.pushDynamicResolver({ _self.reviewController })
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        MainDependencyContainer._pushDynamicResolver({ _self.logger })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieID })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieTitle })
+        MainDependencyContainer._pushDynamicResolver({ _self.movieManager })
+        MainDependencyContainer._pushDynamicResolver({ _self.imageManager })
+        MainDependencyContainer._pushDynamicResolver({ _self.reviewManager })
+        MainDependencyContainer._pushDynamicResolver({ _self.reviewController })
         return _self
     }
 }
@@ -357,7 +355,7 @@ typealias WSReviewViewControllerInputDependencyResolver = ImageManagerResolver &
 struct Weaver<ConcreteType, AbstractType> {
 
     typealias Resolver = () -> AbstractType
-    let resolver = MainDependencyContainer.popDynamicResolver(Resolver.self)
+    let resolver = MainDependencyContainer._popDynamicResolver(Resolver.self)
 
     init(_ kind: MainDependencyContainer.DependencyKind,
          type: ConcreteType.Type,
@@ -385,7 +383,7 @@ extension Weaver where ConcreteType == Void {
 struct WeaverP2<ConcreteType, AbstractType, P1, P2> {
 
     typealias Resolver = (P1, P2) -> AbstractType
-    let resolver = MainDependencyContainer.popDynamicResolver(Resolver.self)
+    let resolver = MainDependencyContainer._popDynamicResolver(Resolver.self)
 
     init(_ kind: MainDependencyContainer.DependencyKind,
          type: ConcreteType.Type,

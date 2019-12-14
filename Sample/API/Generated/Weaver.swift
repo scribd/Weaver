@@ -67,24 +67,28 @@ final class MainDependencyContainer {
         }
     }
 
-    private var _host: Builder<Optional<String>> = MainDependencyContainer.fatalBuilder()
+    private var builders = Dictionary<String, Any>()
+    private func getBuilder<T>(for name: String, type _: T.Type) -> Builder<T> {
+        guard let builder = builders[name] as? Builder<T> else {
+            return MainDependencyContainer.fatalBuilder()
+        }
+        return builder
+    }
+
     var host: Optional<String> {
-        return _host(nil)
+        return getBuilder(for: "host", type: Optional<String>.self)(nil)
     }
 
-    private var _logger: Builder<Logger> = MainDependencyContainer.fatalBuilder()
     var logger: Logger {
-        return _logger(nil)
+        return getBuilder(for: "logger", type: Logger.self)(nil)
     }
 
-    private var _movieAPI: Builder<APIProtocol> = MainDependencyContainer.fatalBuilder()
     var movieAPI: APIProtocol {
-        return _movieAPI(nil)
+        return getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
     }
 
-    private var _urlSession: Builder<URLSession> = MainDependencyContainer.fatalBuilder()
     var urlSession: URLSession {
-        return _urlSession(nil)
+        return getBuilder(for: "urlSession", type: URLSession.self)(nil)
     }
 
     fileprivate init() {
@@ -92,39 +96,39 @@ final class MainDependencyContainer {
 
     private func movieAPIDependencyResolver() -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._urlSession = _self.builder(urlSession)
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _ = _self._logger(nil)
+        _self.builders["urlSession"] = _self.builder(urlSession)
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
         return _self
     }
 
     fileprivate func publicMovieAPIDependencyResolver(urlSession: URLSession) -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._urlSession = _self.builder(urlSession)
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _ = _self._logger(nil)
+        _self.builders["urlSession"] = _self.builder(urlSession)
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
         return _self
     }
 
     fileprivate func imageManagerDependencyResolver() -> ImageManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._logger = lazyBuilder { _ in return Logger() }
-        _self._urlSession = lazyBuilder { [weak _self] _ in
+        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return ImageManager.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
-        _self._movieAPI = lazyBuilder { [weak _self] _ in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             let __self = _self.movieAPIDependencyResolver()
             return MovieAPI(injecting: __self)
         }
-        _ = _self._logger(nil)
-        _ = _self._urlSession(nil)
-        _ = _self._movieAPI(nil)
+        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
+        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
         return _self
     }
 
@@ -135,44 +139,44 @@ final class MainDependencyContainer {
 
     private func movieManagerDependencyResolver() -> MovieManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._urlSession = lazyBuilder { [weak _self] _ in
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
         }
-        _self._movieAPI = lazyBuilder { [weak _self] _ in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             let __self = _self.movieAPIDependencyResolver()
             return MovieAPI(injecting: __self)
         }
-        _ = _self._urlSession(nil)
-        _ = _self._movieAPI(nil)
+        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
+        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
         return _self
     }
 
     fileprivate func publicMovieManagerDependencyResolver(host: Optional<String>,
                                                           logger: Logger) -> MovieManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self._host = _self.builder(host)
-        _self._logger = _self.builder(logger)
-        _self._urlSession = lazyBuilder { [weak _self] _ in
+        _self.builders["host"] = _self.builder(host)
+        _self.builders["logger"] = _self.builder(logger)
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
         }
-        _self._movieAPI = lazyBuilder { [weak _self] _ in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             let __self = _self.movieAPIDependencyResolver()
             return MovieAPI(injecting: __self)
         }
-        _ = _self._urlSession(nil)
-        _ = _self._movieAPI(nil)
+        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
+        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
         return _self
     }
 }
