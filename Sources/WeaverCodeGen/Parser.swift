@@ -37,19 +37,6 @@ private extension Parser {
     }
 }
 
-// MARK: - Printable
-
-private extension Parser {
-    
-    func fileLocation(line: Int? = nil) -> FileLocation {
-        return FileLocation(line: line, file: fileName)
-    }
-    
-    func printableDependency(line: Int?, name: String) -> PrintableDependency {
-        return PrintableDependency(fileLocation: fileLocation(line: line), name: name, type: nil)
-    }
-}
-
 // MARK: - Parsing
 
 private extension Parser {
@@ -73,9 +60,9 @@ private extension Parser {
             consumeToken()
             return token
         case nil:
-            throw ParserError.unexpectedEOF(fileLocation())
+            throw ParserError.unexpectedEOF(FileLocation(file: fileName))
         case .some(let token):
-            throw ParserError.unexpectedToken(fileLocation(line: token.line))
+            throw ParserError.unexpectedToken(FileLocation(line: token.line, file: fileName))
         }
     }
 
@@ -89,9 +76,8 @@ private extension Parser {
         var parameterNames = Set<String>()
         
         let checkDoubleDeclaration = { (name: String, line: Int) throws in
-            let dependency = self.printableDependency(line: line, name: name)
             guard !registrationNames.contains(name) && !referenceNames.contains(name) && !parameterNames.contains(name) else {
-                throw ParserError.dependencyDoubleDeclaration(dependency)
+                throw ParserError.dependencyDoubleDeclaration(name, FileLocation(line: line, file: self.fileName))
             }
         }
         
@@ -127,7 +113,7 @@ private extension Parser {
                 let annotation = try parseSimpleExpr(ConfigurationAnnotation.self)
                 var annotations = configurationAnnotations[annotation.value.target] ?? [:]
                 guard annotations[annotation.value.uniqueIdentifier] == nil else {
-                    throw ParserError.configurationAttributeDoubleAssignation(fileLocation(line: annotation.line),
+                    throw ParserError.configurationAttributeDoubleAssignation(FileLocation(line: annotation.line, file: fileName),
                                                                               attribute: annotation.value.attribute)
                 }
                 annotations[annotation.value.uniqueIdentifier] = annotation
@@ -148,10 +134,10 @@ private extension Parser {
                 }
 
             case nil:
-                throw ParserError.unexpectedEOF(fileLocation())
+                throw ParserError.unexpectedEOF(FileLocation(file: fileName))
             
             case .some(let token):
-                throw ParserError.unexpectedToken(fileLocation(line: token.line))
+                throw ParserError.unexpectedToken(FileLocation(line: token.line, file: fileName))
             }
             
             for configurationAnnotation in configurationAnnotations.values.flatMap({ $0.values }) {
@@ -167,15 +153,16 @@ private extension Parser {
         case .dependency(let name):
             let _dependencyKind: ConfigurationAttributeDependencyKind? = referenceNames.contains(name) ?
                 .reference : registrationNames.contains(name) ?
-                    .registration : nil
-            let error = ParserError.unknownDependency(printableDependency(line: configurationAnnotation.line, name: name))
+                .registration : nil
+            
+            let fileLocation = FileLocation(line: configurationAnnotation.line, file: fileName)
             if let dependencyKind = _dependencyKind {
-                if !ConfigurationAnnotation.validate(configurationAttribute: configurationAnnotation.value.attribute,
-                                                     with: dependencyKind) {
-                    throw error
+                let attribute = configurationAnnotation.value.attribute
+                guard ConfigurationAnnotation.validate(configurationAttribute: attribute, with: dependencyKind) else {
+                    throw ParserError.incompatibleConfigurationAttribute(fileLocation, attribute: attribute, dependencyName: name)
                 }
             } else {
-                throw error
+                throw ParserError.unknownDependency(name, fileLocation)
             }
             
         case .`self`:
@@ -211,7 +198,7 @@ private extension Parser {
                 return .file(types: types, name: fileName, imports: sortedImports)
                 
             case .some(let token):
-                throw ParserError.unexpectedToken(fileLocation(line: token.line))
+                throw ParserError.unexpectedToken(FileLocation(line: token.line, file: fileName))
             }
         }
     }

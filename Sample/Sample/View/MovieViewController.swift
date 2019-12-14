@@ -17,17 +17,26 @@ final class MovieViewController: UIViewController {
         let overview: String?
     }
     
-    private let dependencies: MovieViewControllerDependencyResolver
+    @Weaver(.registration, type: Logger.self)
+    private var logger: Logger
 
-    // weaver: logger = Logger
+    @Weaver(.parameter)
+    private var movieID: UInt
     
-    // weaver: movieID <= UInt
-    // weaver: title <= String
+    @Weaver(.parameter)
+    private var movieTitle: String
     
-    // weaver: movieManager <- MovieManaging
-    // weaver: imageManager <- ImageManaging
-    
-    // weaver: reviewController = WSReviewViewController
+    @Weaver(.reference)
+    private var movieManager: MovieManaging
+
+    @Weaver(.reference)
+    private var imageManager: ImageManaging
+
+    @Weaver(.reference)
+    private var reviewManager: ReviewManaging
+
+    @Weaver(.registration, type: WSReviewViewController.self, scope: .weak, builder: WSReviewViewController.make)
+    private var reviewController: WSReviewViewController
     
     private var originalBarStyle: UIBarStyle?
     
@@ -54,8 +63,7 @@ final class MovieViewController: UIViewController {
         return recognizer
     }()
 
-    required init(injecting dependencies: MovieViewControllerDependencyResolver) {
-        self.dependencies = dependencies
+    required init(injecting _: MovieViewControllerDependencyResolver) {
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -79,9 +87,9 @@ final class MovieViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        dependencies.logger.log(.info, "Showing movie: \(dependencies.title).")
+        logger.log(.info, "Showing movie: \(movieTitle).")
         
-        title = dependencies.title
+        title = movieTitle
         view.backgroundColor = .black
         edgesForExtendedLayout = []
 
@@ -103,12 +111,12 @@ final class MovieViewController: UIViewController {
         ])
         
         loadData { viewModel in
-            self.dependencies.imageManager.getImage(with: viewModel.thumbnail) { result in
+            self.imageManager.getImage(with: viewModel.thumbnail) { result in
                 switch result {
                 case .success(let image):
                     self.thumbnailImageView.image = image
                 case .failure(let error):
-                    self.dependencies.logger.log(.error, "\(error)")
+                    self.logger.log(.error, "\(error)")
                 }
             }
             
@@ -117,12 +125,12 @@ final class MovieViewController: UIViewController {
     }
     
     private func loadData(completion: @escaping (ViewModel) -> ()) {
-        dependencies.movieManager.getMovie(id: dependencies.movieID) { result in
+        movieManager.getMovie(id: movieID) { result in
             switch result {
             case .success(let movie):
                 completion(ViewModel(movie))
             case .failure(let error):
-                self.dependencies.logger.log(.error, "\(error)")
+                self.logger.log(.error, "\(error)")
                 completion(ViewModel())
             }
         }
@@ -134,8 +142,7 @@ final class MovieViewController: UIViewController {
 private extension MovieViewController {
     
     @objc func didTapImage(_: UITapGestureRecognizer) {
-        let controller = dependencies.reviewController(movieID: dependencies.movieID)
-        navigationController?.pushViewController(controller, animated: true)
+        navigationController?.pushViewController(reviewController, animated: true)
     }
 }
 
@@ -149,5 +156,14 @@ private extension MovieViewController.ViewModel {
     init(_ movie: Movie) {
         thumbnail = movie.poster_path
         overview = movie.overview
+    }
+}
+
+// MARK: - Custom builder
+
+extension WSReviewViewController {
+    
+    static func make(_ dependencies: WSReviewViewControllerInputDependencyResolver) -> WSReviewViewController {
+        return WSReviewViewController(dependencies, movieID: dependencies.movieID)
     }
 }

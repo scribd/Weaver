@@ -22,14 +22,14 @@ public indirect enum Expr: Equatable {
 
 struct ExprSequence: Sequence, IteratorProtocol {
 
-    private var stack: [[Expr]]
+    private var stack: [(exprs: [Expr], embeddingTypes: [ConcreteType], file: String?)]
 
     init(exprs: [Expr]) {
-        self.stack = [exprs]
+        self.stack = [(exprs, [], nil)]
     }
 
-    mutating func next() -> Expr? {
-        guard let exprs = stack.popLast() else {
+    mutating func next() -> (expr: Expr, embeddingTypes: [ConcreteType], file: String?)? {
+        guard let (exprs, embeddingTypes, file) = stack.popLast() else {
             return nil
         }
 
@@ -39,12 +39,14 @@ struct ExprSequence: Sequence, IteratorProtocol {
 
         var mutableExprs = exprs
         mutableExprs.removeFirst()
-        stack.append(mutableExprs)
+        stack.append((mutableExprs, embeddingTypes, file))
 
         switch expr {
-        case .file(let exprs, _, _),
-             .typeDeclaration(_, let exprs):
-            stack.append(exprs)
+        case .file(let exprs, let file, _):
+            stack.append((exprs, embeddingTypes, file))
+            
+        case .typeDeclaration(let token, let exprs):
+            stack.append((exprs, embeddingTypes + [token.value.type], file))
 
         case .referenceAnnotation,
              .registerAnnotation,
@@ -53,7 +55,7 @@ struct ExprSequence: Sequence, IteratorProtocol {
             break
         }
 
-        return expr
+        return (expr, embeddingTypes, file)
     }
 }
 
@@ -65,21 +67,21 @@ extension Expr: CustomStringConvertible {
         case .file(let types, let name, _):
             return """
             File[\(name)]
-            \(types.map { " \($0)" }.joined(separator: "\n"))
+            \(types.map { "|- \($0.description)" }.joined(separator: "\n"))
             """
         case .registerAnnotation(let token):
-            return "Register - \(token)"
+            return "Register - \(token.description)"
         case .typeDeclaration(let type, let children):
             return """
-            \(type)
-            \(children.map { "   \($0)" }.joined(separator: "\n"))
+            \(type.description)
+            \(children.map { "|-- \($0.description)" }.joined(separator: "\n"))
             """
         case .referenceAnnotation(let token):
-            return "Reference - \(token)"
+            return "Reference - \(token.description)"
         case .parameterAnnotation(let token):
-            return "Parameter - \(token)"
+            return "Parameter - \(token.description)"
         case .configurationAnnotation(let token):
-            return "Configuration - \(token)"
+            return "Configuration - \(token.description)"
         }
     }
 }
@@ -88,37 +90,12 @@ extension Expr: CustomStringConvertible {
 
 extension Expr {
     
-    func toFile() -> (types: [Expr], name: String, imports: [String])? {
+    func toRegisterAnnotation() -> TokenBox<RegisterAnnotation>? {
         switch self {
-        case .file(let types, let name, let imports):
-            return (types, name, imports)
-        default:
-            return nil
-        }
-    }
-    
-    func toTypeDeclaration() -> (token: TokenBox<InjectableType>, children: [Expr])? {
-        switch self {
-        case .typeDeclaration(let token, let children):
-            return (token, children)
-        default:
-            return nil
-        }
-    }
-    
-    func toReferenceAnnotation() -> TokenBox<ReferenceAnnotation>? {
-        switch self {
-        case .referenceAnnotation(let token):
+        case .registerAnnotation(let token):
             return token
         default:
             return nil
         }
-    }
-}
-
-extension ExprSequence {
-
-    var referenceAnnotations: [TokenBox<ReferenceAnnotation>] {
-        return compactMap {$0.toReferenceAnnotation() }
     }
 }

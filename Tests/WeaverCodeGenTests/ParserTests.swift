@@ -28,13 +28,12 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 109, line: 0),
-                                                              children: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyEmbeddedService"), accessLevel: .default), offset: 32, length: 81, line: 1),
-                                                                                          children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "session", type: Type(name: "Session"), protocolType: Type(name: "SessionProtocol")), offset: 62, length: 48, line: 2))])])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[109] - at line: 0
+|-- internal MyEmbeddedService { - 32[81] - at line: 1
+|-- Register - session = Session <- SessionProtocol - 62[48] - at line: 2
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -44,7 +43,7 @@ final class MyService {
         let file = File(contents: """
 final class MyService {
   // weaver: api = API <- APIProtocol
-  // weaver: api.scope = .graph
+  // weaver: api.scope = .container
 }
 """)
         
@@ -54,13 +53,12 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 89, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol")), offset: 26, length: 36, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .scope(value: .graph), target: .dependency(name: "api")), offset: 64, length: 30, line: 2))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[93] - at line: 0
+|-- Register - api = API <- APIProtocol - 26[36] - at line: 1
+|-- Configuration - api.Config Attr - scope = container - 64[34] - at line: 2
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -79,12 +77,11 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 58, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol", isOptional: true)), offset: 26, length: 37, line: 1))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[58] - at line: 0
+|-- Register - api = API <- Optional<APIProtocol> - 26[37] - at line: 1
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -103,12 +100,11 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 57, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol")), offset: 26, length: 36, line: 1))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[57] - at line: 0
+|-- Register - api = API <- APIProtocol - 26[36] - at line: 1
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -127,12 +123,11 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 42, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: nil), offset: 26, length: 21, line: 1))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[42] - at line: 0
+|-- Register - api = API - 26[21] - at line: 1
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -151,37 +146,13 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 51, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[51] - at line: 0
+|-- Reference - api <- APIProtocol - 26[30] - at line: 1
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
-    func test_parser_should_generate_a_syntax_error_when_trying_to_add_a_scope_to_a_reference() {
-        let file = File(contents: """
-final class MyService {
-  // weaver: api <- APIProtocol
-  // weaver: api.scope = .graph
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            _ = try parser.parse()
-            XCTFail("An error was expected.")
-        } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                         name: "api",
-                                                                         type: nil)))
-        } catch {
-            XCTFail("Unexpected error: \(error).")
         }
     }
     
@@ -199,9 +170,7 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, .unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                         name: "api",
-                                                                         type: nil)))
+            XCTAssertEqual(error.description, "test.swift:2: error: Unknown dependency: 'api'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -220,14 +189,13 @@ final class MyService {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 93, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "MyService.make"), target: .dependency(name: "api")), offset: 58, length: 40, line: 2))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[93] - at line: 0
+|-- Reference - api <- APIProtocol - 26[30] - at line: 1
+|-- Configuration - api.Config Attr - builder = MyService.make - 58[40] - at line: 2
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -247,13 +215,12 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 93, line: 0),
-                                                              children: [.registerAnnotation(TokenBox(value: RegisterAnnotation(name: "api", type: Type(name: "API"), protocolType: Type(name: "APIProtocol")), offset: 26, length: 36, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .customBuilder(value: "API.make"), target: .dependency(name: "api")), offset: 64, length: 34, line: 2))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[93] - at line: 0
+|-- Register - api = API <- APIProtocol - 26[36] - at line: 1
+|-- Configuration - api.Config Attr - builder = API.make - 64[34] - at line: 2
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -275,9 +242,7 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "api",
-                                                                                              type: nil)))
+            XCTAssertEqual(error.description, "test.swift:3: error: Double dependency declaration: 'api'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -294,10 +259,12 @@ class Test {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
-            
             let syntaxTree = try parser.parse()
             
-            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift", imports: []))
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -318,15 +285,13 @@ class Test {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
-            
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 51, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[51] - at line: 0
+|-- Reference - api <- APIProtocol - 26[30] - at line: 1
+""")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -340,9 +305,12 @@ class Test {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
-            
             let syntaxTree = try parser.parse()
-            XCTAssertEqual(syntaxTree, .file(types: [], name: "test.swift", imports: []))
+
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+
+""")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -352,7 +320,7 @@ class Test {
         
         let file = File(contents: """
 final class MyService {
-  // weaver: api.scope = .graph
+  // weaver: api.scope = .container
 }
 """)
         do {
@@ -363,9 +331,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.unknownDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                    name: "api",
-                                                                                    type: nil)))
+            XCTAssertEqual(error.description, "test.swift:2: error: Unknown dependency: 'api'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -388,9 +354,7 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "api",
-                                                                                              type: nil)))
+            XCTAssertEqual(error.description, "test.swift:3: error: Double dependency declaration: 'api'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -410,7 +374,7 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.unexpectedToken(FileLocation(line: 0, file: "test.swift")))
+            XCTAssertEqual(error.description, "test.swift:1: error: Unexpected token.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -428,13 +392,12 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
-            
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MovieManager")), offset: 6, length: 52, line: 0),
-                                                              children: [.parameterAnnotation(TokenBox(value: ParameterAnnotation(name: "movieID", type: Type(name: "UInt", isOptional: true)), offset: 29, length: 28, line: 1))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MovieManager { - 6[52] - at line: 0
+|-- Parameter - movieID <= Optional<UInt> - 29[28] - at line: 1
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -457,9 +420,7 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "movieID",
-                                                                                              type: nil)))
+            XCTAssertEqual(error.description, "test.swift:3: error: Double dependency declaration: 'movieID'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -482,9 +443,7 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "movieID",
-                                                                                              type: nil)))
+            XCTAssertEqual(error.description, "test.swift:3: error: Double dependency declaration: 'movieID'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -507,9 +466,7 @@ final class MovieManager {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.dependencyDoubleDeclaration(PrintableDependency(fileLocation: FileLocation(line: 2, file: "test.swift"),
-                                                                                              name: "movieID",
-                                                                                              type: nil)))
+            XCTAssertEqual(error.description, "test.swift:3: error: Double dependency declaration: 'movieID'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -529,13 +486,12 @@ final class MyService {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 87, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`), offset: 58, length: 34, line: 2))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
+            XCTAssertEqual(syntaxTree.description, """
+File[test.swift]
+|- internal MyService { - 6[87] - at line: 0
+|-- Reference - api <- APIProtocol - 26[30] - at line: 1
+|-- Configuration - self.Config Attr - isIsolated = true - 58[34] - at line: 2
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -557,36 +513,9 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error, ParserError.configurationAttributeDoubleAssignation(FileLocation(line: 3, file: "test.swift"),
-                                                                                      attribute: .isIsolated(value: false)))
+            XCTAssertEqual(error.description, "test.swift:4: error: Configuration attribute 'isIsolated' was already set.")
         } catch {
             XCTFail("Unexpected error: \(error).")
-        }
-    }
-    
-    func test_parser_should_generate_a_valid_syntax_tree_with_an_objc_configuration_attribute() {
-        let file = File(contents: """
-final class MyService {
-  // weaver: api <- APIProtocol
-  // weaver: api.objc = true
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            let syntaxTree = try parser.parse()
-            
-            let expected = Expr.file(types: [.typeDeclaration(TokenBox(value: InjectableType(type: Type(name: "MyService")), offset: 6, length: 80, line: 0),
-                                                              children: [.referenceAnnotation(TokenBox(value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")), offset: 26, length: 30, line: 1)),
-                                                                         .configurationAnnotation(TokenBox(value: ConfigurationAnnotation(attribute: .doesSupportObjc(value: true), target: .dependency(name: "api")), offset: 58, length: 27, line: 2))])],
-                                     name: "test.swift",
-                                     imports: [])
-            
-            XCTAssertEqual(syntaxTree, expected)
-        } catch {
-            XCTFail("Unexpected error: \(error)")
         }
     }
     
@@ -604,8 +533,29 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as LexerError {
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"),
-                                                               underlyingError: TokenError.invalidConfigurationAttributeTarget(name: "objc", target: .`self`)))
+            XCTAssertEqual(error.description, "test.swift:2: error: Can't assign configuration attribute 'objc' on 'self'.")
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
+    
+    func test_parser_should_generate_a_parser_error_when_trying_to_use_an_incompatible_attribute() {
+        let file = File(contents: """
+final class MyService {
+  // weaver: api <- APIProtocol
+  // weaver: api.objc = true
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            
+            _ = try parser.parse()
+            XCTFail("An error was expected.")
+        } catch let error as ParserError {
+            XCTAssertEqual(error.description, "test.swift:3: error: Configuration attribute 'doesSupportObjc' cannot be used on dependency 'api'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

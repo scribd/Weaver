@@ -7,67 +7,89 @@
 
 import Foundation
 
-enum TokenError: Error, Equatable {
+enum TokenError: Error {
     case invalidAnnotation(String)
     case invalidScope(String)
     case invalidConfigurationAttributeValue(value: String, expected: String)
     case invalidConfigurationAttributeTarget(name: String, target: ConfigurationAttributeTarget)
     case unknownConfigurationAttribute(name: String)
+    case invalidTokenInType(type: String, token: String?)
 }
 
-enum LexerError: Error, Equatable {
+enum LexerError: Error {
     case invalidAnnotation(FileLocation, underlyingError: TokenError)
 }
 
-enum ParserError: Error, Equatable {
+enum ParserError: Error {
     case unexpectedToken(FileLocation)
     case unexpectedEOF(FileLocation)
     
-    case unknownDependency(PrintableDependency)
-    case dependencyDoubleDeclaration(PrintableDependency)
+    case unknownDependency(String, FileLocation)
+    case dependencyDoubleDeclaration(String, FileLocation)
     case configurationAttributeDoubleAssignation(FileLocation, attribute: ConfigurationAttribute)
+    case incompatibleConfigurationAttribute(FileLocation, attribute: ConfigurationAttribute, dependencyName: String)
 }
 
-enum SwiftGeneratorError: Error, Equatable {
-    case invalidTemplatePath(path: String)
+enum LinkerError: Error {
+    case foundAnnotationOutsideOfType(FileLocation)
+    case unknownType(FileLocation?, type: CompositeType)
+    case dependencyNotFound(FileLocation?, dependencyName: String)
 }
 
-enum InspectorError: Error, Equatable {
+enum DependencyGraphError: Error {
+    case dependencyContainerNotFound(FileLocation?, type: CompositeType?)
+    case invalidAbstractTypeComposition(FileLocation?, type: AbstractType, candidates: [(String, ConcreteType)])
+}
+
+enum SwiftGeneratorError: Error {
+    case dependencyContainersNotFoundForFileName(String)
+    case dependencyContainerIsMissingTypeInFile(String)
+    case dependencyContainerNotFoundForName(String)
+    case missingProjectTargetName
+}
+
+enum InspectorError: Error {
     case invalidAST(FileLocation, unexpectedExpr: Expr)
-    case invalidDependencyGraph(PrintableDependency, underlyingError: InspectorAnalysisError)
+    case invalidDependencyGraph(Dependency, underlyingError: InspectorAnalysisError)
+    case invalidContainerScope(Dependency)
 }
 
-enum InspectorAnalysisError: Error, Equatable {
+enum InspectorAnalysisError: Error {
     case cyclicDependency(history: [InspectorAnalysisHistoryRecord])
     case unresolvableDependency(history: [InspectorAnalysisHistoryRecord])
-    case isolatedResolverCannotHaveReferents(type: Type?, referents: [PrintableResolver])
+    case isolatedResolverCannotHaveReferents(type: CompositeType?, referents: [DependencyContainer])
+    case typeMismatch
+    case resolverTypeMismatch(expectedType: CompositeType, actualType: CompositeType)
 }
 
-enum InspectorAnalysisHistoryRecord: Equatable {
-    case foundUnaccessibleDependency(PrintableDependency)
-    case dependencyNotFound(PrintableDependency)
-    case triedToBuildType(PrintableResolver, stepCount: Int)
-    case triedToResolveDependencyInType(PrintableDependency, stepCount: Int)
+enum InspectorAnalysisHistoryRecord: Error {
+    case dependencyNotFound(Dependency, in: DependencyContainer)
+    case triedToBuildType(DependencyContainer, stepCount: Int)
+    case triedToResolveDependencyInType(Dependency, stepCount: Int)
+    case triedToResolveDependencyInRootType(DependencyContainer)
+    case typeMismatch(Dependency, candidate: Dependency)
+    case implicitDependency(Dependency, candidates: [Dependency])
+    case implicitType(Dependency, candidates: [Dependency])
 }
 
 // MARK: - Printables
 
 protocol Printable {
-    var fileLocation: FileLocation { get }
+    var fileLocation: FileLocation? { get }
 }
 
-struct PrintableResolver: Equatable, Printable {
-    let fileLocation: FileLocation
-    let type: Type?
+protocol PrintableDependency: Printable {
+    var dependencyName: String { get }
 }
 
-struct PrintableDependency: Equatable, Printable {
-    let fileLocation: FileLocation
-    let name: String
-    let type: Type?
+protocol PrintableDependencyContainer: Printable {
+    var type: ConcreteType { get }
 }
 
-struct FileLocation: Equatable, Printable {
+extension DependencyContainer: PrintableDependencyContainer {}
+extension Dependency: PrintableDependency {}
+
+struct FileLocation: Printable, Encodable {
     let line: Int?
     let file: String?
     
@@ -77,12 +99,8 @@ struct FileLocation: Equatable, Printable {
         self.file = file
     }
     
-    var fileLocation: FileLocation {
+    var fileLocation: FileLocation? {
         return self
-    }
-    
-    static var unknown: FileLocation {
-        return FileLocation(line: nil, file: nil)
     }
     
     static func file(_ file: String?) -> FileLocation {
@@ -106,6 +124,8 @@ extension TokenError: CustomStringConvertible {
             return "Can't assign configuration attribute '\(name)' on '\(target)'"
         case .unknownConfigurationAttribute(let name):
             return "Unknown configuration attribute: '\(name)'"
+        case .invalidTokenInType(let type, let token):
+            return "Invalid token '\(token ?? "eot")' in type '\(type)'"
         }
     }
 }
@@ -124,16 +144,47 @@ extension ParserError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .dependencyDoubleDeclaration(let dependency):
-            return dependency.xcodeLogString(.error, "Double dependency declaration: '\(dependency.name)'")
+        case .dependencyDoubleDeclaration(let dependencyName, let location):
+            return location.xcodeLogString(.error, "Double dependency declaration: '\(dependencyName)'")
         case .unexpectedEOF(let location):
             return location.xcodeLogString(.error, "Unexpected EOF (End of file)")
         case .unexpectedToken(let location):
             return location.xcodeLogString(.error, "Unexpected token")
-        case .unknownDependency(let dependency):
-            return dependency.xcodeLogString(.error, "Unknown dependency: '\(dependency.name)'")
+        case .unknownDependency(let dependencyName, let location):
+            return location.xcodeLogString(.error, "Unknown dependency: '\(dependencyName)'")
         case .configurationAttributeDoubleAssignation(let location, let attribute):
             return location.xcodeLogString(.error, "Configuration attribute '\(attribute.name)' was already set")
+        case .incompatibleConfigurationAttribute(let location, let attribute, let dependencyName):
+            return location.xcodeLogString(.error, "Configuration attribute '\(attribute.name)' cannot be used on dependency '\(dependencyName)'")
+        }
+    }
+}
+
+extension DependencyGraphError: CustomStringConvertible {
+    
+    var description: String {
+        switch self {
+        case .dependencyContainerNotFound(let location, let type):
+            let message = "Could not find dependency container associated to type '\(type?.description ?? "_")'"
+            if let location = location {
+                return location.xcodeLogString(.error, message)
+            } else {
+                return message
+            }
+        case .invalidAbstractTypeComposition(let location, let types, let candidates):
+            let message = "Invalid type composition: '\(types.lazy.map { $0.description }.sorted().joined(separator: " & "))'"
+            let note = "Found candidates: '\(candidates.map { "\($0): \($1.description)" }.joined(separator: ", "))'"
+            if let location = location {
+                return [
+                    location.xcodeLogString(.error, message),
+                    candidates.isEmpty ? nil : location.xcodeLogString(.warning, note)
+                ].compactMap { $0 }.joined(separator: "\n")
+            } else {
+                return [
+                    message,
+                    candidates.isEmpty ? nil : note
+                ].compactMap { $0 }.joined(separator: "\n")
+            }
         }
     }
 }
@@ -142,8 +193,14 @@ extension SwiftGeneratorError: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .invalidTemplatePath(let path):
-            return "Invalid template path: \(path)."
+        case .dependencyContainersNotFoundForFileName(let fileName):
+            return "Could not find dependency graphs for file: '\(fileName)'."
+        case .dependencyContainerIsMissingTypeInFile(let fileName):
+            return "Could not resolve type for dependency container in file: '\(fileName)'."
+        case .dependencyContainerNotFoundForName(let name):
+            return "Could not find dependency container for name: '\(name)'."
+        case .missingProjectTargetName:
+            return "Project target name is missing."
         }
     }
 }
@@ -153,13 +210,16 @@ extension InspectorError: CustomStringConvertible {
     var description: String {
         switch self {
         case .invalidAST(let location, let token):
-            return location.xcodeLogString(.error, "Invalid AST because of token: \(token)")
+            return location.xcodeLogString(.error, "Invalid AST because of token: \(token.description)")
         case .invalidDependencyGraph(let dependency, let underlyingIssue):
-            var description = dependency.xcodeLogString(.error, "Detected invalid dependency graph starting with '\(dependency.name): \(dependency.type?.description ?? "_")'. \(underlyingIssue)")
+            var description = dependency.xcodeLogString(.error, "Invalid dependency: '\(dependency.dependencyName): \(dependency.type.description)'. \(underlyingIssue)")
             if let notes = underlyingIssue.notes {
                 description = ([description] + notes.map { $0.description }).joined(separator: "\n")
             }
             return description
+        case .invalidContainerScope(let dependency):
+            let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a container scope"
+            return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         }
     }
 }
@@ -174,22 +234,28 @@ extension InspectorAnalysisError: CustomStringConvertible {
             return "Dependency cannot be resolved"
         case .isolatedResolverCannotHaveReferents:
             return "This type is flagged as isolated. It cannot have any connected referent"
+        case .typeMismatch:
+            return "Type mismatch"
+        case .resolverTypeMismatch(let expectedType, let actualType):
+            return "Resolver type mismatch. Expected '\(expectedType)' but got '\(actualType)'"
         }
     }
     
     fileprivate var notes: [CustomStringConvertible]? {
         switch self {
-        case .cyclicDependency(let history):
+        case .cyclicDependency(let history),
+             .unresolvableDependency(let history):
             return history
         case .isolatedResolverCannotHaveReferents(let type, let referents):
             return referents.map { referent in
-                let message = "'\(referent.type?.description ?? "_")' " +
+                let message = "'\(referent.type.description)' " +
                     "cannot depend on '\(type?.description ?? "_")' because it is flagged as 'isolated'. " +
                     "You may want to set '\(type?.description ?? "_").isIsolated' to 'false'"
                 return referent.xcodeLogString(.error, message)
             }
-        case .unresolvableDependency(let history):
-            return history
+        case .typeMismatch,
+             .resolverTypeMismatch:
+            return nil
         }
     }
 }
@@ -198,14 +264,33 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
     
     var description: String {
         switch self {
-        case .dependencyNotFound(let dependency):
-            return dependency.xcodeLogString(.warning, "Could not find the dependency '\(dependency.name)' in '\(dependency.type?.description ?? "_")'. You may want to register it here to solve this issue")
-        case .foundUnaccessibleDependency(let dependency):
-            return dependency.xcodeLogString(.warning, "Found unaccessible dependency '\(dependency.name)' in '\(dependency.type?.description ?? "_")'. You may want to set its scope to '.container' or '.weak' to solve this issue")
-        case .triedToBuildType(let resolver, let stepCount):
-            return resolver.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(resolver.type?.description ?? "_")'")
+        case .dependencyNotFound(let dependency, let dependencyContainer):
+            return dependencyContainer.xcodeLogString(.warning, "Could not find the dependency '\(dependency.dependencyName)' in '\(dependencyContainer.type.description)'. You may want to register it here to solve this issue")
+        case .triedToBuildType(let dependencyContainer, let stepCount):
+            return dependencyContainer.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(dependencyContainer.type.description)'")
         case .triedToResolveDependencyInType(let dependency, let stepCount):
-            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.name)' in type '\(dependency.type?.description ?? "_")'")
+            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.dependencyName)' in type '\(dependency.source.description)'")
+        case .triedToResolveDependencyInRootType(let dependencyContainer):
+            return dependencyContainer.xcodeLogString(.warning, "Type '\(dependencyContainer.type.description)' doesn't seem to be attached to the dependency graph. You might have to use `self.isIsolated = true` or register it somewhere")
+        case .typeMismatch(let dependency, let candidate):
+            return """
+            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' has a mismatching type '\(dependency.type.description)'"))
+            \(candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type.description)'"))
+            """
+        case .implicitDependency(let dependency, let candidates):
+            return """
+            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' is implicit"))
+            \(candidates.map { candidate in
+                candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName)'")
+            }.joined(separator: "\n"))
+            """
+        case .implicitType(let dependency, let candidates):
+            return """
+            \(dependency.xcodeLogString(.error, "Dependency '\(dependency.dependencyName)' has an implicit type '\(dependency.type.description)'.")) You can desambiguate by using one of the candidate dependency names.
+            \(candidates.map { candidate in
+            candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type.description)'")
+            }.joined(separator: ".\n"))
+            """
         }
     }
 }
@@ -218,9 +303,12 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
         return filter {
             switch $0 {
             case .dependencyNotFound,
-                 .foundUnaccessibleDependency:
+                 .typeMismatch,
+                 .implicitDependency,
+                 .implicitType:
                 return true
             case .triedToResolveDependencyInType,
+                 .triedToResolveDependencyInRootType,
                  .triedToBuildType:
                 return false
             }
@@ -237,8 +325,11 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
             case .triedToBuildType:
                 return true
             case .dependencyNotFound,
-                 .foundUnaccessibleDependency,
-                 .triedToResolveDependencyInType:
+                 .triedToResolveDependencyInType,
+                 .triedToResolveDependencyInRootType,
+                 .typeMismatch,
+                 .implicitDependency,
+                 .implicitType:
                 return false
             }
         }
@@ -247,10 +338,13 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
     var resolutionSteps: [InspectorAnalysisHistoryRecord] {
         return filter {
             switch $0 {
-            case .triedToResolveDependencyInType:
+            case .triedToResolveDependencyInType,
+                 .triedToResolveDependencyInRootType,
+                 .typeMismatch,
+                 .implicitDependency,
+                 .implicitType:
                 return true
             case .dependencyNotFound,
-                 .foundUnaccessibleDependency,
                  .triedToBuildType:
                 return false
             }
@@ -268,7 +362,7 @@ private enum LogLevel: String {
 private extension Printable {
     
     func xcodeLogString(_ logLevel: LogLevel, _ message: String) -> String {
-        switch (fileLocation.line, fileLocation.file) {
+        switch (fileLocation?.line, fileLocation?.file) {
         case (.some(let line), .some(let file)):
             return "\(file):\(line + 1): \(logLevel.rawValue): \(message)."
         case (nil, .some(let file)):

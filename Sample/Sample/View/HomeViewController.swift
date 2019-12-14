@@ -13,18 +13,18 @@ import API
 // weaver: import API
 
 final class HomeViewController: UIViewController {
-    
-    private let dependencies: HomeViewControllerDependencyResolver
-    
+        
     private var movies = [Movie]()
     
-    // weaver: logger = Logger
+    @Weaver(.registration, type: Logger.self)
+    private var logger: Logger
     
-    // weaver: movieManager <- MovieManaging
-    
-    // weaver: movieController = MovieViewController <- UIViewController
-    // weaver: movieController.scope = .weak
-    
+    @Weaver(.reference)
+    private var movieManager: MovieManaging
+
+    @WeaverP2(.registration, type: MovieViewController.self, scope: .weak)
+    private var movieController: (UInt, String) -> UIViewController
+
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .white
@@ -34,8 +34,7 @@ final class HomeViewController: UIViewController {
         return tableView
     }()
 
-    required init(injecting dependencies: HomeViewControllerDependencyResolver) {
-        self.dependencies = dependencies
+    required init(injecting _: HomeViewControllerDependencyResolver) {
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -59,14 +58,14 @@ final class HomeViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
         
-        dependencies.movieManager.getDiscoverMovies { result in
+        movieManager.getDiscoverMovies { result in
             switch result {
             case .success(let page):
                 self.movies = page.results
                 self.tableView.reloadData()
                 
             case .failure(let error):
-                self.dependencies.logger.log(.error, "\(error)")
+                self.logger.log(.error, "\(error)")
             }
         }
     }
@@ -76,7 +75,7 @@ extension HomeViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let movie = movies[indexPath.row]
-        let controller = dependencies.movieController(movieID: movie.id, title: movie.title)
+        let controller = movieController(movie.id, movie.title)
         navigationController?.pushViewController(controller, animated: true)
         tableView.deselectRow(at: indexPath, animated: true)
     }

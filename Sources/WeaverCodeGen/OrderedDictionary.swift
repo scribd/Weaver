@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Dictionary
 
-final class OrderedDictionary<Key: Hashable, Value> {
+final class OrderedDictionary<Key, Value> where Key: Hashable {
     
     private(set) var dictionary = [Key: Value]()
     
@@ -21,16 +21,18 @@ final class OrderedDictionary<Key: Hashable, Value> {
     }
     
     init(_ keyValues: [(Key, Value)] = []) {
-        dictionary = keyValues.reduce(into: [:]) { $0[$1.0] = $1.1 }
-        orderedKeys = keyValues.map { $0.0 }
+        keyValues.reversed().forEach { key, value in
+            guard dictionary[key] == nil else { return }
+            dictionary[key] = value
+            orderedKeys = [key] + orderedKeys
+        }
     }
     
     var orderedKeyValues: [KeyValue] {
-        var result = [KeyValue]()
-        for key in orderedKeys {
-            dictionary[key].flatMap { result.append(KeyValue(key: key, value: $0)) }
+        return orderedKeys.compactMap { key in
+            guard let value = dictionary[key] else { return nil }
+            return KeyValue(key: key, value: value)
         }
-        return result
     }
 
     var orderedValues: [Value] {
@@ -42,15 +44,23 @@ final class OrderedDictionary<Key: Hashable, Value> {
             return dictionary[key]
         }
         set {
-            if dictionary[key] == nil {
+            if dictionary[key] == nil && newValue != nil {
                 orderedKeys.append(key)
             } else {
-                orderedKeys.firstIndex(of: key).flatMap { index -> Void in
+                if let index = orderedKeys.firstIndex(of: key) {
                     orderedKeys.remove(at: index)
                 }
-                orderedKeys.append(key)
+                if newValue != nil {
+                    orderedKeys.append(key)
+                }
             }
             dictionary[key] = newValue
         }
     }
+    
+    var isEmpty: Bool {
+        return dictionary.isEmpty
+    }
 }
+
+extension OrderedDictionary: Encodable where Key: Encodable, Value: Encodable {}

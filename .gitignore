@@ -70,3 +70,4 @@ fastlane/test_output
 
 # Package
 weaver-*.zip
+.weaver_cache.json

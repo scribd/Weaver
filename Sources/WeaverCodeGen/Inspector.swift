@@ -13,130 +13,243 @@ public final class Inspector {
 
     private let dependencyGraph: DependencyGraph
     
-    private lazy var resolutionCache = Set<ResolutionCacheIndex>()
-    private lazy var buildCache = Set<BuildCacheIndex>()
+    private lazy var resolutionCache = [InspectorCacheIndex: Dependency]()
+    private lazy var buildCache = Set<InspectorCacheIndex>()
     
     public init(dependencyGraph: DependencyGraph) {
         self.dependencyGraph = dependencyGraph
     }
     
     public func validate() throws {
-        for dependency in dependencyGraph.dependencies {
-            try dependency.resolve(with: &resolutionCache)
-            try dependency.build(with: &buildCache)
+        for dependency in dependencyGraph.dependencies where dependency.kind.isResolvable {
+            try validateConfiguration(of: dependency)
+            try validatePropertyWrapper(of: dependency)
+            try resolve(dependency)
+            try build(dependency)
         }
     }
 }
 
 // MARK: - Resolution Check
 
-private extension ResolvableDependency {
+extension Inspector {
     
-    func resolve(with cache: inout Set<ResolutionCacheIndex>) throws {
+    @discardableResult
+    func resolve(_ dependency: Dependency) throws -> [ConcreteType: Dependency] {
+        let source = try dependencyGraph.dependencyContainer(for: dependency.source, at: dependency.fileLocation)
+        return try resolve(dependency, from: source)
+    }
+    
+    func resolve(_ dependency: Dependency, from source: DependencyContainer) throws -> [ConcreteType: Dependency] {
+        let target = try dependencyGraph.dependencyContainer(for: dependency)
         
         if source.accessLevel == .public && source.sources.isEmpty {
-            guard target.referencedTypes.count <= 1 else {
+            guard target.references.count <= 1 else {
                 let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [])
-                throw InspectorError.invalidDependencyGraph(printableDependency, underlyingError: underlyingError)
+                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: underlyingError)
             }
-            return
+            return [source.type: dependency]
         }
         
-        guard isReference && configuration.customBuilder == nil else {
-            return
+        guard dependency.kind == .reference else {
+            return [source.type: dependency]
         }
-
+        
         do {
-
-            if try source.checkIsolation(history: []) == false {
-                return
-            }
+            guard try checkIsolation(of: source, history: []) else { return [:] }
             
-            let index = DependencyIndex(name: dependencyName, type: target.type)
-            for dependent in source.sources {
-                try dependent.resolveDependency(index: index, cache: &cache)
+            let sources = [source.type] + Array(source.sources)
+            return try sources.reduce(into: [ConcreteType: Dependency]()) { foundDependencies, sourceType in
+                let source = try dependencyGraph.dependencyContainer(for: sourceType, at: source.fileLocation)
+                foundDependencies[sourceType] = try resolve(dependency, in: source)
             }
-            
         } catch let error as InspectorAnalysisError {
-            throw InspectorError.invalidDependencyGraph(printableDependency, underlyingError: error)
+            if source.sources.isEmpty {
+                let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [
+                    .triedToResolveDependencyInRootType(source)
+                ])
+                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: underlyingError)
+            } else {
+                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: error)
+            }
         }
     }
 }
 
-private extension DependencyContainer {
+private extension Inspector {
     
-    func resolveDependency(index: DependencyIndex, cache: inout Set<ResolutionCacheIndex>) throws {
+    func resolve(_ dependency: Dependency, in dependencyContainer: DependencyContainer) throws -> Dependency {
         
-        let cacheIndex = ResolutionCacheIndex(dependencyContainer: self, dependencyIndex: index)
-        guard !cache.contains(cacheIndex) else {
-            return
+        let cacheIndex = InspectorCacheIndex(dependency, dependencyContainer)
+        if let foundDependency = resolutionCache[cacheIndex] {
+            return foundDependency
         }
-
-        var visitedDependencyContainers = Set<DependencyContainer>()
-        var history = [InspectorAnalysisHistoryRecord]()
-        try resolveDependency(index: index,
-                              visitedDependencyContainers: &visitedDependencyContainers,
-                              history: &history)
         
-        cache.insert(cacheIndex)
+        var visitedDependencyContainers = Set<ObjectIdentifier>()
+        var history = [InspectorAnalysisHistoryRecord]()
+        history.reserveCapacity(dependencyGraph.dependencyContainers.orderedKeys.count)
+        let foundDependency = try resolve(dependency,
+                                          in: dependencyContainer,
+                                          visitedDependencyContainers: &visitedDependencyContainers,
+                                          history: &history)
+
+        resolutionCache[cacheIndex] = foundDependency
+        return foundDependency
     }
     
-    private func resolveDependency(index: DependencyIndex,
-                                   visitedDependencyContainers: inout Set<DependencyContainer>,
-                                   history: inout [InspectorAnalysisHistoryRecord]) throws {
+    private func resolve(_ dependency: Dependency,
+                         in dependencyContainer: DependencyContainer,
+                         visitedDependencyContainers: inout Set<ObjectIdentifier>,
+                         history: inout [InspectorAnalysisHistoryRecord]) throws -> Dependency {
 
-        if visitedDependencyContainers.contains(self) {
+        if visitedDependencyContainers.contains(ObjectIdentifier(dependencyContainer)) {
             throw InspectorAnalysisError.cyclicDependency(history: history.cyclicDependencyDetection)
         }
-        visitedDependencyContainers.insert(self)
+        visitedDependencyContainers.insert(ObjectIdentifier(dependencyContainer))
 
-        history.append(.triedToResolveDependencyInType(printableDependency(name: index.name), stepCount: history.resolutionSteps.count))
-        
-        if let dependency = dependency(for: index) {
-            if dependency.isReference && accessLevel == .public {
-                return
+        history.append(.triedToResolveDependencyInType(dependency, stepCount: history.resolutionSteps.count))
+
+        do {
+            if let foundDependency = try resolveRegistration(for: dependency, in: dependencyContainer) {
+                return foundDependency
             }
-            if let scope = dependency.scope, (dependency.configuration.customBuilder != nil && scope.allowsAccessFromChildren) || scope.allowsAccessFromChildren {
-                return
-            }
-            history.append(.foundUnaccessibleDependency(dependency.printableDependency))
-        } else {
-            history.append(.dependencyNotFound(printableDependency(name: index.name)))
+            history.append(.dependencyNotFound(dependency, in: dependencyContainer))
+        } catch let error as InspectorAnalysisHistoryRecord {
+            history.append(error)
         }
 
-        if try checkIsolation(history: history) == false {
-           return
-        }
+        guard try checkIsolation(of: dependencyContainer, history: history) else { return dependency }
         
-        for source in sources {
+        for source in dependencyContainer.sources {
+            let source = try dependencyGraph.dependencyContainer(for: source, at: dependency.fileLocation)
+            
             var visitedDependencyContainersCopy = visitedDependencyContainers
-            if let _ = try? source.resolveDependency(index: index,
-                                                     visitedDependencyContainers: &visitedDependencyContainersCopy,
-                                                     history: &history) {
-                return
+            do {
+                return try resolve(dependency,
+                                   in: source,
+                                   visitedDependencyContainers: &visitedDependencyContainersCopy,
+                                   history: &history)
+            } catch {
+                // no-op
             }
         }
         
         throw InspectorAnalysisError.unresolvableDependency(history: history.unresolvableDependencyDetection)
     }
+    
+    func resolveRegistration(for dependency: Dependency,
+                             in dependencyContainer: DependencyContainer) throws -> Dependency? {
+        
+        var _dependencyNames: Set<String>?
+        if let concreteType = dependency.type.concreteType {
+            _dependencyNames = dependencyContainer.dependencyNamesByConcreteType[concreteType]
+        } else if dependency.type.abstractType.isEmpty == false {
+            let dependencyNames = Set(dependency.type.abstractType.flatMap { abstractType in
+                dependencyContainer.dependencyNamesByAbstractType[abstractType] ?? []
+            })
+            if dependencyNames.isEmpty == false {
+                _dependencyNames = dependencyNames
+            }
+        }
+        
+        if let dependencyNames = _dependencyNames {
+            
+            if dependencyNames.contains(dependency.dependencyName) {
+                guard let foundDependency = dependencyContainer.dependencies[dependency.dependencyName] else { return nil }
+                
+                guard foundDependency.type ~= dependency.type else {
+                    throw InspectorAnalysisHistoryRecord.typeMismatch(dependency, candidate: foundDependency)
+                }
+
+                switch foundDependency.kind {
+                case .reference where dependencyContainer.accessLevel == .public:
+                    return foundDependency
+                case .parameter,
+                     .registration:
+                    return foundDependency
+                case .reference:
+                    return nil
+                }
+            } else {
+                let foundDependencies = dependencyContainer.dependencies.orderedValues.filter {
+                    $0.kind != .reference && $0.type ~= dependency.type
+                }
+                guard foundDependencies.count < 2 else {
+                    throw InspectorAnalysisHistoryRecord.implicitDependency(dependency, candidates: foundDependencies)
+                }
+
+                guard foundDependencies.count == 1 else {
+                    let _candidate = dependencyContainer.dependencies.orderedValues.lazy.filter {
+                        $0.kind != .reference
+                    }.filter {
+                        $0.type.concreteType == dependency.type.concreteType ||
+                        dependency.type.abstractType.isSuperset(of: $0.type.concreteType) ||
+                        $0.type.abstractType.isSuperset(of: dependency.type.concreteType)
+                    }.first
+                    
+                    if let candidate = _candidate {
+                        throw InspectorAnalysisHistoryRecord.typeMismatch(dependency, candidate: candidate)
+                    } else {
+                        return nil
+                    }
+                }
+                
+                return foundDependencies.first!
+            }
+            
+        } else {
+            
+            let concreteTypes = Set(dependency.type.abstractType.flatMap { type -> [ConcreteType] in
+                guard let concreteTypes = dependencyGraph.concreteTypes[type] else { return [] }
+                return Array(concreteTypes.values)
+            })
+            
+            if concreteTypes.count > 1 {
+                let candidates = concreteTypes.flatMap { type -> [Dependency] in
+                    guard let dependencyNames = dependencyContainer.dependencyNamesByConcreteType[type] else { return [] }
+                    return dependencyNames.compactMap { dependencyContainer.dependencies[$0] }
+                }.sorted { $0.dependencyName < $1.dependencyName }
+                
+                throw InspectorAnalysisHistoryRecord.implicitType(dependency, candidates: candidates)
+            } else if let concreteType = dependency.type.concreteType,
+                let abstractTypes = dependencyGraph.abstractTypes[concreteType],
+                abstractTypes.value.isEmpty == false {
+                
+                let candidates = abstractTypes.flatMap { type -> [Dependency] in
+                    guard let dependencyNames = dependencyContainer.dependencyNamesByAbstractType[type] else { return [] }
+                    return dependencyNames.compactMap { dependencyContainer.dependencies[$0] }
+                }.sorted { $0.dependencyName < $1.dependencyName }
+                
+                throw InspectorAnalysisHistoryRecord.implicitType(dependency, candidates: candidates)
+            } else if let candidate = dependencyContainer.dependencies[dependency.dependencyName] {
+                throw InspectorAnalysisHistoryRecord.typeMismatch(dependency, candidate: candidate)
+            } else {
+                return nil
+            }
+        }
+    }
 }
 
 // MARK: - Isolation Check
 
-private extension DependencyContainer {
+private extension Inspector {
     
-    func checkIsolation(history: [InspectorAnalysisHistoryRecord]) throws -> Bool {
+    func checkIsolation(of dependencyContainer: DependencyContainer,
+                        history: [InspectorAnalysisHistoryRecord]) throws -> Bool {
+
+        let connectedSources = try dependencyContainer.sources.compactMap { source -> DependencyContainer? in
+            let source = try dependencyGraph.dependencyContainer(for: source, at: dependencyContainer.fileLocation)
+            return source.configuration.isIsolated ? nil : source
+        }
         
-        let connectedSources = sources.filter { !$0.configuration.isIsolated }
-        
-        switch (sources.isEmpty, configuration.isIsolated) {
+        switch (dependencyContainer.sources.isEmpty, dependencyContainer.configuration.isIsolated) {
         case (true, false):
             throw InspectorAnalysisError.unresolvableDependency(history: history.unresolvableDependencyDetection)
             
-        case (false, true) where !connectedSources.isEmpty:
+        case (false, true) where connectedSources.isEmpty == false:
             throw InspectorAnalysisError.isolatedResolverCannotHaveReferents(
-                type: type,
-                referents: connectedSources.map { $0.printableResolver }
+                type: dependencyContainer.type.value,
+                referents: connectedSources
             )
 
         case (true, true):
@@ -150,104 +263,124 @@ private extension DependencyContainer {
 
 // MARK: - Build Check
 
-private extension ResolvableDependency {
+private extension Inspector {
     
-    func build(with buildCache: inout Set<BuildCacheIndex>) throws {
+    func build(_ dependency: Dependency) throws {
         
-        let buildCacheIndex = BuildCacheIndex(dependencyContainer: target, scope: scope)
-        guard !buildCache.contains(buildCacheIndex) else {
-            return
-        }
-        buildCache.insert(buildCacheIndex)
+        let target = try dependencyGraph.dependencyContainer(for: dependency)
         
-        guard !isReference && configuration.customBuilder == nil else {
-            return
-        }
+        let cacheIndex = InspectorCacheIndex(dependency, target)
+        guard !buildCache.contains(cacheIndex) else { return }
+        buildCache.insert(cacheIndex)
         
-        guard let scope = scope, scope.allowsAccessFromChildren else {
-            return
-        }
+        guard dependency.kind != .reference && dependency.configuration.customBuilder == nil else { return }
         
-        var visitedDependencyContainers = Set<DependencyContainer>()
-        try target.buildDependencies(from: self,
-                                     visitedDependencyContainers: &visitedDependencyContainers,
-                                     history: [])
+        var visitedDependencyContainers = Set<ConcreteType>()
+        try buildDependencies(of: target,
+                              from: dependency,
+                              visitedDependencyContainers: &visitedDependencyContainers,
+                              history: [])
     }
 }
 
-private extension DependencyContainer {
+private extension Inspector {
     
-    func buildDependencies(from sourceDependency: ResolvableDependency,
-                           visitedDependencyContainers: inout Set<DependencyContainer>,
+    func buildDependencies(of dependencyContainer: DependencyContainer,
+                           from sourceDependency: Dependency,
+                           visitedDependencyContainers: inout Set<ConcreteType>,
                            history: [InspectorAnalysisHistoryRecord]) throws {
 
-        if visitedDependencyContainers.contains(self) {
-            throw InspectorError.invalidDependencyGraph(sourceDependency.printableDependency,
-                                              underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
+        if visitedDependencyContainers.contains(dependencyContainer.type) {
+            let visitedASelfReferenced = try visitedDependencyContainers.contains { type in
+                let dependencyContainer = try dependencyGraph.dependencyContainer(for: type)
+                return try dependencyGraph.hasSelfReference(dependencyContainer)
+            }
+            guard visitedASelfReferenced == false else { return }
+            throw InspectorError.invalidDependencyGraph(sourceDependency, underlyingError: .cyclicDependency(history: history.cyclicDependencyDetection))
         }
-        visitedDependencyContainers.insert(self)
+        visitedDependencyContainers.insert(dependencyContainer.type)
         
         var history = history
-        history.append(.triedToBuildType(printableResolver, stepCount: history.buildSteps.count))
+        history.append(.triedToBuildType(dependencyContainer, stepCount: history.buildSteps.count))
         
-        for dependency in orderedDependencies {
+        for dependency in dependencyContainer.dependencies.orderedValues where dependency.kind.isResolvable {
             var visitedDependencyContainersCopy = visitedDependencyContainers
-            try dependency.target.buildDependencies(from: sourceDependency,
-                                                    visitedDependencyContainers: &visitedDependencyContainersCopy,
-                                                    history: history)
+            
+            let target = try dependencyGraph.dependencyContainer(for: dependency)
+            try buildDependencies(of: target,
+                                  from: sourceDependency,
+                                  visitedDependencyContainers: &visitedDependencyContainersCopy,
+                                  history: history)
         }
     }
 }
 
-// MARK: - Conversions
+// MARK: - Configuration check
 
-extension TokenBox where T == RegisterAnnotation {
+private extension Inspector {
     
-    func printableDependency(file: String) -> PrintableDependency {
-        return PrintableDependency(fileLocation: FileLocation(line: line, file: file),
-                                   name: value.name,
-                                   type: value.type)
+    func validateConfiguration(of dependency: Dependency) throws {
+        switch dependency.configuration.scope {
+        case .container:
+            let target = try dependencyGraph.dependencyContainer(for: dependency)
+            if target.parameters.isEmpty == false {
+                throw InspectorError.invalidContainerScope(dependency)
+            }
+        case .lazy,
+             .weak,
+             .transient:
+            break
+        }
     }
 }
 
-extension TokenBox where T == ReferenceAnnotation {
+// MARK: - Property Wrappers check
+
+private extension Inspector {
     
-    func printableDependency(file: String) -> PrintableDependency {
-        return PrintableDependency(fileLocation: FileLocation(line: line, file: file),
-                                   name: value.name,
-                                   type: value.type)
+    func validatePropertyWrapper(of dependency: Dependency) throws {
+        guard dependency.annotationStyle == .propertyWrapper else { return }
+
+        let target = try dependencyGraph.dependencyContainer(for: dependency)
+        
+        let expectedType: CompositeType
+        if target.parameters.isEmpty == false {
+            expectedType = .closure(Closure(
+                tuple: target.parameters.map { TupleComponent(alias: nil, name: nil, type: $0.type.anyType) },
+                returnType: dependency.type.anyType
+            ))
+        } else {
+            expectedType = dependency.type.anyType
+        }
+
+        let actualType: CompositeType
+        if dependency.closureParameters.isEmpty == false {
+            actualType = .closure(Closure(
+                tuple: dependency.closureParameters.map { TupleComponent(alias: nil, name: nil, type: $0.type) },
+                returnType: dependency.type.anyType
+            ))
+        } else {
+            actualType = dependency.type.anyType
+        }
+        
+        guard expectedType == actualType else {
+            throw InspectorError.invalidDependencyGraph(
+                dependency,
+                underlyingError: .resolverTypeMismatch(expectedType: expectedType, actualType: actualType)
+            )
+        }
     }
 }
-
-private extension ResolvableDependency {
-    
-    var printableDependency: PrintableDependency {
-        return PrintableDependency(fileLocation: fileLocation,
-                                   name: dependencyName,
-                                   type: target.type)
-    }
-}
-
-private extension DependencyContainer {
-    
-    func printableDependency(name: String) -> PrintableDependency {
-        return PrintableDependency(fileLocation: fileLocation, name: name, type: type)
-    }
-    
-    var printableResolver: PrintableResolver {
-        return PrintableResolver(fileLocation: fileLocation, type: type)
-    }
-}
-
 
 // MARK: - Indexes
 
-private struct ResolutionCacheIndex: Hashable, Equatable {
-    let dependencyContainer: DependencyContainer
-    let dependencyIndex: DependencyIndex
-}
+struct InspectorCacheIndex: Hashable, Equatable {
 
-private struct BuildCacheIndex: Hashable, Equatable {
-    let dependencyContainer: DependencyContainer
-    let scope: Scope?
+    let dependency: ObjectIdentifier
+    let dependencyContainer: ObjectIdentifier
+    
+    init(_ dependency: Dependency, _ dependencyContainer: DependencyContainer) {
+        self.dependency = ObjectIdentifier(dependency)
+        self.dependencyContainer = ObjectIdentifier(dependencyContainer)
+    }
 }

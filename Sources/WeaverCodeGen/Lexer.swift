@@ -15,27 +15,42 @@ public final class Lexer {
     private let file: File
     private let fileName: String
     
+    private let cache: LexerCache?
+    
     private lazy var lines: [Line] = self.file.lines
     
-    public init(_ file: File, fileName: String) {
+    public init(_ file: File,
+                fileName: String,
+                cache: LexerCache? = nil) {
+
         self.file = file
         self.fileName = fileName
+        self.cache = cache
     }
     
     /// Generates a sorted list of tokens
     public func tokenize() throws -> [AnyTokenBox] {
+        
+        if let filePath = file.path, let tokens = cache?.read(for: Path(filePath)) {
+            return tokens
+        }
         
         let sourceKitAST = try Structure(file: file).dictionary
         let sourceKitTokens = try SyntaxMap(file: file).tokens
         
         var line = lines.startIndex
 
-        var tokens = [AnyTokenBox]()
-        tokens += tokenize(from: sourceKitAST, at: &line)
-        tokens += try tokenize(from: sourceKitTokens)
-        tokens += try tokenize(from: file.lines)
-
-        return tokens.sorted(by: tokenSortFunction)
+        let tokens = try [
+            tokenize(from: sourceKitAST, at: &line),
+            tokenize(from: sourceKitTokens),
+            tokenize(from: file.lines)
+        ].flatMap { $0 }.sorted(by: tokenSortFunction)
+        
+        if let filePath = file.path, let cache = cache {
+            cache.write(tokens, for: Path(filePath))
+        }
+        
+        return tokens
     }
 }
 
@@ -59,43 +74,55 @@ private extension Lexer {
     }
     
     /// Tokenize declarations from the SourceKitAST
-    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) -> [AnyTokenBox] {
-        var tokens = [AnyTokenBox]()
+    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) throws -> [AnyTokenBox] {
+        do {
+            var tokens = [AnyTokenBox]()
 
-        let typeDeclaration = SourceKitDeclaration(sourceKitAST)
-        
-        if let typeDeclaration = typeDeclaration {
-            var startToken = typeDeclaration.toToken
+            let restOfLines = lines[line...].map { ($0.content, $0.range) }
+            if let annotation = try SourceKitDependencyAnnotation(sourceKitAST, lines: restOfLines, file: file.path, line: line) {
+                return try annotation.toTokens()
+            }
 
-            if let nextLine = findNextLine(after: line, containing: Int(startToken.offset)) {
-                line = nextLine
-                if let _typeDeclaration = SourceKitDeclaration(sourceKitAST, lineString: lines[line].content) {
-                    startToken = _typeDeclaration.toToken
-                } 
-                startToken.line = line
-            } else {
-                return tokens
+            let typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content)
+            
+            if let typeDeclaration = typeDeclaration {
+                var startToken = typeDeclaration.toToken
+
+                if let nextLine = findNextLine(after: line, containing: Int(startToken.offset)) {
+                    line = nextLine
+                    if let _typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content) {
+                        startToken = _typeDeclaration.toToken
+                    }
+                    startToken.line = line
+                } else {
+                    return tokens
+                }
+                
+                tokens += [startToken]
             }
             
-            tokens += [startToken]
-        }
-        
-        if let children = sourceKitAST[SwiftDocKey.substructure.rawValue] as? [[String: SourceKitRepresentable]] {
-            for child in children {
-                tokens += tokenize(from: child, at: &line)
+            if let children = sourceKitAST[SwiftDocKey.substructure.rawValue] as? [[String: SourceKitRepresentable]] {
+                for child in children {
+                    tokens += try tokenize(from: child, at: &line)
+                }
             }
-        }
 
-        if let typeDeclaration = typeDeclaration, let endToken = typeDeclaration.endToken {
-            var mutableEndToken = endToken
-            
-            line = findNextLine(after: line, containing: endToken.offset) ?? lines.count - 1
-            mutableEndToken.line = line
-            
-            tokens += [mutableEndToken]
-        }
+            if let typeDeclaration = typeDeclaration, let endToken = typeDeclaration.endToken {
+                var mutableEndToken = endToken
+                
+                line = findNextLine(after: line, containing: endToken.offset) ?? lines.count - 1
+                mutableEndToken.line = line
+                
+                tokens += [mutableEndToken]
+            }
 
-        return tokens
+            return tokens
+        } catch let error as TokenError {
+            let location = FileLocation(line: line, file: file.path)
+            throw LexerError.invalidAnnotation(location, underlyingError: error)
+        } catch {
+            throw error
+        }
     }
     
     /// Tokenize annotations from the SourceKit SyntaxTokens.
@@ -132,7 +159,7 @@ private extension Lexer {
     func tokenize(from lines: [Line]) throws -> [AnyTokenBox] {
         return try (0..<lines.count).compactMap { index in
             let line = lines[index]
-            guard let token = try ImportDeclaration.create(line.content) else {
+            guard let token = try ImportDeclaration.create(fromComment: line.content) else {
                 return nil
             }
             return TokenBox<ImportDeclaration>(value: token,

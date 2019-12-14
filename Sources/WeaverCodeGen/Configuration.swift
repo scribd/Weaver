@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Configuration
 
-protocol Configuration {
+protocol Configuration: Encodable {
     
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?)
 }
@@ -43,21 +43,21 @@ struct DependencyConfiguration: Configuration {
     
     let doesSupportObjc: Bool
     
+    let setter: Bool
+    
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
         customBuilder = attributes?[.customBuilder]?.stringValue
         scope = attributes?[.scope]?.scopeValue ?? .default
         doesSupportObjc = attributes?[.doesSupportObjc]?.boolValue ?? false
+        setter = attributes?[.setter]?.boolValue ?? false
     }
 }
 
 struct DependencyContainerConfiguration: Configuration {
     
     let isIsolated: Bool
-    
-    let doesSupportObjc: Bool
-    
+        
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
         isIsolated = attributes?[.isIsolated]?.boolValue ?? false
-        doesSupportObjc = attributes?[.doesSupportObjc]?.boolValue ?? false
     }
 }

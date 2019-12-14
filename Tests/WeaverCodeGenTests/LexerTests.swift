@@ -25,14 +25,8 @@ final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService")),
-                    offset: 7, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 25, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "internal MyService { - 7[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 25[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -55,22 +49,10 @@ final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 4 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService")),
-                    offset: 7, length: 57, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyEmbeddedService")),
-                    offset: 33, length: 29, line: 2)
-                )
-                XCTAssertEqual(tokens[2] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 61, length: 1, line: 3)
-                )
-                XCTAssertEqual(tokens[3] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 63, length: 1, line: 4)
-                )
+                XCTAssertEqual(tokens[0].description, "internal MyService { - 7[57] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "internal MyEmbeddedService { - 33[29] - at line: 2")
+                XCTAssertEqual(tokens[2].description, "_ } - 61[1] - at line: 3")
+                XCTAssertEqual(tokens[3].description, "_ } - 63[1] - at line: 4")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -91,14 +73,30 @@ public final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), accessLevel: .public),
-                    offset: 14, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 32, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "public MyService { - 14[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 32[1] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_generic_type_declaration() {
+        
+        let file = File(contents: """
+
+public final class MyService<T>: CustomStringDescription {
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 2 {
+                XCTAssertEqual(tokens[0].description, "public MyService<T> { - 14[47] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 60[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -119,14 +117,8 @@ open final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), accessLevel: .open),
-                    offset: 12, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 30, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "open MyService { - 12[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 30[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -147,14 +139,8 @@ internal final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), accessLevel: .internal),
-                    offset: 16, length: 19, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 34, length: 1, line: 2)
-                )
+                XCTAssertEqual(tokens[0].description, "internal MyService { - 16[19] - at line: 1")
+                XCTAssertEqual(tokens[1].description, "_ } - 34[1] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -163,35 +149,7 @@ internal final class MyService {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_an_extension_of_ObjCDependencyInjectable() {
-        
-        let file = File(contents: """
-
-extension MyService: MyServiceObjCDependencyInjectable {
-}
-""")
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            
-            if tokens.count == 2 {
-                XCTAssertEqual(tokens[0] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "MyService"), doesSupportObjc: true),
-                    offset: 1, length: 58, line: 1)
-                )
-                XCTAssertEqual(tokens[1] as? TokenBox<EndOfInjectableType>, TokenBox(
-                    value: EndOfInjectableType(),
-                    offset: 58, length: 1, line: 2)
-                )
-            } else {
-                XCTFail("Unexpected amount of tokens: \(tokens.count).")
-            }
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_comment_annotation() {
         
         let file = File(contents: """
 
@@ -202,13 +160,9 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        name: "api",
-                        type: Type(name: "API"),
-                        protocolType: Type(name: "APIProtocol")
-                ), offset: 1, length: 35, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, """
+                api = API <- APIProtocol - 1[35] - at line: 1
+                """)
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -217,7 +171,31 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_and_no_protocol() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation() {
+        
+        let file = File(contents: """
+
+final class MovieManager {
+    
+    @Weaver(.registration, type: API.self)
+    private var api: APIProtocol
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "api = API <- APIProtocol - 88[20] - at line: 3")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_comment_annotation_and_no_protocol() {
         
         let file = File(contents: """
 
@@ -228,13 +206,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        name: "api",
-                        type: Type(name: "API"),
-                        protocolType: nil
-                ), offset: 1, length: 20, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "api = API - 1[20] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -243,7 +215,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_and_optional_types() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_and_no_protocol() {
+            
+            let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.registration, type: API.self)
+    private var api: API
+}
+""")
+            do {
+                let lexer = Lexer(file, fileName: "test.swift")
+                let tokens = try lexer.tokenize()
+                
+                if tokens.count == 3 {
+                    XCTAssertEqual(tokens[1].description, "api = API <- API - 83[12] - at line: 2")
+                } else {
+                    XCTFail("Unexpected amount of tokens: \(tokens.count).")
+                }
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_comment_annotation_and_optional_types() {
         
         let file = File(contents: """
 
@@ -254,13 +249,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        name: "api",
-                        type: Type(name: "API", isOptional: true),
-                        protocolType: Type(name: "APIProtocol", isOptional: true)
-                ), offset: 1, length: 37, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "api = Optional<API> <- Optional<APIProtocol> - 1[37] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -269,7 +258,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_with_generic_types() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_and_optional_types() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.registration, type: API?.self)
+    private var api: APIProtocol?
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "api = Optional<API> <- Optional<APIProtocol> - 84[21] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_comment_annotation_with_generic_types() {
         
         let file = File(contents: """
 
@@ -280,13 +292,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"]),
-                        protocolType: Type(name: "APIRequest", genericNames: ["T", "P"])
-                ), offset: 1, length: 54, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request = Request<T, P> <- APIRequest<T, P> - 1[54] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -295,7 +301,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_annotation_with_generic_and_optional_types() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_with_generic_types() {
+            
+        let file = File(contents: """
+final class MovieManager<T, P> {
+
+@Weaver(.registration, type: Request<T, P>.self)
+private var api: APIRequest<T, P>
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "api = Request<T, P> <- APIRequest<T, P> - 91[25] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_comment_annotation_with_generic_and_optional_types() {
         
         let file = File(contents: """
 
@@ -306,13 +335,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(
-                        name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true),
-                        protocolType: Type(name: "APIRequest", genericNames: ["T", "P"], isOptional: true)
-                ), offset: 1, length: 56, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request = Optional<Request<T, P>> <- Optional<APIRequest<T, P>> - 1[56] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -321,7 +344,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_with_generic_and_optional_types() {
+        
+        let file = File(contents: """
+final class MovieManager<T, P> {
+
+    @Weaver(.registration, type: Request<T, P>?.self)
+    private var request: APIRequest<T, P>?
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "request = Optional<Request<T, P>> <- Optional<APIRequest<T, P>> - 100[30] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_comment_annotation() {
         
         let file = File(contents: """
 
@@ -332,10 +378,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol")),
-                    offset: 1, length: 29, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "api <- APIProtocol - 1[29] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -344,7 +387,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation_with_an_optional_type() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.reference)
+    private var api: APIProtocol
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "api <- APIProtocol - 64[20] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_comment_annotation_with_an_optional_type() {
         
         let file = File(contents: """
 
@@ -355,10 +421,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(name: "api", type: Type(name: "APIProtocol", isOptional: true)),
-                    offset: 1, length: 30, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "api <- Optional<APIProtocol> - 1[30] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -367,7 +430,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation_with_a_generic_type() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation_with_an_optional_type() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.reference)
+    private var api: APIProtocol?
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "api <- Optional<APIProtocol> - 64[21] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_comment_annotation_with_a_generic_type() {
         
         let file = File(contents: """
 
@@ -378,12 +464,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(
-                        name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"])),
-                    offset: 1, length: 35, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request <- Request<T, P> - 1[35] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -392,7 +473,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_annotation_with_a_generic_optional_type() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation_with_a_generic_type() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.reference)
+    private var request: Request<T, P>
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "request <- Request<T, P> - 64[26] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_comment_annotation_with_a_generic_optional_type() {
         
         let file = File(contents: """
 
@@ -403,12 +507,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ReferenceAnnotation>, TokenBox(
-                    value: ReferenceAnnotation(
-                        name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true)
-                ), offset: 1, length: 36, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request <- Optional<Request<T, P>> - 1[36] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -417,7 +516,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation_with_a_generic_optional_type() {
+            
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.reference)
+    private var request: Request<T, P>?
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "request <- Optional<Request<T, P>> - 64[27] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_comment_annotation() {
         
         let file = File(contents: """
 
@@ -428,10 +550,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "movieID", type: Type(name: "UInt")),
-                    offset: 1, length: 26, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "movieID <= UInt - 1[26] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -440,7 +559,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation_with_an_optional_type() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.parameter)
+    private var movieID: UInt
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "movieID <= UInt - 64[17] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_comment_annotation_with_an_optional_type() {
         
         let file = File(contents: """
 
@@ -451,10 +593,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "movieID", type: Type(name: "UInt", isOptional: true)),
-                    offset: 1, length: 27, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "movieID <= Optional<UInt> - 1[27] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -463,7 +602,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation_with_a_generaic_type() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation_with_an_optional_type() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.parameter)
+    private var movieID: UInt?
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "movieID <= Optional<UInt> - 64[18] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_comment_annotation_with_a_generaic_type() {
         
         let file = File(contents: """
 
@@ -474,10 +636,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(name: "request", type: Type(name: "Request", genericNames: ["T", "P"])),
-                    offset: 1, length: 35, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request <= Request<T, P> - 1[35] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -486,7 +645,30 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_annotation_with_a_generaic_optional_type() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation_with_a_generaic_type() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.parameter)
+    private var request: Request<T, P>
+}
+""")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "request <= Request<T, P> - 64[26] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_comment_annotation_with_a_generic_optional_type() {
         
         let file = File(contents: """
 
@@ -497,12 +679,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ParameterAnnotation>, TokenBox(
-                    value: ParameterAnnotation(
-                        name: "request",
-                        type: Type(name: "Request", genericNames: ["T", "P"], isOptional: true)
-                ), offset: 1, length: 36, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "request <= Optional<Request<T, P>> - 1[36] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -511,22 +688,21 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_scope_annotation() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation_with_a_generic_optional_type() {
         
         let file = File(contents: """
+final class MovieManager {
 
-// weaver: api.scope = .graph
+    @Weaver(.parameter)
+    private var request: Request<T, P>?
+}
 """)
-        let lexer = Lexer(file, fileName: "test.swift")
-        
         do {
+            let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
             
-            if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .scope(value: .graph), target: .dependency(name: "api")),
-                    offset: 1, length: 29, line: 1)
-                )
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "request <= Optional<Request<T, P>> - 64[27] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -535,7 +711,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
         }
     }
     
-    func test_tokenizer_should_generate_a_valid_token_list_with_a_custom_builder_annotation() {
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_custom_builder_comment_annotation() {
         
         let file = File(contents: """
 
@@ -547,10 +723,31 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .customBuilder(value: "make"), target: .dependency(name: "api")),
-                    offset: 1, length: 29, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "api.Config Attr - builder = make - 1[29] - at line: 1")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_custom_builder_property_wrapper_annotation() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.registration, type: Request<T, P>?.self, builder: make)
+    private var request: Request<T, P>?
+}
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 4 {
+                XCTAssertEqual(tokens[2].description, "request.Config Attr - builder = make - 109[27] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -571,10 +768,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .isIsolated(value: true), target: .`self`),
-                    offset: 1, length: 33, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "self.Config Attr - isIsolated = true - 1[33] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -595,10 +789,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ConfigurationAnnotation>, TokenBox(
-                    value: ConfigurationAnnotation(attribute: .isIsolated(value: false), target: .`self`),
-                    offset: 1, length: 34, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "self.Config Attr - isIsolated = false - 1[34] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -619,8 +810,7 @@ extension MyService: MyServiceObjCDependencyInjectable {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: "ok", expected: "true|false")
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
+            XCTAssertEqual(error.description, "test.swift:2: error: Invalid configuration attribute value: 'ok'. Expected 'true|false'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -655,14 +845,13 @@ func ignoredFunc() {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.unknownConfigurationAttribute(name: "fakeAttribute")
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 1, file: "test.swift"), underlyingError: underlyingError))
+            XCTAssertEqual(error.description, "test.swift:2: error: Unknown configuration attribute: 'fakeAttribute'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
     }
     
-    func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_annotation() {
+    func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_comment_annotation() {
         
         let file = File(contents: """
 
@@ -670,7 +859,7 @@ final class MyService {
   let dependencies: DependencyResolver
 
   // weaver: api = API <-- APIProtocol
-  // weaver: api.scope = .graph
+  // weaver: api.scope = .container
 
   init(_ dependencies: DependencyResolver) {
     self.dependencies = dependencies
@@ -693,8 +882,44 @@ final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidAnnotation("weaver: api = API <-- APIProtocol")
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 4, file: "test.swift"), underlyingError: underlyingError))
+            XCTAssertEqual(error.description, "test.swift:5: error: Invalid token '-' in type '- APIProtocol'.")
+        } catch {
+            XCTAssertTrue(false, "Unexpected error: \(error).")
+        }
+    }
+    
+    func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_property_wrapper_annotation() {
+            
+        let file = File(contents: """
+
+final class MyService {
+  let dependencies: DependencyResolver
+
+  @Weaver(.registration, API.self)
+  private var api: APIProtocol
+
+  init(_ dependencies: DependencyResolver) {
+    self.dependencies = dependencies
+  }
+
+  func doSomething() {
+    otherService.doSomething(in: api).then { result in
+      if let session = self.session {
+        router.redirectSomewhereWeAreLoggedIn()
+      } else {
+        router.redirectSomewhereWeAreLoggedOut()
+      }
+    }
+  }
+}
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            _ = try lexer.tokenize()
+            XCTAssertTrue(false, "Haven't thrown any error.")
+        } catch let error as LexerError {
+            XCTAssertEqual(error.description, "error: Invalid annotation: '@Weaver(.registration, API.self)'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -731,8 +956,7 @@ final class MyService {
             _ = try lexer.tokenize()
             XCTAssertTrue(false, "Haven't thrown any error.")
         } catch let error as LexerError {
-            let underlyingError = TokenError.invalidConfigurationAttributeValue(value: ".thisScopeDoesNotExists", expected: "transient|graph|weak|container")
-            XCTAssertEqual(error, LexerError.invalidAnnotation(FileLocation(line: 5, file: "test.swift"), underlyingError: underlyingError))
+            XCTAssertEqual(error.description, "test.swift:6: error: Invalid configuration attribute value: '.thisScopeDoesNotExists'. Expected 'transient|container|weak|lazy'.")
         } catch {
             XCTAssertTrue(false, "Unexpected error: \(error).")
         }
@@ -750,10 +974,7 @@ final class MyService {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ImportDeclaration>, TokenBox(
-                    value: ImportDeclaration(moduleName: "API"),
-                    offset: 1, length: 21, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "import API - 1[21] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -774,10 +995,7 @@ import API
             let tokens = try lexer.tokenize()
             
             if tokens.count == 1 {
-                XCTAssertEqual(tokens[0] as? TokenBox<ImportDeclaration>, TokenBox(
-                    value: ImportDeclaration(moduleName: "API"),
-                    offset: 1, length: 10, line: 1)
-                )
+                XCTAssertEqual(tokens[0].description, "import API - 1[10] - at line: 1")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -803,10 +1021,7 @@ final class Logger<T> {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 6 {
-                XCTAssertEqual(tokens[3] as? TokenBox<InjectableType>, TokenBox(
-                    value: InjectableType(type: Type(name: "Logger", genericNames: ["T"])),
-                    offset: 75, length: 46, line: 4
-                ))
+                XCTAssertEqual(tokens[3].description, "internal Logger<T> { - 75[46] - at line: 4")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -829,10 +1044,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "array", type: Type(name: "Array", genericNames: ["String"], isOptional: false), protocolType: nil),
-                    offset: 32, length: 28, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "array = Array<String> - 32[28] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -855,10 +1067,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "array", type: Type(name: "Array", genericNames: ["String?"], isOptional: true), protocolType: nil),
-                    offset: 32, length: 32, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "array = Optional<Array<Optional<String>>> - 32[32] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -881,10 +1090,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "dict", type: Type(name: "Dictionary", genericNames: ["String", "Int"], isOptional: false), protocolType: nil),
-                    offset: 32, length: 35, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "dict = Dictionary<String, Int> - 32[35] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
@@ -907,10 +1113,7 @@ final class MovieManager {
             let tokens = try lexer.tokenize()
             
             if tokens.count == 3 {
-                XCTAssertEqual(tokens[1] as? TokenBox<RegisterAnnotation>, TokenBox(
-                    value: RegisterAnnotation(name: "dict", type: Type(name: "Dictionary", genericNames: ["String?", "Int?"], isOptional: true), protocolType: nil),
-                    offset: 32, length: 34, line: 2
-                ))
+                XCTAssertEqual(tokens[1].description, "dict = Optional<Dictionary<Optional<String>, Optional<Int>>> - 32[34] - at line: 2")
             } else {
                 XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }

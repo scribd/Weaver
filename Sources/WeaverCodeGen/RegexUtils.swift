@@ -52,25 +52,22 @@ extension NSTextCheckingResult {
 
 // MARK: - Patterns
 
-enum Patterns {
-    private static let spaces = "\\s*"
-    private static let equal = "\(spaces)=\(spaces)"
-    private static let arrow = "\(spaces)<-\(spaces)"
-    private static let name = "\\w+"
-    private static let typeNamePart = "\(name)(\\.\(name))*"
-    
-    static let typeName = "(\(genericType))|(\(arrayType))|(\(dictType))"
-    static let genericTypePart = "<\(typeNamePart)(\(spaces),\(spaces)\(typeNamePart))*>"
-    static let genericType = "(\(typeNamePart))(\(genericTypePart))?\\??"
-    static let arrayType = "\\[\(spaces)(\(genericType)\\??)\(spaces)\\]\\??"
-    static let arrayTypeWithNamedGroups = "\\[\(spaces)(?<value>\(genericType)\\??)\(spaces)\\]\\??"
-    static let dictType = "\\[\(spaces)(\(genericType)\\??)\(spaces):\(spaces)(\(genericType)\\??)\(spaces)\\]\\??"
-    static let dictTypeWithNamedGroups = "\\[\(spaces)(?<key>\(genericType)\\??)\(spaces):\(spaces)(?<value>\(genericType)\\??)\(spaces)\\]\\??"
+private enum Patterns {
+    static let register = "^(\\w+)\\s*=\\s*(.+)?"
+    static let reference = "^(\\w+)\\s*<-\\s*(.+)"
+    static let parameter = "^(\\w+)\\s*<=\\s*(.+)"
+    static let scope = "^(\\w+)\\.scope\\s*=\\s*\\.(\\w+)"
+    static let configuration = "^(\\w+)\\.(\\w+)\\s*=\\s*(.+)"
+    static let `import` = "^import\\s+(\\w+)"
+    static let snakeCased = "([a-z0-9])([A-Z])"
+}
 
-    static let register = "^(\(name))\(equal)(\(typeName))\(spaces)(<-\(spaces)(\(typeName))\(spaces))?$"
-    static let reference = "^(\(name))\(arrow)(\(typeName))\(spaces)$"
-    static let parameter = "^(\(name))\(spaces)<=\(spaces)(\(typeName))\(spaces)$"
-    static let scope = "^(\(name))\\.scope\(equal)\\.(\(name))\(spaces)$"
-    static let configuration = "^(\(name))\\.(\(name))\(equal)(.*)\(spaces)$"
-    static let `import` = "^import\\s+(\(name))\(spaces)$"
+extension NSRegularExpression {
+    static let register = try! NSRegularExpression(pattern: Patterns.register)
+    static let reference = try! NSRegularExpression(pattern: Patterns.reference)
+    static let parameter = try! NSRegularExpression(pattern: Patterns.parameter)
+    static let scope = try! NSRegularExpression(pattern: Patterns.scope)
+    static let configuration = try! NSRegularExpression(pattern: Patterns.configuration)
+    static let `import` = try! NSRegularExpression(pattern: Patterns.`import`)
+    static let snakeCased = try! NSRegularExpression(pattern: Patterns.snakeCased)
 }

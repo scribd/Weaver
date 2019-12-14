@@ -8,59 +8,58 @@
 import Foundation
 import PathKit
 import Yams
+import ShellOut
+import WeaverCodeGen
 
 // MARK: - Configuration
 
 struct Configuration {
+    
     let projectPath: Path
-    let outputPath: Path
-    let mainTemplatePath: Path
-    let detailedResolversTemplatePath: Path
+    let mainOutputPath: Path
+    let testsOutputPath: Path
     let inputPathStrings: [String]
     let ignoredPathStrings: [String]
-    let unsafe: Bool
-    let singleOutput: Bool
+    let cachePath: Path
     let recursiveOff: Bool
-    let detailedResolvers: Bool
+    let tests: Bool
+    let testableImports: [String]?
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
                  projectPath: Path?,
-                 outputPath: Path?,
-                 mainTemplatePath: Path?,
-                 detailedResolversTemplatePath: Path?,
-                 unsafe: Bool?,
-                 singleOutput: Bool?,
+                 mainOutputPath: Path?,
+                 testsOutputPath: Path?,
+                 cachePath: Path?,
                  recursiveOff: Bool?,
-                 detailedResolvers: Bool?) {
+                 tests: Bool?,
+                 testableImports: [String]?) {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
         self.projectPath = projectPath ?? Defaults.projectPath
-        self.outputPath = outputPath ?? Defaults.outputPath
-        self.mainTemplatePath = mainTemplatePath ?? Defaults.mainTemplatePath
-        self.detailedResolversTemplatePath = detailedResolversTemplatePath ?? Defaults.detailedResolversTemplatePath
-        self.unsafe = unsafe ?? Defaults.unsafe
-        self.singleOutput = singleOutput ?? Defaults.singleOuput
+        self.mainOutputPath = mainOutputPath ?? Defaults.mainOutputPath
+        self.testsOutputPath = testsOutputPath ?? Defaults.testsOutputPath
+        self.cachePath = cachePath ?? Defaults.cachePath
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
-        self.detailedResolvers = detailedResolvers ?? Defaults.detailedResolvers
+        self.tests = tests ?? Defaults.tests
+        self.testableImports = testableImports
     }
     
     init(configPath: Path? = nil,
          inputPathStrings: [String]? = nil,
          ignoredPathStrings: [String]? = nil,
          projectPath: Path? = nil,
-         outputPath: Path? = nil,
-         mainTemplatePath: Path? = nil,
-         detailedResolversTemplatePath: Path? = nil,
-         unsafe: Bool? = nil,
-         singleOutput: Bool? = nil,
+         mainOutputPath: Path? = nil,
+         testsOutputPath: Path? = nil,
+         cachePath: Path? = nil,
          recursiveOff: Bool? = nil,
-         detailedResolvers: Bool? = nil) throws {
+         tests: Bool? = nil,
+         testableImports: [String]? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
-        let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath,
-                                                         projectPath: projectPath)
+        let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath, projectPath: projectPath)
+        let cachePath = Configuration.prepareCachePath(cachePath ?? Defaults.cachePath, projectPath: projectPath)
         
         var configuration: Configuration
         switch (configPath.extension, configPath.isFile) {
@@ -74,33 +73,27 @@ struct Configuration {
             configuration = Configuration(inputPathStrings: inputPathStrings,
                                           ignoredPathStrings: ignoredPathStrings,
                                           projectPath: projectPath,
-                                          outputPath: outputPath,
-                                          mainTemplatePath: mainTemplatePath,
-                                          detailedResolversTemplatePath: detailedResolversTemplatePath,
-                                          unsafe: unsafe,
-                                          singleOutput: singleOutput,
+                                          mainOutputPath: mainOutputPath,
+                                          testsOutputPath: testsOutputPath,
+                                          cachePath: cachePath,
                                           recursiveOff: recursiveOff,
-                                          detailedResolvers: detailedResolvers)
+                                          tests: tests,
+                                          testableImports: testableImports)
         }
         
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? configuration.ignoredPathStrings
         self.projectPath = projectPath
-        self.unsafe = unsafe ?? configuration.unsafe
-        self.singleOutput = singleOutput ?? configuration.singleOutput
+        self.cachePath = cachePath
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
-        self.detailedResolvers = detailedResolvers ?? configuration.detailedResolvers
+        self.tests = tests ?? configuration.tests
+        self.testableImports = testableImports ?? configuration.testableImports
         
-        let outputPath = outputPath ?? configuration.outputPath
-        self.outputPath = outputPath.isRelative ? projectPath + configuration.outputPath : outputPath
+        let mainOutputPath = mainOutputPath ?? configuration.mainOutputPath
+        self.mainOutputPath = mainOutputPath.isRelative ? projectPath + configuration.mainOutputPath : mainOutputPath
 
-        let mainTemplatePath = mainTemplatePath ?? configuration.mainTemplatePath
-        var shouldUseProjectPath = mainTemplatePath.isRelative && mainTemplatePath != Defaults.mainTemplatePath
-        self.mainTemplatePath = shouldUseProjectPath ? projectPath + mainTemplatePath : mainTemplatePath
-        
-        let detailedResolversTemplatePath = detailedResolversTemplatePath ?? configuration.detailedResolversTemplatePath
-        shouldUseProjectPath = detailedResolversTemplatePath.isRelative && detailedResolversTemplatePath != Defaults.detailedResolversTemplatePath
-        self.detailedResolversTemplatePath = shouldUseProjectPath ? projectPath + detailedResolversTemplatePath : detailedResolversTemplatePath
+        let testsOutputPath = testsOutputPath ?? configuration.testsOutputPath
+        self.testsOutputPath = testsOutputPath.isRelative ? projectPath + configuration.testsOutputPath : testsOutputPath
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -115,8 +108,12 @@ struct Configuration {
         return configPath
     }
     
+    private static func prepareCachePath(_ cachePath: Path, projectPath: Path) -> Path {
+        return cachePath.isRelative ? projectPath + cachePath : cachePath
+    }
+    
     private var recursive: Bool {
-        return !recursiveOff
+        return recursiveOff == false
     }
 }
 
@@ -128,12 +125,13 @@ extension Configuration {
         static let configPath = Path(".")
         static let configYAMLFile = Path(".weaver.yaml")
         static let configJSONFile = Path(".weaver.json")
-        static let outputPath = Path(".")
-        static let unsafe = false
-        static let singleOuput = false
+        static let mainOutputPath = Path(".")
+        static let testsOutputPath = Path(".")
+        static let cachePath = Path(".weaver_cache.json")
         static let recursiveOff = false
         static let inputPathStrings = ["."]
         static let detailedResolvers = false
+        static let tests = false
         
         static var projectPath: Path {
             if let projectPath = ProcessInfo.processInfo.environment["WEAVER_PROJECT_PATH"] {
@@ -158,6 +156,22 @@ extension Configuration {
                 return Path("/usr/local/share/weaver/Resources/detailed_resolvers.stencil")
             }
         }
+        
+        static var testsTemplatePath: Path {
+            if let testsTemplatePath = ProcessInfo.processInfo.environment["WEAVER_TESTS_TEMPLATE_PATH"] {
+                return Path(testsTemplatePath)
+            } else {
+                return Path("/usr/local/share/weaver/Resources/dependency_resolver_stub.stencil")
+            }
+        }
+        
+        static var macrosTemplatePath: Path {
+            if let macrosTemplatePath = ProcessInfo.processInfo.environment["MACROS_TEMPLATE_PATH"] {
+                return Path(macrosTemplatePath)
+            } else {
+                return Path("/usr/local/share/weaver/Resources/macros.stencil")
+            }
+        }
     }
 }
 
@@ -167,15 +181,14 @@ extension Configuration: Decodable {
 
     private enum Keys: String, CodingKey {
         case projectPath = "project_path"
-        case outputPath = "output_path"
-        case mainTemplatePath = "main_template_path"
-        case detailedResolversTemplatePath = "detailed_resolvers_template_path"
+        case mainOutputPath = "main_output_path"
+        case testsOutputPath = "tests_output_path"
         case inputPaths = "input_paths"
         case ignoredPaths = "ignored_paths"
-        case unsafe
-        case singleOutput = "single_output"
         case recursive
-        case detailedResolvers = "detailed_resolvers"
+        case tests
+        case testableImports = "testable_imports"
+        case cachePath = "cache_path"
     }
     
     public init(from decoder: Decoder) throws {
@@ -186,15 +199,14 @@ extension Configuration: Decodable {
         }
         
         projectPath = Defaults.projectPath
-        outputPath = try container.decodeIfPresent(Path.self, forKey: .outputPath) ?? Defaults.outputPath
-        mainTemplatePath = try container.decodeIfPresent(Path.self, forKey: .mainTemplatePath) ?? Defaults.mainTemplatePath
-        detailedResolversTemplatePath = try container.decodeIfPresent(Path.self, forKey: .detailedResolversTemplatePath) ?? Defaults.detailedResolversTemplatePath
+        mainOutputPath = try container.decodeIfPresent(Path.self, forKey: .mainOutputPath) ?? Defaults.mainOutputPath
+        testsOutputPath = try container.decodeIfPresent(Path.self, forKey: .testsOutputPath) ?? Defaults.testsOutputPath
         inputPathStrings = try container.decodeIfPresent([String].self, forKey: .inputPaths) ?? Defaults.inputPathStrings
         ignoredPathStrings = try container.decodeIfPresent([String].self, forKey: .ignoredPaths) ?? []
-        unsafe = try container.decodeIfPresent(Bool.self, forKey: .unsafe) ?? Defaults.unsafe
-        singleOutput = try container.decodeIfPresent(Bool.self, forKey: .singleOutput) ?? Defaults.singleOuput
         recursiveOff = !(try container.decodeIfPresent(Bool.self, forKey: .recursive) ?? !Defaults.recursiveOff)
-        detailedResolvers = try container.decodeIfPresent(Bool.self, forKey: .detailedResolvers) ?? Defaults.detailedResolvers
+        tests = try container.decodeIfPresent(Bool.self, forKey: .tests) ?? Defaults.tests
+        testableImports = try container.decodeIfPresent([String].self, forKey: .testableImports)
+        cachePath = try container.decodeIfPresent(Path.self, forKey: .cachePath) ?? Defaults.cachePath
     }
 }
 
@@ -210,18 +222,36 @@ extension Path: Decodable {
 
 extension Configuration {
     
+    private static let annotationRegex = "\\/\\/[[:space:]]*\(TokenBuilder.annotationRegexString)"
+    private static let propertyWrapperRegex = "\"@\\w*Weaver\""
+    
     func inputPaths() throws -> [Path]  {
+        var inputPaths = Set<Path>()
 
-        let inputPaths = try Set(inputPathStrings
-            .map { projectPath + $0 }
+        let inputDirectories = Set(inputPathStrings
+            .lazy
+            .map { self.projectPath + $0 }
+            .filter { $0.exists && $0.isDirectory }
+            .map { $0.absolute().string })
+
+        let grepArguments = ["-lR", "-e", Configuration.annotationRegex, "-e", Configuration.propertyWrapperRegex] + Array(inputDirectories)
+        inputPaths.formUnion(try shellOut(to: "grep", arguments: grepArguments)
+            .split(separator: "\n")
+            .lazy
+            .map { Path(String($0)) }
+            .filter { $0.extension == "swift" })
+        
+        inputPaths.formUnion(inputPathStrings
+            .lazy
+            .map { self.projectPath + $0 }
+            .filter { $0.exists && $0.isFile && $0.extension == "swift" })
+
+        inputPaths.subtract(try ignoredPathStrings
+            .lazy
+            .map { self.projectPath + $0 }
             .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
             .filter { $0.extension == "swift" })
         
-        let ignoredPaths = try Set(ignoredPathStrings
-            .map { projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
-            .filter { $0.extension == "swift" })
-        
-        return inputPaths.subtracting(ignoredPaths).sorted()
+        return inputPaths.sorted()
     }
 }

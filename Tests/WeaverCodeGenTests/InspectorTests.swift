@@ -82,14 +82,11 @@ final class App {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                            name: "sessionManager",
-                                                                                            type: nil),
-                                                                        underlyingError: .unresolvableDependency(history: [
-                                                                            InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 4, file: "test.swift"),
-                                                                                                                                                  name: "sessionManager",
-                                                                                                                                                  type: Type(name: "App")))
-                                                                            ])))
+            XCTAssertEqual(error.description, """
+test.swift:2: error: Invalid dependency: 'sessionManager: SessionManagerProtocol'. Dependency cannot be resolved.
+test.swift:1: warning: Could not find the dependency 'sessionManager' in 'API'. You may want to register it here to solve this issue.
+test.swift:5: warning: Could not find the dependency 'sessionManager' in 'App'. You may want to register it here to solve this issue.
+""")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -124,25 +121,33 @@ final class SessionManager {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            let underlyingError = InspectorAnalysisError.cyclicDependency(history: [
-                InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 10, file: "test.swift"), type: Type(name: "SessionManager")), stepCount: 0),
-                InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 0, file: "test.swift"), type: Type(name: "API")), stepCount: 1),
-                InspectorAnalysisHistoryRecord.triedToBuildType(PrintableResolver(fileLocation: FileLocation(line: 5, file: "test.swift"), type: Type(name: "Session")), stepCount: 2)
-                ])
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 6, file: "test.swift"),
-                                                                                            name: "sessionManager",
-                                                                                            type: Type(name: "SessionManager")),
-                                                                        underlyingError: underlyingError))
+            XCTAssertEqual(error.description, """
+test.swift:2: error: Invalid dependency: 'session: Session <- SessionProtocol'. Detected a cyclic dependency.
+test.swift:6: warning: Step 0: Tried to build type 'Session'.
+test.swift:11: warning: Step 1: Tried to build type 'SessionManager'.
+test.swift:1: warning: Step 2: Tried to build type 'API'.
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
     
-    func test_inspector_should_build_a_valid_dependency_graph_with_an_unresolvable_ref_with_custom_builder_set_to_true() {
+    func test_inspector_should_build_a_valid_cyclic_dependency_graph_with_a_self_reference() {
         let file = File(contents: """
 final class API {
     // weaver: api <- APIProtocol
-    // weaver: api.builder = API.make
+    // weaver: session = Session <- SessionProtocol
+    // weaver: session.scope = .container
+}
+
+final class Session {
+    // weaver: sessionManager = SessionManager <- SessionManagerProtocol
+    // weaver: sessionManager.scope = .container
+}
+
+final class SessionManager {
+    // weaver: api = API <- APIProtocol
+    // weaver: api.scope = .weak
 }
 """)
         
@@ -159,7 +164,7 @@ final class API {
             XCTFail("Unexpected error: \(error)")
         }
     }
-    
+
     func test_inspector_should_build_a_valid_dependency_graph_with_an_unbuildable_dependency_with_custom_builder_set_to_true() {
         let file = File(contents: """
 final class API {
@@ -213,47 +218,6 @@ final class ViewController {
         }
     }
     
-    func test_inspector_should_build_an_invalid_dependency_graph_because_of_a_custom_builder_not_shared_with_children() {
-        let file = File(contents: """
-final class AppDelegate {
-    // weaver: appDelegate <- AppDelegateProtocol
-    // weaver: appDelegate.builder = AppDelegate.make
-    
-    // weaver: viewController = ViewController
-    // weaver: viewController.scope = .container
-    // weaver: viewController.builder = ViewController.make
-}
-
-final class ViewController {
-    // weaver: appDelegate <- AppDelegateProtocol
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            let syntaxTree = try parser.parse()
-            let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
-            
-            try inspector.validate()
-            XCTFail("Expected error.")
-        } catch let error as InspectorError {
-            let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [
-                InspectorAnalysisHistoryRecord.foundUnaccessibleDependency(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                               name: "appDelegate",
-                                                                                               type: nil))
-                ])
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 10, file: "test.swift"),
-                                                                                            name: "appDelegate",
-                                                                                            type: nil),
-                                                                        underlyingError: underlyingError))
-        } catch {
-            XCTFail("Unexpected error: \(error).")
-        }
-    }
-    
     func test_inspector_should_build_a_valid_dependency_graph_with_two_references_of_the_same_type() {
         let file = File(contents: """
 final class AppDelegate {
@@ -276,7 +240,7 @@ final class Coordinator {
     // weaver: viewController1 <- UIViewController
 }
 """)
-        
+
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -288,51 +252,6 @@ final class Coordinator {
             try inspector.validate()
         } catch {
             XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
-    func test_inspector_should_build_an_invalid_dependency_graph_because_of_an_incorrectly_named_reference() {
-        let file = File(contents: """
-final class AppDelegate {
-    // weaver: viewController1 = ViewController1 <- UIViewController
-    // weaver: viewController1.scope = .container
-
-    // weaver: viewController2 = ViewController2 <- UIViewController
-    // weaver: viewController2.scope = .container
-
-    // weaver: coordinator = Coordinator
-    // weaver: coordinator.scope = .container
-}
-
-final class Coordinator {
-    // weaver: viewController1 <- UIViewController
-    // weaver: viewController2 <- UIViewController
-    // weaver: viewController3 <- UIViewController
-}
-""")
-        
-        do {
-            let lexer = Lexer(file, fileName: "test.swift")
-            let tokens = try lexer.tokenize()
-            let parser = Parser(tokens, fileName: "test.swift")
-            let syntaxTree = try parser.parse()
-            let linker = try Linker(syntaxTrees: [syntaxTree])
-            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
-            
-            try inspector.validate()
-            XCTFail("Expected error.")
-        } catch let error as InspectorError {
-            let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [
-                InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 0, file: "test.swift"),
-                                                                                      name: "viewController3",
-                                                                                      type: Type(name: "AppDelegate")))
-                ])
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 14, file: "test.swift"),
-                                                                                            name: "viewController3",
-                                                                                            type: nil),
-                                                                        underlyingError: underlyingError))
-        } catch {
-            XCTFail("Unexpected error: \(error).")
         }
     }
     
@@ -504,13 +423,10 @@ final class MovieAPI: APIProtocol {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            let underlyingError = InspectorAnalysisError.isolatedResolverCannotHaveReferents(type: Type(name: "HomeViewController"), referents: [
-                PrintableResolver(fileLocation: FileLocation(line: 0, file: "test.swift"), type: Type(name: "AppDelegate"))
-                ])
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 34, file: "test.swift"),
-                                                                                            name: "movieAPI",
-                                                                                            type: Type(name: "MovieAPI")),
-                                                                        underlyingError: underlyingError))
+            XCTAssertEqual(error.description, """
+test.swift:19: error: Invalid dependency: 'movieManager: MovieManaging'. This type is flagged as isolated. It cannot have any connected referent.
+test.swift:1: error: 'AppDelegate' cannot depend on 'HomeViewController' because it is flagged as 'isolated'. You may want to set 'HomeViewController.isIsolated' to 'false'.
+""")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -544,18 +460,12 @@ final class MovieViewController: UIViewController {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [
-                InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 5, file: "test.swift"),
-                                                                                      name: "urlSession",
-                                                                                      type: Type(name: "HomeViewController"))),
-                InspectorAnalysisHistoryRecord.dependencyNotFound(PrintableDependency(fileLocation: FileLocation(line: 0, file: "test.swift"),
-                                                                                      name: "urlSession",
-                                                                                      type: Type(name: "AppDelegate")))
-                ])
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 11, file: "test.swift"),
-                                                                                            name: "urlSession",
-                                                                                            type: nil),
-                                                                        underlyingError: underlyingError))
+            XCTAssertEqual(error.description, """
+test.swift:12: error: Invalid dependency: 'urlSession: URLSession'. Dependency cannot be resolved.
+test.swift:11: warning: Could not find the dependency 'urlSession' in 'MovieViewController'. You may want to register it here to solve this issue.
+test.swift:6: warning: Could not find the dependency 'urlSession' in 'HomeViewController'. You may want to register it here to solve this issue.
+test.swift:1: warning: Could not find the dependency 'urlSession' in 'AppDelegate'. You may want to register it here to solve this issue.
+""")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -600,10 +510,10 @@ final class MovieViewController: UIViewController {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                            name: "movieManager",
-                                                                                            type: nil),
-                                                                        underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
+            XCTAssertEqual(error.description, """
+test.swift:2: error: Invalid dependency: 'movieManager: MovieManaging'. Dependency cannot be resolved.
+test.swift:1: warning: Type 'MovieViewController' doesn't seem to be attached to the dependency graph. You might have to use `self.isIsolated = true` or register it somewhere.
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -658,10 +568,354 @@ final class MovieManager {
             try inspector.validate()
             XCTFail("Expected error.")
         } catch let error as InspectorError {
-            XCTAssertEqual(error, InspectorError.invalidDependencyGraph(PrintableDependency(fileLocation: FileLocation(line: 1, file: "test.swift"),
-                                                                                            name: "logger",
-                                                                                            type: nil),
-                                                                        underlyingError: InspectorAnalysisError.unresolvableDependency(history: [])))
+            XCTAssertEqual(error.description, """
+test.swift:7: error: Invalid dependency: 'logger: Logger<String>'. Dependency cannot be resolved.
+test.swift:6: warning: Could not find the dependency 'logger' in 'MovieManager'. You may want to register it here to solve this issue.
+test.swift:7: error: Dependency 'logger' has a mismatching type 'Logger<String>'.
+test.swift:2: warning: Found candidate 'logger: Logger<Int>'.
+""")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_a_valid_dependency_graph_by_resolving_a_dependency_from_its_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- Logging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: movieManagerLogger <- Logging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_a_valid_dependency_by_resolving_a_dependency_from_its_type_on_several_levels() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- ManagerLogging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: logger <- ManagerLogging
+    // weaver: api = API
+}
+
+final class API {
+    // weaver: apiLogger <- ManagerLogging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_dependency_graph_because_a_reference_uses_an_unknown_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- Logging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: logger <- Foo
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+test.swift:7: error: Invalid dependency: 'logger: Foo'. Dependency cannot be resolved.
+test.swift:6: warning: Could not find the dependency 'logger' in 'MovieManager'. You may want to register it here to solve this issue.
+test.swift:7: error: Dependency 'logger' has a mismatching type 'Foo'.
+test.swift:2: warning: Found candidate 'logger: Logger <- Logging'.
+""")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_dependency_graph_because_a_reference_uses_an_implicit_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- Logging
+    // weaver: logger1 = Logger1 <- Logging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: movieManagerLogger <- Logging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+test.swift:8: error: Invalid dependency: 'movieManagerLogger: Logging'. Dependency cannot be resolved.
+test.swift:7: warning: Could not find the dependency 'movieManagerLogger' in 'MovieManager'. You may want to register it here to solve this issue.
+test.swift:8: error: Dependency 'movieManagerLogger' is implicit.
+test.swift:2: warning: Found candidate 'logger'.
+test.swift:3: warning: Found candidate 'logger1'.
+""")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_dependency_graph_because_a_reference_uses_a_concrete_type_instead_using_an_abstract_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- Logging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: movieManagerLogger <- Logger
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+test.swift:7: error: Invalid dependency: 'movieManagerLogger: Logger'. Dependency cannot be resolved.
+test.swift:6: warning: Could not find the dependency 'movieManagerLogger' in 'MovieManager'. You may want to register it here to solve this issue.
+test.swift:7: error: Dependency 'movieManagerLogger' has a mismatching type 'Logger'.
+test.swift:2: warning: Found candidate 'logger: Logger <- Logging'.
+""")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_dependency_graph_because_a_reference_uses_an_unknown_concrete_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- Logging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: logger <- Loggers
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+test.swift:7: error: Invalid dependency: 'logger: Loggers'. Dependency cannot be resolved.
+test.swift:6: warning: Could not find the dependency 'logger' in 'MovieManager'. You may want to register it here to solve this issue.
+test.swift:7: error: Dependency 'logger' has a mismatching type 'Loggers'.
+test.swift:2: warning: Found candidate 'logger: Logger <- Logging'.
+""")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_a_valid_dependency_graph_with_references_using_subtypes() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- ManagerLogging & UniversalLogging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: universalLogger <- UniversalLogging
+    // weaver: movieLogger <- ManagerLogging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_a_valid_dependency_graph_with_a_reference_using_a_composite_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- ManagerLogging & UniversalLogging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: movieLogger <- ManagerLogging & UniversalLogging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_dependency_graph_with_a_registration_using_an_incomplete_type() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: logger = Logger <- ManagerLogging
+    // weaver: movieManager = MovieManager
+}
+
+final class MovieManager {
+    // weaver: movieLogger <- ManagerLogging & UniversalLogging
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as DependencyGraphError {
+            XCTAssertEqual(error.description, """
+test.swift:7: error: Invalid type composition: 'ManagerLogging & UniversalLogging'.
+test.swift:7: warning: Found candidates: 'logger: Logger'.
+""")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func test_inspector_should_build_an_invalid_dependency_graph_with_a_registration_using_scope_container_on_dependency_taking_parameters() {
+        let file = File(contents: """
+final class MovieViewController {
+    // weaver: movieManager = MovieManager
+    // weaver: movieManager.scope = .container
+}
+
+final class MovieManager {
+    // weaver: movieID <= Int
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+test.swift:2: error: Dependency 'movieManager' cannot declare parameters and be registered with a container scope.
+""")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_inspector_should_build_an_invalid_dependency_graph_because_of_invalid_amount_of_parameters_in_decalaration() {
+        let file = File(contents: """
+final class MovieViewController {
+    @WeaverP2(.registration, type: MovieManager.self, scope: .transient)
+    private var movieManager: MovieManager
+}
+
+final class MovieManager {
+    // weaver: movieID <= Int
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+test.swift:2: error: Invalid dependency: 'movieManager: MovieManager <- MovieManager'. Resolver type mismatch. Expected '(Int) -> MovieManager' but got 'MovieManager'.
+""")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
