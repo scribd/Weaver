@@ -122,7 +122,7 @@ import UIKit
     func movieController(movieID: UInt,
                          movieTitle: String) -> UIViewController {
         let builder: Builder<UIViewController> = getBuilder(for: "movieController", type: UIViewController.self)
-        return builder { _self in
+        return builder { (_self) in
             _self.builders["movieID"] = _self.builder(movieID)
             _self.builders["movieTitle"] = _self.builder(movieTitle)
         }
@@ -157,27 +157,27 @@ import UIKit
 
     fileprivate func appDelegateDependencyResolver() -> AppDelegateDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeMovieAPI(_self as MovieAPIInputDependencyResolver)
         }
-        _self.builders["imageManager"] = lazyBuilder { _ -> ImageManaging in return ImageManager() }
-        _self.builders["movieManager"] = lazyBuilder { [weak _self] _ -> MovieManaging in
+        _self.builders["imageManager"] = lazyBuilder { (_: Optional<ParametersCopier>) -> ImageManaging in return ImageManager() }
+        _self.builders["movieManager"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> MovieManaging in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return AppDelegate.makeMovieManager(_self as MovieManagerInputDependencyResolver)
         }
-        _self.builders["homeViewController"] = lazyBuilder { [weak _self] _ -> UIViewController in
+        _self.builders["homeViewController"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> UIViewController in
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
             MainDependencyContainer._dynamicResolversLock.lock()
             guard let _self = _self else {
@@ -186,7 +186,7 @@ import UIKit
             let __self = _self.homeViewControllerDependencyResolver()
             return HomeViewController(injecting: __self)
         }
-        _self.builders["reviewManager"] = lazyBuilder { [weak _self] _ -> ReviewManaging in
+        _self.builders["reviewManager"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> ReviewManaging in
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
             MainDependencyContainer._dynamicResolversLock.lock()
             guard let _self = _self else {
@@ -218,7 +218,7 @@ import UIKit
 
     private func personManagerDependencyResolver() -> PersonManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
@@ -228,7 +228,7 @@ import UIKit
     private func reviewManagerDependencyResolver() -> ReviewManagerDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["movieAPI"] = _self.builder(movieAPI)
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
@@ -240,8 +240,8 @@ import UIKit
         _self.builders["imageManager"] = _self.builder(imageManager)
         _self.builders["movieManager"] = _self.builder(movieManager)
         _self.builders["reviewManager"] = _self.builder(reviewManager)
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
-        _self.builders["movieController"] = weakLazyBuilder { [weak _self] copyParameters -> UIViewController in
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
+        _self.builders["movieController"] = weakLazyBuilder { [weak _self] (copyParameters: Optional<ParametersCopier>) -> UIViewController in
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
             MainDependencyContainer._dynamicResolversLock.lock()
             guard let _self = _self else {
@@ -263,8 +263,8 @@ import UIKit
         _self.builders["imageManager"] = _self.builder(imageManager)
         _self.builders["movieManager"] = _self.builder(movieManager)
         _self.builders["reviewManager"] = _self.builder(reviewManager)
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
-        _self.builders["reviewController"] = weakLazyBuilder { [weak _self] _ -> WSReviewViewController in
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
+        _self.builders["reviewController"] = weakLazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> WSReviewViewController in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }

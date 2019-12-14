@@ -559,7 +559,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 Function(kind: .named(declaration.setterName))
                     .adding(parameter: FunctionParameter(alias: "_", name: "value", type: declaration.type.typeID))
                     .adding(member: Assignment(
-                        variable: Reference.named("_\(declaration.declarationName)"),
+                        variable: Reference.named("builders[\"\(declaration.declarationName)\"]"),
                         value: Reference.named("builder") | .call(Tuple()
                             .adding(parameter: TupleParameter(value: Reference.named("value")))
                         )
@@ -872,7 +872,10 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         }
         
         builderReference = builderFunction | .block(FunctionBody()
-            .adding(parameter: FunctionBodyParameter(name: hasParameters ? "copyParameters" : "_"))
+            .adding(parameter: FunctionBodyParameter(
+                name: hasParameters ? "copyParameters" : nil,
+                type: .optional(wrapped: TypeIdentifier(name: "ParametersCopier"))
+            ))
             .with(resultType: declaration.type.typeID)
             .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
             .adding(member: targetHasPropertyWrapperAnnotations ? PlainCode(code: """
@@ -908,7 +911,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             ] + targetSelfReferences.map { selfReference in
                 let declaration = try self.declaration(for: selfReference)
                 return Assignment(
-                    variable: Variable.__mainSelf.reference + .named("_\(declaration.declarationName)"),
+                    variable: Variable.__mainSelf.reference + .named("builders[\"\(declaration.declarationName)\"]"),
                     value: Variable.__mainSelf.reference + .named("weakBuilder") | .call(Tuple()
                         .adding(parameter: TupleParameter(value: Variable.value.reference))
                     )

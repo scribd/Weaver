@@ -97,7 +97,7 @@ final class MainDependencyContainer {
     private func movieAPIDependencyResolver() -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["urlSession"] = _self.builder(urlSession)
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
         return _self
     }
@@ -105,21 +105,21 @@ final class MainDependencyContainer {
     fileprivate func publicMovieAPIDependencyResolver(urlSession: URLSession) -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["urlSession"] = _self.builder(urlSession)
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
         return _self
     }
 
     fileprivate func imageManagerDependencyResolver() -> ImageManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { _ -> Logger in return Logger() }
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
+        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return ImageManager.makeURLSession(_self as URLSessionInputDependencyResolver)
         }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
@@ -139,13 +139,13 @@ final class MainDependencyContainer {
 
     private func movieManagerDependencyResolver() -> MovieManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
         }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
@@ -162,13 +162,13 @@ final class MainDependencyContainer {
         let _self = MainDependencyContainer()
         _self.builders["host"] = _self.builder(host)
         _self.builders["logger"] = _self.builder(logger)
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] _ -> URLSession in
+        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
             return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
         }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] _ -> APIProtocol in
+        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
             guard let _self = _self else {
                 MainDependencyContainer.fatalError()
             }
