@@ -609,7 +609,6 @@ For an output example, please check this [Gist](https://gist.github.com/trupin/9
 - [From weaver 0.9.+ to 0.10.+](./Documentation/Migration_from_0.9.+_to_0.10.+.md)
 - [From weaver 0.10.+ to 0.11.+](./Documentation/Migration_from_0.10.+_to_0.11.+.md)
 - [From weaver 0.11.+ to 0.12.+](./Documentation/Migration_from_0.11.+_to_0.12.+.md)
-- [From weaver 0.12.+ to 1.0.+](./Documentation/Migration_from_0.12.+_to_1.0.+.md)
 
 ## More content...
 - [Weaver: A Painless Dependency Injection Framework For Swift](https://medium.com/scribd-data-science-engineering/weaver-a-painless-dependency-injection-framework-for-swift-7c4afad5ef6a)
