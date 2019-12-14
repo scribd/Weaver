@@ -6,7 +6,9 @@
 [![codecov](https://codecov.io/gh/scribd/Weaver/branch/master/graph/badge.svg)](https://codecov.io/gh/scribd/Weaver) 
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/scribd-weaver/Lobby)
 
-[![Watch the video](weaver.gif)](https://youtu.be/Rxhc9VJBoOI)
+<a href="https://youtu.be/Rxhc9VJBoOI" alt="Watch the demo" target="_blank">
+	<img src="weaver.gif" alt="Watch the video" width="960" style="display: block; margin: 0 auto" />
+</a>
 
 ## Features
 
