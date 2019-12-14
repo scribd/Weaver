@@ -8,10 +8,7 @@ fi
 echo $next_version
 echo $next_version > .version
 
-sed -i '' "s/${current_version//./\\.}/$next_version/g" \
-Tests/WeaverCodeGenTests/SwiftGenerator/Output/*.swift \
-Tests/WeaverCodeGenTests/SwiftGenerator/SwiftGeneratorTests.swift \
-Sources/WeaverCommand/main.swift
+sed -i '' "s/${current_version//./\\.}/$next_version/g" Sources/WeaverCommand/Command.swift
 
 release_tar="https://github.com/scribd/Weaver/archive/$current_version.tar.gz"
 sha=$(curl -L -s $release_tar | shasum -a 256 | sed 's/ .*//')
