@@ -109,6 +109,7 @@ private final class MetaDependencyDeclaration: Hashable {
     }()
     
     lazy var declarationName = "\(name)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
+    lazy var buildersSubcriptGet = "builders[\"\(declarationName)\"]"
     lazy var resolverTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Resolver"
     lazy var setterName = "set\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
     lazy var setterTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Setter"
@@ -511,7 +512,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                             .adding(members: try declaration.parameters.map { parameter in
                                 let declaration = try self.declaration(for: parameter)
                                 return Assignment(
-                                    variable: Variable._self.reference + .named("builders[\"\(declaration.declarationName)\"]"),
+                                    variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
                                     value: Variable._self.reference + .named("builder") | .call(Tuple()
                                         .adding(parameter: TupleParameter(value:  Reference.named(parameter.dependencyName)))
                                     )
@@ -559,7 +560,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 Function(kind: .named(declaration.setterName))
                     .adding(parameter: FunctionParameter(alias: "_", name: "value", type: declaration.type.typeID))
                     .adding(member: Assignment(
-                        variable: Reference.named("builders[\"\(declaration.declarationName)\"]"),
+                        variable: Reference.named(declaration.buildersSubcriptGet),
                         value: Reference.named("builder") | .call(Tuple()
                             .adding(parameter: TupleParameter(value: Reference.named("value")))
                         )
@@ -702,7 +703,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
 
                     let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
                         Assignment(
-                            variable: Variable._self.reference + .named("builders[\"\(declaration.declarationName)\"]"),
+                            variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
                             value: Variable._self.reference + .named("builder") | .call(Tuple()
                                 .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
                             )
@@ -911,7 +912,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             ] + targetSelfReferences.map { selfReference in
                 let declaration = try self.declaration(for: selfReference)
                 return Assignment(
-                    variable: Variable.__mainSelf.reference + .named("builders[\"\(declaration.declarationName)\"]"),
+                    variable: Variable.__mainSelf.reference + .named(declaration.buildersSubcriptGet),
                     value: Variable.__mainSelf.reference + .named("weakBuilder") | .call(Tuple()
                         .adding(parameter: TupleParameter(value: Variable.value.reference))
                     )
@@ -924,7 +925,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         )
         
         return Assignment(
-            variable: Variable._self.reference + .named("builders[\"\(declaration.declarationName)\"]"),
+            variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
             value: builderReference
         )
     }
