@@ -184,7 +184,7 @@ public let weaverCommand = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Writing...".lightMagenta, benchmark: .start("writing"))
             
-            if didChange || mainOutputPath.exists == false || testsOutputPath.exists == false {
+            if didChange || mainOutputPath.exists == false || (testsOutputPath.exists == false && configuration.tests) {
                 let dataToWrite = [
                     (mainOutputPath, mainGeneratedData),
                     (testsOutputPath, testsGeneratedData)
