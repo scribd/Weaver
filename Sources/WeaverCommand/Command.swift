@@ -279,5 +279,9 @@ public let weaverCommand = Group {
         
         Logger.log(.info, jsonString)
     }
+    
+    $0.command("version") {
+        print(version)
+    }
 }
 
