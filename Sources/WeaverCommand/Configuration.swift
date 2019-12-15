@@ -140,38 +140,6 @@ extension Configuration {
                 return Path(".")
             }
         }
-
-        static var mainTemplatePath: Path {
-            if let mainTemplatePath = ProcessInfo.processInfo.environment["WEAVER_MAIN_TEMPLATE_PATH"] {
-                return Path(mainTemplatePath)
-            } else {
-                return Path("/usr/local/share/weaver/Resources/dependency_resolver.stencil")
-            }
-        }
-        
-        static var detailedResolversTemplatePath: Path {
-            if let detailedResolversTemplatePath = ProcessInfo.processInfo.environment["WEAVER_DETAILED_RESOLVERS_TEMPLATE_PATH"] {
-                return Path(detailedResolversTemplatePath)
-            } else {
-                return Path("/usr/local/share/weaver/Resources/detailed_resolvers.stencil")
-            }
-        }
-        
-        static var testsTemplatePath: Path {
-            if let testsTemplatePath = ProcessInfo.processInfo.environment["WEAVER_TESTS_TEMPLATE_PATH"] {
-                return Path(testsTemplatePath)
-            } else {
-                return Path("/usr/local/share/weaver/Resources/dependency_resolver_stub.stencil")
-            }
-        }
-        
-        static var macrosTemplatePath: Path {
-            if let macrosTemplatePath = ProcessInfo.processInfo.environment["MACROS_TEMPLATE_PATH"] {
-                return Path(macrosTemplatePath)
-            } else {
-                return Path("/usr/local/share/weaver/Resources/macros.stencil")
-            }
-        }
     }
 }
 
