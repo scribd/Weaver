@@ -46,13 +46,13 @@ final class CommandTests: XCTestCase {
     
     func test_weaver_swift_should_create_cache_file() throws {
         try run(command: "swift", with: ".sample.weaver.yaml")
-        XCTAssertGreaterThan(try Constants.cachePath.read().count, 36)
+        XCTAssertGreaterThan(try Constants.cachePath.read().count, 35)
     }
     
     func test_weaver_clean_should_remove_cache_file() throws {
         try run(command: "swift", with: ".sample.weaver.yaml")
         try run(command: "clean", with: ".sample.weaver.yaml")
-        XCTAssertEqual(try Constants.cachePath.read().count, 36)
+        XCTAssertEqual(try Constants.cachePath.read().count, 35)
     }
     
     func test_weaver_swift_should_generate_code_for_sample() throws {
