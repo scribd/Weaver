@@ -35,7 +35,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @objc private var homeViewController: UIViewController
 
     // weaver: reviewManager = ReviewManager <- ReviewManaging
-    // weaver: reviewManager.scope = .container
     // weaver: reviewManager.objc = true
     
     func applicationDidFinishLaunching(_ application: UIApplication) {
@@ -58,6 +57,6 @@ extension AppDelegate {
     }
     
     static func makeMovieManager(_ dependencies: MovieManagerInputDependencyResolver) -> MovieManaging {
-        return MovieManager(host: "https://api.themoviedb.org/3", logger: Logger())
+        return MovieManager(host: "https://api.themoviedb.org/3", logger: dependencies.logger)
     }
 }

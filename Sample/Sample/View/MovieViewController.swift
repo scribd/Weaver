@@ -17,6 +17,9 @@ final class MovieViewController: UIViewController {
         let overview: String?
     }
     
+    @Weaver(.registration)
+    private var logger: Logger
+
     @Weaver(.parameter)
     private var movieID: UInt
     
@@ -32,10 +35,7 @@ final class MovieViewController: UIViewController {
     @Weaver(.reference)
     private var reviewManager: ReviewManaging
 
-    @Weaver(.registration,
-            type: WSReviewViewController.self,
-            scope: .weak,
-            builder: WSReviewViewController.make)
+    @Weaver(.registration, scope: .weak, builder: WSReviewViewController.make)
     private var reviewController: WSReviewViewController
     
     private var originalBarStyle: UIBarStyle?
@@ -86,7 +86,9 @@ final class MovieViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        logger.log(.info, "Showing movie: \(movieTitle).")
+        
         title = movieTitle
         view.backgroundColor = .black
         edgesForExtendedLayout = []
@@ -113,7 +115,8 @@ final class MovieViewController: UIViewController {
                 switch result {
                 case .success(let image):
                     self.thumbnailImageView.image = image
-                case .failure: break
+                case .failure(let error):
+                    self.logger.log(.error, "\(error)")
                 }
             }
             
@@ -126,7 +129,8 @@ final class MovieViewController: UIViewController {
             switch result {
             case .success(let movie):
                 completion(ViewModel(movie))
-            case .failure:
+            case .failure(let error):
+                self.logger.log(.error, "\(error)")
                 completion(ViewModel())
             }
         }

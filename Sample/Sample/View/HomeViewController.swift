@@ -16,6 +16,9 @@ final class HomeViewController: UIViewController {
         
     private var movies = [Movie]()
     
+    @Weaver(.registration)
+    private var logger: Logger
+    
     @Weaver(.reference)
     private var movieManager: MovieManaging
 
@@ -39,13 +42,8 @@ final class HomeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    @Weaver(.reference)
-    private var logger: Logger
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.logger.log(.debug, "Hello world!")
         
         view.backgroundColor = .white
         edgesForExtendedLayout = []
@@ -66,7 +64,8 @@ final class HomeViewController: UIViewController {
                 self.movies = page.results
                 self.tableView.reloadData()
                 
-            case .failure: break
+            case .failure(let error):
+                self.logger.log(.error, "\(error)")
             }
         }
     }
