@@ -148,12 +148,15 @@ private extension Parser {
         }
     }
     
-    func validate(_ configurationAnnotation: TokenBox<ConfigurationAnnotation>, referenceNames: Set<String>, registrationNames: Set<String>) throws {
+    func validate(_ configurationAnnotation: TokenBox<ConfigurationAnnotation>,
+                  referenceNames: Set<String>,
+                  registrationNames: Set<String>) throws {
+        
         switch configurationAnnotation.value.target {
         case .dependency(let name):
             let _dependencyKind: ConfigurationAttributeDependencyKind? = referenceNames.contains(name) ?
                 .reference : registrationNames.contains(name) ?
-                .registration : nil
+                .registration : .parameter
             
             let fileLocation = FileLocation(line: configurationAnnotation.line, file: fileName)
             if let dependencyKind = _dependencyKind {

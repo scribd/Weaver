@@ -15,7 +15,7 @@ import API
 final class HomeViewController: UIViewController {
         
     private var movies = [Movie]()
-    
+        
     @Weaver(.registration)
     private var logger: Logger
     

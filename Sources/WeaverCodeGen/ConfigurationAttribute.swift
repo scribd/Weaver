@@ -15,6 +15,7 @@ public enum ConfigurationAttributeName: String {
     case scope
     case doesSupportObjc = "objc"
     case setter
+    case escaping
 }
 
 public enum ConfigurationAttribute: Hashable {
@@ -23,6 +24,7 @@ public enum ConfigurationAttribute: Hashable {
     case scope(value: Scope)
     case doesSupportObjc(value: Bool)
     case setter(value: Bool)
+    case escaping(value: Bool)
 }
 
 // MARK: - Target
@@ -37,6 +39,7 @@ public enum ConfigurationAttributeTarget: Hashable {
 enum ConfigurationAttributeDependencyKind {
     case reference
     case registration
+    case parameter
 }
 
 // MARK: - Description
@@ -55,6 +58,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return "Config Attr - objc = \(value)"
         case .setter(let value):
             return "Config Attr - setter = \(value)"
+        case .escaping(let value):
+            return "Config Attr - escaping = \(value)"
         }
     }
     
@@ -70,6 +75,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return .doesSupportObjc
         case .setter:
             return .setter
+        case .escaping:
+            return .escaping
         }
     }
 }
@@ -96,14 +103,16 @@ extension ConfigurationAnnotation {
              (.customBuilder, .dependency),
              (.scope, .dependency),
              (.doesSupportObjc, .dependency),
-             (.setter, .dependency):
+             (.setter, .dependency),
+             (.escaping, .dependency):
             return true
             
         case (.isIsolated, _),
              (.customBuilder, _),
              (.scope, _),
              (.doesSupportObjc, _),
-             (.setter, _):
+             (.setter, _),
+             (.escaping, _):
             return false
         }
     }
@@ -116,14 +125,18 @@ extension ConfigurationAnnotation {
     static func validate(configurationAttribute: ConfigurationAttribute, with dependencyKind: ConfigurationAttributeDependencyKind) -> Bool {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
-             (.customBuilder, _),
+             (.customBuilder, .reference),
+             (.customBuilder, .registration),
              (.setter, .registration),
-             (.doesSupportObjc, .registration):
+             (.doesSupportObjc, .registration),
+             (.escaping, .parameter):
             return true
         case (.isIsolated, _),
              (.scope, _),
              (.setter, _),
-             (.doesSupportObjc, _):
+             (.doesSupportObjc, _),
+             (.escaping, _),
+             (.customBuilder, _):
             return false
         }
     }
@@ -145,6 +158,8 @@ extension ConfigurationAttribute {
             self = .doesSupportObjc(value: try ConfigurationAttribute.boolValue(from: valueString))
         case .setter?:
             self = .setter(value: try ConfigurationAttribute.boolValue(from: valueString))
+        case .escaping?:
+            self = .escaping(value: try ConfigurationAttribute.boolValue(from: valueString))
         case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
@@ -186,7 +201,8 @@ extension ConfigurationAttribute {
         switch self {
         case .isIsolated(let value),
              .doesSupportObjc(let value),
-             .setter(let value):
+             .setter(let value),
+             .escaping(let value):
             return value
 
         case .scope,
@@ -203,7 +219,8 @@ extension ConfigurationAttribute {
         case .customBuilder,
              .isIsolated,
              .doesSupportObjc,
-             .setter:
+             .setter,
+             .escaping:
             return nil
         }
     }
@@ -216,7 +233,8 @@ extension ConfigurationAttribute {
         case .scope,
              .isIsolated,
              .doesSupportObjc,
-             .setter:
+             .setter,
+             .escaping:
             return nil
         }
     }

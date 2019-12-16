@@ -27,6 +27,8 @@ extension ConfigurationAttribute: Codable {
             self = .scope(value: try container.decode(Scope.self, forKey: .value))
         case .setter:
             self = .setter(value: try container.decode(Bool.self, forKey: .value))
+        case .escaping:
+            self = .escaping(value: try container.decode(Bool.self, forKey: .value))
         }
     }
     
@@ -47,6 +49,9 @@ extension ConfigurationAttribute: Codable {
             try container.encode(value, forKey: .value)
         case .setter(let value):
             try container.encode(ConfigurationAttributeName.setter, forKey: .name)
+            try container.encode(value, forKey: .value)
+        case .escaping(let value):
+            try container.encode(ConfigurationAttributeName.escaping, forKey: .name)
             try container.encode(value, forKey: .value)
         }
     }
@@ -83,6 +88,7 @@ extension ConfigurationAttributeName: Codable {
         case scope = "s"
         case doesSupportObjc = "o"
         case setter = "set"
+        case escaping = "e"
         
         init(_ value: ConfigurationAttributeName) {
             switch value {
@@ -96,6 +102,8 @@ extension ConfigurationAttributeName: Codable {
                 self = .doesSupportObjc
             case .setter:
                 self = .setter
+            case .escaping:
+                self = .escaping
             }
         }
         
@@ -111,6 +119,8 @@ extension ConfigurationAttributeName: Codable {
                 return .scope
             case .setter:
                 return .setter
+            case .escaping:
+                return .escaping
             }
         }
     }

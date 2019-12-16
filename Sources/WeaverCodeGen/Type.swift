@@ -151,6 +151,15 @@ indirect enum CompositeType: Hashable, Sequence, CustomStringConvertible {
         }
     }
     
+    var isClosure: Bool {
+        switch self {
+        case .closure:
+            return true
+        default:
+            return false
+        }
+    }
+    
     func union(_ other: CompositeType) -> CompositeType {
         switch (self, other) {
         case (.components(let lhs), .components(let rhs)):
