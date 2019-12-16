@@ -361,6 +361,7 @@ struct Weaver<ConcreteType, AbstractType> {
          type: ConcreteType.Type,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
+         escaping: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }
@@ -374,6 +375,7 @@ extension Weaver where ConcreteType == Void {
     init(_ kind: MainDependencyContainer.DependencyKind,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
+         escaping: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }
@@ -389,6 +391,7 @@ struct WeaverP2<ConcreteType, AbstractType, P1, P2> {
          type: ConcreteType.Type,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
+         escaping: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }
@@ -402,6 +405,7 @@ extension WeaverP2 where ConcreteType == Void {
     init(_ kind: MainDependencyContainer.DependencyKind,
          scope: MainDependencyContainer.Scope = .container,
          setter: Bool = false,
+         escaping: Bool = false,
          builder: Optional<Any> = nil) {
         // no-op
     }

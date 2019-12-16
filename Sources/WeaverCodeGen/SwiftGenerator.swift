@@ -174,6 +174,7 @@ private final class MetaWeaverFile {
     private var doesSupportObjcByDeclaration = [MetaDependencyDeclaration: Bool]()
     private var isParameterByDeclaration = [MetaDependencyDeclaration: Bool]()
     private var isPropertyWrapperAnnotationByDeclaration = [MetaDependencyDeclaration: Bool]()
+    private var isEscapingByDeclaration = [MetaDependencyDeclaration: Bool]()
     
     private lazy var doesSupportObjc = dependencyGraph.dependencies.contains { $0.configuration.doesSupportObjc }
 
@@ -214,6 +215,9 @@ private final class MetaWeaverFile {
             isParameterByDeclaration[declaration] = isParameter && dependency.kind == .parameter
             if dependency.annotationStyle == .propertyWrapper {
                 isPropertyWrapperAnnotationByDeclaration[declaration] = true
+            }
+            if dependency.configuration.escaping || (dependency.type.anyType.isClosure && dependency.kind == .parameter) {
+                isEscapingByDeclaration[declaration] = true
             }
         }
     }
@@ -429,6 +433,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 FunctionParameter(name: "scope", type: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).Scope"))
                     .with(defaultValue: +Reference.named("container")),
                 FunctionParameter(name: "setter", type: .bool).with(defaultValue: Value.bool(false)),
+                FunctionParameter(name: "escaping", type: .bool).with(defaultValue: Value.bool(false)),
                 FunctionParameter(name: "builder", type: .optional(wrapped: .any))
                     .with(defaultValue: Value.nil)
             ]
@@ -497,8 +502,10 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 members += [
                     Function(kind: .named(declaration.declarationName))
                         .with(resultType: declaration.type.typeID)
-                        .adding(parameters: declaration.parameters.map { parameter in
-                            FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
+                        .adding(parameters: try declaration.parameters.map { parameter in
+                            let declaration = try self.declaration(for: parameter)
+                            return FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
+                                .with(escaping: isEscapingByDeclaration[declaration] ?? false)
                         })
                         .adding(member: Assignment(
                             variable: Variable(name: "builder").with(type: TypeIdentifier.builder(of: declaration.type.typeID)),
@@ -526,8 +533,8 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         }
     }
 
-    func resolvers() -> [FileBodyMember] {
-        return orderedDeclarations.flatMap { declaration -> [FileBodyMember] in
+    func resolvers() throws -> [FileBodyMember] {
+        return try orderedDeclarations.flatMap { declaration -> [FileBodyMember] in
             return [
                 EmptyLine(),
                 Type(identifier: TypeIdentifier(name: declaration.resolverTypeName))
@@ -538,8 +545,10 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         ProtocolProperty(name: declaration.declarationName, type: declaration.type.typeID) :
                         ProtocolFunction(name: declaration.declarationName)
                             .with(resultType: declaration.type.typeID)
-                            .adding(parameters: declaration.parameters.map { parameter in
-                                FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
+                            .adding(parameters: try declaration.parameters.map { parameter in
+                                let declaration = try self.declaration(for: parameter)
+                                return FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
+                                    .with(escaping: isEscapingByDeclaration[declaration] ?? false)
                             })
                     )
             ]
