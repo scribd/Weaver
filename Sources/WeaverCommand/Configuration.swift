@@ -202,12 +202,14 @@ extension Configuration {
             .filter { $0.exists && $0.isDirectory }
             .map { $0.absolute().string })
 
-        let grepArguments = ["-lR", "-e", Configuration.annotationRegex, "-e", Configuration.propertyWrapperRegex] + Array(inputDirectories)
-        inputPaths.formUnion(try shellOut(to: "grep", arguments: grepArguments)
-            .split(separator: "\n")
-            .lazy
-            .map { Path(String($0)) }
-            .filter { $0.extension == "swift" })
+        if inputDirectories.isEmpty == false {
+            let grepArguments = ["-lR", "-e", Configuration.annotationRegex, "-e", Configuration.propertyWrapperRegex] + Array(inputDirectories)
+            inputPaths.formUnion(try shellOut(to: "grep", arguments: grepArguments)
+                .split(separator: "\n")
+                .lazy
+                .map { Path(String($0)) }
+                .filter { $0.extension == "swift" })
+        }
         
         inputPaths.formUnion(inputPathStrings
             .lazy
