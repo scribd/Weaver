@@ -451,6 +451,8 @@ var dependencyName: DependencyType
 
 - `objc: Bool` (default: `false`): generates an ObjC compliant resolver for a given dependency, allowing it be accessed from ObjC code.
 
+- `escaping: Bool` (default: `true` when applicable): asks Weaver to use `@escaping` when declaring a closure parameter.
+
 #### Using protperty wrappers with parameters:
 
 Types using parameter annotations need to take the said parameters as an input when being registered or referenced. This is particularly true when using property wrappers, because the signature of the annotation won't compile if not done correctly.
