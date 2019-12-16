@@ -840,10 +840,8 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 ) : nil
                 builderReference = .named(customBuilder) | .call(Tuple()
                     .adding(parameter: TupleParameter(value:
-                        (containsAmbiguousDeclarations ? Variable.__self : Variable._self).reference |
-                        (containsAmbiguousDeclarations ? +Variable.proxySelf.reference : .none) |
-                        .as |
-                        target.type.inputDependencyResolverTypeID.reference
+                        (containsAmbiguousDeclarations ? Variable.__self.reference + Variable.proxySelf.reference : Variable._self.reference) |
+                        .as | target.type.inputDependencyResolverTypeID.reference
                     ))
                 )
                 shouldUnwrapResolverReference = containsAmbiguousDeclarations

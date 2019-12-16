@@ -248,7 +248,7 @@ extension TupleComponent {
 extension Closure {
     
     var description: String {
-        return "(\(tuple.map { $0.description }.joined(separator: ", "))) -> \(returnType)"
+        return "((\(tuple.map { $0.description }.joined(separator: ", "))) -> \(returnType))"
     }
 }
 

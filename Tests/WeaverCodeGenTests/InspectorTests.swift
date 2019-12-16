@@ -914,7 +914,7 @@ final class MovieManager {
             XCTFail("Expected error.")
         } catch let error as InspectorError {
             XCTAssertEqual(error.description, """
-test.swift:2: error: Invalid dependency: 'movieManager: MovieManager'. Resolver type mismatch. Expected '(Int) -> MovieManager' but got 'MovieManager'.
+test.swift:2: error: Invalid dependency: 'movieManager: MovieManager'. Resolver type mismatch. Expected '((Int) -> MovieManager)' but got 'MovieManager'.
 """)
         } catch {
             XCTFail("Unexpected error: \(error)")

@@ -116,7 +116,7 @@ final class AnyTypeTests: XCTestCase {
     func test_init_should_build_correctly_with_closures() {
         do {
             let type = try CompositeType("() -> Void")
-            XCTAssertEqual(type.description, "() -> Void")
+            XCTAssertEqual(type.description, "(() -> Void)")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -125,7 +125,7 @@ final class AnyTypeTests: XCTestCase {
     func test_init_should_build_correctly_with_nested_closures() {
         do {
             let type = try CompositeType("() -> () -> Void")
-            XCTAssertEqual(type.description, "() -> () -> Void")
+            XCTAssertEqual(type.description, "(() -> (() -> Void))")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -163,7 +163,7 @@ final class AnyTypeTests: XCTestCase {
     func test_init_should_build_correctly_closure_with_named_parameters() {
         do {
             let type = try CompositeType("(_ foo: Int, _ bar: Int) -> ()")
-            XCTAssertEqual(type.description, "(_ foo: Int, _ bar: Int) -> ()")
+            XCTAssertEqual(type.description, "((_ foo: Int, _ bar: Int) -> ())")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -181,7 +181,7 @@ final class AnyTypeTests: XCTestCase {
     func test_init_should_build_correctly_with_closure_taking_a_tuple_as_a_parameter() {
         do {
             let type = try CompositeType("((foo: Int, bar: Int)) -> ()")
-            XCTAssertEqual(type.description, "((foo: Int, bar: Int)) -> ()")
+            XCTAssertEqual(type.description, "(((foo: Int, bar: Int)) -> ())")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

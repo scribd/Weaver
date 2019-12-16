@@ -101,18 +101,13 @@ struct SourceKitDependencyAnnotation {
             .joined(separator: " ")
         self.annotationString = annotationString
                 
-        guard try parseBuilder(annotationString) else { return nil }
+        guard try parseBuilder() else { return nil }
     }
-    
-    private mutating func parseBuilder(_ annotationString: String) throws -> Bool {
-        guard var startIndex = annotationString.firstIndex(where: { $0 == "@" }) else { return false }
-        guard var endIndex = annotationString.firstIndex(where: { $0 == ")" }) else { return false }
-        guard annotationString[startIndex] == "@" else { return false }
-        startIndex = annotationString.index(after: startIndex)
-        endIndex = annotationString.index(after: endIndex)
-        guard startIndex < endIndex, endIndex <= annotationString.endIndex else { return false }
-        let annotationString = String(annotationString[startIndex..<endIndex])
+        
+    private mutating func parseBuilder() throws -> Bool {
 
+        guard let annotationString = extractBuilderParametersString() else { return false }
+        
         let dictionary = try Structure(file: File(contents: annotationString)).dictionary
         guard let structures = dictionary[SwiftDocKey.substructure.rawValue] as? [[String: Any]] else { return false }
         guard let structure = structures.first else { return false }
@@ -139,8 +134,13 @@ struct SourceKitDependencyAnnotation {
                 let startIndex = annotationString.index(annotationString.startIndex, offsetBy: Int(offset))
                 let endIndex = annotationString.index(startIndex, offsetBy: Int(length))
                 let keyValueString = String(annotationString[startIndex..<endIndex])
-                let keyValue = keyValueString.split(separator: ":").map { $0.trimmingCharacters(in: .whitespaces) }
-                guard let value = keyValue.last else { continue }
+                var keyValue = keyValueString.split(separator: ":")
+                if keyValue.count > 1 {
+                    keyValue.removeFirst()
+                }
+                let value = keyValue
+                    .joined(separator: ":")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
 
                 if attributeName == "type" {
                     let value = value.replacingOccurrences(of: ".self", with: "")
@@ -159,6 +159,28 @@ struct SourceKitDependencyAnnotation {
         }
         
         return true
+    }
+    
+    private func extractBuilderParametersString() -> String? {
+        guard var startIndex = annotationString.firstIndex(of: "@") else { return nil }
+        
+        var iterator = annotationString.enumerated().makeIterator()
+        var parenthesisCount = -1
+        var endIndex = annotationString.startIndex
+        while let (offset, char) = iterator.next(), parenthesisCount != 0 {
+            if char == "(" {
+                parenthesisCount = parenthesisCount == -1 ? 1 : parenthesisCount + 1
+            } else if char == ")" {
+                parenthesisCount -= 1
+            }
+            endIndex = annotationString.index(annotationString.startIndex, offsetBy: offset)
+        }
+        
+        guard annotationString[startIndex] == "@" else { return nil }
+        startIndex = annotationString.index(after: startIndex)
+        endIndex = annotationString.index(after: endIndex)
+        guard startIndex < endIndex, endIndex <= annotationString.endIndex else { return nil }
+        return String(self.annotationString[startIndex..<endIndex])
     }
 }
 
