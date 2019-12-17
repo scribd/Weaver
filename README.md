@@ -127,7 +127,7 @@ Options:
 In Xcode, add the following command to a command line build phase: 
 
 ```
-weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --output-path output/relative/path
+weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --main-output-path output/relative/path
 ```
 
 **Important - Move this build phase above the `Compile Source` phase so that Weaver can generate the boilerplate code before compilation happens.**
