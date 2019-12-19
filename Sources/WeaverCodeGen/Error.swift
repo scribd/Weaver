@@ -222,7 +222,7 @@ extension InspectorError: CustomStringConvertible {
             let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a container scope"
             return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         case .weakParameterHasToBeOptional(let dependency):
-            let message = "Parameter '\(dependency.dependencyName)' has to be of optional type."
+            let message = "Parameter '\(dependency.dependencyName)' has to be of type optional"
             return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         }
     }

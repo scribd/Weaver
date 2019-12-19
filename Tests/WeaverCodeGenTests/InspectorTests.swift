@@ -953,4 +953,40 @@ final class MovieManager {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_inspector_should_build_an_invalid_dependency_graph_with_a_non_optional_weak_parameter() {
+            let file = File(contents: """
+    final class MovieViewController {
+        @Weaver(.parameter, scope: .weak)
+        private var movieManager: MovieManager
+    }
+
+    final class HomeViewController {
+        @Weaver(.registration, type: MovieManager.self)
+        private var movieManager: MovieManager
+    }
+
+    final class MovieManager {
+    }
+    """)
+            
+            do {
+                let lexer = Lexer(file, fileName: "test.swift")
+                let tokens = try lexer.tokenize()
+                let parser = Parser(tokens, fileName: "test.swift")
+                let syntaxTree = try parser.parse()
+                let linker = try Linker(syntaxTrees: [syntaxTree])
+                let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+                
+                try inspector.validate()
+                XCTFail("Expected error.")
+            } catch let error as InspectorError {
+                XCTAssertEqual(error.description, """
+test.swift:2: error: Parameter 'movieManager' has to be of type optional.
+""")
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
+    
 }

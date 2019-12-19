@@ -21,11 +21,13 @@ public final class Inspector {
     }
     
     public func validate() throws {
-        for dependency in dependencyGraph.dependencies where dependency.kind.isResolvable {
+        for dependency in dependencyGraph.dependencies {
             try validateConfiguration(of: dependency)
-            try validatePropertyWrapper(of: dependency)
-            try resolve(dependency)
-            try build(dependency)
+            if dependency.kind.isResolvable {
+                try validatePropertyWrapper(of: dependency)
+                try resolve(dependency)
+                try build(dependency)
+            }
         }
     }
 }
