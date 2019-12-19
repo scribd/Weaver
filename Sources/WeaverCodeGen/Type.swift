@@ -504,7 +504,8 @@ private final class TypeParser {
                 
                 if currentToken == .delimiter(.tupleClose) ||
                    currentToken == .delimiter(.comma) ||
-                   currentToken == .delimiter(.colon) {
+                   currentToken == .delimiter(.colon) ||
+                    currentToken == .delimiter(.unwrap) {
                     alias = nil
                     revertToken()
                 }
@@ -515,7 +516,8 @@ private final class TypeParser {
                 name = value
                 
                 if currentToken == .delimiter(.tupleClose) ||
-                   currentToken == .delimiter(.comma) {
+                   currentToken == .delimiter(.comma) ||
+                   currentToken == .delimiter(.unwrap) {
                     name = nil
                     revertToken()
                 }

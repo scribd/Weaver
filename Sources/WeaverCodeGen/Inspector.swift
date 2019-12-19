@@ -326,8 +326,11 @@ private extension Inspector {
             if target.parameters.isEmpty == false {
                 throw InspectorError.invalidContainerScope(dependency)
             }
+        case .weak:
+            if dependency.kind == .parameter && dependency.type.anyType.isOptional == false {
+                throw InspectorError.weakParameterHasToBeOptional(dependency)
+            }
         case .lazy,
-             .weak,
              .transient:
             break
         }

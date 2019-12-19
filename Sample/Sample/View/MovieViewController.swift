@@ -25,7 +25,7 @@ final class MovieViewController: UIViewController {
     
     @Weaver(.parameter)
     private var movieTitle: String
-    
+        
     @Weaver(.reference)
     private var movieManager: MovieManaging
 
@@ -69,6 +69,10 @@ final class MovieViewController: UIViewController {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        logger.log(.debug, "\(MovieViewController.self): deinit")
     }
     
     override func viewWillAppear(_ animated: Bool) {

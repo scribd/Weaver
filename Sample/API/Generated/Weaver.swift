@@ -27,6 +27,10 @@ final class MainDependencyContainer {
         }
     }
 
+    private func weakOptionalBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
+        return { [weak value] _ in value }
+    }
+
     private func weakBuilder<T>(_ value: T) -> Builder<T> where T: AnyObject {
         return { [weak self, weak value] copyParameters in
             guard let self = self, let value = value else {

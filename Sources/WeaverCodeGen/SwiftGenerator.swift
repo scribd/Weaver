@@ -317,6 +317,10 @@ private func builder<T>(_ value: T) -> Builder<T> {
     }
 }
 
+private func weakOptionalBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
+    return { [weak value] _ in value }
+}
+
 private func weakBuilder<T>(_ value: T) -> Builder<T> where T: AnyObject {
     return { [weak self, weak value] copyParameters in
         guard let self = self, let value = value else {
@@ -515,13 +519,23 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                             )
                         ))
                         .adding(member: Return(value: .named("builder") | .block(FunctionBody()
+                            .adding(context: declaration.parameters.compactMap { parameter in
+                                guard parameter.configuration.scope == .weak else { return nil }
+                                return FunctionBodyContext(name: parameter.dependencyName, kind: .weak)
+                            })
                             .adding(parameter: FunctionBodyParameter(name: Variable._self.name))
                             .adding(members: try declaration.parameters.map { parameter in
                                 let declaration = try self.declaration(for: parameter)
+                                let builderReference: Reference
+                                if parameter.configuration.scope == .weak {
+                                    builderReference = .named("weakOptionalBuilder")
+                                } else {
+                                    builderReference = .named("builder")
+                                }
                                 return Assignment(
                                     variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
-                                    value: Variable._self.reference + .named("builder") | .call(Tuple()
-                                        .adding(parameter: TupleParameter(value:  Reference.named(parameter.dependencyName)))
+                                    value: Variable._self.reference + builderReference | .call(Tuple()
+                                        .adding(parameter: TupleParameter(value: Reference.named(parameter.dependencyName)))
                                     )
                                 )
                             })

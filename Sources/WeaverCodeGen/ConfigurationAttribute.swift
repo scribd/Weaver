@@ -125,6 +125,7 @@ extension ConfigurationAnnotation {
     static func validate(configurationAttribute: ConfigurationAttribute, with dependencyKind: ConfigurationAttributeDependencyKind) -> Bool {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
+             (.scope(.weak), .parameter),
              (.customBuilder, .reference),
              (.customBuilder, .registration),
              (.setter, .registration),
