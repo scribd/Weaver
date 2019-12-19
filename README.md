@@ -539,7 +539,7 @@ Options:
 ### Example:
 
 ```bash
-weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --output-path Generated
+weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --main-output-path Generated
 ```
 
 ### Parameters:
