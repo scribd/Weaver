@@ -52,6 +52,7 @@ enum InspectorError: Error {
     case invalidAST(FileLocation, unexpectedExpr: Expr)
     case invalidDependencyGraph(Dependency, underlyingError: InspectorAnalysisError)
     case invalidContainerScope(Dependency)
+    case weakParameterHasToBeOptional(Dependency)
 }
 
 enum InspectorAnalysisError: Error {
@@ -219,6 +220,9 @@ extension InspectorError: CustomStringConvertible {
             return description
         case .invalidContainerScope(let dependency):
             let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a container scope"
+            return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
+        case .weakParameterHasToBeOptional(let dependency):
+            let message = "Parameter '\(dependency.dependencyName)' has to be of type optional"
             return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         }
     }

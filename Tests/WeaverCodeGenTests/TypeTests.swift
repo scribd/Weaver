@@ -186,4 +186,13 @@ final class AnyTypeTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_init_should_build_correctly_with_closure_taking_optional_as_parameter() {
+        do {
+            let type = try CompositeType("(UInt, String?) -> UIViewController")
+            XCTAssertEqual(type.description, "((UInt, Optional<String>) -> UIViewController)")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
