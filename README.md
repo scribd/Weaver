@@ -565,7 +565,7 @@ Parameters are named the same, but snakecased. They also work the same way with 
 For example, the [sample project configuration](https://github.com/scribd/Weaver/blob/master/Sample/.sample.weaver.yaml) looks like:
 
 ```yaml
-output_path: Sample/Generated
+main_output_path: Sample/Generated
 input_paths:
   - Sample
 ignored_paths:
