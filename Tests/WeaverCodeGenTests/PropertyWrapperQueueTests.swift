@@ -28,7 +28,7 @@ import XCTest
 /// As you can see this process relies on the way Swift internally initializes types in their
 /// order of declaration. If this rule was to change in future versions of Swift, this test would detect it.
 ///
-final class PropertyWrapperStackTests: XCTestCase {
+final class PropertyWrapperQueueTests: XCTestCase {
     
     func test_injectable_type_builds_without_memory_corruption() {
         let injectableType = MainDependencyContainer.makeInjectableType(42, "42", false)
