@@ -170,7 +170,7 @@ final class MyService {
             _ = try parser.parse()
             XCTFail("An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error.description, "test.swift:2: error: Configuration attribute 'customBuilder' cannot be used on dependency 'api'.")
+            XCTAssertEqual(error.description, "test.swift:2: error: Unknown dependency: 'api'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }
@@ -331,7 +331,7 @@ final class MyService {
             _ = try parser.parse()
             XCTAssertTrue(false, "An error was expected.")
         } catch let error as ParserError {
-            XCTAssertEqual(error.description, "test.swift:2: error: Configuration attribute 'scope' cannot be used on dependency 'api'.")
+            XCTAssertEqual(error.description, "test.swift:2: error: Unknown dependency: 'api'.")
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

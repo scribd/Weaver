@@ -141,7 +141,10 @@ private extension Parser {
             }
             
             for configurationAnnotation in configurationAnnotations.values.flatMap({ $0.values }) {
-                try validate(configurationAnnotation, referenceNames: referenceNames, registrationNames: registrationNames)
+                try validate(configurationAnnotation,
+                             referenceNames: referenceNames,
+                             registrationNames: registrationNames,
+                             parameterNames: parameterNames)
             }
             
             parseAnyDeclarations()
@@ -149,14 +152,16 @@ private extension Parser {
     }
     
     func validate(_ configurationAnnotation: TokenBox<ConfigurationAnnotation>,
-                  referenceNames: Set<String>,
-                  registrationNames: Set<String>) throws {
+                   referenceNames: Set<String>,
+                  registrationNames: Set<String>,
+                  parameterNames: Set<String>) throws {
         
         switch configurationAnnotation.value.target {
         case .dependency(let name):
             let _dependencyKind: ConfigurationAttributeDependencyKind? = referenceNames.contains(name) ?
                 .reference : registrationNames.contains(name) ?
-                .registration : .parameter
+                .registration : parameterNames.contains(name) ?
+                .parameter : nil
             
             let fileLocation = FileLocation(line: configurationAnnotation.line, file: fileName)
             if let dependencyKind = _dependencyKind {

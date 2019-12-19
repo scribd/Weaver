@@ -323,7 +323,7 @@ private extension Inspector {
     
     func validateConfiguration(of dependency: Dependency) throws {
         switch dependency.configuration.scope {
-        case .container:
+        case .container where dependency.kind.isResolvable:
             let target = try dependencyGraph.dependencyContainer(for: dependency)
             if target.parameters.isEmpty == false {
                 throw InspectorError.invalidContainerScope(dependency)
@@ -333,7 +333,8 @@ private extension Inspector {
                 throw InspectorError.weakParameterHasToBeOptional(dependency)
             }
         case .lazy,
-             .transient:
+             .transient,
+             .container:
             break
         }
     }

@@ -389,9 +389,9 @@ var parameterName: ParameterType
 
 #### - Scope
 
-Sets the scope of a dependency. The default scope being `container`. Only works along with a registration annotation.
+Sets the scope of a dependency. The default scope being `container`. Only works for registrations or weak parameters.
 
-The `scope` defines a dependency's access level and caching strategy. Four scopes are available:
+The `scope` defines a dependency lifecycle. Four scopes are available:
 
 - `transient`: Always creates a new instance when resolved.
 

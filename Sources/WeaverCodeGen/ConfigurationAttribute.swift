@@ -126,6 +126,7 @@ extension ConfigurationAnnotation {
         switch (configurationAttribute, dependencyKind) {
         case (.scope, .registration),
              (.scope(.weak), .parameter),
+             (.scope(.container), .parameter),
              (.customBuilder, .reference),
              (.customBuilder, .registration),
              (.setter, .registration),
