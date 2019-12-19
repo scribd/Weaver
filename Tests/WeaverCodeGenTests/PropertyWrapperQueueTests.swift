@@ -24,7 +24,7 @@ import XCTest
 /// 3. Finnally, it calls the dependency's initializer, which will immediately build the property wrappers
 ///    in their order of declaration. When a property wrapper is initialized, it immediately retrieves the first
 ///    resolver in the queue and removes it.
-/// 4. The building dependency container releases removes the barrier from the queue.
+/// 4. The building dependency container removes the barrier from the queue.
 ///
 /// As you can see this process relies on the way Swift internally initializes types in their
 /// order of declaration. If this rule was to change in future versions of Swift, this test would detect it.
