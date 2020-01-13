@@ -43,20 +43,15 @@ extension Inspector {
     }
     
     func resolve(_ dependency: Dependency, from source: DependencyContainer) throws -> [ConcreteType: Dependency] {
-        let target = try dependencyGraph.dependencyContainer(for: dependency)
-        
-        if source.accessLevel == .public && source.sources.isEmpty {
-            guard target.references.count <= 1 else {
-                let underlyingError = InspectorAnalysisError.unresolvableDependency(history: [])
-                throw InspectorError.invalidDependencyGraph(dependency, underlyingError: underlyingError)
-            }
-            return [source.type: dependency]
-        }
         
         guard dependency.kind == .reference else {
             return [source.type: dependency]
         }
-        
+
+        if source.accessLevel == .public && source.sources.isEmpty {
+            return [source.type: dependency]
+        }
+                
         do {
             guard try checkIsolation(of: source, history: []) else { return [:] }
             
