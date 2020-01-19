@@ -135,7 +135,7 @@ private extension Lexer {
                 return nil
             }
 
-            guard let nextLine = findNextLine(after: currentLine, containing: syntaxToken.offset) else {
+            guard let nextLine = findNextLine(after: currentLine, containing: syntaxToken.offset.value) else {
                 return nil
             }
             currentLine = nextLine
@@ -144,8 +144,8 @@ private extension Lexer {
 
             do {
                 guard let token = try TokenBuilder.makeAnnotationToken(string: content,
-                                                                       offset: syntaxToken.offset,
-                                                                       length: syntaxToken.length,
+                                                                       offset: syntaxToken.offset.value,
+                                                                       length: syntaxToken.length.value,
                                                                        line: currentLine) else {
                     return nil
                 }
