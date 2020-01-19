@@ -195,33 +195,36 @@ extension Configuration {
     
     func inputPaths() throws -> [Path]  {
         var inputPaths = Set<Path>()
-
-        let inputDirectories = Set(inputPathStrings
-            .lazy
-            .map { self.projectPath + $0 }
-            .filter { $0.exists && $0.isDirectory }
-            .map { $0.absolute().string })
-
-        if inputDirectories.isEmpty == false {
-            let grepArguments = ["-lR", "-e", Configuration.annotationRegex, "-e", Configuration.propertyWrapperRegex] + Array(inputDirectories)
-            inputPaths.formUnion(try shellOut(to: "grep", arguments: grepArguments)
-                .split(separator: "\n")
-                .lazy
-                .map { Path(String($0)) }
-                .filter { $0.extension == "swift" })
-        }
         
-        inputPaths.formUnion(inputPathStrings
+        inputPaths.formUnion(try inputPathStrings
             .lazy
             .map { self.projectPath + $0 }
+            .flatMap { $0.isFile ? [$0] : try self.recursiveFilesByPattren(fromDirectory: $0) }
             .filter { $0.exists && $0.isFile && $0.extension == "swift" })
 
         inputPaths.subtract(try ignoredPathStrings
             .lazy
             .map { self.projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
+            .flatMap { $0.isFile ? [$0] : try self.files(fromDirectory: $0) }
             .filter { $0.extension == "swift" })
         
         return inputPaths.sorted()
+    }
+
+    private func recursiveFilesByPattren(fromDirectory directory: Path) throws -> [Path] {
+        let grepArguments = [
+            "-lR",
+            "-e", Configuration.annotationRegex,
+            "-e", Configuration.propertyWrapperRegex,
+            directory.absolute().string
+        ]
+        return try shellOut(to: "grep", arguments: grepArguments)
+            .split(separator: "\n")
+            .lazy
+            .map { Path(String($0)) }
+    }
+
+    private func files(fromDirectory directory: Path) throws -> [Path] {
+        recursive ? try directory.recursiveChildren() : try directory.children()
     }
 }
