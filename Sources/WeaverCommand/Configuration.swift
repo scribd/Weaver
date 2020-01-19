@@ -218,7 +218,13 @@ extension Configuration {
             "-e", Configuration.propertyWrapperRegex,
             directory.absolute().string
         ]
-        return try shellOut(to: "grep", arguments: grepArguments)
+        // if there are no files matching the pattern
+        // command grep return exit 1, and ShellOut throws an exception with empty message
+        guard let grepResult = try? shellOut(to: "grep", arguments: grepArguments) else {
+            return []
+        }
+
+        return grepResult
             .split(separator: "\n")
             .lazy
             .map { Path(String($0)) }
