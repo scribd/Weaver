@@ -138,8 +138,8 @@ public let weaverCommand = Group {
                                               tests: tests,
                                               testableImports: testableImports.isEmpty ? nil : testableImports)
 
-        let mainOutputPath = configuration.mainOutputPath + "Weaver.swift"
-        let testsOutputPath = configuration.testsOutputPath + "WeaverTests.swift"
+        let mainOutputPath = configuration.mainOutputPath
+        let testsOutputPath = configuration.testsOutputPath
         
         do {
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))
@@ -169,7 +169,9 @@ public let weaverCommand = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
 
-            let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
+            let generator = try SwiftGenerator(mainOutputPath: configuration.mainOutputPath,
+                                               testOutputPath: configuration.testsOutputPath,
+                                               dependencyGraph: dependencyGraph,
                                                inspector: inspector,
                                                version: version,
                                                testableImports: configuration.testableImports)

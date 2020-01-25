@@ -11,7 +11,11 @@ import Meta
 import CommonCrypto
 
 public final class SwiftGenerator {
-    
+
+    private let mainOutputPath: Path
+
+    private let testOutputPath: Path
+
     private let dependencyGraph: DependencyGraph
     
     private let inspector: Inspector
@@ -20,11 +24,15 @@ public final class SwiftGenerator {
 
     private let version: String
     
-    public init(dependencyGraph: DependencyGraph,
+    public init(mainOutputPath: Path,
+                testOutputPath: Path,
+                dependencyGraph: DependencyGraph,
                 inspector: Inspector,
                 version: String,
                 testableImports: [String]?) throws {
 
+        self.mainOutputPath = mainOutputPath
+        self.testOutputPath = testOutputPath
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.version = version
@@ -45,11 +53,11 @@ public final class SwiftGenerator {
     }
     
     public func generate() throws -> String {
-        return try file().meta().swiftString
+        return try file().meta(mainOutputPath.lastComponent).swiftString
     }
     
     public func generateTests() throws -> String {
-        return try file().metaTests().swiftString
+        return try file().metaTests(testOutputPath.lastComponent).swiftString
     }
 }
 
@@ -156,7 +164,7 @@ private final class MetaDependencyDeclaration: Hashable {
 // MARK: - Weaver File
 
 private final class MetaWeaverFile {
-    
+
     private let dependencyGraph: DependencyGraph
     
     private let inspector: Inspector
@@ -231,8 +239,8 @@ private final class MetaWeaverFile {
     
     // MARK: - Main File
 
-    func meta() throws -> Meta.File {
-        return File(name: "Weaver.swift")
+    func meta(_ fileName: String) throws -> Meta.File {
+        return File(name: fileName)
             .adding(members: MetaWeaverFile.header(version))
             .adding(imports: dependencyGraph.imports.sorted().map { Import(name: $0) })
             .adding(members: try body())
@@ -265,9 +273,9 @@ private final class MetaWeaverFile {
     
     // MARK: - Tests File
 
-    func metaTests() throws -> Meta.File {
+    func metaTests(_ fileName: String) throws -> Meta.File {
         let imports = dependencyGraph.imports.subtracting(testableImports ?? [])
-        return File(name: "WeaverTest.swift")
+        return File(name: fileName)
             .adding(members: MetaWeaverFile.header(version))
             .adding(imports: imports.sorted().map { Import(name: $0) })
             .adding(imports: testableImports?.sorted().map { Import(name: $0, testable: true) } ?? [])

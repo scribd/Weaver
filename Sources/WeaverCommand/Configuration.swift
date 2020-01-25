@@ -37,9 +37,17 @@ struct Configuration {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
-        self.projectPath = projectPath ?? Defaults.projectPath
-        self.mainOutputPath = mainOutputPath ?? Defaults.mainOutputPath
-        self.testsOutputPath = testsOutputPath ?? Defaults.testsOutputPath
+
+        let projectPath = projectPath ?? Defaults.projectPath
+        self.projectPath = projectPath
+
+        self.mainOutputPath = mainOutputPath
+            .map { $0.isFile ? $0 : $0 + "Weaver.swift" }
+            .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.mainOutputPath
+        self.testsOutputPath = testsOutputPath
+            .map { $0.isFile ? $0 : $0 + "WeaverTest.swift" }
+            .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.testsOutputPath
+
         self.cachePath = cachePath ?? Defaults.cachePath
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
         self.tests = tests ?? Defaults.tests
