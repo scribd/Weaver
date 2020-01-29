@@ -725,12 +725,27 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     guard selfReferenceDeclarations.contains(declaration) == false else { return nil }
 
                     let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
-                        Assignment(
-                            variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
-                            value: Variable._self.reference + .named("builder") | .call(Tuple()
-                                .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
+                        switch reference.kind {
+                        case .parameter:
+                            return Assignment(
+                                variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
+                                value: Variable._self.reference + .named("builder") | .call(Tuple()
+                                    .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
+                                )
                             )
-                        )
+
+                        case .reference:
+                            return Assignment(
+                                variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
+                                value: .named("getBuilder") | .call(Tuple()
+                                    .adding(parameter: TupleParameter(name: "for", value: Value.string(resolvedDeclaration.declarationName)))
+                                    .adding(parameter: TupleParameter(name: "type", value: resolvedDeclaration.type.typeID.reference + .named(.`self`)))
+                                )
+                            )
+
+                        case .registration:
+                            fatalError("Invalid kind for input reference")
+                        }
                     }
 
                     if publicInterface {

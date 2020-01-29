@@ -231,7 +231,7 @@ import UIKit
 
     private func reviewManagerDependencyResolver() -> ReviewManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["movieAPI"] = _self.builder(movieAPI)
+        _self.builders["movieAPI"] = getBuilder(for: "movieAPI", type: APIProtocol.self)
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
@@ -241,9 +241,9 @@ import UIKit
 
     private func homeViewControllerDependencyResolver() -> HomeViewControllerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["imageManager"] = _self.builder(imageManager)
-        _self.builders["movieManager"] = _self.builder(movieManager)
-        _self.builders["reviewManager"] = _self.builder(reviewManager)
+        _self.builders["imageManager"] = getBuilder(for: "imageManager", type: ImageManaging.self)
+        _self.builders["movieManager"] = getBuilder(for: "movieManager", type: MovieManaging.self)
+        _self.builders["reviewManager"] = getBuilder(for: "reviewManager", type: ReviewManaging.self)
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _self.builders["movieController"] = weakLazyBuilder { [weak _self] (copyParameters: Optional<ParametersCopier>) -> UIViewController in
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
@@ -264,9 +264,9 @@ import UIKit
 
     private func movieViewControllerDependencyResolver() -> MovieViewControllerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["imageManager"] = _self.builder(imageManager)
-        _self.builders["movieManager"] = _self.builder(movieManager)
-        _self.builders["reviewManager"] = _self.builder(reviewManager)
+        _self.builders["imageManager"] = getBuilder(for: "imageManager", type: ImageManaging.self)
+        _self.builders["movieManager"] = getBuilder(for: "movieManager", type: MovieManaging.self)
+        _self.builders["reviewManager"] = getBuilder(for: "reviewManager", type: ReviewManaging.self)
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _self.builders["reviewController"] = weakLazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> WSReviewViewController in
             guard let _self = _self else {
