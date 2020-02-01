@@ -196,22 +196,22 @@ extension Configuration {
     func inputPaths() throws -> [Path]  {
         var inputPaths = Set<Path>()
         
-        inputPaths.formUnion(try inputPathStrings
+        inputPaths.formUnion(inputPathStrings
             .lazy
             .map { self.projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : try self.recursiveFilesByPattren(fromDirectory: $0) }
+            .flatMap { $0.isFile ? [$0] : self.recursiveFilesByPattern(fromDirectory: $0) }
             .filter { $0.exists && $0.isFile && $0.extension == "swift" })
 
         inputPaths.subtract(try ignoredPathStrings
             .lazy
             .map { self.projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : try self.files(fromDirectory: $0) }
+            .flatMap { $0.isFile ? [$0] : try files(fromDirectory: $0) }
             .filter { $0.extension == "swift" })
         
         return inputPaths.sorted()
     }
 
-    private func recursiveFilesByPattren(fromDirectory directory: Path) throws -> [Path] {
+    private func recursiveFilesByPattern(fromDirectory directory: Path) -> [Path] {
         let grepArguments = [
             "-lR",
             "-e", Configuration.annotationRegex,
