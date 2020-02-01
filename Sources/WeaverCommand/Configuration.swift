@@ -42,10 +42,10 @@ struct Configuration {
         self.projectPath = projectPath
 
         self.mainOutputPath = mainOutputPath
-            .map { $0.isFile ? $0 : $0 + "Weaver.swift" }
+            .map { $0.isFile ? $0 : $0 + Defaults.mainOutputFileName }
             .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.mainOutputPath
         self.testsOutputPath = testsOutputPath
-            .map { $0.isFile ? $0 : $0 + "WeaverTest.swift" }
+            .map { $0.isFile ? $0 : $0 + Defaults.testOutputFileName }
             .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.testsOutputPath
 
         self.cachePath = cachePath ?? Defaults.cachePath
@@ -92,16 +92,12 @@ struct Configuration {
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? configuration.ignoredPathStrings
         self.projectPath = projectPath
+        self.mainOutputPath = mainOutputPath ?? configuration.mainOutputPath
+        self.testsOutputPath = testsOutputPath ?? configuration.testsOutputPath
         self.cachePath = cachePath
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
         self.tests = tests ?? configuration.tests
         self.testableImports = testableImports ?? configuration.testableImports
-        
-        let mainOutputPath = mainOutputPath ?? configuration.mainOutputPath
-        self.mainOutputPath = mainOutputPath.isRelative ? projectPath + configuration.mainOutputPath : mainOutputPath
-
-        let testsOutputPath = testsOutputPath ?? configuration.testsOutputPath
-        self.testsOutputPath = testsOutputPath.isRelative ? projectPath + configuration.testsOutputPath : testsOutputPath
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -133,8 +129,10 @@ extension Configuration {
         static let configPath = Path(".")
         static let configYAMLFile = Path(".weaver.yaml")
         static let configJSONFile = Path(".weaver.json")
-        static let mainOutputPath = Path(".")
-        static let testsOutputPath = Path(".")
+        static let mainOutputFileName = Path("Weaver.swift")
+        static let mainOutputPath = Path(".") + mainOutputFileName
+        static let testOutputFileName = Path("Weaver.swift")
+        static let testsOutputPath = Path(".") + testOutputFileName
         static let cachePath = Path(".weaver_cache.json")
         static let recursiveOff = false
         static let inputPathStrings = ["."]
