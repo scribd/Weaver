@@ -226,7 +226,6 @@ extension Configuration {
 
         return grepResult
             .split(separator: "\n")
-            .lazy
             .map { Path(String($0)) }
     }
 
