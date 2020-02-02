@@ -159,7 +159,7 @@ import UIKit
     fileprivate override init() {
     }
 
-    fileprivate func appDelegateDependencyResolver() -> AppDelegateDependencyResolver {
+    fileprivate func appDelegateDependencyResolver() -> AppDelegateInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
@@ -215,12 +215,12 @@ import UIKit
         return _self
     }
 
-    static func appDelegateDependencyResolver() -> AppDelegateDependencyResolver {
+    static func appDelegateDependencyResolver() -> AppDelegateInternalDependencyResolver {
         let _self = MainDependencyContainer().appDelegateDependencyResolver()
         return _self
     }
 
-    private func personManagerDependencyResolver() -> PersonManagerDependencyResolver {
+    private func personManagerDependencyResolver() -> PersonManagerInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
@@ -229,7 +229,7 @@ import UIKit
         return _self
     }
 
-    private func reviewManagerDependencyResolver() -> ReviewManagerDependencyResolver {
+    private func reviewManagerDependencyResolver() -> ReviewManagerInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["movieAPI"] = _self.builder(movieAPI)
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
@@ -239,7 +239,7 @@ import UIKit
         return _self
     }
 
-    private func homeViewControllerDependencyResolver() -> HomeViewControllerDependencyResolver {
+    private func homeViewControllerDependencyResolver() -> HomeViewControllerInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["imageManager"] = _self.builder(imageManager)
         _self.builders["movieManager"] = _self.builder(movieManager)
@@ -262,7 +262,7 @@ import UIKit
         return _self
     }
 
-    private func movieViewControllerDependencyResolver() -> MovieViewControllerDependencyResolver {
+    private func movieViewControllerDependencyResolver() -> MovieViewControllerInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["imageManager"] = _self.builder(imageManager)
         _self.builders["movieManager"] = _self.builder(movieManager)
@@ -337,15 +337,15 @@ extension MainDependencyContainer: HomeViewControllerResolver, ImageManagerResol
 extension MainDependencyContainer {
 }
 
-typealias AppDelegateDependencyResolver = LoggerResolver & UrlSessionResolver & MovieAPIResolver & ImageManagerResolver & MovieManagerResolver & HomeViewControllerResolver & ReviewManagerResolver
+typealias AppDelegateInternalDependencyResolver = LoggerResolver & UrlSessionResolver & MovieAPIResolver & ImageManagerResolver & MovieManagerResolver & HomeViewControllerResolver & ReviewManagerResolver
 
-typealias PersonManagerDependencyResolver = LoggerResolver & MovieAPIResolver
+typealias PersonManagerInternalDependencyResolver = LoggerResolver & MovieAPIResolver
 
-typealias ReviewManagerDependencyResolver = LoggerResolver & MovieAPIResolver
+typealias ReviewManagerInternalDependencyResolver = LoggerResolver & MovieAPIResolver
 
-typealias HomeViewControllerDependencyResolver = LoggerResolver & MovieManagerResolver & MovieControllerResolver
+typealias HomeViewControllerInternalDependencyResolver = LoggerResolver & MovieManagerResolver & MovieControllerResolver
 
-typealias MovieViewControllerDependencyResolver = LoggerResolver & MovieIDResolver & MovieTitleResolver & MovieManagerResolver & ImageManagerResolver & ReviewManagerResolver & ReviewControllerResolver
+typealias MovieViewControllerInternalDependencyResolver = LoggerResolver & MovieIDResolver & MovieTitleResolver & MovieManagerResolver & ImageManagerResolver & ReviewManagerResolver & ReviewControllerResolver
 
 typealias MovieAPIInputDependencyResolver = HomeViewControllerResolver & ImageManagerResolver & LoggerResolver & MovieAPIResolver & MovieManagerResolver & ReviewManagerResolver & UrlSessionResolver
 
@@ -354,6 +354,16 @@ typealias MovieManagerInputDependencyResolver = HomeViewControllerResolver & Ima
 typealias URLSessionInputDependencyResolver = HomeViewControllerResolver & ImageManagerResolver & LoggerResolver & MovieAPIResolver & MovieManagerResolver & ReviewManagerResolver & UrlSessionResolver
 
 typealias WSReviewViewControllerInputDependencyResolver = ImageManagerResolver & LoggerResolver & MovieIDResolver & MovieManagerResolver & MovieTitleResolver & ReviewControllerResolver & ReviewManagerResolver
+
+typealias AppDelegateDependencyResolver = AppDelegateInternalDependencyResolver
+
+typealias PersonManagerDependencyResolver = PersonManagerInternalDependencyResolver
+
+typealias ReviewManagerDependencyResolver = ReviewManagerInternalDependencyResolver
+
+typealias HomeViewControllerDependencyResolver = HomeViewControllerInternalDependencyResolver
+
+typealias MovieViewControllerDependencyResolver = MovieViewControllerInternalDependencyResolver
 
 @propertyWrapper
 struct Weaver<ConcreteType, AbstractType> {

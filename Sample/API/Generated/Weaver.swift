@@ -98,7 +98,7 @@ final class MainDependencyContainer {
     fileprivate init() {
     }
 
-    private func movieAPIDependencyResolver() -> MovieAPIDependencyResolver {
+    private func movieAPIDependencyResolver() -> MovieAPIInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["urlSession"] = _self.builder(urlSession)
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
@@ -106,7 +106,7 @@ final class MainDependencyContainer {
         return _self
     }
 
-    fileprivate func publicMovieAPIDependencyResolver(urlSession: URLSession) -> MovieAPIDependencyResolver {
+    fileprivate func publicMovieAPIDependencyResolver(urlSession: URLSession) -> MovieAPIInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["urlSession"] = _self.builder(urlSession)
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
@@ -114,7 +114,7 @@ final class MainDependencyContainer {
         return _self
     }
 
-    fileprivate func imageManagerDependencyResolver() -> ImageManagerDependencyResolver {
+    fileprivate func imageManagerDependencyResolver() -> ImageManagerInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
         _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
@@ -136,12 +136,12 @@ final class MainDependencyContainer {
         return _self
     }
 
-    static func imageManagerDependencyResolver() -> ImageManagerDependencyResolver {
+    static func imageManagerDependencyResolver() -> ImageManagerInternalDependencyResolver {
         let _self = MainDependencyContainer().imageManagerDependencyResolver()
         return _self
     }
 
-    private func movieManagerDependencyResolver() -> MovieManagerDependencyResolver {
+    private func movieManagerDependencyResolver() -> MovieManagerInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
             guard let _self = _self else {
@@ -162,7 +162,7 @@ final class MainDependencyContainer {
     }
 
     fileprivate func publicMovieManagerDependencyResolver(host: Optional<String>,
-                                                          logger: Logger) -> MovieManagerDependencyResolver {
+                                                          logger: Logger) -> MovieManagerInternalDependencyResolver {
         let _self = MainDependencyContainer()
         _self.builders["host"] = _self.builder(host)
         _self.builders["logger"] = _self.builder(logger)
@@ -208,13 +208,19 @@ extension MainDependencyContainer: HostResolver, LoggerResolver, MovieAPIResolve
 extension MainDependencyContainer {
 }
 
-typealias MovieAPIDependencyResolver = UrlSessionResolver & LoggerResolver
+typealias MovieAPIInternalDependencyResolver = UrlSessionResolver & LoggerResolver
 
-typealias ImageManagerDependencyResolver = LoggerResolver & UrlSessionResolver & MovieAPIResolver
+typealias ImageManagerInternalDependencyResolver = LoggerResolver & UrlSessionResolver & MovieAPIResolver
 
-typealias MovieManagerDependencyResolver = LoggerResolver & UrlSessionResolver & MovieAPIResolver & HostResolver
+typealias MovieManagerInternalDependencyResolver = LoggerResolver & UrlSessionResolver & MovieAPIResolver & HostResolver
 
 typealias URLSessionInputDependencyResolver = LoggerResolver & MovieAPIResolver & UrlSessionResolver
+
+typealias MovieAPIDependencyResolver = MovieAPIInternalDependencyResolver
+
+typealias ImageManagerDependencyResolver = ImageManagerInternalDependencyResolver
+
+typealias MovieManagerDependencyResolver = MovieManagerInternalDependencyResolver
 
 extension MovieAPI {
     public convenience init(urlSession: URLSession) {

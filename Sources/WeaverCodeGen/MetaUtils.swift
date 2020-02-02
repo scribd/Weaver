@@ -44,9 +44,15 @@ extension TypeWrapper {
     var dependencyResolverTypeID: TypeIdentifier {
         let valueTypeName = value.toTypeName
         let underscore = valueTypeName.contains("_") ? "_" : String()
-        return TypeIdentifier(name: "\(value.toTypeName)\(underscore)DependencyResolver")
+        return TypeIdentifier(name: "\(valueTypeName)\(underscore)DependencyResolver")
     }
-    
+
+    var internalDependencyResolverTypeID: TypeIdentifier {
+        let valueTypeName = value.toTypeName
+        let underscore = valueTypeName.contains("_") ? "_" : String()
+        return TypeIdentifier(name: "\(valueTypeName)\(underscore)InternalDependencyResolver")
+    }
+
     var dependencyResolverProxyTypeID: TypeIdentifier {
         let valueTypeName = value.toTypeName
         let underscore = valueTypeName.contains("_") ? "_" : String()
