@@ -46,6 +46,7 @@ enum SwiftGeneratorError: Error {
     case dependencyContainerIsMissingTypeInFile(String)
     case dependencyContainerNotFoundForName(String)
     case missingProjectTargetName
+    case inputReferenceCannotBeOfRegistrationKind(String)
 }
 
 enum InspectorError: Error {
@@ -202,6 +203,8 @@ extension SwiftGeneratorError: CustomStringConvertible {
             return "Could not find dependency container for name: '\(name)'."
         case .missingProjectTargetName:
             return "Project target name is missing."
+        case .inputReferenceCannotBeOfRegistrationKind(let name):
+            return "Input reference \(name) cannot be of registration kind."
         }
     }
 }

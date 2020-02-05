@@ -724,7 +724,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     let declaration = try self.declaration(for: reference)
                     guard selfReferenceDeclarations.contains(declaration) == false else { return nil }
 
-                    let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
+                    let assignment: (MetaDependencyDeclaration) throws -> Assignment = { resolvedDeclaration in
                         switch reference.kind {
                         case .parameter:
                             return Assignment(
@@ -744,27 +744,27 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                             )
 
                         case .registration:
-                            fatalError("Invalid kind for input reference")
+                            throw SwiftGeneratorError.inputReferenceCannotBeOfRegistrationKind(resolvedDeclaration.name)
                         }
                     }
 
                     if publicInterface {
-                        return assignment(declaration)
+                        return try assignment(declaration)
                     } else {
                         let resolvedDeclarations = try resolvedDeclarationsBySource(for: reference, in: dependencyContainer)
                         if resolvedDeclarations.count > 1 {
                             return Switch(reference: Variable.source.reference)
-                                .adding(cases: resolvedDeclarations.compactMap { source, declaration in
+                                .adding(cases: try resolvedDeclarations.compactMap { source, declaration in
                                     guard let source = source else { return nil }
                                     return SwitchCase()
                                         .adding(value: Value.string(source.description))
-                                        .adding(member: assignment(declaration))
+                                        .adding(member: try assignment(declaration))
                                 })
                                 .adding(case: SwitchCase(name: .default)
                                     .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call())
                                 )
                         } else if let resolvedDeclaration = resolvedDeclarations.first?.declaration {
-                            return assignment(resolvedDeclaration)
+                            return try assignment(resolvedDeclaration)
                         } else {
                             return nil
                         }
