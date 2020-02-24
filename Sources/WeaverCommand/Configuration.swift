@@ -195,33 +195,41 @@ extension Configuration {
     
     func inputPaths() throws -> [Path]  {
         var inputPaths = Set<Path>()
-
-        let inputDirectories = Set(inputPathStrings
-            .lazy
-            .map { self.projectPath + $0 }
-            .filter { $0.exists && $0.isDirectory }
-            .map { $0.absolute().string })
-
-        if inputDirectories.isEmpty == false {
-            let grepArguments = ["-lR", "-e", Configuration.annotationRegex, "-e", Configuration.propertyWrapperRegex] + Array(inputDirectories)
-            inputPaths.formUnion(try shellOut(to: "grep", arguments: grepArguments)
-                .split(separator: "\n")
-                .lazy
-                .map { Path(String($0)) }
-                .filter { $0.extension == "swift" })
-        }
         
         inputPaths.formUnion(inputPathStrings
             .lazy
             .map { self.projectPath + $0 }
+            .flatMap { $0.isFile ? [$0] : self.recursivePathsByPattern(fromDirectory: $0) }
             .filter { $0.exists && $0.isFile && $0.extension == "swift" })
 
         inputPaths.subtract(try ignoredPathStrings
             .lazy
             .map { self.projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : recursive ? try $0.recursiveChildren() : try $0.children() }
+            .flatMap { $0.isFile ? [$0] : try paths(fromDirectory: $0) }
             .filter { $0.extension == "swift" })
         
         return inputPaths.sorted()
+    }
+
+    private func recursivePathsByPattern(fromDirectory directory: Path) -> [Path] {
+        let grepArguments = [
+            "-lR",
+            "-e", Configuration.annotationRegex,
+            "-e", Configuration.propertyWrapperRegex,
+            directory.absolute().string
+        ]
+        // if there are no files matching the pattern
+        // command grep return exit 1, and ShellOut throws an exception with empty message
+        guard let grepResult = try? shellOut(to: "grep", arguments: grepArguments) else {
+            return []
+        }
+
+        return grepResult
+            .split(separator: "\n")
+            .map { Path(String($0)) }
+    }
+
+    private func paths(fromDirectory directory: Path) throws -> [Path] {
+        recursive ? try directory.recursiveChildren() : try directory.children()
     }
 }

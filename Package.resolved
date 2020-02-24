@@ -42,7 +42,7 @@
         "repositoryURL": "https://github.com/scribd/Meta.git",
         "state": {
           "branch": "master",
-          "revision": "94685cb2252a7eb5caa0f74a440f5d130595733b",
+          "revision": "a955d8dfbaaf6416922967d190580ea5a4571288",
           "version": null
         }
       },
@@ -51,8 +51,8 @@
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
           "branch": null,
-          "revision": "6abeb3f5c03beba2b9e4dbe20886e773b5b629b6",
-          "version": "8.0.4"
+          "revision": "b02b00b30b6353632aa4a5fb6124f8147f7140c0",
+          "version": "8.0.5"
         }
       },
       {
@@ -96,8 +96,8 @@
         "repositoryURL": "https://github.com/jpsim/SourceKitten.git",
         "state": {
           "branch": null,
-          "revision": "356551fc513eb12ed779bb369f79cf86a3a01599",
-          "version": "0.27.0"
+          "revision": "77a4dbbb477a8110eb8765e3c44c70fb4929098f",
+          "version": "0.29.0"
         }
       },
       {
