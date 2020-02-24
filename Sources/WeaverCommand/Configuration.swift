@@ -199,19 +199,19 @@ extension Configuration {
         inputPaths.formUnion(inputPathStrings
             .lazy
             .map { self.projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : self.recursiveFilesByPattern(fromDirectory: $0) }
+            .flatMap { $0.isFile ? [$0] : self.recursivePathsByPattern(fromDirectory: $0) }
             .filter { $0.exists && $0.isFile && $0.extension == "swift" })
 
         inputPaths.subtract(try ignoredPathStrings
             .lazy
             .map { self.projectPath + $0 }
-            .flatMap { $0.isFile ? [$0] : try files(fromDirectory: $0) }
+            .flatMap { $0.isFile ? [$0] : try paths(fromDirectory: $0) }
             .filter { $0.extension == "swift" })
         
         return inputPaths.sorted()
     }
 
-    private func recursiveFilesByPattern(fromDirectory directory: Path) -> [Path] {
+    private func recursivePathsByPattern(fromDirectory directory: Path) -> [Path] {
         let grepArguments = [
             "-lR",
             "-e", Configuration.annotationRegex,
@@ -229,7 +229,7 @@ extension Configuration {
             .map { Path(String($0)) }
     }
 
-    private func files(fromDirectory directory: Path) throws -> [Path] {
+    private func paths(fromDirectory directory: Path) throws -> [Path] {
         recursive ? try directory.recursiveChildren() : try directory.children()
     }
 }
