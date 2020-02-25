@@ -255,10 +255,9 @@ private final class MetaWeaverFile {
                 EmptyLine(),
                 settersImplementationExtension()
             ],
-            internalDependencyResolvers(),
+            dependencyResolvers(),
             inputDependencyResolvers(),
             dependencyResolverProxies(),
-            dependencyResolvers(),
             publicDependencyInitExtensions(),
             propertyWrappers()
         ].flatMap { $0 }
@@ -615,7 +614,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             })
     }
     
-    func internalDependencyResolvers() throws -> [FileBodyMember] {
+    func dependencyResolvers() throws -> [FileBodyMember] {
         return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
             switch dependencyContainer.declarationSource {
             case .type:
@@ -627,10 +626,15 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     return TypeIdentifier(name: try declaration(for: registration).setterTypeName)
                 }
                 guard let andTypeIDs = TypeIdentifier.and(resolverTypeIDs + setterTypeIDs) else { return [] }
+
+                let name = try containsAmbiguousDeclarations(in: dependencyContainer)
+                    ? dependencyContainer.type.internalDependencyResolverTypeID.name
+                    : dependencyContainer.type.dependencyResolverTypeID.name
+
                 return [
                     EmptyLine(),
                     TypeAlias(
-                        identifier: TypeAliasIdentifier(name: dependencyContainer.type.internalDependencyResolverTypeID.name),
+                        identifier: TypeAliasIdentifier(name: name),
                         value: andTypeIDs
                     )
                 ]
@@ -709,7 +713,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 dependencyContainer.type.publicDependencyResolverVariable.name : dependencyContainer.type.dependencyResolverVariable.name))
                 .with(accessLevel: accessLevel)
                 .with(resultType: containsAmbiguousDeclarations ?
-                    dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.internalDependencyResolverTypeID
+                    dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
                 )
                 .adding(parameter: containsDeclarationBasedOnSource && publicInterface == false ?
                     FunctionParameter(alias: "_", name: Variable.source.name, type: .string) : nil
@@ -802,7 +806,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 EmptyLine(),
                 Function(kind: .named(dependencyContainer.type.dependencyResolverVariable.name))
                     .with(resultType: containsAmbiguousDeclarations ?
-                        dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.internalDependencyResolverTypeID
+                        dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
                     )
                     .with(static: true)
                     .adding(member: Assignment(
@@ -996,35 +1000,16 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         }
                         
                         return members
-                    })
+                    }),
+                EmptyLine(),
+                TypeAlias(
+                    identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
+                    value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
+                )
             ]
         }
     }
 
-    func dependencyResolvers() throws -> [FileBodyMember] {
-
-        return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
-            switch dependencyContainer.declarationSource {
-            case .type:
-                let typeId = try containsAmbiguousDeclarations(in: dependencyContainer)
-                    ? TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
-                    : TypeIdentifier(name: dependencyContainer.type.internalDependencyResolverTypeID.name)
-
-                return [
-                    EmptyLine(),
-                    TypeAlias(
-                        identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
-                        value: typeId
-                    )
-                ]
-
-            case .registration,
-                 .reference:
-                return []
-            }
-        }
-    }
-    
     func publicDependencyInitExtensions() throws -> [FileBodyMember] {
         return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
             guard dependencyContainer.declarationSource == .type else { return [] }
