@@ -185,7 +185,7 @@ A dependency registration automatically generates the registration code and one 
 
 **`AppDelegate` with property wrapper annotations**:
 
-Since Weaver 1.0.0, you can use property wrappers instead of annotations in comments.
+Since Weaver 1.0.1, you can use property wrappers instead of annotations in comments.
 
 ```swift
 @UIApplicationMain

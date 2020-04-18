@@ -16,7 +16,6 @@ sed -i '' "s|^  \(sha256 \"\)\(.*\)\(\"\)|  \1$sha\3|" $(brew --repo homebrew/co
 
 previous_version=${current_version%.*}.$((${current_version##*.}-1))
 sed -i '' "s/${previous_version//./\\.}/$current_version/g" \
-README.md \
 $(brew --repo homebrew/core)/Formula/weaver.rb
 
 git commit -am "Bump version to $next_version"
