@@ -42,10 +42,10 @@ struct Configuration {
         self.projectPath = projectPath
 
         self.mainOutputPath = mainOutputPath
-            .map { $0.isFile ? $0 : $0 + Defaults.mainOutputFileName }
+            .map { $0.extension == "swift" ? $0 : $0 + Defaults.mainOutputFileName }
             .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.mainOutputPath
         self.testsOutputPath = testsOutputPath
-            .map { $0.isFile ? $0 : $0 + Defaults.testOutputFileName }
+            .map { $0.extension == "swift" ? $0 : $0 + Defaults.testOutputFileName }
             .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.testsOutputPath
 
         self.cachePath = cachePath ?? Defaults.cachePath
@@ -76,7 +76,7 @@ struct Configuration {
             configuration = try jsonDecoder.decode(Configuration.self, from: try configPath.read())
         case ("yaml"?, true):
             let yamlDecoder = YAMLDecoder()
-            configuration = try yamlDecoder.decode(Configuration.self, from: try configPath.read(), userInfo: [:])
+            configuration = try yamlDecoder.decode(Configuration.self, from: try configPath.read())
         default:
             configuration = Configuration(inputPathStrings: inputPathStrings,
                                           ignoredPathStrings: ignoredPathStrings,
@@ -171,16 +171,20 @@ extension Configuration: Decodable {
         if container.contains(.projectPath) {
             Logger.log(.error, "\(Keys.projectPath.rawValue) cannot be overriden in the configuration file.")
         }
-        
-        projectPath = Defaults.projectPath
-        mainOutputPath = try container.decodeIfPresent(Path.self, forKey: .mainOutputPath) ?? Defaults.mainOutputPath
-        testsOutputPath = try container.decodeIfPresent(Path.self, forKey: .testsOutputPath) ?? Defaults.testsOutputPath
-        inputPathStrings = try container.decodeIfPresent([String].self, forKey: .inputPaths) ?? Defaults.inputPathStrings
-        ignoredPathStrings = try container.decodeIfPresent([String].self, forKey: .ignoredPaths) ?? []
-        recursiveOff = !(try container.decodeIfPresent(Bool.self, forKey: .recursive) ?? !Defaults.recursiveOff)
-        tests = try container.decodeIfPresent(Bool.self, forKey: .tests) ?? Defaults.tests
-        testableImports = try container.decodeIfPresent([String].self, forKey: .testableImports)
-        cachePath = try container.decodeIfPresent(Path.self, forKey: .cachePath) ?? Defaults.cachePath
+
+        let recursive = try container.decodeIfPresent(Bool.self, forKey: .recursive)
+
+        self.init(
+            inputPathStrings: try container.decodeIfPresent([String].self, forKey: .inputPaths),
+            ignoredPathStrings: try container.decodeIfPresent([String].self, forKey: .ignoredPaths),
+            projectPath: nil,
+            mainOutputPath: try container.decodeIfPresent(Path.self, forKey: .mainOutputPath),
+            testsOutputPath: try container.decodeIfPresent(Path.self, forKey: .testsOutputPath),
+            cachePath: try container.decodeIfPresent(Path.self, forKey: .cachePath),
+            recursiveOff: recursive.map { !$0 },
+            tests: try container.decodeIfPresent(Bool.self, forKey: .tests),
+            testableImports: try container.decodeIfPresent([String].self, forKey: .testableImports)
+        )
     }
 }
 
