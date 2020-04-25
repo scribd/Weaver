@@ -6,6 +6,9 @@ let package = Package(
     platforms: [
        .macOS(.v10_13)
     ],
+    products: [
+      .executable(name: "Weaver", targets: ["WeaverMain"])
+    ],
     dependencies: [
         .package(url: "https://github.com/jpsim/SourceKitten.git", from: "0.27.0"),
         .package(url: "https://github.com/kylef/Commander.git", from: "0.9.0"),
