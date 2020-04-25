@@ -169,9 +169,7 @@ public let weaverCommand = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
 
-            let generator = try SwiftGenerator(mainOutputPath: configuration.mainOutputPath,
-                                               testOutputPath: configuration.testsOutputPath,
-                                               dependencyGraph: dependencyGraph,
+            let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
                                                inspector: inspector,
                                                version: version,
                                                testableImports: configuration.testableImports)
