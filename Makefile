@@ -35,5 +35,5 @@ codecov: build
 
 define install_files
 	install -d $(1)/bin
-	install -C .build/release/WeaverMain $(1)/bin/weaver
+	install -C .build/release/Weaver $(1)/bin/weaver
 endef
