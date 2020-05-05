@@ -63,7 +63,7 @@ final class CommandTests: XCTestCase {
         try exportDiff(actual: actualOutput, expected: Constants.initialMainOutput)
     }
     
-    func test_weaver_swift_should_geenrate_code_for_api() throws {
+    func test_weaver_swift_should_generate_code_for_api() throws {
         try run(command: "clean", with: ".api.weaver.yaml")
         try run(command: "swift", with: ".api.weaver.yaml")
         let actualOutput: String = try Constants.apiOutputPath.read()

@@ -626,10 +626,15 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     return TypeIdentifier(name: try declaration(for: registration).setterTypeName)
                 }
                 guard let andTypeIDs = TypeIdentifier.and(resolverTypeIDs + setterTypeIDs) else { return [] }
+
+                let name = try containsAmbiguousDeclarations(in: dependencyContainer)
+                    ? dependencyContainer.type.internalDependencyResolverTypeID.name
+                    : dependencyContainer.type.dependencyResolverTypeID.name
+
                 return [
                     EmptyLine(),
                     TypeAlias(
-                        identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
+                        identifier: TypeAliasIdentifier(name: name),
                         value: andTypeIDs
                     )
                 ]
@@ -962,11 +967,11 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     .with(kind: .struct)
                     .adding(member: EmptyLine())
                     .adding(member: Property(variable: Variable.proxySelf
-                        .with(type: dependencyContainer.type.dependencyResolverTypeID))
+                        .with(type: dependencyContainer.type.internalDependencyResolverTypeID))
                     )
                     .adding(member: EmptyLine())
                     .adding(member: Function(kind: .`init`(convenience: false, optional: false))
-                        .adding(parameter: FunctionParameter(alias: "_", name: Variable.proxySelf.name, type: dependencyContainer.type.dependencyResolverTypeID))
+                        .adding(parameter: FunctionParameter(alias: "_", name: Variable.proxySelf.name, type: dependencyContainer.type.internalDependencyResolverTypeID))
                         .adding(member: Assignment(variable: .named(.`self`) + Variable.proxySelf.reference, value: Variable.proxySelf.reference))
                     )
                     .adding(members: try dependencyContainer.dependencies.orderedValues.flatMap { dependency -> [TypeBodyMember] in
@@ -995,11 +1000,16 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         }
                         
                         return members
-                    })
+                    }),
+                EmptyLine(),
+                TypeAlias(
+                    identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
+                    value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
+                )
             ]
         }
     }
-    
+
     func publicDependencyInitExtensions() throws -> [FileBodyMember] {
         return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
             guard dependencyContainer.declarationSource == .type else { return [] }
