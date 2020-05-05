@@ -296,6 +296,25 @@ private final class TypeParser {
     enum Token: Equatable {
         case delimiter(Delimiter)
         case typeName(String)
+        
+        static var anyTypeName: Token {
+            return .typeName(String())
+        }
+        
+        static func == (_ lhs: Token, _ rhs: Token) -> Bool {
+            switch (lhs, rhs) {
+            case (.delimiter(let lhs), .delimiter(let rhs)):
+                return lhs == rhs
+            case (.typeName(String()), .typeName),
+                 (.typeName, .typeName(String())):
+                return true
+            case (.typeName(let lhs), .typeName(let rhs)):
+                return lhs == rhs
+            case (.delimiter, _),
+                 (.typeName, _):
+                return false
+            }
+        }
     }
     
     private let string: String
@@ -427,6 +446,9 @@ private final class TypeParser {
             if consumeToken(.delimiter(.genericOpen)) {
                 repeat {
                     parameters.append(try parse())
+                    if consumeToken(.delimiter(.colon)) {
+                        try consumeTokenOrBail(.anyTypeName)
+                    }
                 } while consumeToken(.delimiter(.comma))
                 try consumeTokenOrBail(.delimiter(.genericClose))
             }
