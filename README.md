@@ -92,6 +92,20 @@ This will download the Weaver binaries and dependencies in Pods/ during your nex
 
 This is the best way to install a specific version of Weaver since Homebrew cannot automatically install a specific version.
 
+### [Mint](https://github.com/yonaskolb/Mint)
+
+To use Weaver via Mint, prefix the normal usage with mint run scribd/Weaver like so:
+
+```shell
+mint run scribd/Weaver version
+```
+
+To use a specific version of Weaver, add the release tag like so:
+
+```shell
+mint run scribd/Weaver@1.0.3 version
+```
+
 #### Building from source
 
 Download the latest release source code from the [release tab](https://github.com/scribd/Weaver/releases) or clone the repository.
