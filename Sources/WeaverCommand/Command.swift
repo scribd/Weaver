@@ -262,12 +262,15 @@ public let weaverCommand = Group {
         recursiveOff,
         swiftlintDisableAll in
         
-        let configuration = try Configuration(configPath: configPath,
-                                              inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
-                                              ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
-                                              projectPath: projectPath,
-                                              cachePath: cachePath,
-                                              recursiveOff: recursiveOff)
+        let configuration = try Configuration(
+            configPath: configPath,
+            inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
+            ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
+            projectPath: projectPath,
+            cachePath: cachePath,
+            recursiveOff: recursiveOff,
+            swiftlintDisableAll: swiftlintDisableAll
+        )
         
         // ---- Link ----
 
