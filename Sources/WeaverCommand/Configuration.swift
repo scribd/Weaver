@@ -131,7 +131,7 @@ extension Configuration {
         static let configJSONFile = Path(".weaver.json")
         static let mainOutputFileName = Path("Weaver.swift")
         static let mainOutputPath = Path(".") + mainOutputFileName
-        static let testOutputFileName = Path("Weaver.swift")
+        static let testOutputFileName = Path("WeaverTests.swift")
         static let testsOutputPath = Path(".") + testOutputFileName
         static let cachePath = Path(".weaver_cache.json")
         static let recursiveOff = false
