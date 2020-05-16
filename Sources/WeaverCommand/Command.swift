@@ -13,7 +13,7 @@ import Darwin
 import PathKit
 import Rainbow
 
-private let version = "1.0.4"
+private let version = "1.0.5"
 
 // MARK: - Linker
 
@@ -138,8 +138,8 @@ public let weaverCommand = Group {
                                               tests: tests,
                                               testableImports: testableImports.isEmpty ? nil : testableImports)
 
-        let mainOutputPath = configuration.mainOutputPath + "Weaver.swift"
-        let testsOutputPath = configuration.testsOutputPath + "WeaverTests.swift"
+        let mainOutputPath = configuration.mainOutputPath
+        let testsOutputPath = configuration.testsOutputPath
         
         do {
             Logger.log(.info, "Let the injection begin.".lightRed, benchmark: .start("all"))

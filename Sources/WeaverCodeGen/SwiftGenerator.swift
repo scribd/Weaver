@@ -11,7 +11,7 @@ import Meta
 import CommonCrypto
 
 public final class SwiftGenerator {
-    
+
     private let dependencyGraph: DependencyGraph
     
     private let inspector: Inspector
@@ -45,11 +45,11 @@ public final class SwiftGenerator {
     }
     
     public func generate() throws -> String {
-        return try file().meta().swiftString
+        try file().meta().swiftString
     }
     
     public func generateTests() throws -> String {
-        return try file().metaTests().swiftString
+        try file().metaTests().swiftString
     }
 }
 
@@ -156,7 +156,7 @@ private final class MetaDependencyDeclaration: Hashable {
 // MARK: - Weaver File
 
 private final class MetaWeaverFile {
-    
+
     private let dependencyGraph: DependencyGraph
     
     private let inspector: Inspector
@@ -232,7 +232,7 @@ private final class MetaWeaverFile {
     // MARK: - Main File
 
     func meta() throws -> Meta.File {
-        return File(name: "Weaver.swift")
+        return File(name: "main-file")
             .adding(members: MetaWeaverFile.header(version))
             .adding(imports: dependencyGraph.imports.sorted().map { Import(name: $0) })
             .adding(members: try body())
@@ -267,7 +267,7 @@ private final class MetaWeaverFile {
 
     func metaTests() throws -> Meta.File {
         let imports = dependencyGraph.imports.subtracting(testableImports ?? [])
-        return File(name: "WeaverTest.swift")
+        return File(name: "tests-file")
             .adding(members: MetaWeaverFile.header(version))
             .adding(imports: imports.sorted().map { Import(name: $0) })
             .adding(imports: testableImports?.sorted().map { Import(name: $0, testable: true) } ?? [])
@@ -626,10 +626,15 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     return TypeIdentifier(name: try declaration(for: registration).setterTypeName)
                 }
                 guard let andTypeIDs = TypeIdentifier.and(resolverTypeIDs + setterTypeIDs) else { return [] }
+
+                let name = try containsAmbiguousDeclarations(in: dependencyContainer)
+                    ? dependencyContainer.type.internalDependencyResolverTypeID.name
+                    : dependencyContainer.type.dependencyResolverTypeID.name
+
                 return [
                     EmptyLine(),
                     TypeAlias(
-                        identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
+                        identifier: TypeAliasIdentifier(name: name),
                         value: andTypeIDs
                     )
                 ]
@@ -962,11 +967,11 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     .with(kind: .struct)
                     .adding(member: EmptyLine())
                     .adding(member: Property(variable: Variable.proxySelf
-                        .with(type: dependencyContainer.type.dependencyResolverTypeID))
+                        .with(type: dependencyContainer.type.internalDependencyResolverTypeID))
                     )
                     .adding(member: EmptyLine())
                     .adding(member: Function(kind: .`init`(convenience: false, optional: false))
-                        .adding(parameter: FunctionParameter(alias: "_", name: Variable.proxySelf.name, type: dependencyContainer.type.dependencyResolverTypeID))
+                        .adding(parameter: FunctionParameter(alias: "_", name: Variable.proxySelf.name, type: dependencyContainer.type.internalDependencyResolverTypeID))
                         .adding(member: Assignment(variable: .named(.`self`) + Variable.proxySelf.reference, value: Variable.proxySelf.reference))
                     )
                     .adding(members: try dependencyContainer.dependencies.orderedValues.flatMap { dependency -> [TypeBodyMember] in
@@ -995,11 +1000,16 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         }
                         
                         return members
-                    })
+                    }),
+                EmptyLine(),
+                TypeAlias(
+                    identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
+                    value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
+                )
             ]
         }
     }
-    
+
     func publicDependencyInitExtensions() throws -> [FileBodyMember] {
         return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
             guard dependencyContainer.declarationSource == .type else { return [] }

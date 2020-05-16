@@ -195,4 +195,13 @@ final class AnyTypeTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_init_should_build_correctly_with_generic_and_constraint() {
+        do {
+            let type = try CompositeType("Foo<T: Bar>")
+            XCTAssertEqual(type.description, "Foo<T>")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
