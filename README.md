@@ -134,6 +134,7 @@ Options:
     --recursive-off
     --tests - Activates the test helpers' generation.
     --testable-imports - Modules to imports in the test helpers.
+    --swiftlint-disable-all - Disables all swiftlint rules.
 ```
 
 ### (2) - Weaver build phase
@@ -548,6 +549,7 @@ Options:
     --recursive-off
     --tests - Activates the test helpers' generation.
     --testable-imports - Modules to imports in the test helpers.
+    --swiftlint-disable-all - Disables all swiftlint rules.
 ```
 
 ### Example:
