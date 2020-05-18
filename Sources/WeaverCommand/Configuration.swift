@@ -24,6 +24,7 @@ struct Configuration {
     let recursiveOff: Bool
     let tests: Bool
     let testableImports: [String]?
+    let swiftlintDisableAll: Bool
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
@@ -33,7 +34,8 @@ struct Configuration {
                  cachePath: Path?,
                  recursiveOff: Bool?,
                  tests: Bool?,
-                 testableImports: [String]?) {
+                 testableImports: [String]?,
+                 swiftlintDisableAll: Bool?) {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
@@ -52,6 +54,7 @@ struct Configuration {
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
         self.tests = tests ?? Defaults.tests
         self.testableImports = testableImports
+        self.swiftlintDisableAll = swiftlintDisableAll ?? Defaults.swiftlintDisableAll
     }
     
     init(configPath: Path? = nil,
@@ -63,7 +66,8 @@ struct Configuration {
          cachePath: Path? = nil,
          recursiveOff: Bool? = nil,
          tests: Bool? = nil,
-         testableImports: [String]? = nil) throws {
+         testableImports: [String]? = nil,
+         swiftlintDisableAll: Bool? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath, projectPath: projectPath)
@@ -78,15 +82,18 @@ struct Configuration {
             let yamlDecoder = YAMLDecoder()
             configuration = try yamlDecoder.decode(Configuration.self, from: try configPath.read())
         default:
-            configuration = Configuration(inputPathStrings: inputPathStrings,
-                                          ignoredPathStrings: ignoredPathStrings,
-                                          projectPath: projectPath,
-                                          mainOutputPath: mainOutputPath,
-                                          testsOutputPath: testsOutputPath,
-                                          cachePath: cachePath,
-                                          recursiveOff: recursiveOff,
-                                          tests: tests,
-                                          testableImports: testableImports)
+            configuration = Configuration(
+                inputPathStrings: inputPathStrings,
+                ignoredPathStrings: ignoredPathStrings,
+                projectPath: projectPath,
+                mainOutputPath: mainOutputPath,
+                testsOutputPath: testsOutputPath,
+                cachePath: cachePath,
+                recursiveOff: recursiveOff,
+                tests: tests,
+                testableImports: testableImports,
+                swiftlintDisableAll: swiftlintDisableAll
+            )
         }
         
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
@@ -98,6 +105,7 @@ struct Configuration {
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
         self.tests = tests ?? configuration.tests
         self.testableImports = testableImports ?? configuration.testableImports
+        self.swiftlintDisableAll = swiftlintDisableAll ?? configuration.swiftlintDisableAll
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -131,13 +139,14 @@ extension Configuration {
         static let configJSONFile = Path(".weaver.json")
         static let mainOutputFileName = Path("Weaver.swift")
         static let mainOutputPath = Path(".") + mainOutputFileName
-        static let testOutputFileName = Path("Weaver.swift")
+        static let testOutputFileName = Path("WeaverTests.swift")
         static let testsOutputPath = Path(".") + testOutputFileName
         static let cachePath = Path(".weaver_cache.json")
         static let recursiveOff = false
         static let inputPathStrings = ["."]
         static let detailedResolvers = false
         static let tests = false
+        static let swiftlintDisableAll = true
         
         static var projectPath: Path {
             if let projectPath = ProcessInfo.processInfo.environment["WEAVER_PROJECT_PATH"] {
@@ -163,6 +172,7 @@ extension Configuration: Decodable {
         case tests
         case testableImports = "testable_imports"
         case cachePath = "cache_path"
+        case swiftlintDisableAll = "swiftlint_disable_all"
     }
     
     public init(from decoder: Decoder) throws {
@@ -183,7 +193,8 @@ extension Configuration: Decodable {
             cachePath: try container.decodeIfPresent(Path.self, forKey: .cachePath),
             recursiveOff: recursive.map { !$0 },
             tests: try container.decodeIfPresent(Bool.self, forKey: .tests),
-            testableImports: try container.decodeIfPresent([String].self, forKey: .testableImports)
+            testableImports: try container.decodeIfPresent([String].self, forKey: .testableImports),
+            swiftlintDisableAll: try container.decodeIfPresent(Bool.self, forKey: .swiftlintDisableAll)
         )
     }
 }

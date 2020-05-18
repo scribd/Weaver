@@ -97,6 +97,7 @@ private enum Parameters {
     static let pretty = Flag("pretty", default: false)
     static let tests = OptionalFlag("tests", default: nil)
     static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
+    static let swiftlintDisableAll = OptionalFlag("swiftlint-disable-all", default: nil)
 }
 
 // MARK: - Commands
@@ -114,7 +115,8 @@ public let weaverCommand = Group {
         Parameters.cachePath,
         Parameters.recursiveOff,
         Parameters.tests,
-        Parameters.testableImports)
+        Parameters.testableImports,
+        Parameters.swiftlintDisableAll)
     {
         projectPath,
         configPath,
@@ -125,18 +127,22 @@ public let weaverCommand = Group {
         cachePath,
         recursiveOff,
         tests,
-        testableImports in
+        testableImports,
+        swiftlintDisableAll in
 
-        let configuration = try Configuration(configPath: configPath,
-                                              inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
-                                              ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
-                                              projectPath: projectPath,
-                                              mainOutputPath: mainOutputPath,
-                                              testsOutputPath: testsOutputPath,
-                                              cachePath: cachePath,
-                                              recursiveOff: recursiveOff,
-                                              tests: tests,
-                                              testableImports: testableImports.isEmpty ? nil : testableImports)
+        let configuration = try Configuration(
+            configPath: configPath,
+            inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
+            ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
+            projectPath: projectPath,
+            mainOutputPath: mainOutputPath,
+            testsOutputPath: testsOutputPath,
+            cachePath: cachePath,
+            recursiveOff: recursiveOff,
+            tests: tests,
+            testableImports: testableImports.isEmpty ? nil : testableImports,
+            swiftlintDisableAll: swiftlintDisableAll
+        )
 
         let mainOutputPath = configuration.mainOutputPath
         let testsOutputPath = configuration.testsOutputPath
@@ -169,10 +175,13 @@ public let weaverCommand = Group {
             Logger.log(.info, "")
             Logger.log(.info, "Generating boilerplate code...".lightBlue, benchmark: .start("generating"))
 
-            let generator = try SwiftGenerator(dependencyGraph: dependencyGraph,
-                                               inspector: inspector,
-                                               version: version,
-                                               testableImports: configuration.testableImports)
+            let generator = try SwiftGenerator(
+                dependencyGraph: dependencyGraph,
+                inspector: inspector,
+                version: version,
+                testableImports: configuration.testableImports,
+                swiftlintDisableAll: configuration.swiftlintDisableAll
+            )
 
             let mainGeneratedData = try generator.generate()
             let testsGeneratedData = configuration.tests ? try generator.generateTests() : nil
@@ -241,7 +250,8 @@ public let weaverCommand = Group {
         Parameters.inputPath,
         Parameters.ignoredPath,
         Parameters.cachePath,
-        Parameters.recursiveOff
+        Parameters.recursiveOff,
+        Parameters.swiftlintDisableAll
     ) {
         projectPath,
         configPath,
@@ -249,14 +259,18 @@ public let weaverCommand = Group {
         inputPaths,
         ignoredPaths,
         cachePath,
-        recursiveOff in
+        recursiveOff,
+        swiftlintDisableAll in
         
-        let configuration = try Configuration(configPath: configPath,
-                                              inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
-                                              ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
-                                              projectPath: projectPath,
-                                              cachePath: cachePath,
-                                              recursiveOff: recursiveOff)
+        let configuration = try Configuration(
+            configPath: configPath,
+            inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
+            ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
+            projectPath: projectPath,
+            cachePath: cachePath,
+            recursiveOff: recursiveOff,
+            swiftlintDisableAll: swiftlintDisableAll
+        )
         
         // ---- Link ----
 
