@@ -11,12 +11,14 @@ public final class Parser {
     
     private let tokens: [AnyTokenBox]
     private let fileName: String
+    private let platform: String?
 
     private var index = 0
     
-    public init(_ tokens: [AnyTokenBox], fileName: String) {
+    public init(_ tokens: [AnyTokenBox], fileName: String, platform: String?) {
         self.tokens = tokens
         self.fileName = fileName
+        self.platform = platform
     }
     
     public func parse() throws -> Expr {
@@ -211,5 +213,3 @@ private extension Parser {
         }
     }
 }
-
-

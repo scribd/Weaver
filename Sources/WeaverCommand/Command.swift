@@ -21,11 +21,13 @@ private extension Linker {
 
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
+                     platform: String?,
                      shouldLog: Bool = true) throws {
         
         var didChange = false
         try self.init(inputPaths,
                       cachePath: cachePath,
+                      platform: platform,
                       shouldLog: shouldLog,
                       didChange: &didChange)
         _ = didChange
@@ -33,6 +35,7 @@ private extension Linker {
     
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
+                     platform: String?,
                      shouldLog: Bool = true,
                      didChange: inout Bool) throws {
 
@@ -58,7 +61,7 @@ private extension Linker {
             
             if shouldLog { Logger.log(.info, "<- '\(filePath)'".yellow) }
             let tokens = try Lexer(file, fileName: filePath.string, cache: lexerCache).tokenize()
-            return try Parser(tokens, fileName: filePath.string).parse()
+            return try Parser(tokens, fileName: filePath.string, platform: platform).parse()
         }
         if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("parsing")) }
         
@@ -161,7 +164,10 @@ public let weaverCommand = Group {
             Logger.log(.info, "Done".yellow, benchmark: .end("listing"))
 
             var didChange = false
-            let linker = try Linker(inputPaths, cachePath: configuration.cachePath, didChange: &didChange)
+            let linker = try Linker(inputPaths,
+                                    cachePath: configuration.cachePath,
+                                    platform: configuration.platform,
+                                    didChange: &didChange)
             let dependencyGraph = linker.dependencyGraph
 
             // ---- Inspect ----
@@ -255,7 +261,8 @@ public let weaverCommand = Group {
         Parameters.ignoredPath,
         Parameters.cachePath,
         Parameters.recursiveOff,
-        Parameters.swiftlintDisableAll
+        Parameters.swiftlintDisableAll,
+        Parameters.platform
     ) {
         projectPath,
         configPath,
@@ -264,7 +271,8 @@ public let weaverCommand = Group {
         ignoredPaths,
         cachePath,
         recursiveOff,
-        swiftlintDisableAll in
+        swiftlintDisableAll,
+        platform in
         
         let configuration = try Configuration(
             configPath: configPath,
@@ -273,13 +281,15 @@ public let weaverCommand = Group {
             projectPath: projectPath,
             cachePath: cachePath,
             recursiveOff: recursiveOff,
-            swiftlintDisableAll: swiftlintDisableAll
+            swiftlintDisableAll: swiftlintDisableAll,
+            platform: platform
         )
         
         // ---- Link ----
 
         let linker = try Linker(try configuration.inputPaths(),
                                 cachePath: configuration.cachePath,
+                                platform: configuration.platform,
                                 shouldLog: false)
         let dependencyGraph = linker.dependencyGraph
 
