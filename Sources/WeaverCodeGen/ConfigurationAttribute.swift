@@ -16,6 +16,7 @@ public enum ConfigurationAttributeName: String {
     case doesSupportObjc = "objc"
     case setter
     case escaping
+    case platforms
 }
 
 public enum ConfigurationAttribute: Hashable {
@@ -25,6 +26,7 @@ public enum ConfigurationAttribute: Hashable {
     case doesSupportObjc(value: Bool)
     case setter(value: Bool)
     case escaping(value: Bool)
+    case platforms(values: [String])
 }
 
 // MARK: - Target
@@ -60,6 +62,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return "Config Attr - setter = \(value)"
         case .escaping(let value):
             return "Config Attr - escaping = \(value)"
+        case .platforms(let values):
+            return "Config Attr - platforms = \(values.joined(separator: ", "))"
         }
     }
     
@@ -77,6 +81,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return .setter
         case .escaping:
             return .escaping
+        case .platforms:
+            return .platforms
         }
     }
 }
@@ -104,7 +110,8 @@ extension ConfigurationAnnotation {
              (.scope, .dependency),
              (.doesSupportObjc, .dependency),
              (.setter, .dependency),
-             (.escaping, .dependency):
+             (.escaping, .dependency),
+             (.platforms, .dependency):
             return true
             
         case (.isIsolated, _),
@@ -112,7 +119,8 @@ extension ConfigurationAnnotation {
              (.scope, _),
              (.doesSupportObjc, _),
              (.setter, _),
-             (.escaping, _):
+             (.escaping, _),
+             (.platforms, _):
             return false
         }
     }
@@ -131,7 +139,8 @@ extension ConfigurationAnnotation {
              (.customBuilder, .registration),
              (.setter, .registration),
              (.doesSupportObjc, .registration),
-             (.escaping, .parameter):
+             (.escaping, .parameter),
+             (.platforms, _):
             return true
         case (.isIsolated, _),
              (.scope, _),
@@ -150,18 +159,20 @@ extension ConfigurationAttribute {
     
     init(name: String, valueString: String) throws {
         switch ConfigurationAttributeName(rawValue: name) {
-        case .isIsolated?:
+        case .isIsolated:
             self = .isIsolated(value: try ConfigurationAttribute.boolValue(from: valueString))
-        case .customBuilder?:
+        case .customBuilder:
             self = .customBuilder(value: valueString)
-        case .scope?:
+        case .scope:
             self = .scope(value: try ConfigurationAttribute.scopeValue(from: valueString))
-        case .doesSupportObjc?:
+        case .doesSupportObjc:
             self = .doesSupportObjc(value: try ConfigurationAttribute.boolValue(from: valueString))
-        case .setter?:
+        case .setter:
             self = .setter(value: try ConfigurationAttribute.boolValue(from: valueString))
-        case .escaping?:
+        case .escaping:
             self = .escaping(value: try ConfigurationAttribute.boolValue(from: valueString))
+        case .platforms:
+            self = .platforms(values: try ConfigurationAttribute.stringValues(from: valueString))
         case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
@@ -180,6 +191,14 @@ extension ConfigurationAttribute {
             throw TokenError.invalidConfigurationAttributeValue(value: string, expected: expected)
         }
         return value
+    }
+    
+    private static func stringValues(from string: String) throws -> [String] {
+        let platforms = string.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard platforms.isEmpty == false else {
+            throw TokenError.invalidConfigurationAttributeValue(value: string, expected: "Platforms separated with a comma")
+        }
+        return platforms
     }
 }
 
@@ -208,7 +227,8 @@ extension ConfigurationAttribute {
             return value
 
         case .scope,
-             .customBuilder:
+             .customBuilder,
+             .platforms:
             return nil
         }
     }
@@ -222,7 +242,8 @@ extension ConfigurationAttribute {
              .isIsolated,
              .doesSupportObjc,
              .setter,
-             .escaping:
+             .escaping,
+             .platforms:
             return nil
         }
     }
@@ -236,7 +257,23 @@ extension ConfigurationAttribute {
              .isIsolated,
              .doesSupportObjc,
              .setter,
-             .escaping:
+             .escaping,
+             .platforms:
+            return nil
+        }
+    }
+    
+    var stringValues: [String]? {
+        switch self {
+        case .platforms(let values):
+            return values
+        
+        case .scope,
+             .customBuilder,
+             .isIsolated,
+             .setter,
+             .escaping,
+             .doesSupportObjc:
             return nil
         }
     }
