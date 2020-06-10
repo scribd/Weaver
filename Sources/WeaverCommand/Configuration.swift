@@ -25,6 +25,7 @@ struct Configuration {
     let tests: Bool
     let testableImports: [String]?
     let swiftlintDisableAll: Bool
+    let platform: String?
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
@@ -35,7 +36,8 @@ struct Configuration {
                  recursiveOff: Bool?,
                  tests: Bool?,
                  testableImports: [String]?,
-                 swiftlintDisableAll: Bool?) {
+                 swiftlintDisableAll: Bool?,
+                 platform: String?) {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
@@ -55,6 +57,7 @@ struct Configuration {
         self.tests = tests ?? Defaults.tests
         self.testableImports = testableImports
         self.swiftlintDisableAll = swiftlintDisableAll ?? Defaults.swiftlintDisableAll
+        self.platform = platform
     }
     
     init(configPath: Path? = nil,
@@ -67,7 +70,8 @@ struct Configuration {
          recursiveOff: Bool? = nil,
          tests: Bool? = nil,
          testableImports: [String]? = nil,
-         swiftlintDisableAll: Bool? = nil) throws {
+         swiftlintDisableAll: Bool? = nil,
+         platform: String? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath, projectPath: projectPath)
@@ -92,7 +96,8 @@ struct Configuration {
                 recursiveOff: recursiveOff,
                 tests: tests,
                 testableImports: testableImports,
-                swiftlintDisableAll: swiftlintDisableAll
+                swiftlintDisableAll: swiftlintDisableAll,
+                platform: platform
             )
         }
         
@@ -106,6 +111,7 @@ struct Configuration {
         self.tests = tests ?? configuration.tests
         self.testableImports = testableImports ?? configuration.testableImports
         self.swiftlintDisableAll = swiftlintDisableAll ?? configuration.swiftlintDisableAll
+        self.platform = platform ?? configuration.platform
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -173,6 +179,7 @@ extension Configuration: Decodable {
         case testableImports = "testable_imports"
         case cachePath = "cache_path"
         case swiftlintDisableAll = "swiftlint_disable_all"
+        case platform
     }
     
     public init(from decoder: Decoder) throws {
@@ -194,7 +201,8 @@ extension Configuration: Decodable {
             recursiveOff: recursive.map { !$0 },
             tests: try container.decodeIfPresent(Bool.self, forKey: .tests),
             testableImports: try container.decodeIfPresent([String].self, forKey: .testableImports),
-            swiftlintDisableAll: try container.decodeIfPresent(Bool.self, forKey: .swiftlintDisableAll)
+            swiftlintDisableAll: try container.decodeIfPresent(Bool.self, forKey: .swiftlintDisableAll),
+            platform: try container.decodeIfPresent(String.self, forKey: .platform)
         )
     }
 }

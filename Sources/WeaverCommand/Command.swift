@@ -98,6 +98,7 @@ private enum Parameters {
     static let tests = OptionalFlag("tests", default: nil)
     static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
     static let swiftlintDisableAll = OptionalFlag("swiftlint-disable-all", default: nil)
+    static let platform = Option<String?>("platform", default: nil, description: "Selected platform.")
 }
 
 // MARK: - Commands
@@ -116,7 +117,8 @@ public let weaverCommand = Group {
         Parameters.recursiveOff,
         Parameters.tests,
         Parameters.testableImports,
-        Parameters.swiftlintDisableAll)
+        Parameters.swiftlintDisableAll,
+        Parameters.platform)
     {
         projectPath,
         configPath,
@@ -128,7 +130,8 @@ public let weaverCommand = Group {
         recursiveOff,
         tests,
         testableImports,
-        swiftlintDisableAll in
+        swiftlintDisableAll,
+        platform in
 
         let configuration = try Configuration(
             configPath: configPath,
@@ -141,7 +144,8 @@ public let weaverCommand = Group {
             recursiveOff: recursiveOff,
             tests: tests,
             testableImports: testableImports.isEmpty ? nil : testableImports,
-            swiftlintDisableAll: swiftlintDisableAll
+            swiftlintDisableAll: swiftlintDisableAll,
+            platform: platform
         )
 
         let mainOutputPath = configuration.mainOutputPath
