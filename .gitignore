@@ -71,3 +71,7 @@ Sample/fastlane/test_output
 # Package
 weaver-*.zip
 .weaver_cache.json
+
+# Tests
+API
+Sample/Generated

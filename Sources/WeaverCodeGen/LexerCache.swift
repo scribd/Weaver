@@ -79,6 +79,8 @@ public final class LexerCache {
             let cacheData = try encoder.encode(cache)
             if cachePath.exists {
                 try cachePath.delete()
+            } else if cachePath.parent().exists == false {
+                try cachePath.parent().mkpath()
             }
             try cachePath.write(cacheData)
         } catch {
