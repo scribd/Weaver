@@ -83,7 +83,7 @@ struct Configuration {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath, projectPath: projectPath)
-        let cachePath = Configuration.prepareCachePath(cachePath ?? Defaults.cachePath, projectPath: projectPath)
+        let _cachePath = Configuration.prepareCachePath(cachePath ?? Defaults.cachePath, projectPath: projectPath)
         
         var configuration: Configuration
         switch (configPath.extension, configPath.isFile) {
@@ -100,7 +100,7 @@ struct Configuration {
                 projectPath: projectPath,
                 mainOutputPath: mainOutputPath,
                 testsOutputPath: testsOutputPath,
-                cachePath: cachePath,
+                cachePath: _cachePath,
                 recursiveOff: recursiveOff,
                 tests: tests,
                 testableImports: testableImports,
@@ -116,7 +116,7 @@ struct Configuration {
         self.projectPath = projectPath
         self.mainOutputPath = mainOutputPath ?? configuration.mainOutputPath
         self.testsOutputPath = testsOutputPath ?? configuration.testsOutputPath
-        self.cachePath = cachePath
+        self.cachePath = cachePath ?? configuration.cachePath
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
         self.tests = tests ?? configuration.tests
         self.testableImports = testableImports ?? configuration.testableImports

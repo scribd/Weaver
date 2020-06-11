@@ -33,7 +33,13 @@ public final class LexerCache {
     
     private var cache: Cache
     
-    public private(set) var didChange = false
+    private var accessedKeys = Set<String>()
+
+    private var _didChange = false
+    
+    public func didChange() -> Bool {
+        return _didChange || cache.values.count != accessedKeys.count
+    }
 
     public init(for cachePath: Path,
                 version: String,
@@ -58,7 +64,7 @@ public final class LexerCache {
             if shouldLog {
                 print("Could not read cache. \(error.localizedDescription) Creating a new one.")
             }
-            didChange = true
+            _didChange = true
             cache = Cache(version: version, values: [:])
         }
     }
@@ -69,6 +75,7 @@ public final class LexerCache {
             #if DEBUG
             encoder.outputFormatting = .prettyPrinted
             #endif
+            cache.values = cache.values.filter { accessedKeys.contains($0.key) }
             let cacheData = try encoder.encode(cache)
             if cachePath.exists {
                 try cachePath.delete()
@@ -82,7 +89,7 @@ public final class LexerCache {
     }
     
     public func clear() {
-        didChange = true
+        _didChange = true
         cache = Cache(version: version, values: [:])
     }
 
@@ -96,13 +103,11 @@ public final class LexerCache {
             }
             
             guard let value = cache.values[key(for: filePath)] else {
-                didChange = true
                 return nil
             }
             
             guard lastUpdate <= value.lastUpdate else {
                 cache.values[key(for: filePath)] = nil
-                didChange = true
                 return nil
             }
             
@@ -114,6 +119,7 @@ public final class LexerCache {
     }
     
     func write(_ tokens: [AnyTokenBox], for filePath: Path) {
+        _didChange = true
         cache.values[key(for: filePath)] = Cache.Value(
             lastUpdate: Date(),
             tokens: tokens.map { Cache.Token(value: $0) }
@@ -121,15 +127,18 @@ public final class LexerCache {
     }
     
     private func key(for filePath: Path) -> String {
+        let key: String
         if filePath.absolute().parent().string.starts(with: cachePath.absolute().parent().string) {
-            return filePath.absolute().string.replacingOccurrences(of: cachePath.absolute().parent().string + "/", with: "")
+            key = filePath.absolute().string.replacingOccurrences(of: cachePath.absolute().parent().string + "/", with: "")
         } else {
-            return filePath.string
+            key = filePath.string
         }
+        accessedKeys.insert(key)
+        return key
     }
     
     private func fail(for filePath: Path, _ error: Error? = nil) {
-        didChange = true
+        _didChange = true
         cache.values[key(for: filePath)] = nil
         if shouldLog {
             let errorMessage: String

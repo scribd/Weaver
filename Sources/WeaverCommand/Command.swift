@@ -71,7 +71,7 @@ private extension Linker {
             Logger.log(.info, "")
             Logger.log(.info, "Writing cache to disk...".yellow, benchmark: .start("caching"))
         }
-        didChange = lexerCache.didChange
+        didChange = lexerCache.didChange()
         lexerCache.saveToDisk()
         if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("caching")) }
 
