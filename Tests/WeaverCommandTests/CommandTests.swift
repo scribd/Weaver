@@ -16,7 +16,7 @@ final class CommandTests: XCTestCase {
         static let samplePath = Path(#file) + "../../../Sample"
         static let mainOutputPath = samplePath + "Sample/Generated/Weaver.swift"
         static let apiOutputPath = samplePath + "API/Generated/Weaver.swift"
-        static let cachePath = samplePath + ".weaver_cache.json"
+        static let cachePath = Path(Bundle(for: CommandTests.self).bundlePath) + "../.weaver_cache.json"
         static let diffsPath = Path("/tmp/weaver_tests/\(CommandTests.self)")
         
         static let initialMainOutput: String = try! mainOutputPath.read()
