@@ -254,14 +254,9 @@ private final class MetaWeaverFile {
     // MARK: - Main File
 
     func meta() throws -> Meta.File {
-        let imports = dependencyGraph.imports
-            .filter(importFilter)
-            .sorted()
-            .map { Import(name: $0) }
-        
         return File(name: "main-file")
             .adding(members: MetaWeaverFile.header(version: version, swiftlintDisableAll: swiftlintDisableAll))
-            .adding(imports: imports)
+            .adding(imports: dependencyGraph.imports.filter(importFilter).sorted().map { Import(name: $0) })
             .adding(members: try body())
     }
     
@@ -297,7 +292,7 @@ private final class MetaWeaverFile {
 
         return File(name: "tests-file")
             .adding(members: MetaWeaverFile.header(version: version, swiftlintDisableAll: swiftlintDisableAll))
-            .adding(imports: imports.sorted().map { Import(name: $0) })
+            .adding(imports: imports.filter(importFilter).sorted().map { Import(name: $0) })
             .adding(imports: testableImports?.sorted().map { Import(name: $0, testable: true) } ?? [])
             .adding(members: try bodyTests())
     }
