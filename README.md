@@ -468,6 +468,8 @@ var dependencyName: DependencyType
 
 - `escaping: Bool` (default: `true` when applicable): asks Weaver to use `@escaping` when declaring a closure parameter.
 
+- `platforms: [Platform]` (default: `[]`): List of platforms for which Weaver is allowed to use the dependency. An empty list means any platform is allowed.
+
 #### Using protperty wrappers with parameters:
 
 Types using parameter annotations need to take the said parameters as an input when being registered or referenced. This is particularly true when using property wrappers, because the signature of the annotation won't compile if not done correctly.
@@ -550,6 +552,9 @@ Options:
     --tests - Activates the test helpers' generation.
     --testable-imports - Modules to imports in the test helpers.
     --swiftlint-disable-all - Disables all swiftlint rules.
+    --platform - Targeted platform.
+    --included-imports - Included imports.
+    --excluded-imports - Excluded imports.
 ```
 
 ### Example:
@@ -569,6 +574,10 @@ weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --main-output-path Genera
 - `--recursive-off`: Deactivates recursivity for `input-path` and `ignored-path`.
 - `--tests` - Activates the test helpers' generation.
 - `--testable-imports` - Modules to imports in the test helpers. Variadic parameter, which means it can be set more than once.
+- `--swiftlint-disable-all` - Disables all swiftlint rules in generated files.
+- `--platform` - Platform for which the generated code will be compiled (iOS, watchOS, OSX, macOS or tvOS).
+- `--included-imports` - Modules which can be imported in generated files.
+- `--excluded-imports` - Modules which can't be imported in generated files.
 
 ### Configuration File:
 
@@ -617,7 +626,9 @@ Options:
     --pretty [default: false]
     --input-path - Paths to input files.
     --ignored-path - Paths to ignore.
+    --cache-path - Cache path.
     --recursive-off
+    --platform - Selected platform
 ```
 
 For an output example, please check this [Gist](https://gist.github.com/trupin/9438713f8fae0a5a7f424eca1976f42b).

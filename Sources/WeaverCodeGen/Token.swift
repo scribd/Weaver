@@ -164,14 +164,6 @@ public struct ConfigurationAnnotation: Token, Hashable {
         return ConfigurationAnnotation(attribute: attribute, target: target)
     }
     
-    public static func create(attribute: ConfigurationAttribute, target: ConfigurationAttributeTarget) throws -> ConfigurationAnnotation {
-        guard validate(configurationAttribute: attribute, with: target) else {
-            throw TokenError.invalidConfigurationAttributeTarget(name: attribute.name.rawValue, target: target)
-        }
-        
-        return ConfigurationAnnotation(attribute: attribute, target: target)
-    }
-    
     public var description: String {
         return "\(target.description).\(attribute.description)"
     }

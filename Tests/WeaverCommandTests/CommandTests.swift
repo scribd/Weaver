@@ -13,10 +13,11 @@ import XCTest
 final class CommandTests: XCTestCase {
     
     private enum Constants {
-        static let samplePath = Path(#file) + "../../../Sample"
+        static let currentPath = Path(#file) + "../../.."
+        static let samplePath = currentPath + "Sample"
         static let mainOutputPath = samplePath + "Sample/Generated/Weaver.swift"
         static let apiOutputPath = samplePath + "API/Generated/Weaver.swift"
-        static let cachePath = samplePath + ".weaver_cache.json"
+        static let cachePath = currentPath + ".weaver_cache.json"
         static let diffsPath = Path("/tmp/weaver_tests/\(CommandTests.self)")
         
         static let initialMainOutput: String = try! mainOutputPath.read()

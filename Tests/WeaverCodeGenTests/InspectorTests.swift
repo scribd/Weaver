@@ -1025,4 +1025,31 @@ public class C {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_inspector_should_build_a_valid_dependency_graph_with_an_untargeted_dependency() {
+        let file = File(contents: """
+class Foo {
+    // weaver: bar = Bar
+    // weaver: bar.platforms = [.watchOS]
+}
+
+class Bar {
+    // weaver: foo = Foo
+    // weaver: foo.platforms = [.iOS, .watchOS]
+}
+""")
+        
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree], platform: .iOS)
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }

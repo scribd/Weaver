@@ -21,11 +21,13 @@ private extension Linker {
 
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
+                     platform: Platform?,
                      shouldLog: Bool = true) throws {
         
         var didChange = false
         try self.init(inputPaths,
                       cachePath: cachePath,
+                      platform: platform,
                       shouldLog: shouldLog,
                       didChange: &didChange)
         _ = didChange
@@ -33,6 +35,7 @@ private extension Linker {
     
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
+                     platform: Platform?,
                      shouldLog: Bool = true,
                      didChange: inout Bool) throws {
 
@@ -68,7 +71,7 @@ private extension Linker {
             Logger.log(.info, "")
             Logger.log(.info, "Writing cache to disk...".yellow, benchmark: .start("caching"))
         }
-        didChange = lexerCache.didChange
+        didChange = lexerCache.didChange()
         lexerCache.saveToDisk()
         if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("caching")) }
 
@@ -78,8 +81,20 @@ private extension Linker {
             Logger.log(.info, "")
             Logger.log(.info, "Linking...".lightGreen, benchmark: .start("linking"))
         }
-        try self.init(syntaxTrees: asts)
+        try self.init(syntaxTrees: asts, platform: platform)
         if shouldLog { Logger.log(.info, "Done".lightGreen, benchmark: .end("linking")) }
+    }
+}
+
+private extension Platform {
+    
+    init?(_ value: String?) {
+        guard let value = value else { return nil }
+        guard let platform = Platform(rawValue: value) else {
+            Logger.log(.error, "Unknown platform: \(value).")
+            exit(1)
+        }
+        self = platform
     }
 }
 
@@ -98,6 +113,9 @@ private enum Parameters {
     static let tests = OptionalFlag("tests", default: nil)
     static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
     static let swiftlintDisableAll = OptionalFlag("swiftlint-disable-all", default: nil)
+    static let platform = Option<String?>("platform", default: nil, description: "Targeted platform.")
+    static let includedImports = VariadicOption<String>("included-imports", default: [], description: "Included imports.")
+    static let excludedImports = VariadicOption<String>("excluded-imports", default: [], description: "Excluded imports.")
 }
 
 // MARK: - Commands
@@ -116,7 +134,10 @@ public let weaverCommand = Group {
         Parameters.recursiveOff,
         Parameters.tests,
         Parameters.testableImports,
-        Parameters.swiftlintDisableAll)
+        Parameters.swiftlintDisableAll,
+        Parameters.platform,
+        Parameters.includedImports,
+        Parameters.excludedImports)
     {
         projectPath,
         configPath,
@@ -128,8 +149,11 @@ public let weaverCommand = Group {
         recursiveOff,
         tests,
         testableImports,
-        swiftlintDisableAll in
-
+        swiftlintDisableAll,
+        platform,
+        includedImports,
+        excludedImports in
+        
         let configuration = try Configuration(
             configPath: configPath,
             inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
@@ -141,7 +165,10 @@ public let weaverCommand = Group {
             recursiveOff: recursiveOff,
             tests: tests,
             testableImports: testableImports.isEmpty ? nil : testableImports,
-            swiftlintDisableAll: swiftlintDisableAll
+            swiftlintDisableAll: swiftlintDisableAll,
+            platform: Platform(platform),
+            includedImports: includedImports.isEmpty ? nil : Set(includedImports),
+            excludedImports: excludedImports.isEmpty ? nil : Set(excludedImports)
         )
 
         let mainOutputPath = configuration.mainOutputPath
@@ -157,7 +184,10 @@ public let weaverCommand = Group {
             Logger.log(.info, "Done".yellow, benchmark: .end("listing"))
 
             var didChange = false
-            let linker = try Linker(inputPaths, cachePath: configuration.cachePath, didChange: &didChange)
+            let linker = try Linker(inputPaths,
+                                    cachePath: configuration.cachePath,
+                                    platform: configuration.platform,
+                                    didChange: &didChange)
             let dependencyGraph = linker.dependencyGraph
 
             // ---- Inspect ----
@@ -180,7 +210,8 @@ public let weaverCommand = Group {
                 inspector: inspector,
                 version: version,
                 testableImports: configuration.testableImports,
-                swiftlintDisableAll: configuration.swiftlintDisableAll
+                swiftlintDisableAll: configuration.swiftlintDisableAll,
+                importFilter: configuration.importFilter
             )
 
             let mainGeneratedData = try generator.generate()
@@ -251,7 +282,7 @@ public let weaverCommand = Group {
         Parameters.ignoredPath,
         Parameters.cachePath,
         Parameters.recursiveOff,
-        Parameters.swiftlintDisableAll
+        Parameters.platform
     ) {
         projectPath,
         configPath,
@@ -260,7 +291,7 @@ public let weaverCommand = Group {
         ignoredPaths,
         cachePath,
         recursiveOff,
-        swiftlintDisableAll in
+        platform in
         
         let configuration = try Configuration(
             configPath: configPath,
@@ -269,13 +300,14 @@ public let weaverCommand = Group {
             projectPath: projectPath,
             cachePath: cachePath,
             recursiveOff: recursiveOff,
-            swiftlintDisableAll: swiftlintDisableAll
+            platform: Platform(platform)
         )
         
         // ---- Link ----
 
         let linker = try Linker(try configuration.inputPaths(),
                                 cachePath: configuration.cachePath,
+                                platform: configuration.platform,
                                 shouldLog: false)
         let dependencyGraph = linker.dependencyGraph
 
