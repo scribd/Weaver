@@ -11,7 +11,7 @@ import Meta
 import CommonCrypto
 
 public final class SwiftGenerator {
-
+    
     private let dependencyGraph: DependencyGraph
     
     private let inspector: Inspector
@@ -22,17 +22,22 @@ public final class SwiftGenerator {
 
     private let swiftlintDisableAll: Bool
     
+    public typealias ImportFilter = (String) -> Bool
+    private let importFilter: ImportFilter
+    
     public init(dependencyGraph: DependencyGraph,
                 inspector: Inspector,
                 version: String,
                 testableImports: [String]?,
-                swiftlintDisableAll: Bool) throws {
+                swiftlintDisableAll: Bool,
+                importFilter: @escaping ImportFilter) throws {
 
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.version = version
-        self.testableImports = testableImports
+        self.testableImports = testableImports?.filter(importFilter)
         self.swiftlintDisableAll = swiftlintDisableAll
+        self.importFilter = importFilter
     }
     
     private var _file: MetaWeaverFile?
@@ -45,7 +50,8 @@ public final class SwiftGenerator {
             inspector,
             version,
             testableImports,
-            swiftlintDisableAll
+            swiftlintDisableAll,
+            importFilter
         )
         _file = file
         return file
@@ -174,6 +180,8 @@ private final class MetaWeaverFile {
 
     private let swiftlintDisableAll: Bool
     
+    private let importFilter: SwiftGenerator.ImportFilter
+    
     // Pre computed data
     
     private let declarations: Set<MetaDependencyDeclaration>
@@ -197,13 +205,15 @@ private final class MetaWeaverFile {
          _ inspector: Inspector,
          _ version: String,
          _ testableImports: [String]?,
-         _ swiftlintDisableAll: Bool) throws {
+         _ swiftlintDisableAll: Bool,
+         _ importFilter: @escaping SwiftGenerator.ImportFilter) throws {
         
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.version = version
         self.testableImports = testableImports
         self.swiftlintDisableAll = swiftlintDisableAll
+        self.importFilter = importFilter
         
         let desambiguatedDeclarations = try MetaWeaverFile.desambiguatedDeclarations(from: dependencyGraph)
         declarations = desambiguatedDeclarations
@@ -244,9 +254,14 @@ private final class MetaWeaverFile {
     // MARK: - Main File
 
     func meta() throws -> Meta.File {
+        let imports = dependencyGraph.imports
+            .filter(importFilter)
+            .sorted()
+            .map { Import(name: $0) }
+        
         return File(name: "main-file")
             .adding(members: MetaWeaverFile.header(version: version, swiftlintDisableAll: swiftlintDisableAll))
-            .adding(imports: dependencyGraph.imports.sorted().map { Import(name: $0) })
+            .adding(imports: imports)
             .adding(members: try body())
     }
     

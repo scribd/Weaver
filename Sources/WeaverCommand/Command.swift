@@ -114,6 +114,8 @@ private enum Parameters {
     static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
     static let swiftlintDisableAll = OptionalFlag("swiftlint-disable-all", default: nil)
     static let platform = Option<String?>("platform", default: nil, description: "Selected platform.")
+    static let includedImports = VariadicOption<String>("included-imports", default: [], description: "Included imports.")
+    static let excludedImports = VariadicOption<String>("excluded-imports", default: [], description: "Excluded imports.")
 }
 
 // MARK: - Commands
@@ -133,7 +135,9 @@ public let weaverCommand = Group {
         Parameters.tests,
         Parameters.testableImports,
         Parameters.swiftlintDisableAll,
-        Parameters.platform)
+        Parameters.platform,
+        Parameters.includedImports,
+        Parameters.excludedImports)
     {
         projectPath,
         configPath,
@@ -146,7 +150,9 @@ public let weaverCommand = Group {
         tests,
         testableImports,
         swiftlintDisableAll,
-        platform in
+        platform,
+        includedImports,
+        excludedImports in
         
         let configuration = try Configuration(
             configPath: configPath,
@@ -160,7 +166,9 @@ public let weaverCommand = Group {
             tests: tests,
             testableImports: testableImports.isEmpty ? nil : testableImports,
             swiftlintDisableAll: swiftlintDisableAll,
-            platform: Platform(platform)
+            platform: Platform(platform),
+            includedImports: includedImports.isEmpty ? nil : Set(includedImports),
+            excludedImports: excludedImports.isEmpty ? nil : Set(excludedImports)
         )
 
         let mainOutputPath = configuration.mainOutputPath
@@ -202,7 +210,8 @@ public let weaverCommand = Group {
                 inspector: inspector,
                 version: version,
                 testableImports: configuration.testableImports,
-                swiftlintDisableAll: configuration.swiftlintDisableAll
+                swiftlintDisableAll: configuration.swiftlintDisableAll,
+                importFilter: configuration.importFilter
             )
 
             let mainGeneratedData = try generator.generate()

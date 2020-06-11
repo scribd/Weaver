@@ -26,6 +26,8 @@ struct Configuration {
     let testableImports: [String]?
     let swiftlintDisableAll: Bool
     let platform: Platform?
+    let includedImports: Set<String>?
+    let excludedImports: Set<String>?
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
@@ -37,7 +39,9 @@ struct Configuration {
                  tests: Bool?,
                  testableImports: [String]?,
                  swiftlintDisableAll: Bool?,
-                 platform: Platform?) {
+                 platform: Platform?,
+                 includedImports: Set<String>?,
+                 excludedImports: Set<String>?) {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
@@ -58,6 +62,8 @@ struct Configuration {
         self.testableImports = testableImports
         self.swiftlintDisableAll = swiftlintDisableAll ?? Defaults.swiftlintDisableAll
         self.platform = platform
+        self.includedImports = includedImports
+        self.excludedImports = excludedImports
     }
     
     init(configPath: Path? = nil,
@@ -71,7 +77,9 @@ struct Configuration {
          tests: Bool? = nil,
          testableImports: [String]? = nil,
          swiftlintDisableAll: Bool? = nil,
-         platform: Platform? = nil) throws {
+         platform: Platform? = nil,
+         includedImports: Set<String>? = nil,
+         excludedImports: Set<String>? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath, projectPath: projectPath)
@@ -97,7 +105,9 @@ struct Configuration {
                 tests: tests,
                 testableImports: testableImports,
                 swiftlintDisableAll: swiftlintDisableAll,
-                platform: platform
+                platform: platform,
+                includedImports: includedImports,
+                excludedImports: excludedImports
             )
         }
         
@@ -112,6 +122,8 @@ struct Configuration {
         self.testableImports = testableImports ?? configuration.testableImports
         self.swiftlintDisableAll = swiftlintDisableAll ?? configuration.swiftlintDisableAll
         self.platform = platform ?? configuration.platform
+        self.includedImports = includedImports ?? configuration.includedImports
+        self.excludedImports = excludedImports ?? configuration.excludedImports
     }
     
     private static func prepareConfigPath(_ configPath: Path, projectPath: Path) -> Path {
@@ -180,6 +192,8 @@ extension Configuration: Decodable {
         case cachePath = "cache_path"
         case swiftlintDisableAll = "swiftlint_disable_all"
         case platform
+        case includedImports = "included_imports"
+        case excludedImports = "excluded_imports"
     }
     
     public init(from decoder: Decoder) throws {
@@ -202,7 +216,9 @@ extension Configuration: Decodable {
             tests: try container.decodeIfPresent(Bool.self, forKey: .tests),
             testableImports: try container.decodeIfPresent([String].self, forKey: .testableImports),
             swiftlintDisableAll: try container.decodeIfPresent(Bool.self, forKey: .swiftlintDisableAll),
-            platform: try container.decodeIfPresent(Platform.self, forKey: .platform)
+            platform: try container.decodeIfPresent(Platform.self, forKey: .platform),
+            includedImports: try container.decodeIfPresent(Set<String>.self, forKey: .includedImports),
+            excludedImports: try container.decodeIfPresent(Set<String>.self, forKey: .excludedImports)
         )
     }
 }
@@ -260,5 +276,18 @@ extension Configuration {
 
     private func paths(fromDirectory directory: Path) throws -> [Path] {
         recursive ? try directory.recursiveChildren() : try directory.children()
+    }
+        
+    func importFilter(_ module: String) -> Bool {
+        switch (includedImports, excludedImports) {
+        case (.some(let includedImports), nil):
+            return includedImports.contains(module)
+        case (nil, .some(let excludedImports)):
+            return excludedImports.contains(module) == false
+        case (.some(let includedImports), .some(let excludedImports)):
+            return includedImports.contains(module) && excludedImports.contains(module) == false
+        case (nil, nil):
+            return true
+        }
     }
 }
