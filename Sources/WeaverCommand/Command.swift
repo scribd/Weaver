@@ -113,7 +113,7 @@ private enum Parameters {
     static let tests = OptionalFlag("tests", default: nil)
     static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
     static let swiftlintDisableAll = OptionalFlag("swiftlint-disable-all", default: nil)
-    static let platform = Option<String?>("platform", default: nil, description: "Selected platform.")
+    static let platform = Option<String?>("platform", default: nil, description: "Targeted platform.")
     static let includedImports = VariadicOption<String>("included-imports", default: [], description: "Included imports.")
     static let excludedImports = VariadicOption<String>("excluded-imports", default: [], description: "Excluded imports.")
 }
@@ -282,7 +282,6 @@ public let weaverCommand = Group {
         Parameters.ignoredPath,
         Parameters.cachePath,
         Parameters.recursiveOff,
-        Parameters.swiftlintDisableAll,
         Parameters.platform
     ) {
         projectPath,
@@ -292,7 +291,6 @@ public let weaverCommand = Group {
         ignoredPaths,
         cachePath,
         recursiveOff,
-        swiftlintDisableAll,
         platform in
         
         let configuration = try Configuration(
@@ -302,7 +300,6 @@ public let weaverCommand = Group {
             projectPath: projectPath,
             cachePath: cachePath,
             recursiveOff: recursiveOff,
-            swiftlintDisableAll: swiftlintDisableAll,
             platform: Platform(platform)
         )
         
