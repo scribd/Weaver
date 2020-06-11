@@ -34,6 +34,7 @@ enum LinkerError: Error {
     case foundAnnotationOutsideOfType(FileLocation)
     case unknownType(FileLocation?, type: CompositeType)
     case dependencyNotFound(FileLocation?, dependencyName: String)
+    case missingTargetedPlatform
 }
 
 enum DependencyGraphError: Error {
@@ -157,6 +158,35 @@ extension ParserError: CustomStringConvertible {
             return location.xcodeLogString(.error, "Configuration attribute '\(attribute.name)' was already set")
         case .incompatibleConfigurationAttribute(let location, let attribute, let dependencyName):
             return location.xcodeLogString(.error, "Configuration attribute '\(attribute.name)' cannot be used on dependency '\(dependencyName)'")
+        }
+    }
+}
+
+extension LinkerError: CustomStringConvertible {
+    
+    var description: String {
+        let location: FileLocation?
+        let message: String
+        
+        switch self {
+        case .dependencyNotFound(let _location, let dependencyName):
+            location = _location
+            message = "Could not find dependency in graph: '\(dependencyName)'"
+        case .foundAnnotationOutsideOfType(let _location):
+            location = _location
+            message = "Found annotation outside of type"
+        case .missingTargetedPlatform:
+            location = nil
+            message = "Platform parameter is needed in order to process the dependency graph"
+        case .unknownType(let _location, let type):
+            location = _location
+            message = "Unknown type: '\(type.description)'"
+        }
+        
+        if let location = location {
+            return location.xcodeLogString(.error, message)
+        } else {
+            return message
         }
     }
 }

@@ -47,12 +47,15 @@ struct DependencyConfiguration: Configuration {
     
     let escaping: Bool
     
+    let platforms: Set<Platform>
+    
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
         customBuilder = attributes?[.customBuilder]?.stringValue
         scope = attributes?[.scope]?.scopeValue ?? .default
         doesSupportObjc = attributes?[.doesSupportObjc]?.boolValue ?? false
         setter = attributes?[.setter]?.boolValue ?? false
         escaping = attributes?[.escaping]?.boolValue ?? false
+        platforms = Set(attributes?[.platforms]?.platformValues ?? [])
     }
 }
 

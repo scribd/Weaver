@@ -404,6 +404,10 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     .with(kind: .enum(indirect: false))
                     .adding(members: Scope.allCases.map { Case(name: $0.rawValue) }),
                 EmptyLine(),
+                Type(identifier: TypeIdentifier(name: "Platform"))
+                    .with(kind: .enum(indirect: false))
+                    .adding(members: Platform.allCases.map { Case(name: $0.rawValue) }),
+                EmptyLine(),
                 Type(identifier: TypeIdentifier(name: "DependencyKind"))
                     .with(kind: .enum(indirect: false))
                     .adding(members: Dependency.Kind.allCases.map { Case(name: $0.rawValue) }),
@@ -452,7 +456,12 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 FunctionParameter(name: "setter", type: .bool).with(defaultValue: Value.bool(false)),
                 FunctionParameter(name: "escaping", type: .bool).with(defaultValue: Value.bool(false)),
                 FunctionParameter(name: "builder", type: .optional(wrapped: .any))
-                    .with(defaultValue: Value.nil)
+                    .with(defaultValue: Value.nil),
+                FunctionParameter(name: "objc", type: .bool).with(defaultValue: Value.bool(false)),
+                FunctionParameter(
+                    name: "platforms",
+                    type: .array(element: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).Platform"))
+                ).with(defaultValue: Value.array([]))
             ]
 
             let type = Type(identifier: typeID)

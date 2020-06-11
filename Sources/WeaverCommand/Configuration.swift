@@ -25,7 +25,7 @@ struct Configuration {
     let tests: Bool
     let testableImports: [String]?
     let swiftlintDisableAll: Bool
-    let platform: String?
+    let platform: Platform?
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
@@ -37,7 +37,7 @@ struct Configuration {
                  tests: Bool?,
                  testableImports: [String]?,
                  swiftlintDisableAll: Bool?,
-                 platform: String?) {
+                 platform: Platform?) {
 
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
@@ -71,7 +71,7 @@ struct Configuration {
          tests: Bool? = nil,
          testableImports: [String]? = nil,
          swiftlintDisableAll: Bool? = nil,
-         platform: String? = nil) throws {
+         platform: Platform? = nil) throws {
         
         let projectPath = projectPath ?? Defaults.projectPath
         let configPath = Configuration.prepareConfigPath(configPath ?? Defaults.configPath, projectPath: projectPath)
@@ -202,7 +202,7 @@ extension Configuration: Decodable {
             tests: try container.decodeIfPresent(Bool.self, forKey: .tests),
             testableImports: try container.decodeIfPresent([String].self, forKey: .testableImports),
             swiftlintDisableAll: try container.decodeIfPresent(Bool.self, forKey: .swiftlintDisableAll),
-            platform: try container.decodeIfPresent(String.self, forKey: .platform)
+            platform: try container.decodeIfPresent(Platform.self, forKey: .platform)
         )
     }
 }

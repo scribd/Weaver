@@ -61,7 +61,7 @@ final class DependencyContainer: Encodable, CustomDebugStringConvertible {
     
     /// Indicates where the declaration comes from. Used for debugging.
     let declarationSource: DeclarationSource
-    
+        
     init(type: ConcreteType,
          accessLevel: AccessLevel = .default,
          embeddingTypes: [ConcreteType] = [],
@@ -192,6 +192,9 @@ public final class DependencyGraph {
     /// Imported module names.
     fileprivate(set) var imports = Set<String>()
     
+    /// Platforms.
+    fileprivate(set) var platforms = Set<String>()
+    
     /// Abstract types by concrete type.
     fileprivate(set) var abstractTypes = [ConcreteType: AbstractType]()
     
@@ -225,12 +228,17 @@ public final class Linker {
 
     /// Produced dependency graph
     public let dependencyGraph = DependencyGraph()
+    
+    private let platform: Platform?
 
-    /// - Parameter syntaxTrees: list of syntax trees (AST) for each source file.
+    /// - Parameters
+    ///     - syntaxTrees: list of syntax trees (AST) for each source file.
+    ///     - platform: target platform for which the code is generated.
     ///
     /// - Throws:
     ///     - `InspectorError.invalidDependencyGraph` // TODO: Create a specific error type for the linker.
-    public init(syntaxTrees: [Expr]) throws {
+    public init(syntaxTrees: [Expr], platform: Platform? = nil) throws {
+        self.platform = platform
         try buildDependencyGraph(from: syntaxTrees)
     }
 }
@@ -472,6 +480,10 @@ private extension Linker {
                     throw LinkerError.dependencyNotFound(nil, dependencyName: dependencyName)
                 }
                 dependency.configuration = DependencyConfiguration(with: attributes)
+
+                if try dependency.configuration.contains(platform: platform) == false {
+                    dependencyContainer.dependencies[dependencyName] = nil
+                }
             }
         }
     }
@@ -699,5 +711,16 @@ extension Sequence where Element: CustomStringConvertible {
     
     var sorted: [Element] {
         return sorted { $0.description < $1.description }
+    }
+}
+
+private extension DependencyConfiguration {
+    
+    func contains(platform: Platform?) throws -> Bool {
+        guard platforms.isEmpty == false else { return true }
+        guard let platform = platform else {
+            throw LinkerError.missingTargetedPlatform
+        }
+        return platforms.contains(platform)
     }
 }

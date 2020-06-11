@@ -1121,4 +1121,49 @@ final class MovieManager {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_platforms_comment_annotation() {
+        
+        let file = File(contents: """
+
+// weaver: api.platforms = [.iOS,.watchOS]
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0].description, "api.Config Attr - platforms = [.iOS, .watchOS] - 1[42] - at line: 1")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+    
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_platforms_property_wrapper_annotation() {
+        
+        let file = File(contents: """
+final class MovieManager {
+
+    @Weaver(.registration, type: Request<T, P>?.self, platforms: [.iOS, .watchOS])
+    private var request: Request<T, P>?
+}
+""")
+        let lexer = Lexer(file, fileName: "test.swift")
+        
+        do {
+            let tokens = try lexer.tokenize()
+            
+            if tokens.count == 4 {
+                XCTAssertEqual(tokens[2].description, "request.Config Attr - platforms = [.iOS, .watchOS] - 123[27] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }

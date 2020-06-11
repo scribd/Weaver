@@ -30,7 +30,7 @@ extension ConfigurationAttribute: Codable {
         case .escaping:
             self = .escaping(value: try container.decode(Bool.self, forKey: .value))
         case .platforms:
-            self = .platforms(values: try container.decode([String].self, forKey: .value))
+            self = .platforms(values: try container.decode([Platform].self, forKey: .value))
         }
     }
     

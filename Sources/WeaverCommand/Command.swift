@@ -21,7 +21,7 @@ private extension Linker {
 
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
-                     platform: String?,
+                     platform: Platform?,
                      shouldLog: Bool = true) throws {
         
         var didChange = false
@@ -35,7 +35,7 @@ private extension Linker {
     
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
-                     platform: String?,
+                     platform: Platform?,
                      shouldLog: Bool = true,
                      didChange: inout Bool) throws {
 
@@ -61,7 +61,7 @@ private extension Linker {
             
             if shouldLog { Logger.log(.info, "<- '\(filePath)'".yellow) }
             let tokens = try Lexer(file, fileName: filePath.string, cache: lexerCache).tokenize()
-            return try Parser(tokens, fileName: filePath.string, platform: platform).parse()
+            return try Parser(tokens, fileName: filePath.string).parse()
         }
         if shouldLog { Logger.log(.info, "Done".yellow, benchmark: .end("parsing")) }
         
@@ -81,8 +81,20 @@ private extension Linker {
             Logger.log(.info, "")
             Logger.log(.info, "Linking...".lightGreen, benchmark: .start("linking"))
         }
-        try self.init(syntaxTrees: asts)
+        try self.init(syntaxTrees: asts, platform: platform)
         if shouldLog { Logger.log(.info, "Done".lightGreen, benchmark: .end("linking")) }
+    }
+}
+
+private extension Platform {
+    
+    init?(_ value: String?) {
+        guard let value = value else { return nil }
+        guard let platform = Platform(rawValue: value) else {
+            Logger.log(.error, "Unknown platform: \(value).")
+            exit(1)
+        }
+        self = platform
     }
 }
 
@@ -135,7 +147,7 @@ public let weaverCommand = Group {
         testableImports,
         swiftlintDisableAll,
         platform in
-
+        
         let configuration = try Configuration(
             configPath: configPath,
             inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
@@ -148,7 +160,7 @@ public let weaverCommand = Group {
             tests: tests,
             testableImports: testableImports.isEmpty ? nil : testableImports,
             swiftlintDisableAll: swiftlintDisableAll,
-            platform: platform
+            platform: Platform(platform)
         )
 
         let mainOutputPath = configuration.mainOutputPath
@@ -282,7 +294,7 @@ public let weaverCommand = Group {
             cachePath: cachePath,
             recursiveOff: recursiveOff,
             swiftlintDisableAll: swiftlintDisableAll,
-            platform: platform
+            platform: Platform(platform)
         )
         
         // ---- Link ----

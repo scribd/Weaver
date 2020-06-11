@@ -256,7 +256,7 @@ extension SourceKitDependencyAnnotation {
     func toTokens() throws -> [AnyTokenBox] {
         let tokenBox: AnyTokenBox
         switch dependencyKind {
-        case .registration?:
+        case .registration:
             let (_abstractType, closureParameters) = try buildAbstractType()
             let concreteType = type ?? _abstractType.concreteType
             let abstractType = _abstractType.concreteType != concreteType ? _abstractType : AbstractType()
@@ -271,7 +271,7 @@ extension SourceKitDependencyAnnotation {
                                 offset: offset,
                                 length: length,
                                 line: line)
-        case .parameter?:
+        case .parameter:
             guard let type = abstractType.first, abstractType.count == 1, self.type == nil else {
                 throw LexerError.invalidAnnotation(FileLocation(line: line, file: file),
                                                    underlyingError: TokenError.invalidAnnotation(annotationString))
@@ -284,7 +284,7 @@ extension SourceKitDependencyAnnotation {
                                 length: length,
                                 line: line)
             
-        case .reference?:
+        case .reference:
             let (abstractType, closureParameters) = try buildAbstractType()
 
             guard abstractType.isEmpty == false, type == nil else {

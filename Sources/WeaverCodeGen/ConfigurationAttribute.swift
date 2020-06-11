@@ -26,7 +26,7 @@ public enum ConfigurationAttribute: Hashable {
     case doesSupportObjc(value: Bool)
     case setter(value: Bool)
     case escaping(value: Bool)
-    case platforms(values: [String])
+    case platforms(values: [Platform])
 }
 
 // MARK: - Target
@@ -63,7 +63,7 @@ extension ConfigurationAttribute: CustomStringConvertible {
         case .escaping(let value):
             return "Config Attr - escaping = \(value)"
         case .platforms(let values):
-            return "Config Attr - platforms = \(values.joined(separator: ", "))"
+            return "Config Attr - platforms = [\(values.map { ".\($0.rawValue)" }.joined(separator: ", "))]"
         }
     }
     
@@ -172,7 +172,7 @@ extension ConfigurationAttribute {
         case .escaping:
             self = .escaping(value: try ConfigurationAttribute.boolValue(from: valueString))
         case .platforms:
-            self = .platforms(values: try ConfigurationAttribute.stringValues(from: valueString))
+            self = .platforms(values: try ConfigurationAttribute.platformValues(from: valueString))
         case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
@@ -193,12 +193,25 @@ extension ConfigurationAttribute {
         return value
     }
     
-    private static func stringValues(from string: String) throws -> [String] {
-        let platforms = string.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        guard platforms.isEmpty == false else {
-            throw TokenError.invalidConfigurationAttributeValue(value: string, expected: "Platforms separated with a comma")
+    private static func platformValues(from string: String) throws -> [Platform] {
+
+        var string = string.trimmingTrailingCharacters(in: .whitespaces)
+        guard string.first == "[" && string.last == "]" else {
+            throw TokenError.invalidConfigurationAttributeValue(value: string, expected: "Array of platforms (eg: `[.iOS, .watchOS, ...]`)")
         }
-        return platforms
+        string.removeFirst()
+        string.removeLast()
+        
+        return try string
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .map {
+                guard $0.first == ".", let platform = Platform(rawValue: $0.replacingOccurrences(of: ".", with: "")) else {
+                    let expected = Platform.allCases.map { $0.rawValue }.joined(separator: "|")
+                    throw TokenError.invalidConfigurationAttributeValue(value: $0, expected: expected)
+                }
+                return platform
+            }
     }
 }
 
@@ -263,7 +276,7 @@ extension ConfigurationAttribute {
         }
     }
     
-    var stringValues: [String]? {
+    var platformValues: [Platform]? {
         switch self {
         case .platforms(let values):
             return values
