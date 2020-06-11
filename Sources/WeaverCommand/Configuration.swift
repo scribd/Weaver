@@ -261,10 +261,11 @@ extension Configuration {
             "-lR",
             "-e", Configuration.annotationRegex,
             "-e", Configuration.propertyWrapperRegex,
-            directory.absolute().string
+            "\"\(directory.absolute().string)\""
         ]
-        // if there are no files matching the pattern
-        // command grep return exit 1, and ShellOut throws an exception with empty message
+        
+        // When there is no file matching the pattern,
+        // `grep` fails, and ShellOut throws an exception with an empty message.
         guard let grepResult = try? shellOut(to: "grep", arguments: grepArguments) else {
             return []
         }
