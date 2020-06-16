@@ -7,6 +7,7 @@
 
 import Foundation
 import Darwin
+import PathKit
 
 // MARK: - Level
 
@@ -53,12 +54,12 @@ enum Logger {
     static func log(_ level: LogLevel,
                     _ message: String,
                     benchmark: Benchmark = .none,
-                    function: StaticString = #function,
+                    file: StringLiteralType = #file,
                     line: Int = #line) {
         
         var s = ""
         #if DEBUG
-        s += "\(level) - function: \(function), line: \(line) - "
+        s += "\(level) \(Path(file).lastComponent):\(line) - "
         #endif
         s += message
         

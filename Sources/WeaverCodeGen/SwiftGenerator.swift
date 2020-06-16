@@ -833,7 +833,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 )
         ]
         
-        if inputReferences.isEmpty && dependencyContainer.parameters.isEmpty {
+        if dependencyContainer.references.isEmpty && dependencyContainer.parameters.isEmpty {
             members += [
                 EmptyLine(),
                 Function(kind: .named(dependencyContainer.type.dependencyResolverVariable.name))

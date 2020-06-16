@@ -20,5 +20,5 @@ public struct Movie: Decodable {
     public let original_title: String
     public let adult: Bool
     public let overview: String
-    public let release_date: String
+    public let release_date: String?
 }
