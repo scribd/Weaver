@@ -32,6 +32,13 @@ public final class Inspector {
     }
 }
 
+// MARK: - Inspection Level
+
+enum InspectionLevel {
+    case aggressive
+    case permissive
+}
+
 // MARK: - Resolution Check
 
 extension Inspector {
@@ -42,7 +49,9 @@ extension Inspector {
         return try resolve(dependency, from: source)
     }
     
-    func resolve(_ dependency: Dependency, from source: DependencyContainer) throws -> [ConcreteType: Dependency] {
+    func resolve(_ dependency: Dependency,
+                 from source: DependencyContainer,
+                 inspectionLevel: InspectionLevel = .aggressive) throws -> [ConcreteType: Dependency] {
         
         guard dependency.kind == .reference else {
             return [source.type: dependency]
@@ -53,7 +62,9 @@ extension Inspector {
         }
                 
         do {
-            guard try checkIsolation(of: source, history: []) else { return [:] }
+            if inspectionLevel == .aggressive {
+                guard try checkIsolation(of: source, history: []) else { return [:] }
+            }
             
             let sources = [source.type] + Array(source.sources)
             return try sources.reduce(into: [ConcreteType: Dependency]()) { foundDependencies, sourceType in

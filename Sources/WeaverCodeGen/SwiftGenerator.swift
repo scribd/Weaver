@@ -756,44 +756,58 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     return FunctionParameter(name: declaration.declarationName, type: declaration.type.typeID)
                 } : [])
                 .adding(member: Assignment(variable: Variable._self, value: TypeIdentifier.mainDependencyContainer.reference | .call()))
-                .adding(members: try inputReferences.compactMap { reference in
-                    
-                    let declaration = try self.declaration(for: reference)
-                    guard selfReferenceDeclarations.contains(declaration) == false else { return nil }
+                .adding(members: try dependencyContainer.registrations.compactMap { registration in
+                    try copyAssignment(for: registration, from: dependencyContainer)
+                })
+                .adding(members: try inputReferences.flatMap { reference -> [FunctionBodyMember] in
 
-                    let assignment: (MetaDependencyDeclaration) -> Assignment = { resolvedDeclaration in
-                        Assignment(
-                            variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
-                            value: Variable._self.reference + .named("builder") | .call(Tuple()
-                                .adding(parameter: TupleParameter(value: Reference.named(resolvedDeclaration.declarationName)))
-                            )
+                    let declaration = try self.declaration(for: reference)
+                    guard selfReferenceDeclarations.contains(declaration) == false else { return [] }
+
+                    let assignments: (MetaDependencyDeclaration) -> [Assignment] = { resolvedDeclaration in
+                        let isRootDependencyContainer = dependencyContainer.sources.isEmpty && publicInterface == false
+                        let builderValue = Variable._self.reference + .named("builder") | .call(Tuple()
+                            .adding(parameter: TupleParameter(value:
+                                (isRootDependencyContainer ? Variable._self.reference + .none : .none) | .named(resolvedDeclaration.declarationName)
+                            ))
                         )
+
+                        var assignments = [Assignment(
+                            variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
+                            value: builderValue
+                        )]
+
+                        if resolvedDeclaration.declarationName != declaration.declarationName {
+                            assignments += [Assignment(
+                                variable: Variable._self.reference + .named(resolvedDeclaration.buildersSubcriptGet),
+                                value: builderValue
+                            )]
+                        }
+
+                        return assignments
                     }
 
                     if publicInterface {
-                        return assignment(declaration)
+                        return assignments(declaration)
                     } else {
                         let resolvedDeclarations = try resolvedDeclarationsBySource(for: reference, in: dependencyContainer)
                         if resolvedDeclarations.count > 1 {
-                            return Switch(reference: Variable.source.reference)
+                            return [Switch(reference: Variable.source.reference)
                                 .adding(cases: resolvedDeclarations.compactMap { source, declaration in
                                     guard let source = source else { return nil }
                                     return SwitchCase()
                                         .adding(value: Value.string(source.description))
-                                        .adding(member: assignment(declaration))
+                                        .adding(members: assignments(declaration))
                                 })
                                 .adding(case: SwitchCase(name: .default)
                                     .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call())
-                                )
+                                )]
                         } else if let resolvedDeclaration = resolvedDeclarations.first?.declaration {
-                            return assignment(resolvedDeclaration)
+                            return assignments(resolvedDeclaration)
                         } else {
-                            return nil
+                            return []
                         }
                     }
-                })
-                .adding(members: try dependencyContainer.registrations.compactMap { registration in
-                    try copyAssignment(for: registration, from: dependencyContainer)
                 })
                 .adding(members: try dependencyContainer.registrations.compactMap { registration in
                     guard registration.configuration.setter == false else { return nil }
@@ -1272,15 +1286,15 @@ private extension MetaWeaverFile {
         
         switch dependency.kind {
         case .reference:
-            guard dependencyContainer.sources.isEmpty == false else { return [] }
-            
             do {
-                let registrations = try inspector.resolve(dependency, from: dependencyContainer)
+                let registrations = try inspector.resolve(dependency, from: dependencyContainer, inspectionLevel: .permissive)
                 
                 let resolvedDeclarations: [(ConcreteType?, MetaDependencyDeclaration)] = try registrations.lazy.sorted { lhs, rhs in
                     lhs.key.description < rhs.key.description
                 }.compactMap { source, registration in
-                    guard dependencyContainer.sources.contains(source) else { return nil }
+                    let isRootDependencyContainer = dependencyContainer.sources.isEmpty
+                    let sources = isRootDependencyContainer ? [dependencyContainer.type] : dependencyContainer.sources
+                    guard sources.contains(source) else { return nil }
                     return (source, try self.declaration(for: registration))
                 }
                 
