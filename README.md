@@ -103,7 +103,7 @@ mint run scribd/Weaver version
 To use a specific version of Weaver, add the release tag like so:
 
 ```shell
-mint run scribd/Weaver@1.0.3 version
+mint run scribd/Weaver@1.0.7 version
 ```
 
 #### Building from source
