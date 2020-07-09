@@ -245,13 +245,15 @@ extension Configuration {
             .lazy
             .map { self.projectPath + $0 }
             .flatMap { $0.isFile ? [$0] : self.recursivePathsByPattern(fromDirectory: $0) }
-            .filter { $0.exists && $0.isFile && $0.extension == "swift" })
+            .filter { $0.exists && $0.isFile && $0.extension == "swift" }
+            .map { $0.absolute() })
 
         inputPaths.subtract(try ignoredPathStrings
             .lazy
             .map { self.projectPath + $0 }
             .flatMap { $0.isFile ? [$0] : try paths(fromDirectory: $0) }
-            .filter { $0.extension == "swift" })
+            .filter { $0.extension == "swift" }
+            .map { $0.absolute() })
         
         return inputPaths.sorted()
     }
