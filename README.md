@@ -1,4 +1,4 @@
-![logo](weaver.png)
+![logo](https://docs.google.com/drawings/d/e/2PACX-1vTKZZc4z941kqokBegGiiD2SVWMHb7PHJ4ennMhBv9wq8B9NuD4Vwh2Fn6EmSXaFJO36A8Hs1dKwySS/pub?w=850&h=234)
 
 <p align="center">Declarative, easy-to-use and safe Dependency Injection framework for Swift (iOS/macOS/Linux)</p>
 
