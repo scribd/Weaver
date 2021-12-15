@@ -52,8 +52,8 @@ enum SwiftGeneratorError: Error {
 enum InspectorError: Error {
     case invalidAST(FileLocation, unexpectedExpr: Expr)
     case invalidDependencyGraph(Dependency, underlyingError: InspectorAnalysisError)
-    case invalidContainerScope(Dependency)
     case weakParameterHasToBeOptional(Dependency)
+    case missingRootDependency
 }
 
 enum InspectorAnalysisError: Error {
@@ -67,11 +67,12 @@ enum InspectorAnalysisError: Error {
 enum InspectorAnalysisHistoryRecord: Error {
     case dependencyNotFound(Dependency, in: DependencyContainer)
     case triedToBuildType(DependencyContainer, stepCount: Int)
-    case triedToResolveDependencyInType(Dependency, stepCount: Int)
+    case triedToResolveDependencyInType(Dependency, in: DependencyContainer?, stepCount: Int)
     case triedToResolveDependencyInRootType(DependencyContainer)
     case typeMismatch(Dependency, candidate: Dependency)
     case implicitDependency(Dependency, candidates: [Dependency])
     case implicitType(Dependency, candidates: [Dependency])
+    case invalidContainerScope(Dependency)
 }
 
 // MARK: - Printables
@@ -248,12 +249,11 @@ extension InspectorError: CustomStringConvertible {
                 description = ([description] + notes.map { $0.description }).joined(separator: "\n")
             }
             return description
-        case .invalidContainerScope(let dependency):
-            let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a container scope"
-            return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         case .weakParameterHasToBeOptional(let dependency):
             let message = "Parameter '\(dependency.dependencyName)' has to be of type optional"
             return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
+        case .missingRootDependency:
+            return "Missing root dependency. Attempting to inspect empty graph."
         }
     }
 }
@@ -302,8 +302,8 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
             return dependencyContainer.xcodeLogString(.warning, "Could not find the dependency '\(dependency.dependencyName)' in '\(dependencyContainer.type.description)'. You may want to register it here to solve this issue")
         case .triedToBuildType(let dependencyContainer, let stepCount):
             return dependencyContainer.xcodeLogString(.warning, "Step \(stepCount): Tried to build type '\(dependencyContainer.type.description)'")
-        case .triedToResolveDependencyInType(let dependency, let stepCount):
-            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.dependencyName)' in type '\(dependency.source.description)'")
+        case .triedToResolveDependencyInType(let dependency, let container, let stepCount):
+            return dependency.xcodeLogString(.warning, "Step \(stepCount): Tried to resolve dependency '\(dependency.dependencyName)' in type '\(container?.type.description ?? dependency.source.description)'")
         case .triedToResolveDependencyInRootType(let dependencyContainer):
             return dependencyContainer.xcodeLogString(.warning, "Type '\(dependencyContainer.type.description)' doesn't seem to be attached to the dependency graph. You might have to use `self.isIsolated = true` or register it somewhere")
         case .typeMismatch(let dependency, let candidate):
@@ -325,6 +325,9 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
             candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type.description)'")
             }.joined(separator: ".\n"))
             """
+        case .invalidContainerScope(let dependency):
+            let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a container scope. This must either have no parameters or itself be injected as a parameter to a parent depdenceny"
+            return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         }
     }
 }
@@ -339,7 +342,8 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
             case .dependencyNotFound,
                  .typeMismatch,
                  .implicitDependency,
-                 .implicitType:
+                 .implicitType,
+                 .invalidContainerScope:
                 return true
             case .triedToResolveDependencyInType,
                  .triedToResolveDependencyInRootType,
@@ -363,7 +367,8 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
                  .triedToResolveDependencyInRootType,
                  .typeMismatch,
                  .implicitDependency,
-                 .implicitType:
+                 .implicitType,
+                 .invalidContainerScope:
                 return false
             }
         }
@@ -379,7 +384,8 @@ extension Array where Element == InspectorAnalysisHistoryRecord {
                  .implicitType:
                 return true
             case .dependencyNotFound,
-                 .triedToBuildType:
+                 .triedToBuildType,
+                 .invalidContainerScope:
                 return false
             }
         }
