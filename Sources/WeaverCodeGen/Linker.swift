@@ -26,9 +26,9 @@ final class DependencyContainer: Encodable, CustomDebugStringConvertible {
     fileprivate(set) var dependencyNamesByAbstractType = OrderedDictionary<AbstractType, Set<String>>()
     fileprivate(set) var dependencies = OrderedDictionary<String, Dependency>()
     
-    lazy var references = dependencies.orderedValues.filter { $0.kind == .reference }
-    lazy var registrations = dependencies.orderedValues.filter { $0.kind == .registration }
-    lazy var parameters = dependencies.orderedValues.filter { $0.kind == .parameter }
+    fileprivate(set) lazy var references = dependencies.orderedValues.filter { $0.kind == .reference }
+    fileprivate(set) lazy var registrations = dependencies.orderedValues.filter { $0.kind == .registration }
+    fileprivate(set) lazy var parameters = dependencies.orderedValues.filter { $0.kind == .parameter }
     
     /// Types from which this dependency container's associated type is being registered.
     fileprivate(set) var sources = Set<ConcreteType>()
@@ -48,7 +48,7 @@ final class DependencyContainer: Encodable, CustomDebugStringConvertible {
      
      Produces a dependency container with one embedding type: `Foo`.
     */
-    let embeddingTypes:  [ConcreteType]
+    let embeddingTypes: [ConcreteType]
     
     /// Location of the associated type declaration in the code.
     let fileLocation: FileLocation?
@@ -208,13 +208,13 @@ public final class DependencyGraph {
     fileprivate(set) var dependencyContainers = OrderedDictionary<ConcreteType, DependencyContainer>()
 
     /// All dependencies in order of appearance in the code.
-    lazy var dependencies = dependencyContainers.orderedValues.flatMap { $0.dependencies.orderedValues }
+    fileprivate(set) lazy var dependencies = dependencyContainers.orderedValues.flatMap { $0.dependencies.orderedValues }
 
     /// Count of types with annotations.
-    public lazy var injectableTypesCount = dependencyContainers.orderedValues.filter { $0.dependencies.isEmpty == false }.count
+    public fileprivate(set) lazy var injectableTypesCount = dependencyContainers.orderedValues.filter { $0.dependencies.isEmpty == false }.count
 
     /// Contains at least one annotation using a property wrapper.
-    lazy var hasPropertyWrapperAnnotations = dependencies.contains { $0.annotationStyle == .propertyWrapper }
+    fileprivate(set) lazy var hasPropertyWrapperAnnotations = dependencies.contains { $0.annotationStyle == .propertyWrapper }
 
     // MARK: - Cached data
     

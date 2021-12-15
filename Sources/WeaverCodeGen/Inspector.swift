@@ -22,12 +22,77 @@ public final class Inspector {
     
     public func validate() throws {
         for dependency in dependencyGraph.dependencies {
-            try validateConfiguration(of: dependency)
             if dependency.kind.isResolvable {
                 try validatePropertyWrapper(of: dependency)
                 try resolve(dependency)
                 try build(dependency)
             }
+        }
+
+        for container in dependencyGraph.dependencyContainers.orderedValues {
+            try validateConfiguration(of: container)
+        }
+    }
+}
+
+// MARK: - Configuration check
+
+private extension Inspector {
+
+    func validateConfiguration(of container: DependencyContainer) throws {
+        for dependency in container.dependencies.orderedValues {
+            switch dependency.configuration.scope {
+            case .container where dependency.kind.isResolvable:
+                let containerOfDependency = try dependencyGraph.dependencyContainer(for: dependency)
+                if containerOfDependency.parameters.isEmpty == false,
+                   let historyRecord = containerDependencyTrace(container, dependency) {
+                    throw InspectorError.invalidDependencyGraph(dependency, underlyingError:.unresolvableDependency(history: historyRecord))
+                }
+            case .weak:
+                if dependency.kind == .parameter && dependency.type.anyType.isOptional == false {
+                    throw InspectorError.weakParameterHasToBeOptional(dependency)
+                }
+            case .lazy,
+                 .transient,
+                 .container:
+                break
+            }
+        }
+    }
+
+    private func containerDependencyTrace(_ container: DependencyContainer, _ dependency: Dependency, historyRecord: [InspectorAnalysisHistoryRecord] = [], stepCount: Int = 0) -> [InspectorAnalysisHistoryRecord]? {
+
+        var updatedHistory: [InspectorAnalysisHistoryRecord] = historyRecord + [.triedToResolveDependencyInType(dependency, in: container, stepCount: stepCount)]
+
+        let parseUpward: () -> [InspectorAnalysisHistoryRecord]? = {
+            let history = container.sources.lazy.compactMap({ self.dependencyGraph.dependencyContainers[$0] }).map({ parentContainer -> [InspectorAnalysisHistoryRecord]? in
+                return self.containerDependencyTrace(parentContainer, dependency, historyRecord: updatedHistory, stepCount: stepCount+1)
+            })
+
+            if let parentHistory = history.first(where: { history in
+                history != nil
+            }) {
+                return parentHistory
+            } else if container.sources.isEmpty {
+                updatedHistory.append(.dependencyNotFound(dependency, in: container))
+                return updatedHistory
+            } else {
+                return nil
+            }
+        }
+
+        guard let matchingDependency = container.dependencies[dependency.dependencyName] else {
+            return parseUpward()
+        }
+
+        switch matchingDependency.kind {
+        case .reference:
+            return parseUpward()
+        case .registration:
+            updatedHistory.append(.invalidContainerScope(dependency))
+            return updatedHistory
+        case .parameter:
+            return nil
         }
     }
 }
@@ -115,7 +180,7 @@ private extension Inspector {
         }
         visitedDependencyContainers.insert(ObjectIdentifier(dependencyContainer))
 
-        history.append(.triedToResolveDependencyInType(dependency, stepCount: history.resolutionSteps.count))
+        history.append(.triedToResolveDependencyInType(dependency, in: nil, stepCount: history.resolutionSteps.count))
 
         do {
             if let foundDependency = try resolveRegistration(for: dependency, in: dependencyContainer) {
@@ -319,29 +384,6 @@ private extension Inspector {
                                   from: sourceDependency,
                                   visitedDependencyContainers: &visitedDependencyContainersCopy,
                                   history: history)
-        }
-    }
-}
-
-// MARK: - Configuration check
-
-private extension Inspector {
-    
-    func validateConfiguration(of dependency: Dependency) throws {
-        switch dependency.configuration.scope {
-        case .container where dependency.kind.isResolvable:
-            let target = try dependencyGraph.dependencyContainer(for: dependency)
-            if target.parameters.isEmpty == false {
-                throw InspectorError.invalidContainerScope(dependency)
-            }
-        case .weak:
-            if dependency.kind == .parameter && dependency.type.anyType.isOptional == false {
-                throw InspectorError.weakParameterHasToBeOptional(dependency)
-            }
-        case .lazy,
-             .transient,
-             .container:
-            break
         }
     }
 }
