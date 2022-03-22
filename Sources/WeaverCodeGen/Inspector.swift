@@ -22,12 +22,16 @@ public final class Inspector {
     
     public func validate() throws {
         for dependency in dependencyGraph.dependencies {
-            try validateConfiguration(of: dependency)
             if dependency.kind.isResolvable {
                 try validatePropertyWrapper(of: dependency)
                 try resolve(dependency)
                 try build(dependency)
             }
+        }
+
+        for rootContainer in dependencyGraph.rootContainers {
+            let treeInspector = try RuntimeTreeInspector(rootContainer: rootContainer, dependencyGraph: dependencyGraph)
+            try treeInspector.validate()
         }
     }
 }
@@ -115,7 +119,7 @@ private extension Inspector {
         }
         visitedDependencyContainers.insert(ObjectIdentifier(dependencyContainer))
 
-        history.append(.triedToResolveDependencyInType(dependency, stepCount: history.resolutionSteps.count))
+        history.append(.triedToResolveDependencyInType(dependency, in: nil, stepCount: history.resolutionSteps.count))
 
         do {
             if let foundDependency = try resolveRegistration(for: dependency, in: dependencyContainer) {
@@ -319,29 +323,6 @@ private extension Inspector {
                                   from: sourceDependency,
                                   visitedDependencyContainers: &visitedDependencyContainersCopy,
                                   history: history)
-        }
-    }
-}
-
-// MARK: - Configuration check
-
-private extension Inspector {
-    
-    func validateConfiguration(of dependency: Dependency) throws {
-        switch dependency.configuration.scope {
-        case .container where dependency.kind.isResolvable:
-            let target = try dependencyGraph.dependencyContainer(for: dependency)
-            if target.parameters.isEmpty == false {
-                throw InspectorError.invalidContainerScope(dependency)
-            }
-        case .weak:
-            if dependency.kind == .parameter && dependency.type.anyType.isOptional == false {
-                throw InspectorError.weakParameterHasToBeOptional(dependency)
-            }
-        case .lazy,
-             .transient,
-             .container:
-            break
         }
     }
 }
