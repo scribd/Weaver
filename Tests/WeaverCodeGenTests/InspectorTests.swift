@@ -883,7 +883,9 @@ final class MovieManager {
             XCTFail("Expected error.")
         } catch let error as InspectorError {
             XCTAssertEqual(error.description, """
-test.swift:2: error: Dependency 'movieManager' cannot declare parameters and be registered with a container scope.
+test.swift:2: error: Invalid dependency: 'movieManager: MovieManager'. Dependency cannot be resolved.
+test.swift:2: warning: Step 0: Tried to resolve dependency 'movieManager' in type 'MovieViewController'.
+test.swift:2: error: Dependency 'movieManager' cannot declare parameters and be registered with a container scope. This must either have no parameters or itself be injected as a parameter to a parent depdenceny.
 """)
         } catch {
             XCTFail("Unexpected error: \(error)")

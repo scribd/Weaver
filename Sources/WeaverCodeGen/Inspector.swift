@@ -30,8 +30,9 @@ public final class Inspector {
         }
 
         for rootContainer in dependencyGraph.rootContainers {
-            let treeInspector = try RuntimeTreeInspector(rootContainer: rootContainer, dependencyGraph: dependencyGraph)
-            try treeInspector.validate()
+            if let treeInspector = RuntimeTreeInspector(rootContainer: rootContainer, dependencyGraph: dependencyGraph) {
+                try treeInspector.validate()
+            }
         }
     }
 }

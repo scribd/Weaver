@@ -28,7 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     @Weaver(.registration, type: ImageManager.self)
     private var imageManager: ImageManaging
     
-    @Weaver(.registration, type: MovieManager.self, builder: AppDelegate.makeMovieManager)
+    @Weaver(.registration, type: MovieManaging.self, builder: AppDelegate.makeMovieManager)
     private var movieManager: MovieManaging
 
     @Weaver(.registration, type: HomeViewController.self)
@@ -56,7 +56,7 @@ extension AppDelegate {
         return MovieAPI(urlSession: dependencies.urlSession)
     }
     
-    static func makeMovieManager(_ dependencies: MovieManagerInputDependencyResolver) -> MovieManaging {
+    static func makeMovieManager(_ dependencies: MovieManagingInputDependencyResolver) -> MovieManaging {
         return MovieManager(host: "https://api.themoviedb.org/3", logger: dependencies.logger)
     }
 }

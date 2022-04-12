@@ -13,10 +13,10 @@ public final class RuntimeTreeInspector {
 
     private let rootNode: TreeNode
 
-    init(rootContainer: DependencyContainer,
-         dependencyGraph: DependencyGraph) throws {
-        self.rootNode = try TreeNode(rootContainer: rootContainer,
-                                     dependencyGraph: dependencyGraph)
+    init?(rootContainer: DependencyContainer,
+          dependencyGraph: DependencyGraph) {
+        guard let treeNode = TreeNode(rootContainer: rootContainer, dependencyGraph: dependencyGraph) else { return nil }
+        self.rootNode = treeNode
     }
 
     public func validate() throws {
@@ -60,29 +60,60 @@ private extension RuntimeTreeInspector {
 
         guard container.parameters.isEmpty == false else { return nil }
 
-        var stepCount = 0
-        var history: [InspectorAnalysisHistoryRecord] = [.triedToResolveDependencyInType(dependency, in: node.inspectingContainer, stepCount: stepCount)]
+        var history: [InspectorAnalysisHistoryRecord] = []
 
-        for parentContainer in node.dependencyChain.reversed() {
-            stepCount += 1
-            history.append(.triedToResolveDependencyInType(dependency, in: parentContainer, stepCount: stepCount))
+        enum EarlyReturn {
+            case empty
+            case history
+        }
 
-            guard let matchingDependency = parentContainer.dependencies[dependency.dependencyName] else { continue }
+        let resolveStep: (Int, DependencyContainer) -> EarlyReturn? = { step, dependencyContainer in
+            history.append(.triedToResolveDependencyInType(dependency, in: dependencyContainer, stepCount: step))
+
+            guard let matchingDependency = dependencyContainer.dependencies[dependency.dependencyName] else {
+                return nil
+            }
 
             switch matchingDependency.kind {
             case .parameter:
-                return nil
+                return .empty
             case .registration:
                 history.append(.invalidContainerScope(dependency))
-                return history
+                return .history
             case .reference:
-                continue
+                return nil
             }
+        }
+
+        // root
+        if let earlyReturn = resolveStep(0, node.inspectingContainer) {
+            switch earlyReturn {
+            case .empty:
+                return nil
+            case .history:
+                return history
+            }
+        }
+
+        // dependencyChain
+        var stepCount = 1
+        for parentContainer in node.dependencyChain.reversed() {
+            if let earlyReturn = resolveStep(stepCount, parentContainer) {
+                switch earlyReturn {
+                case .empty:
+                    return nil
+                case .history:
+                    return history
+                }
+            }
+
+            stepCount += 1
         }
 
         if let rootContainer = node.dependencyChain.first {
             history.append(.dependencyNotFound(dependency, in: rootContainer))
         }
+
         return history
     }
 }
@@ -99,10 +130,10 @@ final class TreeNode: Sequence, IteratorProtocol {
 
     let dependencyPointer: Dependency
 
-    convenience init(rootContainer: DependencyContainer,
-                     dependencyGraph: DependencyGraph) throws {
+    convenience init?(rootContainer: DependencyContainer,
+                      dependencyGraph: DependencyGraph) {
         guard let firstDependency = rootContainer.dependencies.orderedValues.first else {
-            throw InspectorError.missingRootDependency
+            return nil
         }
 
         self.init(inspectingContainer: rootContainer,
