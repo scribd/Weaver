@@ -79,8 +79,10 @@ private final class MetaDependencyDeclaration: Hashable {
     
     let type: Dependency.`Type`
     
+    let scope: Scope
+
     let parameters: [Dependency]
-    
+
     private let includeTypeInName: Bool
     
     private let includeParametersInName: Bool
@@ -92,6 +94,7 @@ private final class MetaDependencyDeclaration: Hashable {
         
         name = dependency.dependencyName
         type = dependency.type
+        scope = dependency.configuration.scope
         self.includeTypeInName = includeTypeInName
         self.includeParametersInName = includeParametersInName
         
@@ -122,7 +125,8 @@ private final class MetaDependencyDeclaration: Hashable {
     }()
     
     lazy var declarationName = "\(name)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
-    lazy var buildersSubcriptGet = "builders[\"\(declarationName)\"]"
+    lazy var builderName = "\(declarationName)Builder"
+    lazy var buildersSubcript = "_builders[\"\(declarationName)\"]"
     lazy var resolverTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Resolver"
     lazy var setterName = "set\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
     lazy var setterTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Setter"
@@ -264,8 +268,7 @@ private final class MetaWeaverFile {
         return try [
             [
                 EmptyLine(),
-                mainDependencyContainer(),
-                EmptyLine()
+                mainDependencyContainer()
             ],
             resolvers(),
             [
@@ -281,7 +284,8 @@ private final class MetaWeaverFile {
             inputDependencyResolvers(),
             dependencyResolverProxies(),
             publicDependencyInitExtensions(),
-            propertyWrappers()
+            propertyWrappers(),
+            providerClassAndFunctions()
         ].flatMap { $0 }
     }
     
@@ -318,7 +322,7 @@ private extension MetaWeaverFile {
             .with(objc: doesSupportObjc)
             .adding(inheritedType: doesSupportObjc ? .nsObject : nil)
             .adding(member: PlainCode(code: """
-            
+
 static var onFatalError: (String, StaticString, UInt) -> Never = { message, file, line in
     Swift.fatalError(message, file: file, line: line)
 }
@@ -327,70 +331,7 @@ fileprivate static func fatalError(file: StaticString = #file, line: UInt = #lin
     onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
 }
 
-private typealias ParametersCopier = (\(TypeIdentifier.mainDependencyContainer.swiftString)) -> Void
-private typealias Builder<T> = (ParametersCopier?) -> T
-
-private func builder<T>(_ value: T) -> Builder<T> {
-    return { [weak self] copyParameters in
-        guard let self = self else {
-            \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
-        }
-        copyParameters?(self)
-        return value
-    }
-}
-
-private func weakOptionalBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
-    return { [weak value] _ in value }
-}
-
-private func weakBuilder<T>(_ value: T) -> Builder<T> where T: AnyObject {
-    return { [weak self, weak value] copyParameters in
-        guard let self = self, let value = value else {
-            \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
-        }
-        copyParameters?(self)
-        return value
-    }
-}
-
-private func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
-    var _value: T?
-    return { copyParameters in
-        if let value = _value {
-            return value
-        }
-        let value = builder(copyParameters)
-        _value = value
-        return value
-    }
-}
-
-private func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
-    weak var _value: T?
-    return { copyParameters in
-        if let value = _value {
-            return value
-        }
-        let value = builder(copyParameters)
-        _value = value
-        return value
-    }
-}
-
-private static func fatalBuilder<T>() -> Builder<T> {
-    return { _ in
-        \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
-    }
-}
-
-private var builders = Dictionary<String, Any>()
-private func getBuilder<T>(for name: String, type _: T.Type) -> Builder<T> {
-    guard let builder = builders[name] as? Builder<T> else {
-        return \(TypeIdentifier.mainDependencyContainer.swiftString).fatalBuilder()
-    }
-    return builder
-}
+private lazy var provider = Provider(owner: self)
 """))
             .adding(member: dependencyGraph.hasPropertyWrapperAnnotations ? PlainCode(code: """
 
@@ -428,6 +369,15 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             .adding(member: Function(kind: .`init`(convenience: false, optional: false))
                 .with(override: doesSupportObjc)
                 .with(accessLevel: .fileprivate)
+            )
+            .adding(member: EmptyLine())
+            .adding(member: Function(kind: .`init`(convenience: true, optional: false))
+                .with(accessLevel: .private)
+                .adding(parameter: FunctionParameter(name: "provider", type: .provider))
+                .adding(members: [
+                    Reference.named(.`self`) + .named("init") | .call(),
+                    Assignment(variable: Reference.named(.`self`) + .named("provider"), value: Reference.named("provider"))
+                ])
             )
             .adding(members: try dependencyResolverCopyMethods())
     }
@@ -520,17 +470,32 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
     }
     
     func resolversImplementation() throws -> [TypeBodyMember] {
-        return try orderedDeclarations.flatMap { declaration -> [TypeBodyMember] in
+
+        let builderGetters = orderedDeclarations.flatMap { declaration -> [TypeBodyMember] in
+            var members: [TypeBodyMember] = [EmptyLine()]
+
+            members += [
+                ComputedProperty(variable: Variable(name: declaration.builderName)
+                    .with(type: .builder(of: declaration.type.typeID)))
+                    .with(accessLevel: .private)
+                    .adding(member: Return(value: .provider + .named("getBuilder") | .call(Tuple()
+                        .adding(parameter: TupleParameter(value: Value.string(declaration.declarationName)))
+                        .adding(parameter: TupleParameter(value: declaration.type.typeID.reference + .named(.`self`)))
+                    )))
+            ]
+
+            return members
+        }
+
+        let getters = try orderedDeclarations.flatMap { declaration -> [TypeBodyMember] in
             var members: [TypeBodyMember] = [EmptyLine()]
             
             if declaration.parameters.isEmpty {
                 members += [
                     ComputedProperty(variable: Variable(name: declaration.declarationName)
                         .with(type: declaration.type.typeID))
-                        .adding(member: Return(value: .named("getBuilder") | .call(Tuple()
-                            .adding(parameter: TupleParameter(name: "for", value: Value.string(declaration.declarationName)))
-                            .adding(parameter: TupleParameter(name: "type", value: declaration.type.typeID.reference + .named(.`self`)))
-                        ) | .call(Tuple()
+                        .adding(member: Return(value: .provider + .named("build") | .call(Tuple()
+                            .adding(parameter: TupleParameter(value: Value.reference(.named(declaration.builderName))))
                             .adding(parameter: TupleParameter(value: Value.nil))
                         )))
                 ]
@@ -543,32 +508,27 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                             return FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
                                 .with(escaping: isEscapingByDeclaration[declaration] ?? false)
                         })
-                        .adding(member: Assignment(
-                            variable: Variable(name: "builder").with(type: TypeIdentifier.builder(of: declaration.type.typeID)),
-                            value: .named("getBuilder") | .call(Tuple()
-                                .adding(parameter: TupleParameter(name: "for", value: Value.string(declaration.declarationName)))
-                                .adding(parameter: TupleParameter(name: "type", value: declaration.type.typeID.reference + .named(.`self`)))
-                            )
-                        ))
-                        .adding(member: Return(value: .named("builder") | .block(FunctionBody()
+                        .adding(member: Return(value: .provider + .named("build") | .call(Tuple()
+                                .adding(parameter: TupleParameter(value: Value.reference(.named(declaration.builderName))))
+                            ) | .block(FunctionBody()
                             .adding(context: declaration.parameters.compactMap { parameter in
                                 guard parameter.configuration.scope == .weak else { return nil }
                                 return FunctionBodyContext(name: parameter.dependencyName, kind: .weak)
                             })
-                            .adding(parameter: FunctionBodyParameter(name: Variable._self.name))
+                            .adding(parameter: FunctionBodyParameter(name: Variable.owner.name))
                             .adding(members: try declaration.parameters.map { parameter in
                                 let declaration = try self.declaration(for: parameter)
-                                let builderReference: Reference
+
+                                let parameterProviderReference: Reference
                                 if parameter.configuration.scope == .weak {
-                                    builderReference = .named("weakOptionalBuilder")
+                                    parameterProviderReference = .weakOptionalValueBuilder(value: .named(parameter.dependencyName))
                                 } else {
-                                    builderReference = .named("builder")
+                                    parameterProviderReference = .valueBuilder(value: .named(parameter.dependencyName))
                                 }
-                                return Assignment(
-                                    variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
-                                    value: Variable._self.reference + builderReference | .call(Tuple()
-                                        .adding(parameter: TupleParameter(value: Reference.named(parameter.dependencyName)))
-                                    )
+
+                                return Variable.owner.reference + .provider + .named("setBuilder") | .call(Tuple()
+                                    .adding(parameter: TupleParameter(value: Value.string(declaration.declarationName)))
+                                    .adding(parameter: TupleParameter(value: Value.reference(parameterProviderReference)))
                                 )
                             })
                         )))
@@ -577,6 +537,8 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             
             return members
         }
+
+        return builderGetters + getters
     }
 
     func resolvers() throws -> [FileBodyMember] {
@@ -610,15 +572,19 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
     
     func settersImplementation() -> [TypeBodyMember] {
         return setterDeclarations.flatMap { declaration -> [TypeBodyMember] in
-            [
+            let parameterProviderReference: Reference
+            if declaration.scope == .weak {
+                parameterProviderReference = .weakOptionalValueBuilder(value: .named(declaration.name))
+            } else {
+                parameterProviderReference = .valueBuilder(value: .named("value"))
+            }
+            return [
                 EmptyLine(),
                 Function(kind: .named(declaration.setterName))
                     .adding(parameter: FunctionParameter(alias: "_", name: "value", type: declaration.type.typeID))
-                    .adding(member: Assignment(
-                        variable: Reference.named(declaration.buildersSubcriptGet),
-                        value: Reference.named("builder") | .call(Tuple()
-                            .adding(parameter: TupleParameter(value: Reference.named("value")))
-                        )
+                    .adding(member: Reference.provider + .named("setBuilder") | .call(Tuple()
+                        .adding(parameter: TupleParameter(value: Value.string(declaration.declarationName)))
+                        .adding(parameter: TupleParameter(value: Value.reference(parameterProviderReference)))
                     ))
             ]
         }
@@ -738,7 +704,22 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         
         let accessLevel: Meta.AccessLevel =
             (inputReferences.isEmpty && dependencyContainer.parameters.isEmpty) || publicInterface ? .fileprivate : .private
-        
+
+        let functionParameterValues: [MetaDependencyDeclaration] = publicInterface ? try inputReferences.compactMap { reference in
+            let declaration = try self.declaration(for: reference)
+            guard selfReferenceDeclarations.contains(declaration) == false else { return nil }
+            return declaration
+        } : []
+
+        let hasInputDependencies: Bool = dependencyContainer.registrations.reduce(false) { boolResult, registration in
+            if boolResult { return true }
+            guard let declaration = try? self.declaration(for: registration) else { return false }
+            guard let target = try? dependencyGraph.dependencyContainer(for: registration) else { return false }
+            return target.dependencies.isEmpty == false ||
+                registration.configuration.customBuilder != nil ||
+                declaration.parameters.isEmpty == false
+        }
+
         var members: [TypeBodyMember] = [
             EmptyLine(),
             Function(kind: .named(publicInterface ?
@@ -750,12 +731,15 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 .adding(parameter: containsDeclarationBasedOnSource && publicInterface == false ?
                     FunctionParameter(alias: "_", name: Variable.source.name, type: .string) : nil
                 )
-                .adding(parameters: publicInterface ? try inputReferences.compactMap { reference in
-                    let declaration = try self.declaration(for: reference)
-                    guard selfReferenceDeclarations.contains(declaration) == false else { return nil }
+                .adding(parameters: functionParameterValues.map { declaration in
                     return FunctionParameter(name: declaration.declarationName, type: declaration.type.typeID)
-                } : [])
+                })
                 .adding(member: Assignment(variable: Variable._self, value: TypeIdentifier.mainDependencyContainer.reference | .call()))
+                .adding(member: hasInputDependencies ? Assignment(variable: Variable._self.reference + .provider, value: Reference.provider + .named("transferred") | .call(Tuple()
+                    .adding(parameter: TupleParameter(name: "to", value: Variable._self.reference))
+                )) : nil)
+                .adding(member: Assignment(variable: Variable(name: "_builders").with(immutable: false), value: Reference.named("Dictionary<String, Any>") | .call()))
+                .adding(member: hasInputDependencies ? Assignment(variable: Variable(name: "_inputProvider"), value: Variable._self.reference + .provider) : nil)
                 .adding(members: try dependencyContainer.registrations.compactMap { registration in
                     try copyAssignment(for: registration, from: dependencyContainer)
                 })
@@ -765,22 +749,32 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     guard selfReferenceDeclarations.contains(declaration) == false else { return [] }
 
                     let assignments: (MetaDependencyDeclaration) -> [Assignment] = { resolvedDeclaration in
+                        let inputNames = functionParameterValues.map { $0.name }
+
                         let isRootDependencyContainer = dependencyContainer.sources.isEmpty && publicInterface == false
-                        let builderValue = Variable._self.reference + .named("builder") | .call(Tuple()
-                            .adding(parameter: TupleParameter(value:
-                                (isRootDependencyContainer ? Variable._self.reference + .none : .none) | .named(resolvedDeclaration.declarationName)
-                            ))
-                        )
+                        let isParameter = inputNames.contains(resolvedDeclaration.name)
+                        let shouldHoldSelfReference = isRootDependencyContainer || isParameter
+
+                        let providerValue: Reference
+                        if inputNames.contains(resolvedDeclaration.name) {
+                            if resolvedDeclaration.scope == .weak {
+                                providerValue = .weakOptionalValueBuilder(value: .named(resolvedDeclaration.name))
+                            } else {
+                                providerValue = .valueBuilder(value: .named(resolvedDeclaration.name))
+                            }
+                        } else {
+                            providerValue = (shouldHoldSelfReference ? Variable._self.reference + .none : .none) | .named(resolvedDeclaration.builderName)
+                        }
 
                         var assignments = [Assignment(
-                            variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
-                            value: builderValue
+                            variable: Reference.named(declaration.buildersSubcript),
+                            value: providerValue
                         )]
 
                         if resolvedDeclaration.declarationName != declaration.declarationName {
                             assignments += [Assignment(
-                                variable: Variable._self.reference + .named(resolvedDeclaration.buildersSubcriptGet),
-                                value: builderValue
+                                variable: Reference.named(resolvedDeclaration.buildersSubcript),
+                                value: providerValue
                             )]
                         }
 
@@ -809,6 +803,9 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         }
                     }
                 })
+                .adding(member: Variable._self.reference + .provider + .named("addBuilders") | .call(Tuple()
+                    .adding(parameter: TupleParameter(value: Reference.named("_builders")))
+                ))
                 .adding(members: try dependencyContainer.registrations.compactMap { registration in
                     guard registration.configuration.setter == false else { return nil }
                     switch registration.configuration.scope {
@@ -816,12 +813,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         let declaration = try self.declaration(for: registration)
                         return Assignment(
                             variable: Reference.named("_"),
-                            value: Variable._self.reference + .named("getBuilder") | .call(Tuple()
-                                .adding(parameter: TupleParameter(name: "for", value: Value.string(declaration.declarationName)))
-                                .adding(parameter: TupleParameter(name: "type", value: declaration.type.typeID.reference + .named(.`self`)))
-                            ) | .call(Tuple()
-                                .adding(parameter: TupleParameter(value: Value.nil))
-                            )
+                            value: Variable._self.reference + .named(declaration.name)
                         )
                     case .lazy,
                          .weak,
@@ -879,9 +871,6 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         let target = try dependencyGraph.dependencyContainer(for: registration)
         let targetContainsDeclarationBasedOnSource = try containsDeclarationBasedOnSource(in: target)
         let targetContainsAmbiguousDeclarations = try containsAmbiguousDeclarations(in: target)
-        let targetSelfReferences = try target.references.filter { reference in
-            try dependencyGraph.isSelfReference(reference)
-        }
         let targetHasPropertyWrapperAnnotations = target.dependencies.orderedValues.contains {
             $0.annotationStyle == .propertyWrapper
         }
@@ -895,33 +884,38 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         let containsAmbiguousDeclarations = try self.containsAmbiguousDeclarations(in: dependencyContainer)
 
         let resolverReference: Reference?
-        let shouldUnwrapResolverReference: Bool
         var builderReference: Reference
+
+        let shouldUnwrapResolverReference: Bool
+        let isTypecastingAsResolver: Bool
+
         if let customBuilder = registration.configuration.customBuilder {
             switch target.declarationSource {
             case .type:
-                resolverReference = hasInputDependencies ? Variable._self.reference + concreteType.dependencyResolverVariable.reference | .call(Tuple()
+                resolverReference = hasInputDependencies ? Reference.named("_inputContainer") + concreteType.dependencyResolverVariable.reference | .call(Tuple()
                     .adding(parameter: targetContainsDeclarationBasedOnSource ? TupleParameter(value: Value.string(dependencyContainer.type.description)) : nil)
                 ) : nil
                 builderReference = .named(customBuilder) | .call(Tuple()
                     .adding(parameter: hasInputDependencies ? TupleParameter(value: Variable.__self.reference) : nil)
                 )
                 shouldUnwrapResolverReference = false
+                isTypecastingAsResolver = false
             case .reference,
                  .registration:
                 resolverReference = containsAmbiguousDeclarations ? dependencyContainer.type.dependencyResolverProxyTypeID.reference | .call(Tuple()
-                    .adding(parameter: TupleParameter(value: Variable._self.reference))
+                    .adding(parameter: TupleParameter(value: Reference.named("_inputContainer")))
                 ) : nil
                 builderReference = .named(customBuilder) | .call(Tuple()
                     .adding(parameter: TupleParameter(value:
-                        (containsAmbiguousDeclarations ? Variable.__self.reference + Variable.proxySelf.reference : Variable._self.reference) |
+                        (containsAmbiguousDeclarations ? Variable.__self.reference + Variable.proxySelf.reference : Reference.named("_inputContainer")) |
                         .as | target.type.inputDependencyResolverTypeID.reference
                     ))
                 )
                 shouldUnwrapResolverReference = containsAmbiguousDeclarations
+                isTypecastingAsResolver = true
             }
         } else {
-            resolverReference = hasInputDependencies ? Variable._self.reference + concreteType.dependencyResolverVariable.reference | .call(Tuple()
+            resolverReference = hasInputDependencies ? Reference.named("_inputContainer") + concreteType.dependencyResolverVariable.reference | .call(Tuple()
                 .adding(parameter: targetContainsDeclarationBasedOnSource ? TupleParameter(value: Value.string(dependencyContainer.type.description)) : nil)
             ) : nil
             builderReference = concreteType.typeID.reference | .call(Tuple()
@@ -931,74 +925,60 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 ) : nil)
             )
             shouldUnwrapResolverReference = targetContainsAmbiguousDeclarations
+            isTypecastingAsResolver = false
         }
-        
-        let builderFunction: Reference
-        switch registration.configuration.scope {
-        case .container,
-             .lazy:
-            builderFunction = .named("lazyBuilder")
-        case .weak:
-            builderFunction = .named("weakLazyBuilder")
-        case .transient:
-            builderFunction = .none
-        }
-        
-        builderReference = builderFunction | .block(FunctionBody()
+
+        let hasResolverReference = resolverReference != nil
+        let requiresOwner = hasResolverReference || isTypecastingAsResolver
+
+        let functionBody = FunctionBody()
+            .adding(parameter: FunctionBodyParameter(
+                name: requiresOwner ? "owner" : nil,
+                type: .mainDependencyContainer
+            ))
             .adding(parameter: FunctionBodyParameter(
                 name: hasParameters ? "copyParameters" : nil,
-                type: .optional(wrapped: TypeIdentifier(name: "ParametersCopier"))
+                type: .optional(wrapped: TypeIdentifier(name: "Provider.ParametersCopier"))
             ))
             .with(resultType: declaration.type.typeID)
-            .adding(context: hasInputDependencies ? FunctionBodyContext(name: Variable._self.name, kind: .weak) : nil)
             .adding(member: targetHasPropertyWrapperAnnotations ? PlainCode(code: """
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
             MainDependencyContainer._dynamicResolversLock.lock()
             """) : nil)
-            .adding(member: hasInputDependencies ?
-                Guard(assignment: Assignment(variable: Variable._self, value: Variable._self.reference))
-                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call()) : nil)
+            .adding(member: requiresOwner ?
+                Assignment(variable: Variable(name: "_inputContainer"), value: TypeIdentifier.mainDependencyContainer.reference | .call(Tuple()
+                    .adding(parameter: TupleParameter(name: "provider", value: Reference.named("_inputProvider") + .named("transferred") | .call(Tuple()
+                        .adding(parameter: TupleParameter(name: "to", value: Variable.owner.reference))
+                    )))
+                ))
+            : nil)
             .adding(member: resolverReference.flatMap {
                 Assignment(variable: Variable.__self, value: $0)
             })
             .adding(member: hasParameters ? .named("copyParameters") | .unwrap | .call(Tuple()
                 .adding(parameter: TupleParameter(
-                    value: (resolverReference != nil ? Variable.__self : Variable._self).reference |
+                    value: (hasResolverReference ? Variable.__self : Variable.owner).reference |
                         (shouldUnwrapResolverReference ? +Variable.proxySelf.reference : .none) |
                         .named(" as! ") |
                         TypeIdentifier.mainDependencyContainer.reference
                 ))
             ) : nil)
-            .adding(members: targetSelfReferences.isEmpty == false ? try [
-                Assignment(
-                    variable: Variable.__mainSelf,
-                    value: (resolverReference != nil ? Variable.__self : Variable._self).reference |
-                        (shouldUnwrapResolverReference ? +Variable.proxySelf.reference : .none) |
-                        .named(" as! ") |
-                        TypeIdentifier.mainDependencyContainer.reference
-                ),
-                Assignment(
-                    variable: Variable.value,
-                    value: builderReference
-                )
-            ] + targetSelfReferences.map { selfReference in
-                let declaration = try self.declaration(for: selfReference)
-                return Assignment(
-                    variable: Variable.__mainSelf.reference + .named(declaration.buildersSubcriptGet),
-                    value: Variable.__mainSelf.reference + .named("weakBuilder") | .call(Tuple()
-                        .adding(parameter: TupleParameter(value: Variable.value.reference))
-                    )
-                )
-            } + [
-                Return(value: Variable.value.reference)
-            ] : [
-                Return(value: builderReference)
-            ])
-        )
-        
+            .adding(member: Return(value: builderReference))
+
+        let builderFunction: Reference
+        switch registration.configuration.scope {
+        case .container,
+             .lazy:
+            builderFunction = .lazyBuilder(body: functionBody)
+        case .weak:
+            builderFunction = .weakLazyBuilder(body: functionBody)
+        case .transient:
+            builderFunction = .block(functionBody)
+        }
+
         return Assignment(
-            variable: Variable._self.reference + .named(declaration.buildersSubcriptGet),
-            value: builderReference
+            variable: Reference.named(declaration.buildersSubcript),
+            value: builderFunction
         )
     }
     
@@ -1224,6 +1204,108 @@ private extension MetaWeaverFile {
                     )))
             ]
         }
+    }
+
+    func providerClassAndFunctions() throws -> [FileBodyMember] {
+        return [
+            EmptyLine(),
+            PlainCode(code: """
+            // MARK: - Provider
+
+            private final class Provider {
+
+                typealias ParametersCopier = (MainDependencyContainer) -> Void
+                typealias Builder<T> = (MainDependencyContainer, ParametersCopier?) -> T
+
+                private(set) weak var owner: MainDependencyContainer?
+                private(set) var builders: Dictionary<String, Any>
+
+                init(owner: MainDependencyContainer?,
+                     builders: Dictionary<String, Any> = [:]) {
+                    self.owner = owner
+                    self.builders = builders
+                }
+            }
+
+            private extension Provider {
+
+                func addBuilders(_ builders: Dictionary<String, Any>) {
+                    builders.forEach { key, value in
+                        self.builders[key] = value
+                    }
+                }
+
+                func setBuilder<T>(_ name: String, _ builder: @escaping Builder<T>) {
+                    builders[name] = builder
+                }
+
+                func getBuilder<T>(_ name: String, _ type: T.Type) -> Builder<T> {
+                    guard let builder = builders[name] as? Builder<T> else {
+                        return Provider.fatalBuilder()
+                    }
+                    return builder
+                }
+
+                func build<T>(_ builder: Builder<T>, _ copier: ParametersCopier?) -> T {
+                    guard let owner = owner else {
+                        MainDependencyContainer.fatalError()
+                    }
+                    return builder(owner, copier)
+                }
+
+                func transferred(to newOwner: MainDependencyContainer) -> Provider {
+                    return Provider(owner: newOwner, builders: builders)
+                }
+            }
+
+            private extension Provider {
+
+                static func valueBuilder<T>(_ value: T) -> Builder<T> {
+                    return { owner, copyParameters in
+                        copyParameters?(owner)
+                        return value
+                    }
+                }
+
+                static func weakOptionalValueBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
+                    return { [weak value] owner, copyParameters in
+                        copyParameters?(owner)
+                        return value
+                    }
+                }
+
+                static func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
+                    var _value: T?
+                    return { owner, copyParameters in
+                        if let value = _value {
+                            return value
+                        }
+                        let value = builder(owner, copyParameters)
+                        _value = value
+                        return value
+                    }
+                }
+
+                static func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
+                    weak var _value: T?
+                    return { owner, copyParameters in
+                        if let value = _value {
+                            return value
+                        }
+                        let value = builder(owner, copyParameters)
+                        _value = value
+                        return value
+                    }
+                }
+
+                static func fatalBuilder<T>() -> Builder<T> {
+                    return { _, _ in
+                        MainDependencyContainer.fatalError()
+                    }
+                }
+            }
+            """)
+        ]
     }
 }
 

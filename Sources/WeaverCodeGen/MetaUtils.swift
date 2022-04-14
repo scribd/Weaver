@@ -8,6 +8,10 @@
 import Foundation
 import Meta
 
+extension Reference {
+    static let provider = Reference.named("provider")
+}
+
 extension TypeIdentifier {
     
     static let mainDependencyContainer = TypeIdentifier(name: "MainDependencyContainer")
@@ -17,17 +21,19 @@ extension TypeIdentifier {
     static let abstractType = TypeIdentifier(name: "AbstractType")
     static let concreteType = TypeIdentifier(name: "ConcreteType")
     static let resolver = TypeIdentifier(name: "Resolver")
+    static let provider = TypeIdentifier(name: "Provider")
 
     static func builder(of typeID: TypeIdentifier) -> TypeIdentifier {
-        return TypeIdentifier(name: "Builder").adding(genericParameter: typeID)
+        return TypeIdentifier(name: "Provider.Builder").adding(genericParameter: typeID)
     }
 }
 
 extension Variable {
     
+    static let owner = Variable(name: "owner")
+    static let `self` = Variable(name: "self")
     static let _self = Variable(name: "_self")
     static let __self = Variable(name: "__self")
-    static let __mainSelf = Variable(name: "__mainSelf")
     static let source = Variable(name: "source")
     static let value = Variable(name: "_value")
     static let proxySelf = Variable(name: "value")
@@ -205,5 +211,32 @@ extension String {
         guard let firstChar = _self.first else { return String() }
         _self.removeFirst()
         return prefix + firstChar.uppercased() + _self
+    }
+}
+
+// MARK: - Provider
+
+extension Reference {
+
+    static func providerFunction(name: String, reference: Reference) -> Reference {
+        return TypeIdentifier.provider.reference + .named(name) | .call(Tuple()
+            .adding(parameter: TupleParameter(value: reference))
+        )
+    }
+
+    static func valueBuilder(value: Reference) -> Reference {
+        return providerFunction(name: "valueBuilder", reference: value)
+    }
+
+    static func weakOptionalValueBuilder(value: Reference) -> Reference {
+        return providerFunction(name: "weakOptionalValueBuilder", reference: value)
+    }
+
+    static func lazyBuilder(body: FunctionBody) -> Reference {
+        return providerFunction(name: "lazyBuilder", reference: .block(body))
+    }
+
+    static func weakLazyBuilder(body: FunctionBody) -> Reference {
+        return providerFunction(name: "weakLazyBuilder", reference: .block(body))
     }
 }
