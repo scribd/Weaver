@@ -7,133 +7,87 @@ import UIKit
 
 final class MainDependencyContainer {
 
-    static var onFatalError: (String, StaticString, UInt) -> Never = { message, file, line in
-        Swift.fatalError(message, file: file, line: line)
+    private let provider: Provider
+
+    fileprivate init(provider: Provider = Provider()) {
+        self.provider = provider
     }
 
-    fileprivate static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
-        onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
+    private var hostBuilder: Provider.Builder<Optional<String>> {
+        return provider.getBuilder("host", Optional<String>.self)
     }
 
-    private typealias ParametersCopier = (MainDependencyContainer) -> Void
-    private typealias Builder<T> = (ParametersCopier?) -> T
-
-    private func builder<T>(_ value: T) -> Builder<T> {
-        return { [weak self] copyParameters in
-            guard let self = self else {
-                MainDependencyContainer.fatalError()
-            }
-            copyParameters?(self)
-            return value
-        }
+    private var loggerBuilder: Provider.Builder<Logger> {
+        return provider.getBuilder("logger", Logger.self)
     }
 
-    private func weakOptionalBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
-        return { [weak value] _ in value }
+    private var movieAPIBuilder: Provider.Builder<APIProtocol> {
+        return provider.getBuilder("movieAPI", APIProtocol.self)
     }
 
-    private func weakBuilder<T>(_ value: T) -> Builder<T> where T: AnyObject {
-        return { [weak self, weak value] copyParameters in
-            guard let self = self, let value = value else {
-                MainDependencyContainer.fatalError()
-            }
-            copyParameters?(self)
-            return value
-        }
-    }
-
-    private func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
-        var _value: T?
-        return { copyParameters in
-            if let value = _value {
-                return value
-            }
-            let value = builder(copyParameters)
-            _value = value
-            return value
-        }
-    }
-
-    private func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
-        weak var _value: T?
-        return { copyParameters in
-            if let value = _value {
-                return value
-            }
-            let value = builder(copyParameters)
-            _value = value
-            return value
-        }
-    }
-
-    private static func fatalBuilder<T>() -> Builder<T> {
-        return { _ in
-            MainDependencyContainer.fatalError()
-        }
-    }
-
-    private var builders = Dictionary<String, Any>()
-    private func getBuilder<T>(for name: String, type _: T.Type) -> Builder<T> {
-        guard let builder = builders[name] as? Builder<T> else {
-            return MainDependencyContainer.fatalBuilder()
-        }
-        return builder
+    private var urlSessionBuilder: Provider.Builder<URLSession> {
+        return provider.getBuilder("urlSession", URLSession.self)
     }
 
     var host: Optional<String> {
-        return getBuilder(for: "host", type: Optional<String>.self)(nil)
+        return hostBuilder(nil)
     }
 
     var logger: Logger {
-        return getBuilder(for: "logger", type: Logger.self)(nil)
+        return loggerBuilder(nil)
     }
 
     var movieAPI: APIProtocol {
-        return getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
+        return movieAPIBuilder(nil)
     }
 
     var urlSession: URLSession {
-        return getBuilder(for: "urlSession", type: URLSession.self)(nil)
-    }
-
-    fileprivate init() {
+        return urlSessionBuilder(nil)
     }
 
     private func movieAPIDependencyResolver() -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["urlSession"] = _self.builder(urlSession)
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        var _builders = Dictionary<String, Any>()
+        _builders["logger"] = Provider.lazyBuilder( { (_: Optional<Provider.ParametersCopier>) -> Logger in return Logger() })
+        _builders["urlSession"] = urlSessionBuilder
+        _self.provider.addBuilders(_builders)
+        _ = _self.logger
         return _self
     }
 
     fileprivate func publicMovieAPIDependencyResolver(urlSession: URLSession) -> MovieAPIDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["urlSession"] = _self.builder(urlSession)
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        var _builders = Dictionary<String, Any>()
+        _builders["logger"] = Provider.lazyBuilder( { (_: Optional<Provider.ParametersCopier>) -> Logger in return Logger() })
+        _builders["urlSession"] = Provider.valueBuilder(urlSession)
+        _self.provider.addBuilders(_builders)
+        _ = _self.logger
         return _self
     }
 
     fileprivate func imageManagerDependencyResolver() -> ImageManagerDependencyResolver {
-        let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        let _self = MainDependencyContainer(provider: provider.copy())
+        let _inputProvider = _self.provider.copy()
+        var _builders = Dictionary<String, Any>()
+        _builders["logger"] = Provider.lazyBuilder( { (_: Optional<Provider.ParametersCopier>) -> Logger in return Logger() })
+        _builders["urlSession"] = Provider.lazyBuilder(
+             { (_: Optional<Provider.ParametersCopier>) -> URLSession in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider)
+                return ImageManager.makeURLSession(_inputContainer as URLSessionInputDependencyResolver)
             }
-            return ImageManager.makeURLSession(_self as URLSessionInputDependencyResolver)
-        }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        )
+        _builders["movieAPI"] = Provider.lazyBuilder(
+             { (_: Optional<Provider.ParametersCopier>) -> APIProtocol in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider)
+                let __self = _inputContainer.movieAPIDependencyResolver()
+                return MovieAPI(injecting: __self)
             }
-            let __self = _self.movieAPIDependencyResolver()
-            return MovieAPI(injecting: __self)
-        }
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
-        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
-        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
+        )
+        _self.provider.addBuilders(_builders)
+        _inputProvider.addBuilders(_builders)
+        _ = _self.logger
+        _ = _self.urlSession
+        _ = _self.movieAPI
         return _self
     }
 
@@ -143,50 +97,57 @@ final class MainDependencyContainer {
     }
 
     private func movieManagerDependencyResolver() -> MovieManagerDependencyResolver {
-        let _self = MainDependencyContainer()
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        let _self = MainDependencyContainer(provider: provider.copy())
+        let _inputProvider = _self.provider.copy()
+        var _builders = Dictionary<String, Any>()
+        _builders["urlSession"] = Provider.lazyBuilder(
+             { (_: Optional<Provider.ParametersCopier>) -> URLSession in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider)
+                return { _ in URLSession.shared }(_inputContainer as URLSessionInputDependencyResolver)
             }
-            return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
-        }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        )
+        _builders["movieAPI"] = Provider.lazyBuilder(
+             { (_: Optional<Provider.ParametersCopier>) -> APIProtocol in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider)
+                let __self = _inputContainer.movieAPIDependencyResolver()
+                return MovieAPI(injecting: __self)
             }
-            let __self = _self.movieAPIDependencyResolver()
-            return MovieAPI(injecting: __self)
-        }
-        _self.builders["logger"] = _self.builder(_self.logger)
-        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
-        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
+        )
+        _builders["logger"] = _self.loggerBuilder
+        _self.provider.addBuilders(_builders)
+        _inputProvider.addBuilders(_builders)
+        _ = _self.urlSession
+        _ = _self.movieAPI
         return _self
     }
 
     fileprivate func publicMovieManagerDependencyResolver(host: Optional<String>,
                                                           logger: Logger) -> MovieManagerDependencyResolver {
-        let _self = MainDependencyContainer()
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        let _self = MainDependencyContainer(provider: provider.copy())
+        let _inputProvider = _self.provider.copy()
+        var _builders = Dictionary<String, Any>()
+        _builders["urlSession"] = Provider.lazyBuilder(
+             { (_: Optional<Provider.ParametersCopier>) -> URLSession in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider)
+                return { _ in URLSession.shared }(_inputContainer as URLSessionInputDependencyResolver)
             }
-            return { _ in URLSession.shared }(_self as URLSessionInputDependencyResolver)
-        }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        )
+        _builders["movieAPI"] = Provider.lazyBuilder(
+             { (_: Optional<Provider.ParametersCopier>) -> APIProtocol in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider)
+                let __self = _inputContainer.movieAPIDependencyResolver()
+                return MovieAPI(injecting: __self)
             }
-            let __self = _self.movieAPIDependencyResolver()
-            return MovieAPI(injecting: __self)
-        }
-        _self.builders["host"] = _self.builder(host)
-        _self.builders["logger"] = _self.builder(logger)
-        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
-        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
+        )
+        _builders["host"] = Provider.valueBuilder(host)
+        _builders["logger"] = Provider.valueBuilder(logger)
+        _self.provider.addBuilders(_builders)
+        _inputProvider.addBuilders(_builders)
+        _ = _self.urlSession
+        _ = _self.movieAPI
         return _self
     }
 }
-
 
 protocol HostResolver: AnyObject {
     var host: Optional<String> { get }
@@ -240,5 +201,101 @@ extension MovieManager {
         let _self = MainDependencyContainer()
         let __self = _self.publicMovieManagerDependencyResolver(host: host, logger: logger)
         self.init(injecting: __self)
+    }
+}
+
+// MARK: - Fatal Error
+
+extension MainDependencyContainer {
+
+    static var onFatalError: (String, StaticString, UInt) -> Never = { message, file, line in
+        Swift.fatalError(message, file: file, line: line)
+    }
+
+    fileprivate static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
+        onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
+    }
+}
+
+// MARK: - Provider
+
+private final class Provider {
+
+    typealias ParametersCopier = (Provider) -> Void
+    typealias Builder<T> = (ParametersCopier?) -> T
+
+    private(set) var builders: Dictionary<String, Any>
+
+    init(builders: Dictionary<String, Any> = [:]) {
+        self.builders = builders
+    }
+}
+
+private extension Provider {
+
+    func addBuilders(_ builders: Dictionary<String, Any>) {
+        builders.forEach { key, value in
+            self.builders[key] = value
+        }
+    }
+
+    func setBuilder<T>(_ name: String, _ builder: @escaping Builder<T>) {
+        builders[name] = builder
+    }
+
+    func getBuilder<T>(_ name: String, _ type: T.Type) -> Builder<T> {
+        guard let builder = builders[name] as? Builder<T> else {
+            return Provider.fatalBuilder()
+        }
+        return builder
+    }
+
+    func copy() -> Provider {
+        return Provider(builders: builders)
+    }
+}
+
+private extension Provider {
+
+    static func valueBuilder<T>(_ value: T) -> Builder<T> {
+        return { _ in
+            return value
+        }
+    }
+
+    static func weakOptionalValueBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
+        return { [weak value] _ in
+            return value
+        }
+    }
+
+    static func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
+        var _value: T?
+        return { copyParameters in
+            if let value = _value {
+                return value
+            }
+            let value = builder(copyParameters)
+            _value = value
+            return value
+        }
+    }
+
+    static func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
+        weak var _value: T?
+        return { copyParameters in
+            if let value = _value {
+                return value
+            }
+            let value = builder(copyParameters)
+            _value = value
+            return value
+        }
+    }
+
+    static func fatalBuilder<T>() -> Builder<T> {
+        return { _ in
+            MainDependencyContainer.fatalError()
+        }
     }
 }
