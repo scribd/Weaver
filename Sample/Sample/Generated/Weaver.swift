@@ -16,70 +16,7 @@ import UIKit
         onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
     }
 
-    private typealias ParametersCopier = (MainDependencyContainer) -> Void
-    private typealias Builder<T> = (ParametersCopier?) -> T
-
-    private func builder<T>(_ value: T) -> Builder<T> {
-        return { [weak self] copyParameters in
-            guard let self = self else {
-                MainDependencyContainer.fatalError()
-            }
-            copyParameters?(self)
-            return value
-        }
-    }
-
-    private func weakOptionalBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
-        return { [weak value] _ in value }
-    }
-
-    private func weakBuilder<T>(_ value: T) -> Builder<T> where T: AnyObject {
-        return { [weak self, weak value] copyParameters in
-            guard let self = self, let value = value else {
-                MainDependencyContainer.fatalError()
-            }
-            copyParameters?(self)
-            return value
-        }
-    }
-
-    private func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
-        var _value: T?
-        return { copyParameters in
-            if let value = _value {
-                return value
-            }
-            let value = builder(copyParameters)
-            _value = value
-            return value
-        }
-    }
-
-    private func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
-        weak var _value: T?
-        return { copyParameters in
-            if let value = _value {
-                return value
-            }
-            let value = builder(copyParameters)
-            _value = value
-            return value
-        }
-    }
-
-    private static func fatalBuilder<T>() -> Builder<T> {
-        return { _ in
-            MainDependencyContainer.fatalError()
-        }
-    }
-
-    private var builders = Dictionary<String, Any>()
-    private func getBuilder<T>(for name: String, type _: T.Type) -> Builder<T> {
-        guard let builder = builders[name] as? Builder<T> else {
-            return MainDependencyContainer.fatalBuilder()
-        }
-        return builder
-    }
+    private lazy var provider = Provider(owner: self)
 
     private static var _dynamicResolvers = [Any]()
     private static var _dynamicResolversLock = NSRecursiveLock()
@@ -116,105 +53,161 @@ import UIKit
         case parameter
     }
 
+    private var homeViewControllerBuilder: Provider.Builder<UIViewController> {
+        return provider.getBuilder("homeViewController", UIViewController.self)
+    }
+
+    private var imageManagerBuilder: Provider.Builder<ImageManaging> {
+        return provider.getBuilder("imageManager", ImageManaging.self)
+    }
+
+    private var loggerBuilder: Provider.Builder<Logger> {
+        return provider.getBuilder("logger", Logger.self)
+    }
+
+    private var movieAPIBuilder: Provider.Builder<APIProtocol> {
+        return provider.getBuilder("movieAPI", APIProtocol.self)
+    }
+
+    private var movieControllerBuilder: Provider.Builder<UIViewController> {
+        return provider.getBuilder("movieController", UIViewController.self)
+    }
+
+    private var movieIDBuilder: Provider.Builder<UInt> {
+        return provider.getBuilder("movieID", UInt.self)
+    }
+
+    private var movieManagerBuilder: Provider.Builder<MovieManaging> {
+        return provider.getBuilder("movieManager", MovieManaging.self)
+    }
+
+    private var movieTitleBuilder: Provider.Builder<String> {
+        return provider.getBuilder("movieTitle", String.self)
+    }
+
+    private var reviewControllerBuilder: Provider.Builder<WSReviewViewController> {
+        return provider.getBuilder("reviewController", WSReviewViewController.self)
+    }
+
+    private var reviewManagerBuilder: Provider.Builder<ReviewManaging> {
+        return provider.getBuilder("reviewManager", ReviewManaging.self)
+    }
+
+    private var urlSessionBuilder: Provider.Builder<URLSession> {
+        return provider.getBuilder("urlSession", URLSession.self)
+    }
+
     var homeViewController: UIViewController {
-        return getBuilder(for: "homeViewController", type: UIViewController.self)(nil)
+        return provider.build(homeViewControllerBuilder, nil)
     }
 
     var imageManager: ImageManaging {
-        return getBuilder(for: "imageManager", type: ImageManaging.self)(nil)
+        return provider.build(imageManagerBuilder, nil)
     }
 
     var logger: Logger {
-        return getBuilder(for: "logger", type: Logger.self)(nil)
+        return provider.build(loggerBuilder, nil)
     }
 
     var movieAPI: APIProtocol {
-        return getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
+        return provider.build(movieAPIBuilder, nil)
     }
 
     func movieController(movieID: UInt,
                          movieTitle: String) -> UIViewController {
-        let builder: Builder<UIViewController> = getBuilder(for: "movieController", type: UIViewController.self)
-        return builder { (_self) in
-            _self.builders["movieID"] = _self.builder(movieID)
-            _self.builders["movieTitle"] = _self.builder(movieTitle)
+        return provider.build(movieControllerBuilder) { (owner) in
+            owner.provider.setBuilder("movieID", Provider.valueBuilder(movieID))
+            owner.provider.setBuilder("movieTitle", Provider.valueBuilder(movieTitle))
         }
     }
 
     var movieID: UInt {
-        return getBuilder(for: "movieID", type: UInt.self)(nil)
+        return provider.build(movieIDBuilder, nil)
     }
 
     var movieManager: MovieManaging {
-        return getBuilder(for: "movieManager", type: MovieManaging.self)(nil)
+        return provider.build(movieManagerBuilder, nil)
     }
 
     var movieTitle: String {
-        return getBuilder(for: "movieTitle", type: String.self)(nil)
+        return provider.build(movieTitleBuilder, nil)
     }
 
     var reviewController: WSReviewViewController {
-        return getBuilder(for: "reviewController", type: WSReviewViewController.self)(nil)
+        return provider.build(reviewControllerBuilder, nil)
     }
 
     var reviewManager: ReviewManaging {
-        return getBuilder(for: "reviewManager", type: ReviewManaging.self)(nil)
+        return provider.build(reviewManagerBuilder, nil)
     }
 
     var urlSession: URLSession {
-        return getBuilder(for: "urlSession", type: URLSession.self)(nil)
+        return provider.build(urlSessionBuilder, nil)
     }
 
     fileprivate override init() {
     }
 
+    private convenience init(provider: Provider) {
+        self.init()
+        self.provider = provider
+    }
+
     fileprivate func appDelegateDependencyResolver() -> AppDelegateDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["urlSession"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> URLSession in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        _self.provider = provider.transferred(to: _self)
+        var _builders = Dictionary<String, Any>()
+        let _inputProvider = _self.provider
+        _builders["logger"] = Provider.lazyBuilder(
+             { (_: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> Logger in return Logger() }
+        )
+        _builders["urlSession"] = Provider.lazyBuilder(
+             { (owner: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> URLSession in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider.transferred(to: owner))
+                return AppDelegate.makeURLSession(_inputContainer as URLSessionInputDependencyResolver)
             }
-            return AppDelegate.makeURLSession(_self as URLSessionInputDependencyResolver)
-        }
-        _self.builders["movieAPI"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> APIProtocol in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        )
+        _builders["movieAPI"] = Provider.lazyBuilder(
+             { (owner: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> APIProtocol in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider.transferred(to: owner))
+                return AppDelegate.makeMovieAPI(_inputContainer as MovieAPIInputDependencyResolver)
             }
-            return AppDelegate.makeMovieAPI(_self as MovieAPIInputDependencyResolver)
-        }
-        _self.builders["imageManager"] = lazyBuilder { (_: Optional<ParametersCopier>) -> ImageManaging in return ImageManager() }
-        _self.builders["movieManager"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> MovieManaging in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        )
+        _builders["imageManager"] = Provider.lazyBuilder(
+             { (_: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> ImageManaging in return ImageManager() }
+        )
+        _builders["movieManager"] = Provider.lazyBuilder(
+             { (owner: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> MovieManaging in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider.transferred(to: owner))
+                return AppDelegate.makeMovieManager(_inputContainer as MovieManagingInputDependencyResolver)
             }
-            return AppDelegate.makeMovieManager(_self as MovieManagingInputDependencyResolver)
-        }
-        _self.builders["homeViewController"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> UIViewController in
-            defer { MainDependencyContainer._dynamicResolversLock.unlock() }
-            MainDependencyContainer._dynamicResolversLock.lock()
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        )
+        _builders["homeViewController"] = Provider.lazyBuilder(
+             { (owner: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> UIViewController in
+                defer { MainDependencyContainer._dynamicResolversLock.unlock() }
+                MainDependencyContainer._dynamicResolversLock.lock()
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider.transferred(to: owner))
+                let __self = _inputContainer.homeViewControllerDependencyResolver()
+                return HomeViewController(injecting: __self)
             }
-            let __self = _self.homeViewControllerDependencyResolver()
-            return HomeViewController(injecting: __self)
-        }
-        _self.builders["reviewManager"] = lazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> ReviewManaging in
-            defer { MainDependencyContainer._dynamicResolversLock.unlock() }
-            MainDependencyContainer._dynamicResolversLock.lock()
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        )
+        _builders["reviewManager"] = Provider.lazyBuilder(
+             { (owner: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> ReviewManaging in
+                defer { MainDependencyContainer._dynamicResolversLock.unlock() }
+                MainDependencyContainer._dynamicResolversLock.lock()
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider.transferred(to: owner))
+                let __self = _inputContainer.reviewManagerDependencyResolver()
+                return ReviewManager(injecting: __self)
             }
-            let __self = _self.reviewManagerDependencyResolver()
-            return ReviewManager(injecting: __self)
-        }
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
-        _ = _self.getBuilder(for: "urlSession", type: URLSession.self)(nil)
-        _ = _self.getBuilder(for: "movieAPI", type: APIProtocol.self)(nil)
-        _ = _self.getBuilder(for: "imageManager", type: ImageManaging.self)(nil)
-        _ = _self.getBuilder(for: "movieManager", type: MovieManaging.self)(nil)
-        _ = _self.getBuilder(for: "homeViewController", type: UIViewController.self)(nil)
-        _ = _self.getBuilder(for: "reviewManager", type: ReviewManaging.self)(nil)
+        )
+        _self.provider.addBuilders(_builders)
+        _ = _self.logger
+        _ = _self.urlSession
+        _ = _self.movieAPI
+        _ = _self.imageManager
+        _ = _self.movieManager
+        _ = _self.homeViewController
+        _ = _self.reviewManager
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.urlSession })
         MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
@@ -231,9 +224,13 @@ import UIKit
 
     private func personManagerDependencyResolver() -> PersonManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["movieAPI"] = _self.builder(_self.movieAPI)
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        var _builders = Dictionary<String, Any>()
+        _builders["logger"] = Provider.lazyBuilder(
+             { (_: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> Logger in return Logger() }
+        )
+        _builders["movieAPI"] = _self.movieAPIBuilder
+        _self.provider.addBuilders(_builders)
+        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
         return _self
@@ -241,9 +238,13 @@ import UIKit
 
     private func reviewManagerDependencyResolver() -> ReviewManagerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["movieAPI"] = _self.builder(movieAPI)
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        var _builders = Dictionary<String, Any>()
+        _builders["logger"] = Provider.lazyBuilder(
+             { (_: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> Logger in return Logger() }
+        )
+        _builders["movieAPI"] = movieAPIBuilder
+        _self.provider.addBuilders(_builders)
+        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
         return _self
@@ -251,21 +252,27 @@ import UIKit
 
     private func homeViewControllerDependencyResolver() -> HomeViewControllerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["movieController"] = weakLazyBuilder { [weak _self] (copyParameters: Optional<ParametersCopier>) -> UIViewController in
-            defer { MainDependencyContainer._dynamicResolversLock.unlock() }
-            MainDependencyContainer._dynamicResolversLock.lock()
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        _self.provider = provider.transferred(to: _self)
+        var _builders = Dictionary<String, Any>()
+        let _inputProvider = _self.provider
+        _builders["logger"] = Provider.lazyBuilder(
+             { (_: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> Logger in return Logger() }
+        )
+        _builders["movieController"] = Provider.weakLazyBuilder(
+             { (owner: MainDependencyContainer, copyParameters: Optional<Provider.ParametersCopier>) -> UIViewController in
+                defer { MainDependencyContainer._dynamicResolversLock.unlock() }
+                MainDependencyContainer._dynamicResolversLock.lock()
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider.transferred(to: owner))
+                let __self = _inputContainer.movieViewControllerDependencyResolver()
+                copyParameters?(__self as! MainDependencyContainer)
+                return MovieViewController(injecting: __self)
             }
-            let __self = _self.movieViewControllerDependencyResolver()
-            copyParameters?(__self as! MainDependencyContainer)
-            return MovieViewController(injecting: __self)
-        }
-        _self.builders["imageManager"] = _self.builder(imageManager)
-        _self.builders["movieManager"] = _self.builder(movieManager)
-        _self.builders["reviewManager"] = _self.builder(reviewManager)
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        )
+        _builders["imageManager"] = imageManagerBuilder
+        _builders["movieManager"] = movieManagerBuilder
+        _builders["reviewManager"] = reviewManagerBuilder
+        _self.provider.addBuilders(_builders)
+        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieManager })
         MainDependencyContainer._pushDynamicResolver(_self.movieController)
@@ -274,17 +281,23 @@ import UIKit
 
     private func movieViewControllerDependencyResolver() -> MovieViewControllerDependencyResolver {
         let _self = MainDependencyContainer()
-        _self.builders["logger"] = lazyBuilder { (_: Optional<ParametersCopier>) -> Logger in return Logger() }
-        _self.builders["reviewController"] = weakLazyBuilder { [weak _self] (_: Optional<ParametersCopier>) -> WSReviewViewController in
-            guard let _self = _self else {
-                MainDependencyContainer.fatalError()
+        _self.provider = provider.transferred(to: _self)
+        var _builders = Dictionary<String, Any>()
+        let _inputProvider = _self.provider
+        _builders["logger"] = Provider.lazyBuilder(
+             { (_: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> Logger in return Logger() }
+        )
+        _builders["reviewController"] = Provider.weakLazyBuilder(
+             { (owner: MainDependencyContainer, _: Optional<Provider.ParametersCopier>) -> WSReviewViewController in
+                let _inputContainer = MainDependencyContainer(provider: _inputProvider.transferred(to: owner))
+                return WSReviewViewController.make(_inputContainer as WSReviewViewControllerInputDependencyResolver)
             }
-            return WSReviewViewController.make(_self as WSReviewViewControllerInputDependencyResolver)
-        }
-        _self.builders["imageManager"] = _self.builder(imageManager)
-        _self.builders["movieManager"] = _self.builder(movieManager)
-        _self.builders["reviewManager"] = _self.builder(reviewManager)
-        _ = _self.getBuilder(for: "logger", type: Logger.self)(nil)
+        )
+        _builders["imageManager"] = imageManagerBuilder
+        _builders["movieManager"] = movieManagerBuilder
+        _builders["reviewManager"] = reviewManagerBuilder
+        _self.provider.addBuilders(_builders)
+        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieID })
         MainDependencyContainer._pushDynamicResolver({ _self.movieTitle })
@@ -295,7 +308,6 @@ import UIKit
         return _self
     }
 }
-
 
 @objc protocol HomeViewControllerResolver: AnyObject {
     var homeViewController: UIViewController { get }
@@ -430,5 +442,100 @@ extension WeaverP2 where ConcreteType == Void {
          objc: Bool = false,
          platforms: Array<MainDependencyContainer.Platform> = []) {
         // no-op
+    }
+}
+
+// MARK: - Provider
+
+private final class Provider {
+
+    typealias ParametersCopier = (MainDependencyContainer) -> Void
+    typealias Builder<T> = (MainDependencyContainer, ParametersCopier?) -> T
+
+    private(set) weak var owner: MainDependencyContainer?
+    private(set) var builders: Dictionary<String, Any>
+
+    init(owner: MainDependencyContainer?,
+         builders: Dictionary<String, Any> = [:]) {
+        self.owner = owner
+        self.builders = builders
+    }
+}
+
+private extension Provider {
+
+    func addBuilders(_ builders: Dictionary<String, Any>) {
+        builders.forEach { key, value in
+            self.builders[key] = value
+        }
+    }
+
+    func setBuilder<T>(_ name: String, _ builder: @escaping Builder<T>) {
+        builders[name] = builder
+    }
+
+    func getBuilder<T>(_ name: String, _ type: T.Type) -> Builder<T> {
+        guard let builder = builders[name] as? Builder<T> else {
+            return Provider.fatalBuilder()
+        }
+        return builder
+    }
+
+    func build<T>(_ builder: Builder<T>, _ copier: ParametersCopier?) -> T {
+        guard let owner = owner else {
+            MainDependencyContainer.fatalError()
+        }
+        return builder(owner, copier)
+    }
+
+    func transferred(to newOwner: MainDependencyContainer) -> Provider {
+        return Provider(owner: newOwner, builders: builders)
+    }
+}
+
+private extension Provider {
+
+    static func valueBuilder<T>(_ value: T) -> Builder<T> {
+        return { owner, copyParameters in
+            copyParameters?(owner)
+            return value
+        }
+    }
+
+    static func weakOptionalValueBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
+        return { [weak value] owner, copyParameters in
+            copyParameters?(owner)
+            return value
+        }
+    }
+
+    static func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
+        var _value: T?
+        return { owner, copyParameters in
+            if let value = _value {
+                return value
+            }
+            let value = builder(owner, copyParameters)
+            _value = value
+            return value
+        }
+    }
+
+    static func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
+        weak var _value: T?
+        return { owner, copyParameters in
+            if let value = _value {
+                return value
+            }
+            let value = builder(owner, copyParameters)
+            _value = value
+            return value
+        }
+    }
+
+    static func fatalBuilder<T>() -> Builder<T> {
+        return { _, _ in
+            MainDependencyContainer.fatalError()
+        }
     }
 }
