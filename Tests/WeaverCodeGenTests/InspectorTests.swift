@@ -165,6 +165,131 @@ final class SessionManager {
         }
     }
 
+    func test_inspector_should_build_a_valid_dependency_graph_with_nested_scope() {
+        let file = File(contents: """
+
+enum Parent {
+    enum Another {
+        final class API {
+            // weaver: urlProvider <- URLProvider
+        }
+    }
+}
+
+final class URLProvider { }
+
+final class Session {
+    // weaver: sessionManager = SessionManager <- SessionManagerProtocol
+    // weaver: sessionManager.scope = .container
+
+    // weaver: urlProvider = URLProvider
+    // weaver: urlProvider.scope = .transient
+}
+
+final class SessionManager {
+    // weaver: api = Parent.Another.API <- APIProtocol
+    // weaver: api.scope = .container
+}
+""")
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func test_inspector_should_build_an_invalid_dependency_graph_with_nested_scope_and_a_missing_dependency() {
+        let file = File(contents: """
+            enum Parent {
+                enum Another {
+                    final class API {
+                        // weaver: urlProvider <- URLProvider
+                    }
+                }
+            }
+
+            final class Session {
+                // weaver: sessionManager = SessionManager <- SessionManagerProtocol
+                // weaver: sessionManager.scope = .container
+            }
+
+            final class SessionManager {
+                // weaver: api = Parent.Another.API <- APIProtocol
+                // weaver: api.scope = .container
+            }
+            """)
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+
+            try inspector.validate()
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+                test.swift:4: error: Invalid dependency: 'urlProvider: URLProvider'. Dependency cannot be resolved.
+                test.swift:3: warning: Could not find the dependency 'urlProvider' in 'Parent.Another.API'. You may want to register it here to solve this issue.
+                test.swift:14: warning: Could not find the dependency 'urlProvider' in 'SessionManager'. You may want to register it here to solve this issue.
+                test.swift:9: warning: Could not find the dependency 'urlProvider' in 'Session'. You may want to register it here to solve this issue.
+                """)
+        } catch {
+            XCTFail("Unexpected error: \(error).")
+        }
+    }
+
+
+    func test_inspector_should_build_a_valid_cyclic_dependency_graph_with_nested_scope() {
+        let file = File(contents: """
+            enum Parent {
+                enum Another {
+                    final class API {
+                        // weaver: urlProvider <- URLProvider
+                    }
+                }
+            }
+
+            final class URLProvider { }
+
+            final class Session {
+                // weaver: sessionManager = SessionManager <- SessionManagerProtocol
+                // weaver: sessionManager.scope = .container
+
+                // weaver: urlProvider = URLProvider
+                // weaver: urlProvider.scope = .transient
+            }
+
+            final class SessionManager {
+                // weaver: api = Parent.Another.API <- APIProtocol
+                // weaver: api.scope = .container
+            }
+            """)
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+
     func test_inspector_should_build_a_valid_dependency_graph_with_an_unbuildable_dependency_with_custom_builder_set_to_true() {
         let file = File(contents: """
 final class API {

@@ -50,7 +50,7 @@ final class MyService {
             
             if tokens.count == 4 {
                 XCTAssertEqual(tokens[0].description, "internal MyService { - 7[57] - at line: 1")
-                XCTAssertEqual(tokens[1].description, "internal MyEmbeddedService { - 33[29] - at line: 2")
+                XCTAssertEqual(tokens[1].description, "internal MyService.MyEmbeddedService { - 33[29] - at line: 2")
                 XCTAssertEqual(tokens[2].description, "_ } - 61[1] - at line: 3")
                 XCTAssertEqual(tokens[3].description, "_ } - 63[1] - at line: 4")
             } else {

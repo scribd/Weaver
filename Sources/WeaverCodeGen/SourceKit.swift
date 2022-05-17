@@ -195,7 +195,7 @@ struct SourceKitTypeDeclaration {
     let accessLevel: AccessLevel
     let isInjectable: Bool
     
-    init?(_ dictionary: [String: Any], lineString: String) throws {
+    init?(_ dictionary: [String: Any], classPath: String?, lineString: String) throws {
         
         guard let kindString = dictionary[SwiftDocKey.kind.rawValue] as? String,
               let kind = SwiftDeclarationKind(rawValue: kindString) else {
@@ -231,8 +231,9 @@ struct SourceKitTypeDeclaration {
         if components.count > 1 {
             typeString += components[1]
         }
-        
-        type = try ConcreteType(value: CompositeType(typeString))
+
+        let typeName = classPath.flatMap { "\($0).\(typeString)" } ?? typeString
+        type = try ConcreteType(value: CompositeType(typeName))
         
         hasBody = dictionary.keys.contains(SwiftDocKey.bodyOffset.rawValue)
         

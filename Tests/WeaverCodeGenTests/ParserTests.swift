@@ -31,7 +31,7 @@ final class MyService {
             XCTAssertEqual(syntaxTree.description, """
 File[test.swift]
 |- internal MyService { - 6[109] - at line: 0
-|-- internal MyEmbeddedService { - 32[81] - at line: 1
+|-- internal MyService.MyEmbeddedService { - 32[81] - at line: 1
 |-- Register - session = Session <- SessionProtocol - 62[48] - at line: 2
 """)
         } catch {
