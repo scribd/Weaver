@@ -99,11 +99,11 @@ final class RuntimeTreeInspectorTests: XCTestCase {
         } catch let error as InspectorError {
             print("error = \(error)")
             XCTAssertEqual(error.description, """
-            test.swift:28: error: Invalid dependency: 'coordinator: Coordinator'. Dependency cannot be resolved.
-            test.swift:28: warning: Step 0: Tried to resolve dependency 'coordinator' in type 'ViewController3'.
-            test.swift:28: warning: Step 1: Tried to resolve dependency 'coordinator' in type 'AppDelegate'.
-            test.swift:28: error: Dependency 'coordinator' cannot declare parameters and be registered with a container scope. This must either have no parameters or itself be injected as a parameter to a parent depdenceny.
-            """)
+                test.swift:28: error: Invalid dependency: 'coordinator: Coordinator'. Dependency cannot be resolved.
+                test.swift:28: warning: Step 0: Tried to resolve dependency 'coordinator' in type 'ViewController3'.
+                test.swift:28: warning: Step 1: Tried to resolve dependency 'coordinator' in type 'AppDelegate'.
+                test.swift:28: error: Dependency 'coordinator' cannot declare parameters and be registered with a container scope. This must either have no parameters or itself be injected as a parameter to a parent depdenceny.
+                """)
         } catch {
             XCTFail("Unexpected error: \(error).")
         }

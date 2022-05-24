@@ -17,9 +17,9 @@ final class LexerTests: XCTestCase {
         
         let file = File(contents: """
 
-final class MyService {
-}
-""")
+            final class MyService {
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -39,11 +39,11 @@ final class MyService {
         
         let file = File(contents: """
 
-final class MyService {
-  final class MyEmbeddedService {
-  }
-}
-""")
+            final class MyService {
+              final class MyEmbeddedService {
+              }
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -65,9 +65,9 @@ final class MyService {
         
         let file = File(contents: """
 
-public final class MyService {
-}
-""")
+            public final class MyService {
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -87,9 +87,9 @@ public final class MyService {
         
         let file = File(contents: """
 
-public final class MyService<T>: CustomStringDescription {
-}
-""")
+            public final class MyService<T>: CustomStringDescription {
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -109,9 +109,9 @@ public final class MyService<T>: CustomStringDescription {
         
         let file = File(contents: """
 
-open final class MyService {
-}
-""")
+            open final class MyService {
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -131,9 +131,9 @@ open final class MyService {
         
         let file = File(contents: """
 
-internal final class MyService {
-}
-""")
+            internal final class MyService {
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -153,8 +153,8 @@ internal final class MyService {
         
         let file = File(contents: """
 
-// weaver: api = API <- APIProtocol
-""")
+            // weaver: api = API <- APIProtocol
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -175,12 +175,12 @@ internal final class MyService {
         
         let file = File(contents: """
 
-final class MovieManager {
-    
-    @Weaver(.registration, type: API.self)
-    private var api: APIProtocol
-}
-""")
+            final class MovieManager {
+                
+                @Weaver(.registration, type: API.self)
+                private var api: APIProtocol
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -199,8 +199,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: api = API
-""")
+            // weaver: api = API
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -218,12 +218,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_and_no_protocol() {
             
             let file = File(contents: """
-final class MovieManager {
+                final class MovieManager {
 
-    @Weaver(.registration, type: API.self)
-    private var api: API
-}
-""")
+                    @Weaver(.registration, type: API.self)
+                    private var api: API
+                }
+                """)
             do {
                 let lexer = Lexer(file, fileName: "test.swift")
                 let tokens = try lexer.tokenize()
@@ -242,8 +242,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: api = API? <- APIProtocol?
-""")
+            // weaver: api = API? <- APIProtocol?
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -261,12 +261,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_and_optional_types() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.registration, type: API?.self)
-    private var api: APIProtocol?
-}
-""")
+                @Weaver(.registration, type: API?.self)
+                private var api: APIProtocol?
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -285,8 +285,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: request = Request<T, P> <- APIRequest<T, P>
-""")
+            // weaver: request = Request<T, P> <- APIRequest<T, P>
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -304,12 +304,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_with_generic_types() {
             
         let file = File(contents: """
-final class MovieManager<T, P> {
+            final class MovieManager<T, P> {
 
-@Weaver(.registration, type: Request<T, P>.self)
-private var api: APIRequest<T, P>
-}
-""")
+            @Weaver(.registration, type: Request<T, P>.self)
+            private var api: APIRequest<T, P>
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -328,8 +328,8 @@ private var api: APIRequest<T, P>
         
         let file = File(contents: """
 
-// weaver: request = Request<T, P>? <- APIRequest<T, P>?
-""")
+            // weaver: request = Request<T, P>? <- APIRequest<T, P>?
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -347,12 +347,12 @@ private var api: APIRequest<T, P>
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_with_generic_and_optional_types() {
         
         let file = File(contents: """
-final class MovieManager<T, P> {
+            final class MovieManager<T, P> {
 
-    @Weaver(.registration, type: Request<T, P>?.self)
-    private var request: APIRequest<T, P>?
-}
-""")
+                @Weaver(.registration, type: Request<T, P>?.self)
+                private var request: APIRequest<T, P>?
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -371,8 +371,8 @@ final class MovieManager<T, P> {
         
         let file = File(contents: """
 
-// weaver: api <- APIProtocol
-""")
+            // weaver: api <- APIProtocol
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -390,12 +390,12 @@ final class MovieManager<T, P> {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.reference)
-    private var api: APIProtocol
-}
-""")
+                @Weaver(.reference)
+                private var api: APIProtocol
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -414,8 +414,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: api <- APIProtocol?
-""")
+            // weaver: api <- APIProtocol?
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -433,12 +433,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation_with_an_optional_type() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.reference)
-    private var api: APIProtocol?
-}
-""")
+                @Weaver(.reference)
+                private var api: APIProtocol?
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -457,8 +457,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: request <- Request<T, P>
-""")
+            // weaver: request <- Request<T, P>
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -476,12 +476,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation_with_a_generic_type() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.reference)
-    private var request: Request<T, P>
-}
-""")
+                @Weaver(.reference)
+                private var request: Request<T, P>
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -500,8 +500,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: request <- Request<T, P>?
-""")
+            // weaver: request <- Request<T, P>?
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -519,12 +519,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation_with_a_generic_optional_type() {
             
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.reference)
-    private var request: Request<T, P>?
-}
-""")
+                @Weaver(.reference)
+                private var request: Request<T, P>?
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -543,8 +543,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: movieID <= UInt
-""")
+            // weaver: movieID <= UInt
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -562,12 +562,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.parameter)
-    private var movieID: UInt
-}
-""")
+                @Weaver(.parameter)
+                private var movieID: UInt
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -586,8 +586,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: movieID <= UInt?
-""")
+            // weaver: movieID <= UInt?
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -605,12 +605,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation_with_an_optional_type() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.parameter)
-    private var movieID: UInt?
-}
-""")
+                @Weaver(.parameter)
+                private var movieID: UInt?
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -629,8 +629,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: request <= Request<T, P>
-""")
+            // weaver: request <= Request<T, P>
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -648,12 +648,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation_with_a_generaic_type() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.parameter)
-    private var request: Request<T, P>
-}
-""")
+                @Weaver(.parameter)
+                private var request: Request<T, P>
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -672,8 +672,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: request <= Request<T, P>?
-""")
+            // weaver: request <= Request<T, P>?
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -691,12 +691,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_parameter_property_wrapper_annotation_with_a_generic_optional_type() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.parameter)
-    private var request: Request<T, P>?
-}
-""")
+                @Weaver(.parameter)
+                private var request: Request<T, P>?
+            }
+            """)
         do {
             let lexer = Lexer(file, fileName: "test.swift")
             let tokens = try lexer.tokenize()
@@ -715,8 +715,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: api.builder = make
-""")
+            // weaver: api.builder = make
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -735,12 +735,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_custom_builder_property_wrapper_annotation() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.registration, type: Request<T, P>?.self, builder: make)
-    private var request: Request<T, P>?
-}
-""")
+                @Weaver(.registration, type: Request<T, P>?.self, builder: make)
+                private var request: Request<T, P>?
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -760,8 +760,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: self.isIsolated = true
-""")
+            // weaver: self.isIsolated = true
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -781,8 +781,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: self.isIsolated = false
-""")
+            // weaver: self.isIsolated = false
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -802,8 +802,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: self.isIsolated = ok
-""")
+            // weaver: self.isIsolated = ok
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -819,10 +819,9 @@ final class MovieManager {
     func test_tokenizer_should_generate_an_empty_token_list_with_any_ignored_declaration() {
         
         let file = File(contents: """
-
-func ignoredFunc() {
-}
-""")
+            func ignoredFunc() {
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -837,8 +836,8 @@ func ignoredFunc() {
         
         let file = File(contents: """
 
-// weaver: self.fakeAttribute = true
-""")
+            // weaver: self.fakeAttribute = true
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -855,27 +854,27 @@ func ignoredFunc() {
         
         let file = File(contents: """
 
-final class MyService {
-  let dependencies: DependencyResolver
+            final class MyService {
+              let dependencies: DependencyResolver
 
-  // weaver: api = API <-- APIProtocol
-  // weaver: api.scope = .container
+              // weaver: api = API <-- APIProtocol
+              // weaver: api.scope = .container
 
-  init(_ dependencies: DependencyResolver) {
-    self.dependencies = dependencies
-  }
+              init(_ dependencies: DependencyResolver) {
+                self.dependencies = dependencies
+              }
 
-  func doSomething() {
-    otherService.doSomething(in: api).then { result in
-      if let session = self.session {
-        router.redirectSomewhereWeAreLoggedIn()
-      } else {
-        router.redirectSomewhereWeAreLoggedOut()
-      }
-    }
-  }
-}
-""")
+              func doSomething() {
+                otherService.doSomething(in: api).then { result in
+                  if let session = self.session {
+                    router.redirectSomewhereWeAreLoggedIn()
+                  } else {
+                    router.redirectSomewhereWeAreLoggedOut()
+                  }
+                }
+              }
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -891,28 +890,27 @@ final class MyService {
     func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_property_wrapper_annotation() {
             
         let file = File(contents: """
+            final class MyService {
+              let dependencies: DependencyResolver
 
-final class MyService {
-  let dependencies: DependencyResolver
+              @Weaver(.registration, API.self)
+              private var api: APIProtocol
 
-  @Weaver(.registration, API.self)
-  private var api: APIProtocol
+              init(_ dependencies: DependencyResolver) {
+                self.dependencies = dependencies
+              }
 
-  init(_ dependencies: DependencyResolver) {
-    self.dependencies = dependencies
-  }
-
-  func doSomething() {
-    otherService.doSomething(in: api).then { result in
-      if let session = self.session {
-        router.redirectSomewhereWeAreLoggedIn()
-      } else {
-        router.redirectSomewhereWeAreLoggedOut()
-      }
-    }
-  }
-}
-""")
+              func doSomething() {
+                otherService.doSomething(in: api).then { result in
+                  if let session = self.session {
+                    router.redirectSomewhereWeAreLoggedIn()
+                  } else {
+                    router.redirectSomewhereWeAreLoggedOut()
+                  }
+                }
+              }
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -929,27 +927,27 @@ final class MyService {
         
         let file = File(contents: """
 
-final class MyService {
-  let dependencies: DependencyResolver
+            final class MyService {
+              let dependencies: DependencyResolver
 
-  // weaver: api = API <- APIProtocol
-  // weaver: api.scope = .thisScopeDoesNotExists
+              // weaver: api = API <- APIProtocol
+              // weaver: api.scope = .thisScopeDoesNotExists
 
-  init(_ dependencies: DependencyResolver) {
-    self.dependencies = dependencies
-  }
+              init(_ dependencies: DependencyResolver) {
+                self.dependencies = dependencies
+              }
 
-  func doSomething() {
-    otherService.doSomething(in: api).then { result in
-      if let session = self.session {
-        router.redirectSomewhereWeAreLoggedIn()
-      } else {
-        router.redirectSomewhereWeAreLoggedOut()
-      }
-    }
-  }
-}
-""")
+              func doSomething() {
+                otherService.doSomething(in: api).then { result in
+                  if let session = self.session {
+                    router.redirectSomewhereWeAreLoggedIn()
+                  } else {
+                    router.redirectSomewhereWeAreLoggedOut()
+                  }
+                }
+              }
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -966,8 +964,8 @@ final class MyService {
         
         let file = File(contents: """
 
-// weaver: import API
-""")
+            // weaver: import API
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -987,8 +985,8 @@ final class MyService {
         
         let file = File(contents: """
 
-import API
-""")
+            import API
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -1008,13 +1006,13 @@ import API
         
         let file = File(contents: """
 
-final class MovieManager {
-    // weaver: logger = Logger<String>
-}
-final class Logger<T> {
-    // weaver: domain <= T
-}
-""")
+            final class MovieManager {
+                // weaver: logger = Logger<String>
+            }
+            final class Logger<T> {
+                // weaver: domain <= T
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -1034,10 +1032,10 @@ final class Logger<T> {
         
         let file = File(contents: """
 
-final class MovieManager {
-    // weaver: array = [String]
-}
-""")
+            final class MovieManager {
+                // weaver: array = [String]
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -1057,10 +1055,10 @@ final class MovieManager {
         
         let file = File(contents: """
 
-final class MovieManager {
-    // weaver: array = [ String? ]?
-}
-""")
+            final class MovieManager {
+                // weaver: array = [ String? ]?
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -1080,10 +1078,10 @@ final class MovieManager {
         
         let file = File(contents: """
 
-final class MovieManager {
-    // weaver: dict = [ String : Int ]
-}
-""")
+            final class MovieManager {
+                // weaver: dict = [ String : Int ]
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -1103,10 +1101,10 @@ final class MovieManager {
         
         let file = File(contents: """
 
-final class MovieManager {
-    // weaver: dict = [String?:Int?]?
-}
-""")
+            final class MovieManager {
+                // weaver: dict = [String?:Int?]?
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -1126,8 +1124,8 @@ final class MovieManager {
         
         let file = File(contents: """
 
-// weaver: api.platforms = [.iOS,.watchOS]
-""")
+            // weaver: api.platforms = [.iOS,.watchOS]
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
@@ -1146,12 +1144,12 @@ final class MovieManager {
     func test_tokenizer_should_generate_a_valid_token_list_with_a_platforms_property_wrapper_annotation() {
         
         let file = File(contents: """
-final class MovieManager {
+            final class MovieManager {
 
-    @Weaver(.registration, type: Request<T, P>?.self, platforms: [.iOS, .watchOS])
-    private var request: Request<T, P>?
-}
-""")
+                @Weaver(.registration, type: Request<T, P>?.self, platforms: [.iOS, .watchOS])
+                private var request: Request<T, P>?
+            }
+            """)
         let lexer = Lexer(file, fileName: "test.swift")
         
         do {
