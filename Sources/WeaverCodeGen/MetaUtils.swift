@@ -26,6 +26,10 @@ extension TypeIdentifier {
     static func builder(of typeID: TypeIdentifier) -> TypeIdentifier {
         return TypeIdentifier(name: "Provider.Builder").adding(genericParameter: typeID)
     }
+
+    var typeComponents: [String] {
+        return name.string.components(separatedBy: ".")
+    }
 }
 
 extension Variable {
@@ -65,7 +69,9 @@ extension TypeWrapper {
     }
 
     var dependencyResolverVariable: Variable {
-        let valueTypeName = value.toTypeName
+        let valueTypeName = value.toTypeName.filter { character in
+            return character != "."
+        }
         let underscore = valueTypeName.contains("_") ? "_" : String()
         return Variable(name: "\(valueTypeName.variableCased)\(underscore)DependencyResolver")
     }

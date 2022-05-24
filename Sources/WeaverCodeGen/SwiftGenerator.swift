@@ -607,16 +607,32 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 }
                 guard let andTypeIDs = TypeIdentifier.and(resolverTypeIDs + setterTypeIDs) else { return [] }
 
-                let name = try containsAmbiguousDeclarations(in: dependencyContainer)
-                    ? dependencyContainer.type.internalDependencyResolverTypeID.name
-                    : dependencyContainer.type.dependencyResolverTypeID.name
+                let typeIdentifier = try containsAmbiguousDeclarations(in: dependencyContainer)
+                ? dependencyContainer.type.internalDependencyResolverTypeID
+                : dependencyContainer.type.dependencyResolverTypeID
 
-                return [
-                    EmptyLine(),
-                    TypeAlias(
+                let name = typeIdentifier.name
+                let typeComponents = typeIdentifier.typeComponents
+                let typeAlias: FileBodyMember
+
+                if typeComponents.count == 1 {
+                    typeAlias = TypeAlias(
                         identifier: TypeAliasIdentifier(name: name),
                         value: andTypeIDs
                     )
+                } else {
+                    let extensionName = typeComponents.dropLast().joined(separator: ".")
+                    typeAlias = Extension(name: extensionName)
+                        .adding(member: TypeAlias(
+                            identifier: TypeAliasIdentifier(name: typeComponents[typeComponents.count-1]),
+                            value: andTypeIDs
+                        )
+                    )
+                }
+
+                return [
+                    EmptyLine(),
+                    typeAlias
                 ]
                 
             case .registration,
@@ -648,14 +664,32 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             guard declarations.isEmpty == false else { return [] }
             let target = try dependencyGraph.dependencyContainer(for: target)
             let declarations = declarations.lazy.sorted { lhs, rhs in lhs.resolverTypeName < rhs.resolverTypeName }
-            return [
-                EmptyLine(),
-                TypeAlias(
+
+            let typeComponents = target.type.inputDependencyResolverTypeID.typeComponents
+            let typeAlias: FileBodyMember
+
+            if typeComponents.count == 1 {
+                typeAlias = TypeAlias(
                     identifier: TypeAliasIdentifier(name: target.type.inputDependencyResolverTypeID.name),
                     value: TypeIdentifier.and(declarations.map { declaration in
                         TypeIdentifier(name: declaration.resolverTypeName)
                     })!
                 )
+            } else {
+                let extensionName = typeComponents.dropLast().joined(separator: ".")
+                typeAlias = Extension(name: extensionName)
+                    .adding(member: TypeAlias(
+                        identifier: TypeAliasIdentifier(name: typeComponents[typeComponents.count-1]),
+                        value: TypeIdentifier.and(declarations.map { declaration in
+                            TypeIdentifier(name: declaration.resolverTypeName)
+                        })!
+                    )
+                )
+            }
+
+            return [
+                EmptyLine(),
+                typeAlias
             ]
         }
     }
@@ -981,7 +1015,25 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         
         return try dependencyGraph.dependencyContainers.orderedValues.flatMap { dependencyContainer -> [FileBodyMember] in
             guard try containsAmbiguousDeclarations(in: dependencyContainer) else { return [] }
-            
+
+            let typeComponents = dependencyContainer.type.dependencyResolverTypeID.typeComponents
+            let typeAlias: FileBodyMember
+
+            if typeComponents.count == 1 {
+                typeAlias = TypeAlias(
+                    identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
+                    value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
+                )
+            } else {
+                let extensionName = typeComponents.dropLast().joined(separator: ".")
+                typeAlias = Extension(name: extensionName)
+                    .adding(member: TypeAlias(
+                        identifier: TypeAliasIdentifier(name: typeComponents[typeComponents.count-1]),
+                        value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
+                    )
+                )
+            }
+
             return [
                 EmptyLine(),
                 Type(identifier: dependencyContainer.type.dependencyResolverProxyTypeID)
@@ -1023,10 +1075,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         return members
                     }),
                 EmptyLine(),
-                TypeAlias(
-                    identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
-                    value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
-                )
+                typeAlias
             ]
         }
     }
