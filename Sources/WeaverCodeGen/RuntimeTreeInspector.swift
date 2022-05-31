@@ -40,7 +40,8 @@ private extension RuntimeTreeInspector {
 
     func validateConfiguration(of dependency: Dependency, node: TreeNode) throws {
         switch dependency.configuration.scope {
-        case .container where dependency.kind.isResolvable:
+        case .container where dependency.kind.isResolvable,
+             .lazy where dependency.kind.isResolvable:
             let container = try node.dependencyGraph.dependencyContainer(for: dependency)
             if let historyRecord = containerDependencyError(container, dependency, node) {
                 throw InspectorError.invalidDependencyGraph(dependency, underlyingError:.unresolvableDependency(history: historyRecord))
@@ -74,13 +75,16 @@ private extension RuntimeTreeInspector {
                 return nil
             }
 
-            switch matchingDependency.kind {
-            case .parameter:
-                return .empty
-            case .registration:
-                history.append(.invalidContainerScope(dependency))
+            switch (matchingDependency.kind, matchingDependency.configuration.scope) {
+            case (.registration, .container),
+                 (.registration, .lazy):
+                history.append(.invalidContainerScope(dependency, scope: matchingDependency.configuration.scope))
                 return .history
-            case .reference:
+            case (.parameter, _),
+                 (.registration, .transient),
+                 (.registration, .weak):
+                return .empty
+            case (.reference, _):
                 return nil
             }
         }

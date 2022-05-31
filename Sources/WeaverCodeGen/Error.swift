@@ -72,7 +72,7 @@ enum InspectorAnalysisHistoryRecord: Error {
     case typeMismatch(Dependency, candidate: Dependency)
     case implicitDependency(Dependency, candidates: [Dependency])
     case implicitType(Dependency, candidates: [Dependency])
-    case invalidContainerScope(Dependency)
+    case invalidContainerScope(Dependency, scope: Scope)
 }
 
 // MARK: - Printables
@@ -325,8 +325,8 @@ extension InspectorAnalysisHistoryRecord: CustomStringConvertible {
             candidate.xcodeLogString(.warning, "Found candidate '\(candidate.dependencyName): \(candidate.type.description)'")
             }.joined(separator: ".\n"))
             """
-        case .invalidContainerScope(let dependency):
-            let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a container scope. This must either have no parameters or itself be injected as a parameter to a parent depdenceny"
+        case .invalidContainerScope(let dependency, let scope):
+            let message = "Dependency '\(dependency.dependencyName)' cannot declare parameters and be registered with a \(scope) scope. This must either have no parameters or itself be injected as a parameter to a parent depdenceny"
             return dependency.fileLocation?.xcodeLogString(.error, message) ?? message
         }
     }

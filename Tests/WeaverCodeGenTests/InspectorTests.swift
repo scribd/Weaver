@@ -1015,7 +1015,99 @@ final class InspectorTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
-    
+
+    func test_inspector_should_build_an_invalid_dependency_graph_with_a_registration_using_scope_lazy_on_dependency_taking_parameters() {
+        let file = File(contents: """
+            final class MovieViewController {
+                // weaver: movieManager = MovieManager
+                // weaver: movieManager.scope = .lazy
+            }
+
+            final class MovieManager {
+                // weaver: movieID <= Int
+            }
+            """)
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+
+            try inspector.validate()
+            XCTFail("Expected error.")
+        } catch let error as InspectorError {
+            XCTAssertEqual(error.description, """
+                test.swift:2: error: Invalid dependency: 'movieManager: MovieManager'. Dependency cannot be resolved.
+                test.swift:2: warning: Step 0: Tried to resolve dependency 'movieManager' in type 'MovieViewController'.
+                test.swift:2: error: Dependency 'movieManager' cannot declare parameters and be registered with a lazy scope. This must either have no parameters or itself be injected as a parameter to a parent depdenceny.
+                """)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func test_inspector_should_build_a_valid_dependency_graph_with_a_registration_using_scope_transient_on_dependency_taking_parameters() {
+        let file = File(contents: """
+            final class MovieViewController {
+                // weaver: movieManager = MovieManager
+                // weaver: movieManager.scope = .transient
+            }
+
+            final class MovieManager {
+                // weaver: movieID <= Int
+            }
+            """)
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func test_inspector_should_build_a_valid_dependency_graph_with_a_reference_and_registration_using_scope_transient_on_dependency_taking_parameters() {
+        let file = File(contents: """
+            final class MovieViewController {
+                // weaver: movieManager = MovieManager
+                // weaver: movieManager.scope = .transient
+
+                // weaver: otherClass = OtherClass
+                // weaver: otherClass.scope = .container
+            }
+
+            final class OtherClass {
+                // weaver: movieManager <- MovieManager
+            }
+
+            final class MovieManager {
+                // weaver: movieID <= Int
+            }
+            """)
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func test_inspector_should_build_an_invalid_dependency_graph_because_of_invalid_amount_of_parameters_in_decalaration() {
         let file = File(contents: """
             final class MovieViewController {
