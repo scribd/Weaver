@@ -29,29 +29,29 @@ final class SourceKitDependencyAnnotationTests: XCTestCase {
 
         let builder = builder.flatMap { ", builder: \($0)" } ?? ""
         let lineContent = """
-@Weaver(.\(dependencyKind), type: \(type).self, scope: .\(scope), setter: \(setter)\(builder)) private var \(name): \(abstractTypes)
-"""
+            @Weaver(.\(dependencyKind), type: \(type).self, scope: .\(scope), setter: \(setter)\(builder)) private var \(name): \(abstractTypes)
+            """
 
-        let jsonString = """
-{
-    "key.nameoffset" : 727,
-    "key.typename" : "\(abstractTypes)",
-    "key.setter_accessibility" : "\(accessLevel)",
-    "key.namelength" : 8,
-    "key.kind" : "source.lang.swift.decl.var.instance",
-    "key.accessibility" : "\(accessLevel)",
-    "key.name" : "\(name)",
-    "key.attributes" : [
-     {
-        "key.offset" : 0,
-        "key.length" : \(lineContent.count - 1),
-        "key.attribute" : "source.decl.attribute._custom"
-     }
-    ],
-    "key.offset" : \(offset),
-    "key.length" : \(length)
-}
-"""
+                    let jsonString = """
+            {
+                "key.nameoffset" : 727,
+                "key.typename" : "\(abstractTypes)",
+                "key.setter_accessibility" : "\(accessLevel)",
+                "key.namelength" : 8,
+                "key.kind" : "source.lang.swift.decl.var.instance",
+                "key.accessibility" : "\(accessLevel)",
+                "key.name" : "\(name)",
+                "key.attributes" : [
+                 {
+                    "key.offset" : 0,
+                    "key.length" : \(lineContent.count - 1),
+                    "key.attribute" : "source.decl.attribute._custom"
+                 }
+                ],
+                "key.offset" : \(offset),
+                "key.length" : \(length)
+            }
+            """
         guard let data = jsonString.data(using: .utf8) else {
             XCTFail("Failed to build data from string: \(jsonString)")
             return nil
@@ -178,21 +178,21 @@ final class SourceKitTypeDeclarationTests: XCTestCase {
                            name: String = "fake_name") -> SourceKitTypeDeclaration? {
 
         let jsonString = """
-{
-    "key.accessibility" : "\(accessLevel)",
-    "key.attributes" : [
-    {
-        "key.attribute" : "source.decl.attribute.final"
-    }
-    ],
-    "key.bodylength" : 707,
-    \(bodyOffset.flatMap { "\"key.bodyoffset\" : \($0)," } ?? "")
-    "key.kind" : "\(kind)",
-    "key.length" : \(length),
-    "key.name" : "\(name)",
-    "key.offset" : \(offset)
-}
-"""
+            {
+                "key.accessibility" : "\(accessLevel)",
+                "key.attributes" : [
+                {
+                    "key.attribute" : "source.decl.attribute.final"
+                }
+                ],
+                "key.bodylength" : 707,
+                \(bodyOffset.flatMap { "\"key.bodyoffset\" : \($0)," } ?? "")
+                "key.kind" : "\(kind)",
+                "key.length" : \(length),
+                "key.name" : "\(name)",
+                "key.offset" : \(offset)
+            }
+            """
         guard let data = jsonString.data(using: .utf8) else {
             XCTFail("Failed to build data from string: \(jsonString)")
             return nil
@@ -203,7 +203,7 @@ final class SourceKitTypeDeclarationTests: XCTestCase {
                 XCTFail("Failed to dictionary from json: \(jsonString)")
                 return nil
             }
-            return try SourceKitTypeDeclaration(jsonObject, lineString: "")
+            return try SourceKitTypeDeclaration(jsonObject, classPath: nil, lineString: "")
         } catch {
             XCTFail("Unexpected json parsing error: \(error)")
             return nil

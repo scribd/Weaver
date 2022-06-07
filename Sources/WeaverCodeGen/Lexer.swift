@@ -72,9 +72,17 @@ private extension Lexer {
         }
         return currentLine
     }
-    
+
+    func parseClassPath(from sourceKitAST: [String: SourceKitRepresentable], prefix: String? = nil) -> String? {
+        if let name = sourceKitAST[SwiftDocKey.name.rawValue] as? String {
+            return "\(prefix.flatMap { "\($0).\(name)" } ?? name)"
+        } else {
+            return prefix
+        }
+    }
+
     /// Tokenize declarations from the SourceKitAST
-    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], at line: inout Int) throws -> [AnyTokenBox] {
+    func tokenize(from sourceKitAST: [String: SourceKitRepresentable], classPath: String? = nil, at line: inout Int) throws -> [AnyTokenBox] {
         do {
             var tokens = [AnyTokenBox]()
 
@@ -83,14 +91,14 @@ private extension Lexer {
                 return try annotation.toTokens()
             }
 
-            let typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content)
+            let typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, classPath: classPath, lineString: lines[line].content)
             
             if let typeDeclaration = typeDeclaration {
                 var startToken = typeDeclaration.toToken
 
                 if let nextLine = findNextLine(after: line, containing: Int(startToken.offset)) {
                     line = nextLine
-                    if let _typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, lineString: lines[line].content) {
+                    if let _typeDeclaration = try SourceKitTypeDeclaration(sourceKitAST, classPath: classPath, lineString: lines[line].content) {
                         startToken = _typeDeclaration.toToken
                     }
                     startToken.line = line
@@ -100,10 +108,11 @@ private extension Lexer {
                 
                 tokens += [startToken]
             }
-            
+
+            let classPath = parseClassPath(from: sourceKitAST, prefix: classPath)
             if let children = sourceKitAST[SwiftDocKey.substructure.rawValue] as? [[String: SourceKitRepresentable]] {
                 for child in children {
-                    tokens += try tokenize(from: child, at: &line)
+                    tokens += try tokenize(from: child, classPath: classPath, at: &line)
                 }
             }
 
@@ -124,7 +133,7 @@ private extension Lexer {
             throw error
         }
     }
-    
+
     /// Tokenize annotations from the SourceKit SyntaxTokens.
     func tokenize(from sourceKitTokens: [SyntaxToken]) throws -> [AnyTokenBox] {
 
