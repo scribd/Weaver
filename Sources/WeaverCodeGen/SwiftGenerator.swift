@@ -740,12 +740,12 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
 
         let hasSetter = dependencyContainer.dependencies.orderedValues.contains { $0.configuration.setter == true }
         let hasParameters = dependencyContainer.parameters.isEmpty == false
-        let useWeakReference = hasSetter || hasParameters
+        let useReference = hasSetter || hasParameters
 
         let inputProviderReference: Assignment?
         if hasInputDependencies {
-            if useWeakReference {
-                inputProviderReference = Assignment(variable: Variable(name: "_inputProvider").with(immutable: false).with(kind: .weak), value: Variable._self.reference + .provider)
+            if useReference {
+                inputProviderReference = Assignment(variable: Variable(name: "_inputProvider"), value: Variable._self.reference + .provider)
             } else {
                 inputProviderReference = Assignment(variable: Variable(name: "_inputProvider"), value: Variable._self.reference + .provider + .named("copy") | .call())
             }
@@ -845,7 +845,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 .adding(member: requiresBuilders ? Variable._self.reference + .provider + .named("addBuilders") | .call(Tuple()
                     .adding(parameter: TupleParameter(value: Reference.named("_builders")))
                 ) : nil)
-                .adding(member: (hasInputDependencies && useWeakReference == false) ? Reference.named("_inputProvider") + .named("addBuilders") | .call(Tuple()
+                .adding(member: (hasInputDependencies && useReference == false) ? Reference.named("_inputProvider") + .named("addBuilders") | .call(Tuple()
                     .adding(parameter: TupleParameter(value: Reference.named("_builders")))
                 ) : nil)
                 .adding(members: try dependencyContainer.registrations.compactMap { registration in
@@ -973,7 +973,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         let hasInputContainer = resolverReference != nil || isTypecastingAsResolver
         let hasSetter = dependencyContainer.dependencies.orderedValues.contains { $0.configuration.setter == true }
         let hasParameters = dependencyContainer.parameters.isEmpty == false
-        let useWeakReference = hasSetter || hasParameters
+        let useReference = hasSetter || hasParameters
 
         let functionBody = FunctionBody()
             .adding(parameter: FunctionBodyParameter(
@@ -985,13 +985,9 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
             MainDependencyContainer._dynamicResolversLock.lock()
             """) : nil)
-            .adding(member: (hasInputContainer && useWeakReference) ?
-                Guard(assignment: Assignment(variable: Variable(name: "_inputProvider"), value: Reference.named("_inputProvider") | .named("?") + .named("copy") | .call()))
-                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call())
-            : nil)
             .adding(member: hasInputContainer ?
                 Assignment(variable: Variable(name: "_inputContainer"), value: TypeIdentifier.mainDependencyContainer.reference | .call(Tuple()
-                    .adding(parameter: TupleParameter(name: "provider", value: Reference.named("_inputProvider")))
+                    .adding(parameter: TupleParameter(name: "provider", value: Reference.named("_inputProvider") | (useReference ? .none + .named("copy") | .call() : .none)))
                 ))
             : nil)
             .adding(member: resolverReference.flatMap {
