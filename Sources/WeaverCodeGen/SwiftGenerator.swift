@@ -90,7 +90,8 @@ private final class MetaDependencyDeclaration: Hashable {
     init(for dependency: Dependency,
          in dependencyGraph: DependencyGraph,
          includeTypeInName: Bool = false,
-         includeParametersInName: Bool = false) throws {
+         includeParametersInName: Bool = false,
+         ignoreParametersInReferences: Bool = false) throws {
         
         name = dependency.dependencyName
         type = dependency.type
@@ -99,11 +100,12 @@ private final class MetaDependencyDeclaration: Hashable {
         self.includeParametersInName = includeParametersInName
         
         switch dependency.kind {
-        case .registration,
-             .reference:
+        case .reference where ignoreParametersInReferences == false,
+             .registration:
             let dependencyContainer = try dependencyGraph.dependencyContainer(for: dependency)
             parameters = dependencyContainer.parameters
-        case .parameter:
+        case .reference,
+             .parameter:
             parameters = []
         }
     }
@@ -599,11 +601,11 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             switch dependencyContainer.declarationSource {
             case .type:
                 let resolverTypeIDs = try dependencyContainer.dependencies.orderedValues.map { dependency in
-                    TypeIdentifier(name: try declaration(for: dependency).resolverTypeName)
+                    TypeIdentifier(name: try declaration(for: dependency, ignoreParametersInReferences: true).resolverTypeName)
                 }
                 let setterTypeIDs = try dependencyContainer.registrations.compactMap { registration -> TypeIdentifier? in
                     guard registration.configuration.setter else { return nil }
-                    return TypeIdentifier(name: try declaration(for: registration).setterTypeName)
+                    return TypeIdentifier(name: try declaration(for: registration, ignoreParametersInReferences: true).setterTypeName)
                 }
                 guard let andTypeIDs = TypeIdentifier.and(resolverTypeIDs + setterTypeIDs) else { return [] }
 
@@ -737,10 +739,12 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         }
 
         let hasSetter = dependencyContainer.dependencies.orderedValues.contains { $0.configuration.setter == true }
+        let hasParameters = dependencyContainer.parameters.isEmpty == false
+        let useWeakReference = hasSetter || hasParameters
 
         let inputProviderReference: Assignment?
         if hasInputDependencies {
-            if hasSetter {
+            if useWeakReference {
                 inputProviderReference = Assignment(variable: Variable(name: "_inputProvider").with(immutable: false).with(kind: .weak), value: Variable._self.reference + .provider)
             } else {
                 inputProviderReference = Assignment(variable: Variable(name: "_inputProvider"), value: Variable._self.reference + .provider + .named("copy") | .call())
@@ -748,6 +752,74 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
         } else {
             inputProviderReference = nil
         }
+
+        let copyAssignments: [FunctionBodyMember] = try dependencyContainer.registrations.compactMap { registration in
+            try copyAssignment(for: registration, from: dependencyContainer)
+        }
+
+        let inputReferenceAssignments: [FunctionBodyMember] = try inputReferences.flatMap { reference -> [FunctionBodyMember] in
+
+            let declaration = try self.declaration(for: reference, ignoreParametersInReferences: true)
+            guard selfReferenceDeclarations.contains(declaration) == false else { return [] }
+
+            let assignments: (MetaDependencyDeclaration) -> [Assignment] = { resolvedDeclaration in
+                let inputNames = functionParameterValues.map { $0.name }
+
+                let isRootDependencyContainer = dependencyContainer.sources.isEmpty && publicInterface == false
+                let isParameter = inputNames.contains(resolvedDeclaration.name)
+                let shouldHoldSelfReference = isRootDependencyContainer || isParameter
+
+                let providerValue: (MetaDependencyDeclaration) -> Reference = { currentDeclaration in
+                    if inputNames.contains(currentDeclaration.name) {
+                        if currentDeclaration.scope == .weak {
+                            return .weakOptionalValueBuilder(value: .named(currentDeclaration.name))
+                        } else {
+                            return .valueBuilder(value: .named(currentDeclaration.name))
+                        }
+                    } else {
+                        return (shouldHoldSelfReference ? Variable._self.reference + .none : .none) | .named(currentDeclaration.builderName)
+                    }
+                }
+
+                var assignments = [Assignment(
+                    variable: Reference.named(declaration.buildersSubcript),
+                    value: providerValue(declaration)
+                )]
+
+                if resolvedDeclaration.declarationName != declaration.declarationName {
+                    assignments += [Assignment(
+                        variable: Reference.named(resolvedDeclaration.buildersSubcript),
+                        value: providerValue(resolvedDeclaration)
+                    )]
+                }
+
+                return assignments
+            }
+
+            if publicInterface {
+                return assignments(declaration)
+            } else {
+                let resolvedDeclarations = try resolvedDeclarationsBySource(for: reference, in: dependencyContainer)
+                if resolvedDeclarations.count > 1 {
+                    return [Switch(reference: Variable.source.reference)
+                        .adding(cases: resolvedDeclarations.compactMap { source, declaration in
+                            guard let source = source else { return nil }
+                            return SwitchCase()
+                                .adding(value: Value.string(source.description))
+                                .adding(members: assignments(declaration))
+                        })
+                        .adding(case: SwitchCase(name: .default)
+                            .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call())
+                        )]
+                } else if let resolvedDeclaration = resolvedDeclarations.first?.declaration {
+                    return assignments(resolvedDeclaration)
+                } else {
+                    return []
+                }
+            }
+        }
+
+        let requiresBuilders = copyAssignments.count > 0 || inputReferenceAssignments.count > 0
 
         var members: [TypeBodyMember] = [
             EmptyLine(),
@@ -767,74 +839,13 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                     .adding(parameter: hasInputDependencies ? TupleParameter(name: "provider", value: Reference.provider + .named("copy") | .call()) : nil)
                 )))
                 .adding(member: inputProviderReference)
-                .adding(member: Assignment(variable: Variable(name: "_builders").with(immutable: false), value: Reference.named("Dictionary<String, Any>") | .call()))
-                .adding(members: try dependencyContainer.registrations.compactMap { registration in
-                    try copyAssignment(for: registration, from: dependencyContainer)
-                })
-                .adding(members: try inputReferences.flatMap { reference -> [FunctionBodyMember] in
-
-                    let declaration = try self.declaration(for: reference)
-                    guard selfReferenceDeclarations.contains(declaration) == false else { return [] }
-
-                    let assignments: (MetaDependencyDeclaration) -> [Assignment] = { resolvedDeclaration in
-                        let inputNames = functionParameterValues.map { $0.name }
-
-                        let isRootDependencyContainer = dependencyContainer.sources.isEmpty && publicInterface == false
-                        let isParameter = inputNames.contains(resolvedDeclaration.name)
-                        let shouldHoldSelfReference = isRootDependencyContainer || isParameter
-
-                        let providerValue: Reference
-                        if inputNames.contains(resolvedDeclaration.name) {
-                            if resolvedDeclaration.scope == .weak {
-                                providerValue = .weakOptionalValueBuilder(value: .named(resolvedDeclaration.name))
-                            } else {
-                                providerValue = .valueBuilder(value: .named(resolvedDeclaration.name))
-                            }
-                        } else {
-                            providerValue = (shouldHoldSelfReference ? Variable._self.reference + .none : .none) | .named(resolvedDeclaration.builderName)
-                        }
-
-                        var assignments = [Assignment(
-                            variable: Reference.named(declaration.buildersSubcript),
-                            value: providerValue
-                        )]
-
-                        if resolvedDeclaration.declarationName != declaration.declarationName {
-                            assignments += [Assignment(
-                                variable: Reference.named(resolvedDeclaration.buildersSubcript),
-                                value: providerValue
-                            )]
-                        }
-
-                        return assignments
-                    }
-
-                    if publicInterface {
-                        return assignments(declaration)
-                    } else {
-                        let resolvedDeclarations = try resolvedDeclarationsBySource(for: reference, in: dependencyContainer)
-                        if resolvedDeclarations.count > 1 {
-                            return [Switch(reference: Variable.source.reference)
-                                .adding(cases: resolvedDeclarations.compactMap { source, declaration in
-                                    guard let source = source else { return nil }
-                                    return SwitchCase()
-                                        .adding(value: Value.string(source.description))
-                                        .adding(members: assignments(declaration))
-                                })
-                                .adding(case: SwitchCase(name: .default)
-                                    .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call())
-                                )]
-                        } else if let resolvedDeclaration = resolvedDeclarations.first?.declaration {
-                            return assignments(resolvedDeclaration)
-                        } else {
-                            return []
-                        }
-                    }
-                })
-                .adding(member: Variable._self.reference + .provider + .named("addBuilders") | .call(Tuple()
+                .adding(member: requiresBuilders ? Assignment(variable: Variable(name: "_builders").with(immutable: false), value: Reference.named("Dictionary<String, Any>") | .call()) : nil)
+                .adding(members: copyAssignments)
+                .adding(members: inputReferenceAssignments)
+                .adding(member: requiresBuilders ? Variable._self.reference + .provider + .named("addBuilders") | .call(Tuple()
                     .adding(parameter: TupleParameter(value: Reference.named("_builders")))
-                ))
-                .adding(member: (hasInputDependencies && hasSetter == false) ? Reference.named("_inputProvider") + .named("addBuilders") | .call(Tuple()
+                ) : nil)
+                .adding(member: (hasInputDependencies && useWeakReference == false) ? Reference.named("_inputProvider") + .named("addBuilders") | .call(Tuple()
                     .adding(parameter: TupleParameter(value: Reference.named("_builders")))
                 ) : nil)
                 .adding(members: try dependencyContainer.registrations.compactMap { registration in
@@ -911,7 +922,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             registration.configuration.customBuilder != nil ||
             declaration.parameters.isEmpty == false
 
-        let hasParameters = declaration.parameters.isEmpty == false
+        let hasDeclarationParameters = declaration.parameters.isEmpty == false
         let containsAmbiguousDeclarations = try self.containsAmbiguousDeclarations(in: dependencyContainer)
 
         let resolverReference: Reference?
@@ -961,10 +972,12 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
 
         let hasInputContainer = resolverReference != nil || isTypecastingAsResolver
         let hasSetter = dependencyContainer.dependencies.orderedValues.contains { $0.configuration.setter == true }
+        let hasParameters = dependencyContainer.parameters.isEmpty == false
+        let useWeakReference = hasSetter || hasParameters
 
         let functionBody = FunctionBody()
             .adding(parameter: FunctionBodyParameter(
-                name: hasParameters ? "copyParameters" : nil,
+                name: hasDeclarationParameters ? "copyParameters" : nil,
                 type: .optional(wrapped: TypeIdentifier(name: "Provider.ParametersCopier"))
             ))
             .with(resultType: declaration.type.typeID)
@@ -972,7 +985,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             defer { MainDependencyContainer._dynamicResolversLock.unlock() }
             MainDependencyContainer._dynamicResolversLock.lock()
             """) : nil)
-            .adding(member: (hasInputContainer && hasSetter) ?
+            .adding(member: (hasInputContainer && useWeakReference) ?
                 Guard(assignment: Assignment(variable: Variable(name: "_inputProvider"), value: Reference.named("_inputProvider") | .named("?") + .named("copy") | .call()))
                     .adding(member: TypeIdentifier.mainDependencyContainer.reference + .named("fatalError") | .call())
             : nil)
@@ -984,7 +997,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             .adding(member: resolverReference.flatMap {
                 Assignment(variable: Variable.__self, value: $0)
             })
-            .adding(member: hasParameters ? .named("copyParameters") | .unwrap | .call(Tuple()
+            .adding(member: hasDeclarationParameters ? .named("copyParameters") | .unwrap | .call(Tuple()
                 .adding(parameter: TupleParameter(
                     value: Reference.named("(") | Variable.__self.reference |
                         (shouldUnwrapResolverReference ? +Variable.proxySelf.reference : .none) |
@@ -1048,7 +1061,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         .adding(member: Assignment(variable: .named(.`self`) + Variable.proxySelf.reference, value: Variable.proxySelf.reference))
                     )
                     .adding(members: try dependencyContainer.dependencies.orderedValues.flatMap { dependency -> [TypeBodyMember] in
-                        let declaration = try self.declaration(for: dependency)
+                        let declaration = try self.declaration(for: dependency, ignoreParametersInReferences: true)
 
                         var members: [TypeBodyMember] = [EmptyLine()]
                         if declaration.parameters.isEmpty {
@@ -1381,12 +1394,12 @@ private extension MetaWeaverFile {
         })
     }
     
-    func declaration(for dependency: Dependency) throws -> MetaDependencyDeclaration {
-        let declaration = try MetaDependencyDeclaration(for: dependency, in: dependencyGraph, includeTypeInName: true, includeParametersInName: true)
+    func declaration(for dependency: Dependency, ignoreParametersInReferences: Bool = false) throws -> MetaDependencyDeclaration {
+        let declaration = try MetaDependencyDeclaration(for: dependency, in: dependencyGraph, includeTypeInName: true, includeParametersInName: true, ignoreParametersInReferences: ignoreParametersInReferences)
         if declarations.contains(declaration) {
             return declaration
         } else {
-            let declaration = try MetaDependencyDeclaration(for: dependency, in: dependencyGraph, includeTypeInName: true)
+            let declaration = try MetaDependencyDeclaration(for: dependency, in: dependencyGraph, includeTypeInName: true, ignoreParametersInReferences: ignoreParametersInReferences)
             if declarations.contains(declaration) {
                 return declaration
             } else {
