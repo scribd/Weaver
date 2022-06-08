@@ -108,7 +108,7 @@ private final class MetaDependencyDeclaration: Hashable {
         }
     }
     
-    private lazy var desambiguationHash: String? = {
+    private lazy var disambiguationHash: String? = {
         var desambiguationString = String()
         if includeParametersInName {
             desambiguationString += parameters.map { parameter in
@@ -124,15 +124,15 @@ private final class MetaDependencyDeclaration: Hashable {
         return sha(desambiguationString)
     }()
     
-    lazy var declarationName = "\(name)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
+    lazy var declarationName = "\(name)\(disambiguationHash.flatMap { "_\($0)" } ?? String())"
     lazy var builderName = "\(declarationName)Builder"
     lazy var buildersSubcript = "_builders[\"\(declarationName)\"]"
-    lazy var resolverTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Resolver"
-    lazy var setterName = "set\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)" } ?? String())"
-    lazy var setterTypeName = "\(name.typeCase)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Setter"
-    lazy var declarationDoubleName = "\(name)\(desambiguationHash.flatMap { "_\($0)_" } ?? String())Double"
+    lazy var resolverTypeName = "\(name.typeCase)\(disambiguationHash.flatMap { "_\($0)_" } ?? String())Resolver"
+    lazy var setterName = "set\(name.typeCase)\(disambiguationHash.flatMap { "_\($0)" } ?? String())"
+    lazy var setterTypeName = "\(name.typeCase)\(disambiguationHash.flatMap { "_\($0)_" } ?? String())Setter"
+    lazy var declarationDoubleName = "\(name)\(disambiguationHash.flatMap { "_\($0)_" } ?? String())Double"
     
-    lazy var isDesambiguated = desambiguationHash != nil
+    lazy var isDisambiguated = disambiguationHash != nil
     
     // MARK: - SHA
     
@@ -160,13 +160,13 @@ private final class MetaDependencyDeclaration: Hashable {
     
     static func == (lhs: MetaDependencyDeclaration, rhs: MetaDependencyDeclaration) -> Bool {
         guard lhs.name == rhs.name else { return false }
-        guard lhs.desambiguationHash == rhs.desambiguationHash else { return false }
+        guard lhs.disambiguationHash == rhs.disambiguationHash else { return false }
         return true
     }
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(name)
-        hasher.combine(desambiguationHash)
+        hasher.combine(disambiguationHash)
     }
 }
 
@@ -1462,7 +1462,7 @@ private extension MetaWeaverFile {
     func _containsAmbiguousDeclarations(in dependencyContainer: DependencyContainer) throws -> Bool {
         return try dependencyContainer.dependencies.orderedValues.contains { dependency in
             let declaration = try self.declaration(for: dependency)
-            return declaration.isDesambiguated
+            return declaration.isDisambiguated
         }
     }
     
