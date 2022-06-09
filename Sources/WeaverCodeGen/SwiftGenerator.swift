@@ -340,7 +340,7 @@ private static var _dynamicResolvers = [Any]()
 private static var _dynamicResolversLock = NSRecursiveLock()
 
 fileprivate static func _popDynamicResolver<Resolver>(_ resolverType: Resolver.Type) -> Resolver {
-    guard let dynamicResolver = _dynamicResolvers.removeFirst() as? Resolver else {
+    guard let dynamicResolver = _dynamicResolvers.removeLast() as? Resolver else {
         \(TypeIdentifier.mainDependencyContainer.swiftString).fatalError()
     }
     return dynamicResolver
@@ -863,7 +863,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         return nil
                     }
                 })
-                .adding(members: try dependencyContainer.dependencies.orderedValues.compactMap { dependency in
+                .adding(members: try dependencyContainer.dependencies.orderedValues.reversed().compactMap { dependency in
                     guard dependency.annotationStyle == .propertyWrapper else { return nil }
                     let declaration = try self.declaration(for: dependency)
                     return TypeIdentifier.mainDependencyContainer.reference + .named("_pushDynamicResolver") | .call(Tuple()
@@ -1235,7 +1235,7 @@ private extension MetaWeaverFile {
                             value: Reference.named(parameter.dependencyName)
                         )
                     })
-                    .adding(members: try dependencyContainer.dependencies.orderedValues.compactMap { dependency in
+                    .adding(members: try dependencyContainer.dependencies.orderedValues.reversed().compactMap { dependency in
                         guard dependency.annotationStyle == .propertyWrapper else { return nil }
                         let declaration = try self.declaration(for: dependency)
                         return TypeIdentifier.mainDependencyContainer.reference + .named("_pushDynamicResolver") | .call(Tuple()
