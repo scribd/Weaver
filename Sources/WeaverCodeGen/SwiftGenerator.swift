@@ -1026,13 +1026,63 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             guard try containsAmbiguousDeclarations(in: dependencyContainer) else { return [] }
 
             let typeComponents = dependencyContainer.type.dependencyResolverTypeID.typeComponents
+            let typeProxyComponents = dependencyContainer.type.dependencyResolverProxyTypeID.typeComponents
             let typeAlias: FileBodyMember
+            let typeIdentifier: TypeIdentifier
+
+            if typeProxyComponents.count == 1 {
+                typeIdentifier = dependencyContainer.type.dependencyResolverProxyTypeID
+            } else {
+                typeIdentifier = TypeIdentifier(name: typeProxyComponents[typeProxyComponents.count-1])
+            }
+
+            let typeDeclaration = Type(identifier: typeIdentifier)
+                .with(kind: .struct)
+                .adding(member: EmptyLine())
+                .adding(member: Property(variable: Variable.proxySelf
+                    .with(type: dependencyContainer.type.internalDependencyResolverTypeID))
+                )
+                .adding(member: EmptyLine())
+                .adding(member: Function(kind: .`init`(convenience: false, optional: false))
+                    .adding(parameter: FunctionParameter(alias: "_", name: Variable.proxySelf.name, type: dependencyContainer.type.internalDependencyResolverTypeID))
+                    .adding(member: Assignment(variable: .named(.`self`) + Variable.proxySelf.reference, value: Variable.proxySelf.reference))
+                )
+                .adding(members: try dependencyContainer.dependencies.orderedValues.flatMap { dependency -> [TypeBodyMember] in
+                    let declaration = try self.declaration(for: dependency, ignoreParametersInReferences: true)
+
+                    var members: [TypeBodyMember] = [EmptyLine()]
+                    if declaration.parameters.isEmpty {
+                        members += [
+                            ComputedProperty(variable: Variable(name: declaration.name)
+                                .with(type: declaration.type.typeID))
+                                .adding(member: Return(value: Variable.proxySelf.reference + .named(declaration.declarationName)))
+                        ]
+                    } else {
+                        members += [
+                            Function(kind: .named(declaration.name))
+                                .with(resultType: declaration.type.typeID)
+                                .adding(parameters: declaration.parameters.map { parameter in
+                                    FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
+                                })
+                                .adding(member: Return(value: Variable.proxySelf.reference + .named(declaration.declarationName) | .call(Tuple()
+                                    .adding(parameters: declaration.parameters.map { parameter in
+                                        return TupleParameter(name: parameter.dependencyName, value: Reference.named(parameter.dependencyName))
+                                    })
+                                )))
+                        ]
+                    }
+
+                    return members
+                })
+
+            let typeOrExtension: FileBodyMember
 
             if typeComponents.count == 1 {
                 typeAlias = TypeAlias(
                     identifier: TypeAliasIdentifier(name: dependencyContainer.type.dependencyResolverTypeID.name),
                     value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
                 )
+                typeOrExtension = typeDeclaration
             } else {
                 let extensionName = typeComponents.dropLast().joined(separator: ".")
                 typeAlias = Extension(name: extensionName)
@@ -1041,48 +1091,15 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                         value: TypeIdentifier(name: dependencyContainer.type.dependencyResolverProxyTypeID.name)
                     )
                 )
+
+                typeOrExtension = Extension(name: extensionName)
+                    .adding(member: EmptyLine())
+                    .adding(member: typeDeclaration)
             }
 
             return [
                 EmptyLine(),
-                Type(identifier: dependencyContainer.type.dependencyResolverProxyTypeID)
-                    .with(kind: .struct)
-                    .adding(member: EmptyLine())
-                    .adding(member: Property(variable: Variable.proxySelf
-                        .with(type: dependencyContainer.type.internalDependencyResolverTypeID))
-                    )
-                    .adding(member: EmptyLine())
-                    .adding(member: Function(kind: .`init`(convenience: false, optional: false))
-                        .adding(parameter: FunctionParameter(alias: "_", name: Variable.proxySelf.name, type: dependencyContainer.type.internalDependencyResolverTypeID))
-                        .adding(member: Assignment(variable: .named(.`self`) + Variable.proxySelf.reference, value: Variable.proxySelf.reference))
-                    )
-                    .adding(members: try dependencyContainer.dependencies.orderedValues.flatMap { dependency -> [TypeBodyMember] in
-                        let declaration = try self.declaration(for: dependency, ignoreParametersInReferences: true)
-
-                        var members: [TypeBodyMember] = [EmptyLine()]
-                        if declaration.parameters.isEmpty {
-                            members += [
-                                ComputedProperty(variable: Variable(name: declaration.name)
-                                    .with(type: declaration.type.typeID))
-                                    .adding(member: Return(value: Variable.proxySelf.reference + .named(declaration.declarationName)))
-                            ]
-                        } else {
-                            members += [
-                                Function(kind: .named(declaration.name))
-                                    .with(resultType: declaration.type.typeID)
-                                    .adding(parameters: declaration.parameters.map { parameter in
-                                        FunctionParameter(name: parameter.dependencyName, type: parameter.type.typeID)
-                                    })
-                                    .adding(member: Return(value: Variable.proxySelf.reference + .named(declaration.declarationName) | .call(Tuple()
-                                        .adding(parameters: declaration.parameters.map { parameter in
-                                            return TupleParameter(name: parameter.dependencyName, value: Reference.named(parameter.dependencyName))
-                                        })
-                                    )))
-                            ]
-                        }
-                        
-                        return members
-                    }),
+                typeOrExtension,
                 EmptyLine(),
                 typeAlias
             ]
