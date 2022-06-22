@@ -87,7 +87,10 @@ extension TypeWrapper {
     }
     
     var dependencyBuilderVariable: Variable {
-        return Variable(name: "build\(name ?? toTypeName)")
+        let valueTypeName = value.toTypeName.filter { character in
+            return character != "."
+        }
+        return Variable(name: "build\(valueTypeName)")
     }
      
     var toTypeName: String {
