@@ -29,11 +29,18 @@ public final class Inspector {
             }
         }
 
+        try validateRuntime()
+    }
+
+    @discardableResult
+    public func validateRuntime() throws -> [TreeNode] {
+        var treeNodes: [TreeNode] = []
         for rootContainer in dependencyGraph.rootContainers {
-            if let treeInspector = RuntimeTreeInspector(rootContainer: rootContainer, dependencyGraph: dependencyGraph) {
-                try treeInspector.validate()
-            }
+            let treeInspector = RuntimeTreeInspector(rootContainer: rootContainer, dependencyGraph: dependencyGraph)
+            try treeInspector.validate()
+            treeNodes.append(treeInspector.rootNode)
         }
+        return treeNodes
     }
 }
 

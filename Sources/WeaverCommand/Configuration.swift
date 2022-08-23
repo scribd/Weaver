@@ -240,7 +240,8 @@ extension Configuration {
     
     func inputPaths() throws -> [Path]  {
         var inputPaths = Set<Path>()
-        
+        var fullIgnoredPaths = Set<Path>()
+
         inputPaths.formUnion(inputPathStrings
             .lazy
             .map { self.projectPath + $0 }
@@ -248,7 +249,14 @@ extension Configuration {
             .filter { $0.exists && $0.isFile && $0.extension == "swift" }
             .map { $0.absolute() })
 
-        inputPaths.subtract(try ignoredPathStrings
+        fullIgnoredPaths.formUnion(ignoredPathStrings
+            .lazy
+            .map { self.projectPath + $0 }
+            .flatMap { $0.isFile ? [$0] : self.recursivePathsByPattern(fromDirectory: $0) }
+            .filter { $0.exists && $0.isFile && $0.extension == "swift" }
+            .map { $0.absolute() })
+
+        inputPaths.subtract(try fullIgnoredPaths
             .lazy
             .map { self.projectPath + $0 }
             .flatMap { $0.isFile ? [$0] : try paths(fromDirectory: $0) }
