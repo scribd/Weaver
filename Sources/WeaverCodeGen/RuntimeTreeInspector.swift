@@ -11,12 +11,11 @@ import Foundation
 
 public final class RuntimeTreeInspector {
 
-    private let rootNode: TreeNode
+    public let rootNode: TreeNode
 
-    init?(rootContainer: DependencyContainer,
-          dependencyGraph: DependencyGraph) {
-        guard let treeNode = TreeNode(rootContainer: rootContainer, dependencyGraph: dependencyGraph) else { return nil }
-        self.rootNode = treeNode
+    init(rootContainer: DependencyContainer,
+         dependencyGraph: DependencyGraph) {
+        self.rootNode = TreeNode(rootContainer: rootContainer, dependencyGraph: dependencyGraph)
     }
 
     public func validate() throws {
@@ -97,8 +96,9 @@ private extension RuntimeTreeInspector {
 
         // dependencyChain
         var stepCount = 1
-        for parentContainer in node.dependencyChain.reversed() {
-            if let earlyReturn = resolveStep(stepCount, parentContainer) {
+        var _parent = node.parent
+        while let parent = _parent {
+            if let earlyReturn = resolveStep(stepCount, parent.inspectingContainer) {
                 switch earlyReturn {
                 case .empty:
                     return nil
@@ -107,12 +107,11 @@ private extension RuntimeTreeInspector {
                 }
             }
 
+            _parent = parent.parent
             stepCount += 1
         }
 
-        if let rootContainer = node.dependencyChain.first {
-            history.append(.dependencyNotFound(dependency, in: rootContainer))
-        }
+        history.append(.dependencyNotFound(dependency, in: rootNode.inspectingContainer))
 
         return history
     }
@@ -120,36 +119,40 @@ private extension RuntimeTreeInspector {
 
 // MARK: - Full Tree Iterator
 
-final class TreeNode: Sequence, IteratorProtocol {
+public final class TreeNode: Sequence, IteratorProtocol {
 
     let inspectingContainer: DependencyContainer
 
-    let dependencyChain: [DependencyContainer]
+    private(set) var children: [TreeNode] = []
+
+    weak var parent: TreeNode?
+
+    // do not encode
+    private(set) var dependencyPointer: Dependency?
+
+    private(set) var previousDependencyPointer: Dependency?
 
     let dependencyGraph: DependencyGraph
 
-    let dependencyPointer: Dependency
-
-    convenience init?(rootContainer: DependencyContainer,
-                      dependencyGraph: DependencyGraph) {
-        guard let firstDependency = rootContainer.dependencies.orderedValues.first else {
-            return nil
-        }
-
+    convenience init(rootContainer: DependencyContainer,
+                     dependencyGraph: DependencyGraph) {
         self.init(inspectingContainer: rootContainer,
-                  dependencyChain: [],
                   dependencyGraph: dependencyGraph,
-                  dependencyPointer: firstDependency)
+                  dependencyPointer: rootContainer.dependencies.orderedValues.first,
+                  previousDependencyPointer: nil,
+                  parent: nil)
     }
 
     private init(inspectingContainer: DependencyContainer,
-                dependencyChain: [DependencyContainer],
-                dependencyGraph: DependencyGraph,
-                dependencyPointer: Dependency) {
+                 dependencyGraph: DependencyGraph,
+                 dependencyPointer: Dependency?,
+                 previousDependencyPointer: Dependency?,
+                 parent: TreeNode?) {
         self.inspectingContainer = inspectingContainer
-        self.dependencyChain = dependencyChain
         self.dependencyGraph = dependencyGraph
         self.dependencyPointer = dependencyPointer
+        self.previousDependencyPointer = previousDependencyPointer
+        self.parent = parent
     }
 
     /*
@@ -160,18 +163,26 @@ final class TreeNode: Sequence, IteratorProtocol {
      - If none, then move to the next sibling dependency in the current node
      - If none, then pop up to the parent node
      */
-    func next() -> TreeNode? {
+    public func next() -> TreeNode? {
 
-        guard dependencyPointer.kind.isRegistration,
-              let nextContainer = try? dependencyGraph.dependencyContainer(for: dependencyPointer),
-              let firstNestedDependency = nextContainer.dependencies.orderedValues.first else {
-            return nextByIterating(after: dependencyPointer)
+        guard let dependencyPointer = dependencyPointer else {
+            return nextByPopping()
         }
 
-        return TreeNode(inspectingContainer: nextContainer,
-                        dependencyChain: dependencyChain + [inspectingContainer],
-                        dependencyGraph: dependencyGraph,
-                        dependencyPointer: firstNestedDependency)
+        guard dependencyPointer.kind.isRegistration,
+              let nextContainer = try? dependencyGraph.dependencyContainer(for: dependencyPointer) else {
+                  return nextByIterating(after: dependencyPointer)
+        }
+
+        let node = TreeNode(inspectingContainer: nextContainer,
+                            dependencyGraph: dependencyGraph,
+                            dependencyPointer: nextContainer.dependencies.orderedValues.first,
+                            previousDependencyPointer: dependencyPointer,
+                            parent: self)
+
+        children.append(node)
+
+        return node
     }
 
     private func nextByIterating(after dependency: Dependency) -> TreeNode? {
@@ -183,34 +194,17 @@ final class TreeNode: Sequence, IteratorProtocol {
         }
 
         let nextIndex = values.index(after: firstIndex)
-        guard nextIndex < values.count else {
-            return nextByPopping()
-        }
-
-        let nextDependency: Dependency = values[nextIndex]
-        return TreeNode(inspectingContainer: inspectingContainer,
-                        dependencyChain: dependencyChain,
-                        dependencyGraph: dependencyGraph,
-                        dependencyPointer: nextDependency).next()
+        dependencyPointer = nextIndex < values.count ? values[nextIndex] : nil
+        return next()
     }
 
     private func nextByPopping() -> TreeNode? {
-        guard let parentContainer: DependencyContainer = dependencyChain.last else {
+
+        guard let parent = parent,
+              let parentDependency = parent.inspectingContainer.dependencies.orderedValues.first(where: { $0 === previousDependencyPointer }) else {
             return nil
         }
 
-        guard let dependencyNames = parentContainer.dependencyNamesByConcreteType[inspectingContainer.type] else {
-            return nil
-        }
-
-        guard let dependencyName = dependencyNames.first(where: { parentContainer.dependencies[$0] != nil }),
-              let parentDependency = parentContainer.dependencies[dependencyName] else {
-            return nil
-        }
-
-        return TreeNode(inspectingContainer: parentContainer,
-                        dependencyChain: dependencyChain.dropLast(),
-                        dependencyGraph: dependencyGraph,
-                        dependencyPointer: parentDependency).nextByIterating(after: parentDependency)
+        return parent.nextByIterating(after: parentDependency)
     }
 }

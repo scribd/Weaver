@@ -108,4 +108,60 @@ final class RuntimeTreeInspectorTests: XCTestCase {
             XCTFail("Unexpected error: \(error).")
         }
     }
+
+    func test_tree_inspector_should_validate_a_dependency_graph_with_the_same_concrete_type_fulfilling_multiple_individual_abstractions() {
+
+        let file = File(contents: """
+            protocol DataConfiguring { }
+
+            protocol DataProviding { }
+
+            final class Coordinator {
+                // weaver: value <= Int
+            }
+
+            final class AppDelegate {
+                // weaver: coordinator = Coordinator
+                // weaver: coordinator.scope = .transient
+
+                // weaver: dataConfiguration = DataManager <- DataConfiguring
+                // weaver: dataConfiguration.scope = .container
+                // weaver: dataConfiguration.builder = { _ in DataManager.shared }
+
+                // weaver: dataProvider = DataManager <- DataProviding
+                // weaver: dataProvider.scope = .container
+                // weaver: dataProvider.builder = { _ in DataManager.shared }
+
+                // weaver: viewController1 = ViewController1
+                // weaver: viewController1.scope = .transient
+            }
+
+            final class DataManager: DataConfiguring, DataProviding {
+                static let shared = DataManager()
+            }
+
+            final class ViewController1: UIViewController {
+                // weaver: coordinator <= Coordinator
+
+                // weaver: viewController2 = ViewController2
+                // weaver: viewController2.scope = .transient
+            }
+
+            final class ViewController2: UIViewController {
+                // weaver: coordinator <- Coordinator
+            }
+            """)
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree])
+            let inspector = Inspector(dependencyGraph: linker.dependencyGraph)
+            try inspector.validate()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
