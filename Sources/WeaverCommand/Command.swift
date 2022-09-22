@@ -101,6 +101,7 @@ private extension Platform {
 // MARK: - Parameters
 
 private enum Parameters {
+    static let projectName = Option<String?>("project-name", default: nil, description: "Project's name.")
     static let projectPath = Option<Path?>("project-path", default: nil, description: "Project's directory.")
     static let configPath = Option<Path?>("config-path", default: nil, description: "Configuration path.")
     static let mainOutputPath = Option<Path?>("main-output-path", default: nil, description: "Where the main swift files will be generated.")
@@ -124,6 +125,7 @@ public let weaverCommand = Group {
     
     $0.command(
         "swift",
+        Parameters.projectName,
         Parameters.projectPath,
         Parameters.configPath,
         Parameters.mainOutputPath,
@@ -139,6 +141,7 @@ public let weaverCommand = Group {
         Parameters.includedImports,
         Parameters.excludedImports)
     {
+        projectName,
         projectPath,
         configPath,
         mainOutputPath,
@@ -158,6 +161,7 @@ public let weaverCommand = Group {
             configPath: configPath,
             inputPathStrings: inputPaths.isEmpty ? nil : inputPaths,
             ignoredPathStrings: ignoredPaths.isEmpty ? nil : ignoredPaths,
+            projectName: projectName,
             projectPath: projectPath,
             mainOutputPath: mainOutputPath,
             testsOutputPath: testsOutputPath,
@@ -208,6 +212,8 @@ public let weaverCommand = Group {
             let generator = try SwiftGenerator(
                 dependencyGraph: dependencyGraph,
                 inspector: inspector,
+                projectName: projectName ?? configuration.projectName,
+                platform: Platform(platform) ?? configuration.platform,
                 version: version,
                 testableImports: configuration.testableImports,
                 swiftlintDisableAll: configuration.swiftlintDisableAll,

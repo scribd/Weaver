@@ -14,7 +14,8 @@ import WeaverCodeGen
 // MARK: - Configuration
 
 struct Configuration {
-    
+
+    let projectName: String?
     let projectPath: Path
     let mainOutputPath: Path
     let testsOutputPath: Path
@@ -31,6 +32,7 @@ struct Configuration {
     
     private init(inputPathStrings: [String]?,
                  ignoredPathStrings: [String]?,
+                 projectName: String?,
                  projectPath: Path?,
                  mainOutputPath: Path?,
                  testsOutputPath: Path?,
@@ -46,6 +48,7 @@ struct Configuration {
         self.inputPathStrings = inputPathStrings ?? Defaults.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? []
 
+        self.projectName = projectName
         let projectPath = projectPath ?? Defaults.projectPath
         self.projectPath = projectPath
 
@@ -69,6 +72,7 @@ struct Configuration {
     init(configPath: Path? = nil,
          inputPathStrings: [String]? = nil,
          ignoredPathStrings: [String]? = nil,
+         projectName: String? = nil,
          projectPath: Path? = nil,
          mainOutputPath: Path? = nil,
          testsOutputPath: Path? = nil,
@@ -97,6 +101,7 @@ struct Configuration {
             configuration = Configuration(
                 inputPathStrings: inputPathStrings,
                 ignoredPathStrings: ignoredPathStrings,
+                projectName: projectName,
                 projectPath: projectPath,
                 mainOutputPath: mainOutputPath,
                 testsOutputPath: testsOutputPath,
@@ -113,6 +118,7 @@ struct Configuration {
         
         self.inputPathStrings = inputPathStrings ?? configuration.inputPathStrings
         self.ignoredPathStrings = ignoredPathStrings ?? configuration.ignoredPathStrings
+        self.projectName = projectName ?? configuration.projectName
         self.projectPath = projectPath
         self.mainOutputPath = mainOutputPath ?? configuration.mainOutputPath
         self.testsOutputPath = testsOutputPath ?? configuration.testsOutputPath
@@ -181,6 +187,7 @@ extension Configuration {
 extension Configuration: Decodable {
 
     private enum Keys: String, CodingKey {
+        case projectName = "project_name"
         case projectPath = "project_path"
         case mainOutputPath = "main_output_path"
         case testsOutputPath = "tests_output_path"
@@ -208,6 +215,7 @@ extension Configuration: Decodable {
         self.init(
             inputPathStrings: try container.decodeIfPresent([String].self, forKey: .inputPaths),
             ignoredPathStrings: try container.decodeIfPresent([String].self, forKey: .ignoredPaths),
+            projectName: try container.decodeIfPresent(String.self, forKey: .projectName),
             projectPath: nil,
             mainOutputPath: try container.decodeIfPresent(Path.self, forKey: .mainOutputPath),
             testsOutputPath: try container.decodeIfPresent(Path.self, forKey: .testsOutputPath),
