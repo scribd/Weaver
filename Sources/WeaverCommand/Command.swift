@@ -13,7 +13,7 @@ import Darwin
 import PathKit
 import Rainbow
 
-private let version = "1.1.2"
+private let version = "1.1.3"
 
 // MARK: - Linker
 
