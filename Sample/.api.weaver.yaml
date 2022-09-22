@@ -1,3 +1,4 @@
+project_name: API
 main_output_path: API/Generated
 input_paths:
   - API

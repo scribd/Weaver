@@ -1,3 +1,5 @@
+project_name: Sample
+platform: iOS
 main_output_path: Sample/Generated
 input_paths:
   - Sample

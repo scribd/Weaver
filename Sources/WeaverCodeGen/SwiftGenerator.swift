@@ -18,6 +18,10 @@ public final class SwiftGenerator {
     
     private let testableImports: [String]?
 
+    private let projectName: String?
+
+    private let platform: Platform?
+
     private let version: String
 
     private let swiftlintDisableAll: Bool
@@ -27,6 +31,8 @@ public final class SwiftGenerator {
     
     public init(dependencyGraph: DependencyGraph,
                 inspector: Inspector,
+                projectName: String?,
+                platform: Platform?,
                 version: String,
                 testableImports: [String]?,
                 swiftlintDisableAll: Bool,
@@ -34,6 +40,8 @@ public final class SwiftGenerator {
 
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
+        self.projectName = projectName
+        self.platform = platform
         self.version = version
         self.testableImports = testableImports?.filter(importFilter)
         self.swiftlintDisableAll = swiftlintDisableAll
@@ -45,9 +53,22 @@ public final class SwiftGenerator {
         if let file = _file {
             return file
         }
+
+        let objcPrefix: String?
+        if let projectName = projectName {
+            if let platform = platform {
+                objcPrefix = "\(projectName.typeCase)\(platform.rawValue.typeCase)"
+            } else {
+                objcPrefix = "\(projectName.typeCase)"
+            }
+        } else {
+            objcPrefix = nil
+        }
+
         let file = try MetaWeaverFile(
             dependencyGraph,
             inspector,
+            objcPrefix,
             version,
             testableImports,
             swiftlintDisableAll,
@@ -179,7 +200,9 @@ private final class MetaWeaverFile {
     private let dependencyGraph: DependencyGraph
     
     private let inspector: Inspector
-    
+
+    private let objcPrefix: String?
+
     private let version: String
     
     private let testableImports: [String]?
@@ -209,6 +232,7 @@ private final class MetaWeaverFile {
     
     init(_ dependencyGraph: DependencyGraph,
          _ inspector: Inspector,
+         _ objcPrefix: String?,
          _ version: String,
          _ testableImports: [String]?,
          _ swiftlintDisableAll: Bool,
@@ -216,6 +240,7 @@ private final class MetaWeaverFile {
         
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
+        self.objcPrefix = objcPrefix
         self.version = version
         self.testableImports = testableImports
         self.swiftlintDisableAll = swiftlintDisableAll
@@ -318,10 +343,10 @@ private final class MetaWeaverFile {
 // MARK: - MainDependencyContainer
 
 private extension MetaWeaverFile {
-    
+
     func mainDependencyContainer() throws -> Type {
         return Type(identifier: .mainDependencyContainer)
-            .with(objc: doesSupportObjc)
+            .with(objc: doesSupportObjc, prefix: objcPrefix)
             .adding(inheritedType: doesSupportObjc ? .nsObject : nil)
             .adding(member: EmptyLine())
             .adding(member: Property(variable: Variable(name: "provider").with(immutable: true).with(type: .provider)).with(accessLevel: .private))
@@ -950,7 +975,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 builderReference = .named(customBuilder) | .call(Tuple()
                     .adding(parameter: TupleParameter(value:
                         (containsAmbiguousDeclarations ? Variable.__self.reference + Variable.proxySelf.reference : Reference.named("_inputContainer")) |
-                        .as | target.type.inputDependencyResolverTypeID.reference
+                        .as(.strict(target.type.inputDependencyResolverTypeID)) 
                     ))
                 )
                 shouldUnwrapResolverReference = containsAmbiguousDeclarations
