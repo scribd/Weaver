@@ -49,15 +49,10 @@ struct Configuration {
         self.ignoredPathStrings = ignoredPathStrings ?? []
 
         self.projectName = projectName
-        let projectPath = projectPath ?? Defaults.projectPath
-        self.projectPath = projectPath
+        self.projectPath = projectPath ?? Defaults.projectPath
 
-        self.mainOutputPath = mainOutputPath
-            .map { $0.extension == "swift" ? $0 : $0 + Defaults.mainOutputFileName }
-            .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.mainOutputPath
-        self.testsOutputPath = testsOutputPath
-            .map { $0.extension == "swift" ? $0 : $0 + Defaults.testOutputFileName }
-            .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.testsOutputPath
+        self.mainOutputPath = mainOutputPath ?? Defaults.mainOutputPath
+        self.testsOutputPath = testsOutputPath ?? Defaults.testsOutputPath
 
         self.cachePath = cachePath ?? Defaults.cachePath
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
@@ -120,8 +115,15 @@ struct Configuration {
         self.ignoredPathStrings = ignoredPathStrings ?? configuration.ignoredPathStrings
         self.projectName = projectName ?? configuration.projectName
         self.projectPath = projectPath
-        self.mainOutputPath = mainOutputPath ?? configuration.mainOutputPath
-        self.testsOutputPath = testsOutputPath ?? configuration.testsOutputPath
+
+        let outputPath: Path? = mainOutputPath ?? configuration.mainOutputPath
+        self.mainOutputPath = outputPath
+            .map { $0.extension == "swift" ? $0 : $0 + Defaults.mainOutputFileName }
+            .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.mainOutputPath
+        let testPath: Path? = testsOutputPath ?? configuration.testsOutputPath
+        self.testsOutputPath = testPath
+            .map { $0.extension == "swift" ? $0 : $0 + Defaults.testOutputFileName }
+            .map { $0.isRelative ? projectPath + $0 : $0 } ?? Defaults.testsOutputPath
         self.cachePath = cachePath ?? configuration.cachePath
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
         self.tests = tests ?? configuration.tests
