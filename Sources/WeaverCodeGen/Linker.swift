@@ -219,6 +219,18 @@ public final class DependencyGraph {
     /// The root node of the graph, that which is not referenced by any other container
     fileprivate(set) lazy var rootContainers: [DependencyContainer] = dependencyContainers.orderedValues.filter { $0.sources.isEmpty }
 
+    /// The concrete types that are explicitly excluded per platform
+    fileprivate(set) lazy var excludedConcreteTypesPerPlatform = [Platform: Set<ConcreteType>]()
+
+    /// The abstract reference names that are explicitly excluded per platform per class
+    fileprivate(set) lazy var excludedAbstractReferencesPerPlatformPerClass = [Platform: [ConcreteType: Set<String>]]()
+
+    /// The concrete types that are explicitly included per platform
+    fileprivate(set) lazy var includedConcreteTypesPerPlatform = [Platform: Set<ConcreteType>]()
+
+    /// The abstract reference names that are explicitly included per platform per class
+    fileprivate(set) lazy var includedAbstractReferencesPerPlatformPerClass = [Platform: [ConcreteType: Set<String>]]()
+
     // MARK: - Cached data
     
     private var hasSelfReferenceCache = [ObjectIdentifier: Bool]()
@@ -278,8 +290,70 @@ private extension Linker {
         let referenceAnnotations = OrderedDictionary<ConcreteType, DependencyContainer>()
         
         var configurationAnnotations = [ConcreteType: [ConfigurationAttributeName: ConfigurationAttribute]]()
-        
+
+        var currentTypeLookup: [String: ConcreteType] = [:]
+        var currentReferences: Set<String> = []
+        var currentExcludedReferences: Set<String> = []
+
+        var currentClass: ConcreteType?
+
+        let addToIncludedList: (ConcreteType?, String, ConcreteType) -> Void = { concreteType, reference, classType in
+            guard let platform = self.platform else { return }
+            if let concreteType = concreteType {
+                var includedTypes = self.dependencyGraph.includedConcreteTypesPerPlatform[platform] ?? []
+                includedTypes.insert(concreteType)
+                self.dependencyGraph.includedConcreteTypesPerPlatform[platform] = includedTypes
+            }
+
+            var includedRefsPerClass = self.dependencyGraph.includedAbstractReferencesPerPlatformPerClass[platform] ?? [:]
+            var includedRefs = includedRefsPerClass[classType] ?? []
+            includedRefs.insert(reference)
+            includedRefsPerClass[classType] = includedRefs
+            self.dependencyGraph.includedAbstractReferencesPerPlatformPerClass[platform] = includedRefsPerClass
+        }
+
+        let addToExcludeList: (ConcreteType?, String, ConcreteType) -> Void = { concreteType, reference, classType in
+            guard let platform = self.platform else { return }
+            if let concreteType = concreteType {
+                var excludedTypes = self.dependencyGraph.excludedConcreteTypesPerPlatform[platform] ?? []
+                excludedTypes.insert(concreteType)
+                self.dependencyGraph.excludedConcreteTypesPerPlatform[platform] = excludedTypes
+            }
+
+            var excludedRefsPerClass = self.dependencyGraph.excludedAbstractReferencesPerPlatformPerClass[platform] ?? [:]
+            var excludedRefs = excludedRefsPerClass[classType] ?? []
+            excludedRefs.insert(reference)
+            excludedRefsPerClass[classType] = excludedRefs
+            self.dependencyGraph.excludedAbstractReferencesPerPlatformPerClass[platform] = excludedRefsPerClass
+        }
+
+        let updateLists: (ConcreteType?) -> Void = { classType in
+            guard let classType = classType else { return }
+            for reference in currentReferences {
+                if currentExcludedReferences.contains(reference) {
+                    addToExcludeList(currentTypeLookup[reference], reference, classType)
+                } else {
+                    addToIncludedList(currentTypeLookup[reference], reference, classType)
+                }
+            }
+        }
+
         for (expr, embeddingTypes, file) in ExprSequence(exprs: syntaxTrees) {
+
+            switch expr {
+            case .typeDeclaration(let token, _):
+                updateLists(currentClass)
+                currentTypeLookup = [:]
+                currentExcludedReferences = []
+                currentClass = token.value.type
+            case .file,
+                 .registerAnnotation,
+                 .referenceAnnotation,
+                 .configurationAnnotation,
+                 .parameterAnnotation:
+                break
+            }
+
             switch expr {
             case .file(_, _, let imports):
                 imports.forEach { dependencyGraph.imports.insert($0) }
@@ -298,7 +372,10 @@ private extension Linker {
                 let dependencyContainer = DependencyContainer(type: token.value.type,
                                                               declarationSource: .registration)
                 registerAnnotations[dependencyContainer.type] = dependencyContainer
-                
+
+                currentTypeLookup[token.value.name] = token.value.type
+                currentReferences.insert(token.value.name)
+
             case .referenceAnnotation(let token):
                 let location = FileLocation(line: token.line, file: file)
                 let dependencyType = dependencyGraph.dependencyType(for: token.value.type,
@@ -312,8 +389,30 @@ private extension Linker {
                                                               declarationSource: .reference)
 
                 referenceAnnotations[dependencyContainer.type] = dependencyContainer
+                currentReferences.insert(token.value.name)
 
             case .configurationAnnotation(let token):
+                switch token.value.attribute {
+                case .isIsolated,
+                        .customBuilder,
+                        .scope,
+                        .doesSupportObjc,
+                        .setter,
+                        .escaping:
+                    break
+                case .platforms(let platforms):
+                    if let platform = platform, platforms.isEmpty == false, platforms.contains(platform) == false {
+                        switch token.value.target {
+                        case .`self`:
+                            break
+                        case .dependency(name: let dependencyName):
+                            currentReferences.insert(dependencyName)
+                            currentExcludedReferences.insert(dependencyName)
+                            continue
+                        }
+                    }
+                }
+
                 if token.value.target == .`self` {
                     guard let concreteType = embeddingTypes.last else {
                         let location = FileLocation(line: token.line, file: file)
@@ -324,27 +423,39 @@ private extension Linker {
                     attributes[token.value.attribute.name] = token.value.attribute
                     configurationAnnotations[concreteType] = attributes
                 }
-                
+
             case .parameterAnnotation:
                 break
             }
         }
 
+        if currentReferences.isEmpty == false {
+            updateLists(currentClass)
+        }
+
         // Fill the graph
-        
-        for dependencyContainer in typeDeclarations.orderedValues {
+
+        let excludedTypes = platform.flatMap { dependencyGraph.excludedConcreteTypesPerPlatform[$0] } ?? []
+        let includedTypes = platform.flatMap { dependencyGraph.includedConcreteTypesPerPlatform[$0] } ?? []
+
+        let isAvailable: (ConcreteType) -> Bool = { concreteType in
+            return includedTypes.contains(concreteType)
+                || excludedTypes.contains(concreteType) == false
+        }
+
+        for dependencyContainer in typeDeclarations.orderedValues where isAvailable(dependencyContainer.type) {
             dependencyGraph.dependencyContainers[dependencyContainer.type] = dependencyContainer
         }
-        for dependencyContainer in registerAnnotations.orderedValues where dependencyGraph.dependencyContainers[dependencyContainer.type] == nil {
+        for dependencyContainer in registerAnnotations.orderedValues where dependencyGraph.dependencyContainers[dependencyContainer.type] == nil && isAvailable(dependencyContainer.type) {
             dependencyGraph.dependencyContainers[dependencyContainer.type] = dependencyContainer
         }
-        for dependencyContainer in referenceAnnotations.orderedValues where dependencyGraph.dependencyContainers[dependencyContainer.type] == nil {
+        for dependencyContainer in referenceAnnotations.orderedValues where dependencyGraph.dependencyContainers[dependencyContainer.type] == nil && isAvailable(dependencyContainer.type) {
             dependencyGraph.dependencyContainers[dependencyContainer.type] = dependencyContainer
         }
         
         // Fill dependency containers' configurations
 
-        for (type, attributes) in configurationAnnotations {
+        for (type, attributes) in configurationAnnotations where isAvailable(type) {
             dependencyGraph.dependencyContainers[type]?.configuration = DependencyContainerConfiguration(with: attributes)
         }
     }
@@ -380,16 +491,115 @@ private extension Linker {
     func linkDependencyContainers(from syntaxTrees: [Expr]) throws {
         
         var configurationAnnotations = [ConcreteType: [String: [ConfigurationAttribute]]]()
+        var registrationConcreteTypes = [String: [ConcreteType]]()
 
+        let excludedConcreteTypes = platform.flatMap { dependencyGraph.excludedConcreteTypesPerPlatform[$0] } ?? []
+        let excludedAbstractRefsPerClass = platform.flatMap { dependencyGraph.excludedAbstractReferencesPerPlatformPerClass[$0] } ?? [:]
+
+        let includedConcreteTypes = platform.flatMap { dependencyGraph.includedConcreteTypesPerPlatform[$0] } ?? []
+        let includedAbstractRefsPerClass = platform.flatMap { dependencyGraph.includedAbstractReferencesPerPlatformPerClass[$0] } ?? [:]
+
+        var currentClass: ConcreteType?
+
+        // Step 1: Build all configurations
         for (expr, embeddingTypes, file) in ExprSequence(exprs: syntaxTrees) {
+
+            switch expr {
+            case .typeDeclaration(let token, _):
+                currentClass = token.value.type
+            case .file,
+                 .registerAnnotation,
+                 .referenceAnnotation,
+                 .configurationAnnotation,
+                 .parameterAnnotation:
+                break
+            }
+
+            let excludedAbstractRefs = currentClass.flatMap { excludedAbstractRefsPerClass[$0] } ?? []
+            let includedAbstractRefs = currentClass.flatMap { includedAbstractRefsPerClass[$0] } ?? []
+
+            switch expr {
+            case .referenceAnnotation,
+                 .parameterAnnotation,
+                 .file,
+                 .typeDeclaration:
+                break
+
+            case .registerAnnotation(let token):
+                let existingTypes: [ConcreteType] = registrationConcreteTypes[token.value.name] ?? []
+                registrationConcreteTypes[token.value.name] = existingTypes + token.value.type
+
+            case .configurationAnnotation(let token):
+                if case .dependency(let dependencyName) = token.value.target {
+
+                    if excludedAbstractRefs.contains(dependencyName) && includedAbstractRefs.contains(dependencyName) == false {
+                        continue
+                    }
+
+                    guard let concreteType = embeddingTypes.last else {
+                        let location = FileLocation(line: token.line, file: file)
+                        throw LinkerError.foundAnnotationOutsideOfType(location)
+                    }
+
+                    if excludedConcreteTypes.contains(concreteType) && includedConcreteTypes.contains(concreteType) == false {
+                        continue
+                    }
+
+                    if let associatedConcreteType = registrationConcreteTypes[dependencyName]?.last,
+                       excludedConcreteTypes.contains(associatedConcreteType),
+                       includedConcreteTypes.contains(associatedConcreteType) == false {
+                        continue
+                    }
+
+                    var attributesByDependencyName = configurationAnnotations[concreteType] ?? [:]
+                    var attributes = attributesByDependencyName[dependencyName] ?? []
+                    attributes.append(token.value.attribute)
+                    attributesByDependencyName[dependencyName] = attributes
+                    configurationAnnotations[concreteType] = attributesByDependencyName
+                }
+            }
+        }
+
+        currentClass = nil
+
+        // Step 2: Parse the dependencies
+        for (expr, embeddingTypes, file) in ExprSequence(exprs: syntaxTrees) {
+
+            switch expr {
+            case .typeDeclaration(let token, _):
+                currentClass = token.value.type
+            case .file,
+                 .registerAnnotation,
+                 .referenceAnnotation,
+                 .configurationAnnotation,
+                 .parameterAnnotation:
+                break
+            }
+
+            let excludedAbstractRefs = currentClass.flatMap { excludedAbstractRefsPerClass[$0] } ?? []
+            let includedAbstractRefs = currentClass.flatMap { includedAbstractRefsPerClass[$0] } ?? []
+
             switch expr {
             case .registerAnnotation(let token):
+
+                if excludedAbstractRefs.contains(token.value.name) && includedAbstractRefs.contains(token.value.name) == false {
+                    continue
+                }
+
+                if excludedConcreteTypes.contains(token.value.type) && includedConcreteTypes.contains(token.value.type) == false {
+                    continue
+                }
+
+                if embeddingTypes.allAreExcluded(excludedTypes: excludedConcreteTypes, includedTypes: includedConcreteTypes) {
+                    continue
+                }
+
                 let location = FileLocation(line: token.line, file: file)
 
-                guard let source = embeddingTypes.last else {
+                guard let source = embeddingTypes.first(excludedTypes: excludedConcreteTypes, includedTypes: includedConcreteTypes) else {
                     throw LinkerError.foundAnnotationOutsideOfType(location)
                 }
-                
+
                 guard let sourceDependencyContainer = dependencyGraph.dependencyContainers[source] else {
                     throw LinkerError.unknownType(location, type: source.value)
                 }
@@ -408,9 +618,18 @@ private extension Linker {
                 associatedDependencyContainer.sources.insert(dependency.source)
                 
             case .referenceAnnotation(let token):
+
+                if excludedAbstractRefs.contains(token.value.name) && includedAbstractRefs.contains(token.value.name) == false {
+                    continue
+                }
+
+                if embeddingTypes.allAreExcluded(excludedTypes: excludedConcreteTypes, includedTypes: includedConcreteTypes) {
+                    continue
+                }
+
                 let location = FileLocation(line: token.line, file: file)
 
-                guard let source = embeddingTypes.last else {
+                guard let source = embeddingTypes.first(excludedTypes: excludedConcreteTypes, includedTypes: includedConcreteTypes) else {
                     throw LinkerError.foundAnnotationOutsideOfType(location)
                 }
                 
@@ -431,9 +650,22 @@ private extension Linker {
                 sourceDependencyContainer.insertDependency(dependency)
 
             case .parameterAnnotation(let token):
+
+                if excludedAbstractRefs.contains(token.value.name) && includedAbstractRefs.contains(token.value.name) == false {
+                    continue
+                }
+
+                if excludedConcreteTypes.contains(token.value.type) && includedConcreteTypes.contains(token.value.type) == false {
+                    continue
+                }
+
+                if embeddingTypes.allAreExcluded(excludedTypes: excludedConcreteTypes, includedTypes: includedConcreteTypes) {
+                    continue
+                }
+
                 let location = FileLocation(line: token.line, file: file)
-                
-                guard let source = embeddingTypes.last else {
+
+                guard let source = embeddingTypes.first(excludedTypes: excludedConcreteTypes, includedTypes: includedConcreteTypes) else {
                     throw LinkerError.foundAnnotationOutsideOfType(location)
                 }
 
@@ -451,42 +683,24 @@ private extension Linker {
                 
                 sourceDependencyContainer.insertDependency(dependency)
 
-            case .configurationAnnotation(let token):
-                if case .dependency(let name) = token.value.target {
-
-                    guard let concreteType = embeddingTypes.last else {
-                        let location = FileLocation(line: token.line, file: file)
-                        throw LinkerError.foundAnnotationOutsideOfType(location)
-                    }
-                    
-                    var attributesByDependencyName = configurationAnnotations[concreteType] ?? [:]
-                    var attributes = attributesByDependencyName[name] ?? []
-                    attributes.append(token.value.attribute)
-                    attributesByDependencyName[name] = attributes
-                    configurationAnnotations[concreteType] = attributesByDependencyName
-                }
-                
-            case .file,
+            case .configurationAnnotation,
+                 .file,
                  .typeDeclaration:
                 break
             }
         }
         
-        for (type, attributes) in configurationAnnotations {
-            
-            guard let dependencyContainer = dependencyGraph.dependencyContainers[type] else {
-                throw LinkerError.unknownType(nil, type: type.value)
+        for (concreteType, attributeDictionary) in configurationAnnotations {
+
+            guard let dependencyContainer = dependencyGraph.dependencyContainers[concreteType] else {
+                throw LinkerError.unknownType(nil, type: concreteType.value)
             }
             
-            for (dependencyName, attributes) in attributes {
+            for (dependencyName, attributes) in attributeDictionary {
                 guard let dependency = dependencyContainer.dependencies[dependencyName] else {
                     throw LinkerError.dependencyNotFound(nil, dependencyName: dependencyName)
                 }
                 dependency.configuration = DependencyConfiguration(with: attributes)
-
-                if try dependency.configuration.contains(platform: platform) == false {
-                    dependencyContainer.dependencies[dependencyName] = nil
-                }
             }
         }
     }
@@ -735,5 +949,25 @@ private extension DependencyConfiguration {
             throw LinkerError.missingTargetedPlatform
         }
         return platforms.contains(platform)
+    }
+}
+
+private extension Array where Element == ConcreteType {
+
+    func allAreExcluded(excludedTypes: Set<ConcreteType>, includedTypes: Set<ConcreteType>) -> Bool {
+        return allSatisfy { excludedTypes.contains($0) && includedTypes.contains($0) == false }
+    }
+
+    func first(excludedTypes: Set<ConcreteType>, includedTypes: Set<ConcreteType>) -> ConcreteType? {
+        return first { excludedTypes.contains($0) == false || includedTypes.contains($0) }
+    }
+}
+
+// MARK: - Defaults
+
+extension Linker {
+
+    enum Defaults {
+        static let unnamedFile = "UnnamedFile"
     }
 }
