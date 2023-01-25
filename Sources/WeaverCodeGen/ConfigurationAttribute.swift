@@ -17,6 +17,7 @@ public enum ConfigurationAttributeName: String {
     case setter
     case escaping
     case platforms
+    case projects
 }
 
 public enum ConfigurationAttribute: Hashable {
@@ -27,6 +28,7 @@ public enum ConfigurationAttribute: Hashable {
     case setter(value: Bool)
     case escaping(value: Bool)
     case platforms(values: [Platform])
+    case projects(values: [String])
 }
 
 // MARK: - Target
@@ -64,6 +66,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return "Config Attr - escaping = \(value)"
         case .platforms(let values):
             return "Config Attr - platforms = [\(values.map { ".\($0.rawValue)" }.joined(separator: ", "))]"
+        case .projects(let values):
+            return "Config Attr - Projects = [\(values.joined(separator: ", "))]"
         }
     }
     
@@ -83,6 +87,8 @@ extension ConfigurationAttribute: CustomStringConvertible {
             return .escaping
         case .platforms:
             return .platforms
+        case .projects:
+            return .projects
         }
     }
 }
@@ -111,7 +117,8 @@ extension ConfigurationAnnotation {
              (.doesSupportObjc, .dependency),
              (.setter, .dependency),
              (.escaping, .dependency),
-             (.platforms, .dependency):
+             (.platforms, .dependency),
+             (.projects, .dependency):
             return true
             
         case (.isIsolated, _),
@@ -120,7 +127,8 @@ extension ConfigurationAnnotation {
              (.doesSupportObjc, _),
              (.setter, _),
              (.escaping, _),
-             (.platforms, _):
+             (.platforms, _),
+             (.projects, _):
             return false
         }
     }
@@ -140,7 +148,8 @@ extension ConfigurationAnnotation {
              (.setter, .registration),
              (.doesSupportObjc, .registration),
              (.escaping, .parameter),
-             (.platforms, _):
+             (.platforms, _),
+             (.projects, _):
             return true
         case (.isIsolated, _),
              (.scope, _),
@@ -173,6 +182,8 @@ extension ConfigurationAttribute {
             self = .escaping(value: try ConfigurationAttribute.boolValue(from: valueString))
         case .platforms:
             self = .platforms(values: try ConfigurationAttribute.platformValues(from: valueString))
+        case .projects:
+            self = .projects(values: try ConfigurationAttribute.projectValues(from: valueString))
         case .none:
             throw TokenError.unknownConfigurationAttribute(name: name)
         }
@@ -194,15 +205,14 @@ extension ConfigurationAttribute {
     }
     
     private static func platformValues(from string: String) throws -> [Platform] {
-
-        var string = string.trimmingTrailingCharacters(in: .whitespaces)
-        guard string.first == "[" && string.last == "]" else {
-            throw TokenError.invalidConfigurationAttributeValue(value: string, expected: "Array of platforms (eg: `[.iOS, .watchOS, ...]`)")
+        var parsedString = string.trimmingTrailingCharacters(in: .whitespaces)
+        guard parsedString.first == "[" && parsedString.last == "]" else {
+            throw TokenError.invalidConfigurationAttributeValue(value: parsedString, expected: "Array of platforms (eg: `[.iOS, .watchOS, ...]`)")
         }
-        string.removeFirst()
-        string.removeLast()
+        parsedString.removeFirst()
+        parsedString.removeLast()
         
-        return try string
+        return try parsedString
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .map {
@@ -212,6 +222,19 @@ extension ConfigurationAttribute {
                 }
                 return platform
             }
+    }
+
+    private static func projectValues(from string: String) throws -> [String] {
+        var parsedString = string.trimmingTrailingCharacters(in: .whitespaces)
+        guard parsedString.first == "[" && parsedString.last == "]" else {
+            throw TokenError.invalidConfigurationAttributeValue(value: parsedString, expected: "Array of projects (eg: `[Calculator, Photos, ...]`)")
+        }
+        parsedString.removeFirst()
+        parsedString.removeLast()
+
+        return parsedString
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: .punctuationCharacters) }
     }
 }
 
@@ -241,7 +264,8 @@ extension ConfigurationAttribute {
 
         case .scope,
              .customBuilder,
-             .platforms:
+             .platforms,
+             .projects:
             return nil
         }
     }
@@ -256,7 +280,8 @@ extension ConfigurationAttribute {
              .doesSupportObjc,
              .setter,
              .escaping,
-             .platforms:
+             .platforms,
+             .projects:
             return nil
         }
     }
@@ -271,7 +296,8 @@ extension ConfigurationAttribute {
              .doesSupportObjc,
              .setter,
              .escaping,
-             .platforms:
+             .platforms,
+             .projects:
             return nil
         }
     }
@@ -280,13 +306,30 @@ extension ConfigurationAttribute {
         switch self {
         case .platforms(let values):
             return values
-        
+
         case .scope,
              .customBuilder,
              .isIsolated,
              .setter,
              .escaping,
-             .doesSupportObjc:
+             .doesSupportObjc,
+             .projects:
+            return nil
+        }
+    }
+
+    var projectValues: [String]? {
+        switch self {
+        case .projects(let values):
+            return values
+
+        case .scope,
+             .customBuilder,
+             .isIsolated,
+             .setter,
+             .escaping,
+             .doesSupportObjc,
+             .platforms:
             return nil
         }
     }

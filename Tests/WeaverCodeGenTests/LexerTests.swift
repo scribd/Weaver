@@ -216,27 +216,27 @@ final class LexerTests: XCTestCase {
     }
     
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_and_no_protocol() {
-            
-            let file = File(contents: """
+
+        let file = File(contents: """
                 final class MovieManager {
 
                     @Weaver(.registration, type: API.self)
                     private var api: API
                 }
                 """)
-            do {
-                let lexer = Lexer(file, fileName: "test.swift")
-                let tokens = try lexer.tokenize()
-                
-                if tokens.count == 3 {
-                    XCTAssertEqual(tokens[1].description, "api = API - 83[12] - at line: 2")
-                } else {
-                    XCTFail("Unexpected amount of tokens: \(tokens.count).")
-                }
-            } catch {
-                XCTFail("Unexpected error: \(error)")
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+
+            if tokens.count == 3 {
+                XCTAssertEqual(tokens[1].description, "api = API - 83[12] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
             }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
+    }
     
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_comment_annotation_and_optional_types() {
         
@@ -302,7 +302,7 @@ final class LexerTests: XCTestCase {
     }
     
     func test_tokenizer_should_generate_a_valid_token_list_with_a_register_property_wrapper_annotation_with_generic_types() {
-            
+
         let file = File(contents: """
             final class MovieManager<T, P> {
 
@@ -517,7 +517,7 @@ final class LexerTests: XCTestCase {
     }
     
     func test_tokenizer_should_generate_a_valid_token_list_with_a_reference_property_wrapper_annotation_with_a_generic_optional_type() {
-            
+
         let file = File(contents: """
             final class MovieManager {
 
@@ -888,7 +888,7 @@ final class LexerTests: XCTestCase {
     }
     
     func test_tokenizer_should_throw_an_error_with_the_right_line_and_content_on_an_invalid_property_wrapper_annotation() {
-            
+
         let file = File(contents: """
             final class MyService {
               let dependencies: DependencyResolver
@@ -1164,4 +1164,50 @@ final class LexerTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_projects_comment_annotation() {
+
+        let file = File(contents: """
+
+            // weaver: api.projects = [MyApp, AlternateApp]
+            """)
+        let lexer = Lexer(file, fileName: "test.swift")
+
+        do {
+            let tokens = try lexer.tokenize()
+
+            if tokens.count == 1 {
+                XCTAssertEqual(tokens[0].description, "api.Config Attr - Projects = [MyApp, AlternateApp] - 1[47] - at line: 1")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func test_tokenizer_should_generate_a_valid_token_list_with_a_projects_property_wrapper_annotation() {
+
+        let file = File(contents: """
+            final class MovieManager {
+
+                @Weaver(.registration, type: Request<T, P>?.self, projects: ["MyApp", "AlternateApp"])
+                private var request: Request<T, P>?
+            }
+            """)
+        let lexer = Lexer(file, fileName: "test.swift")
+
+        do {
+            let tokens = try lexer.tokenize()
+
+            if tokens.count == 4 {
+                XCTAssertEqual(tokens[2].description, "request.Config Attr - Projects = [MyApp, AlternateApp] - 131[27] - at line: 2")
+            } else {
+                XCTFail("Unexpected amount of tokens: \(tokens.count).")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
 }

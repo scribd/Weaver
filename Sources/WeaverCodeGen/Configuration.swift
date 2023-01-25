@@ -48,7 +48,9 @@ struct DependencyConfiguration: Configuration {
     let escaping: Bool
     
     let platforms: Set<Platform>
-    
+
+    let projects: Set<String>
+
     init(with attributes: [ConfigurationAttributeName: ConfigurationAttribute]?) {
         customBuilder = attributes?[.customBuilder]?.stringValue
         scope = attributes?[.scope]?.scopeValue ?? .default
@@ -56,6 +58,7 @@ struct DependencyConfiguration: Configuration {
         setter = attributes?[.setter]?.boolValue ?? false
         escaping = attributes?[.escaping]?.boolValue ?? false
         platforms = Set(attributes?[.platforms]?.platformValues ?? [])
+        projects = Set(attributes?[.projects]?.projectValues ?? [])
     }
 }
 
