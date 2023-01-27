@@ -16,7 +16,7 @@ final class HomeViewController: UIViewController {
         
     private var movies = [Movie]()
         
-    @Weaver(.registration)
+    @Weaver(.reference, platforms: [.iOS])
     private var logger: Logger
     
     @Weaver(.reference)

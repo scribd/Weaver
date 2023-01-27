@@ -213,10 +213,9 @@ final class MainDependencyContainer: NSObject {
     private func personManagerDependencyResolver() -> PersonManagerDependencyResolver {
         let _self = MainDependencyContainer()
         var _builders = Dictionary<String, Any>()
-        _builders["logger"] = Provider.lazyBuilder( { (_: Optional<Provider.ParametersCopier>) -> Logger in return Logger() })
+        _builders["logger"] = _self.loggerBuilder
         _builders["movieAPI"] = _self.movieAPIBuilder
         _self.provider.addBuilders(_builders)
-        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
         return _self
@@ -225,10 +224,9 @@ final class MainDependencyContainer: NSObject {
     private func reviewManagerDependencyResolver() -> ReviewManagerDependencyResolver {
         let _self = MainDependencyContainer()
         var _builders = Dictionary<String, Any>()
-        _builders["logger"] = Provider.lazyBuilder( { (_: Optional<Provider.ParametersCopier>) -> Logger in return Logger() })
+        _builders["logger"] = loggerBuilder
         _builders["movieAPI"] = movieAPIBuilder
         _self.provider.addBuilders(_builders)
-        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieAPI })
         return _self
@@ -238,7 +236,6 @@ final class MainDependencyContainer: NSObject {
         let _self = MainDependencyContainer(provider: provider.copy())
         let _inputProvider = _self.provider.copy()
         var _builders = Dictionary<String, Any>()
-        _builders["logger"] = Provider.lazyBuilder( { (_: Optional<Provider.ParametersCopier>) -> Logger in return Logger() })
         _builders["movieController"] = Provider.weakLazyBuilder(
              { (copyParameters: Optional<Provider.ParametersCopier>) -> UIViewController in
                 defer { MainDependencyContainer._dynamicResolversLock.unlock() }
@@ -250,11 +247,11 @@ final class MainDependencyContainer: NSObject {
             }
         )
         _builders["imageManager"] = imageManagerBuilder
+        _builders["logger"] = loggerBuilder
         _builders["movieManager"] = movieManagerBuilder
         _builders["reviewManager"] = reviewManagerBuilder
         _self.provider.addBuilders(_builders)
         _inputProvider.addBuilders(_builders)
-        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieManager })
         MainDependencyContainer._pushDynamicResolver(_self.movieController)
@@ -265,7 +262,6 @@ final class MainDependencyContainer: NSObject {
         let _self = MainDependencyContainer(provider: provider.copy())
         let _inputProvider = _self.provider
         var _builders = Dictionary<String, Any>()
-        _builders["logger"] = Provider.lazyBuilder( { (_: Optional<Provider.ParametersCopier>) -> Logger in return Logger() })
         _builders["reviewController"] = Provider.weakLazyBuilder(
              { (_: Optional<Provider.ParametersCopier>) -> WSReviewViewController in
                 let _inputContainer = MainDependencyContainer(provider: _inputProvider.copy())
@@ -273,10 +269,10 @@ final class MainDependencyContainer: NSObject {
             }
         )
         _builders["imageManager"] = imageManagerBuilder
+        _builders["logger"] = loggerBuilder
         _builders["movieManager"] = movieManagerBuilder
         _builders["reviewManager"] = reviewManagerBuilder
         _self.provider.addBuilders(_builders)
-        _ = _self.logger
         MainDependencyContainer._pushDynamicResolver({ _self.logger })
         MainDependencyContainer._pushDynamicResolver({ _self.movieID })
         MainDependencyContainer._pushDynamicResolver({ _self.movieTitle })
@@ -369,7 +365,8 @@ struct Weaver<ConcreteType, AbstractType> {
          escaping: Bool = false,
          builder: Optional<Any> = nil,
          objc: Bool = false,
-         platforms: Array<MainDependencyContainer.Platform> = []) {
+         platforms: Array<MainDependencyContainer.Platform> = [],
+         projects: Array<String> = []) {
         // no-op
     }
 
@@ -385,7 +382,8 @@ extension Weaver where ConcreteType == Void {
          escaping: Bool = false,
          builder: Optional<Any> = nil,
          objc: Bool = false,
-         platforms: Array<MainDependencyContainer.Platform> = []) {
+         platforms: Array<MainDependencyContainer.Platform> = [],
+         projects: Array<String> = []) {
         // no-op
     }
 }
@@ -403,7 +401,8 @@ struct WeaverP2<ConcreteType, AbstractType, P1, P2> {
          escaping: Bool = false,
          builder: Optional<Any> = nil,
          objc: Bool = false,
-         platforms: Array<MainDependencyContainer.Platform> = []) {
+         platforms: Array<MainDependencyContainer.Platform> = [],
+         projects: Array<String> = []) {
         // no-op
     }
 
@@ -419,7 +418,8 @@ extension WeaverP2 where ConcreteType == Void {
          escaping: Bool = false,
          builder: Optional<Any> = nil,
          objc: Bool = false,
-         platforms: Array<MainDependencyContainer.Platform> = []) {
+         platforms: Array<MainDependencyContainer.Platform> = [],
+         projects: Array<String> = []) {
         // no-op
     }
 }

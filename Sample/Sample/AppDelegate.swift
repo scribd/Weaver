@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     private let dependencies = MainDependencyContainer.appDelegateDependencyResolver()
     
-    @Weaver(.registration)
+    @Weaver(.registration, projects: ["Sample"])
     private var logger: Logger
     
     @Weaver(.registration, builder: AppDelegate.makeURLSession)

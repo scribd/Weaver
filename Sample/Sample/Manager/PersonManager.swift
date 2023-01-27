@@ -28,7 +28,7 @@ final class PersonManager: PersonManaging {
 
     // weaver: self.isIsolated = true
 
-    @Weaver(.registration)
+    @Weaver(.reference)
     private var logger: Logger
 
     @Weaver(.reference)
