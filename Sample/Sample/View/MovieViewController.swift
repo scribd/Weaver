@@ -17,7 +17,7 @@ final class MovieViewController: UIViewController {
         let overview: String?
     }
     
-    @Weaver(.registration)
+    @Weaver(.reference)
     private var logger: Logger
 
     @Weaver(.parameter)

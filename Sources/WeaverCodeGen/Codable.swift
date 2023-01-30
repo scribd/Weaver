@@ -31,6 +31,8 @@ extension ConfigurationAttribute: Codable {
             self = .escaping(value: try container.decode(Bool.self, forKey: .value))
         case .platforms:
             self = .platforms(values: try container.decode([Platform].self, forKey: .value))
+        case .projects:
+            self = .projects(values: try container.decode([String].self, forKey: .value))
         }
     }
     
@@ -57,6 +59,9 @@ extension ConfigurationAttribute: Codable {
             try container.encode(value, forKey: .value)
         case .platforms(let value):
             try container.encode(ConfigurationAttributeName.platforms, forKey: .name)
+            try container.encode(value, forKey: .value)
+        case .projects(let value):
+            try container.encode(ConfigurationAttributeName.projects, forKey: .name)
             try container.encode(value, forKey: .value)
         }
     }
@@ -95,6 +100,7 @@ extension ConfigurationAttributeName: Codable {
         case setter = "set"
         case escaping = "e"
         case platforms = "p"
+        case projects = "j"
         
         init(_ value: ConfigurationAttributeName) {
             switch value {
@@ -112,6 +118,8 @@ extension ConfigurationAttributeName: Codable {
                 self = .escaping
             case .platforms:
                 self = .platforms
+            case .projects:
+                self = .projects
             }
         }
         
@@ -131,6 +139,8 @@ extension ConfigurationAttributeName: Codable {
                 return .escaping
             case .platforms:
                 return .platforms
+            case .projects:
+                return .projects
             }
         }
     }

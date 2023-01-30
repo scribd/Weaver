@@ -13,7 +13,7 @@ import Darwin
 import PathKit
 import Rainbow
 
-private let version = "1.1.4"
+private let version = "1.1.5"
 
 // MARK: - Linker
 
@@ -22,12 +22,14 @@ private extension Linker {
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
                      platform: Platform?,
+                     projectName: String?,
                      shouldLog: Bool = true) throws {
         
         var didChange = false
         try self.init(inputPaths,
                       cachePath: cachePath,
                       platform: platform,
+                      projectName: projectName,
                       shouldLog: shouldLog,
                       didChange: &didChange)
         _ = didChange
@@ -36,6 +38,7 @@ private extension Linker {
     convenience init(_ inputPaths: [Path],
                      cachePath: Path,
                      platform: Platform?,
+                     projectName: String?,
                      shouldLog: Bool = true,
                      didChange: inout Bool) throws {
 
@@ -81,7 +84,7 @@ private extension Linker {
             Logger.log(.info, "")
             Logger.log(.info, "Linking...".lightGreen, benchmark: .start("linking"))
         }
-        try self.init(syntaxTrees: asts, platform: platform)
+        try self.init(syntaxTrees: asts, platform: platform, projectName: projectName)
         if shouldLog { Logger.log(.info, "Done".lightGreen, benchmark: .end("linking")) }
     }
 }
@@ -191,8 +194,19 @@ public let weaverCommand = Group {
             let linker = try Linker(inputPaths,
                                     cachePath: configuration.cachePath,
                                     platform: configuration.platform,
+                                    projectName: configuration.projectName,
                                     didChange: &didChange)
             let dependencyGraph = linker.dependencyGraph
+
+            // ---- Project Name ----
+
+            if dependencyGraph.uniqueProjects.isEmpty == false {
+                let uniqueProjectNames = dependencyGraph.uniqueProjects.sorted(by: { $0.lowercased() < $1.lowercased() }).joined(separator: ", ")
+                Logger.log(.info, "")
+                Logger.log(.info, "Project Names...".cyan)
+                Logger.log(.info, "Active: \(configuration.projectName ?? "<empty>")".cyan, benchmark: .start("checking"))
+                Logger.log(.info, "Found:  \(uniqueProjectNames)".cyan, benchmark: .start("checking"))
+            }
 
             // ---- Inspect ----
             
@@ -314,6 +328,7 @@ public let weaverCommand = Group {
         let linker = try Linker(try configuration.inputPaths(),
                                 cachePath: configuration.cachePath,
                                 platform: configuration.platform,
+                                projectName: configuration.projectName,
                                 shouldLog: false)
         let dependencyGraph = linker.dependencyGraph
 

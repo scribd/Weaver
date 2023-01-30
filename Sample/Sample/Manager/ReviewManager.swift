@@ -37,7 +37,7 @@ import API
 
 final class ReviewManager: ReviewManaging {
 
-    @Weaver(.registration)
+    @Weaver(.reference)
     private var logger: Logger
 
     @Weaver(.reference)

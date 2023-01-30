@@ -167,6 +167,7 @@ final class LinkerTests: XCTestCase {
                 // weaver: dataConfiguration = DataManager <- DataConfiguring
                 // weaver: dataConfiguration.scope = .container
                 // weaver: dataConfiguration.builder = { _ in DataManager.shared }
+                // weaver: dataConfiguration.platforms = [.iOS, .watchOS]
 
                 // weaver: dataProvider = DataManager <- DataProviding
                 // weaver: dataProvider.scope = .container
@@ -196,6 +197,69 @@ final class LinkerTests: XCTestCase {
             let parser = Parser(tokens, fileName: "test.swift")
             let syntaxTree = try parser.parse()
             let linker = try Linker(syntaxTrees: [syntaxTree], platform: .watchOS)
+
+            guard linker.dependencyGraph.dependencies.count == 4 else {
+                XCTFail("Incorrect number of dependencies found \(linker.dependencyGraph.dependencies.count), but expected 4.")
+                return
+            }
+            XCTAssertEqual(linker.dependencyGraph.dependencies[0].dependencyName, "dataConfiguration")
+            XCTAssertEqual(linker.dependencyGraph.dependencies[1].dependencyName, "dataProvider")
+            XCTAssertEqual(linker.dependencyGraph.dependencies[2].dependencyName, "viewController1")
+            XCTAssertEqual(linker.dependencyGraph.dependencies[3].dependencyName, "viewController2")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func test_linker_filters_out_entire_files_if_constructor_doesnt_match_the_current_project() {
+
+        let file = File(contents: """
+            protocol DataConfiguring { }
+
+            protocol DataProviding { }
+
+            final class Coordinator {
+                // weaver: value <= Int
+            }
+
+            final class AppDelegate {
+                // weaver: coordinator = Coordinator
+                // weaver: coordinator.scope = .transient
+                // weaver: coordinator.projects = [myApp]
+
+                // weaver: dataConfiguration = DataManager <- DataConfiguring
+                // weaver: dataConfiguration.scope = .container
+                // weaver: dataConfiguration.builder = { _ in DataManager.shared }
+                // weaver: dataConfiguration.projects = [myApp, alternateApp]
+
+                // weaver: dataProvider = DataManager <- DataProviding
+                // weaver: dataProvider.scope = .container
+                // weaver: dataProvider.builder = { _ in DataManager.shared }
+                // weaver: dataProvider.projects = [alternateApp]
+
+                // weaver: viewController1 = ViewController1
+                // weaver: viewController1.scope = .transient
+            }
+
+            final class DataManager: DataConfiguring, DataProviding {
+                static let shared = DataManager()
+            }
+
+            final class ViewController1: UIViewController {
+                // weaver: viewController2 = ViewController2
+                // weaver: viewController2.scope = .transient
+            }
+
+            final class ViewController2: UIViewController {
+            }
+            """)
+
+        do {
+            let lexer = Lexer(file, fileName: "test.swift")
+            let tokens = try lexer.tokenize()
+            let parser = Parser(tokens, fileName: "test.swift")
+            let syntaxTree = try parser.parse()
+            let linker = try Linker(syntaxTrees: [syntaxTree], projectName: "alternateApp")
 
             guard linker.dependencyGraph.dependencies.count == 4 else {
                 XCTFail("Incorrect number of dependencies found \(linker.dependencyGraph.dependencies.count), but expected 4.")

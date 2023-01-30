@@ -433,6 +433,10 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
                 FunctionParameter(
                     name: "platforms",
                     type: .array(element: TypeIdentifier(name: "\(TypeIdentifier.mainDependencyContainer.swiftString).Platform"))
+                ).with(defaultValue: Value.array([])),
+                FunctionParameter(
+                    name: "projects",
+                    type: .array(element: TypeIdentifier(name: .string))
                 ).with(defaultValue: Value.array([]))
             ]
 

@@ -219,17 +219,20 @@ public final class DependencyGraph {
     /// The root node of the graph, that which is not referenced by any other container
     fileprivate(set) lazy var rootContainers: [DependencyContainer] = dependencyContainers.orderedValues.filter { $0.sources.isEmpty }
 
-    /// The concrete types that are explicitly excluded per platform
-    fileprivate(set) lazy var excludedConcreteTypesPerPlatform = [Platform: Set<ConcreteType>]()
+    /// The concrete types that are explicitly excluded per platform or project
+    fileprivate(set) lazy var excludedConcreteTypes = Set<ConcreteType>()
 
-    /// The abstract reference names that are explicitly excluded per platform per class
-    fileprivate(set) lazy var excludedAbstractReferencesPerPlatformPerClass = [Platform: [ConcreteType: Set<String>]]()
+    /// The abstract reference names that are explicitly excluded per platform or project per class
+    fileprivate(set) lazy var excludedAbstractReferencesPerClass = [ConcreteType: Set<String>]()
 
-    /// The concrete types that are explicitly included per platform
-    fileprivate(set) lazy var includedConcreteTypesPerPlatform = [Platform: Set<ConcreteType>]()
+    /// The concrete types that are explicitly included per platform or project
+    fileprivate(set) lazy var includedConcreteTypes = Set<ConcreteType>()
 
-    /// The abstract reference names that are explicitly included per platform per class
-    fileprivate(set) lazy var includedAbstractReferencesPerPlatformPerClass = [Platform: [ConcreteType: Set<String>]]()
+    /// The abstract reference names that are explicitly included per platform or project per class
+    fileprivate(set) lazy var includedAbstractReferencesPerClass = [ConcreteType: Set<String>]()
+
+    /// The abstract reference names that are explicitly included per platform or project per class
+    public fileprivate(set) lazy var uniqueProjects = Set<String>()
 
     // MARK: - Cached data
     
@@ -246,14 +249,19 @@ public final class Linker {
     
     private let platform: Platform?
 
+    private let projectName: String?
+
     /// - Parameters
     ///     - syntaxTrees: list of syntax trees (AST) for each source file.
     ///     - platform: target platform for which the code is generated.
     ///
     /// - Throws:
     ///     - `InspectorError.invalidDependencyGraph` // TODO: Create a specific error type for the linker.
-    public init(syntaxTrees: [Expr], platform: Platform? = nil) throws {
+    public init(syntaxTrees: [Expr],
+                platform: Platform? = nil,
+                projectName: String? = nil) throws {
         self.platform = platform
+        self.projectName = projectName
         try buildDependencyGraph(from: syntaxTrees)
     }
 }
@@ -280,7 +288,7 @@ private extension Linker {
 // MARK: - Collect
 
 private extension Linker {
-    
+
     func collectDependencyContainers(from syntaxTrees: [Expr]) throws {
 
         // Collect dependency containers
@@ -298,33 +306,23 @@ private extension Linker {
         var currentClass: ConcreteType?
 
         let addToIncludedList: (ConcreteType?, String, ConcreteType) -> Void = { concreteType, reference, classType in
-            guard let platform = self.platform else { return }
             if let concreteType = concreteType {
-                var includedTypes = self.dependencyGraph.includedConcreteTypesPerPlatform[platform] ?? []
-                includedTypes.insert(concreteType)
-                self.dependencyGraph.includedConcreteTypesPerPlatform[platform] = includedTypes
+                self.dependencyGraph.includedConcreteTypes.insert(concreteType)
             }
 
-            var includedRefsPerClass = self.dependencyGraph.includedAbstractReferencesPerPlatformPerClass[platform] ?? [:]
-            var includedRefs = includedRefsPerClass[classType] ?? []
-            includedRefs.insert(reference)
-            includedRefsPerClass[classType] = includedRefs
-            self.dependencyGraph.includedAbstractReferencesPerPlatformPerClass[platform] = includedRefsPerClass
+            var includedRefsPerClass = self.dependencyGraph.includedAbstractReferencesPerClass[classType] ?? []
+            includedRefsPerClass.insert(reference)
+            self.dependencyGraph.includedAbstractReferencesPerClass[classType] = includedRefsPerClass
         }
 
         let addToExcludeList: (ConcreteType?, String, ConcreteType) -> Void = { concreteType, reference, classType in
-            guard let platform = self.platform else { return }
             if let concreteType = concreteType {
-                var excludedTypes = self.dependencyGraph.excludedConcreteTypesPerPlatform[platform] ?? []
-                excludedTypes.insert(concreteType)
-                self.dependencyGraph.excludedConcreteTypesPerPlatform[platform] = excludedTypes
+                self.dependencyGraph.excludedConcreteTypes.insert(concreteType)
             }
 
-            var excludedRefsPerClass = self.dependencyGraph.excludedAbstractReferencesPerPlatformPerClass[platform] ?? [:]
-            var excludedRefs = excludedRefsPerClass[classType] ?? []
-            excludedRefs.insert(reference)
-            excludedRefsPerClass[classType] = excludedRefs
-            self.dependencyGraph.excludedAbstractReferencesPerPlatformPerClass[platform] = excludedRefsPerClass
+            var excludedRefsPerClass = self.dependencyGraph.excludedAbstractReferencesPerClass[classType] ?? []
+            excludedRefsPerClass.insert(reference)
+            self.dependencyGraph.excludedAbstractReferencesPerClass[classType] = excludedRefsPerClass
         }
 
         let updateLists: (ConcreteType?) -> Void = { classType in
@@ -392,6 +390,18 @@ private extension Linker {
                 currentReferences.insert(token.value.name)
 
             case .configurationAnnotation(let token):
+
+                let excludeTarget: (ConfigurationAttributeTarget) -> Bool = { target in
+                    switch target {
+                    case .`self`:
+                        return false
+                    case .dependency(name: let dependencyName):
+                        currentReferences.insert(dependencyName)
+                        currentExcludedReferences.insert(dependencyName)
+                        return true
+                    }
+                }
+
                 switch token.value.attribute {
                 case .isIsolated,
                         .customBuilder,
@@ -401,15 +411,19 @@ private extension Linker {
                         .escaping:
                     break
                 case .platforms(let platforms):
-                    if let platform = platform, platforms.isEmpty == false, platforms.contains(platform) == false {
-                        switch token.value.target {
-                        case .`self`:
-                            break
-                        case .dependency(name: let dependencyName):
-                            currentReferences.insert(dependencyName)
-                            currentExcludedReferences.insert(dependencyName)
-                            continue
-                        }
+                    if let platform = platform,
+                        platforms.isEmpty == false,
+                        platforms.contains(platform) == false,
+                        excludeTarget(token.value.target) {
+                       continue
+                    }
+                case .projects(let projects):
+                    projects.forEach { dependencyGraph.uniqueProjects.insert($0) }
+                    if let projectName = projectName,
+                        projects.isEmpty == false,
+                        projects.contains(projectName) == false,
+                        excludeTarget(token.value.target) {
+                        continue
                     }
                 }
 
@@ -435,8 +449,8 @@ private extension Linker {
 
         // Fill the graph
 
-        let excludedTypes = platform.flatMap { dependencyGraph.excludedConcreteTypesPerPlatform[$0] } ?? []
-        let includedTypes = platform.flatMap { dependencyGraph.includedConcreteTypesPerPlatform[$0] } ?? []
+        let excludedTypes = dependencyGraph.excludedConcreteTypes
+        let includedTypes = dependencyGraph.includedConcreteTypes
 
         let isAvailable: (ConcreteType) -> Bool = { concreteType in
             return includedTypes.contains(concreteType)
@@ -493,11 +507,11 @@ private extension Linker {
         var configurationAnnotations = [ConcreteType: [String: [ConfigurationAttribute]]]()
         var registrationConcreteTypes = [String: [ConcreteType]]()
 
-        let excludedConcreteTypes = platform.flatMap { dependencyGraph.excludedConcreteTypesPerPlatform[$0] } ?? []
-        let excludedAbstractRefsPerClass = platform.flatMap { dependencyGraph.excludedAbstractReferencesPerPlatformPerClass[$0] } ?? [:]
+        let excludedConcreteTypes = dependencyGraph.excludedConcreteTypes
+        let excludedAbstractRefsPerClass = dependencyGraph.excludedAbstractReferencesPerClass
 
-        let includedConcreteTypes = platform.flatMap { dependencyGraph.includedConcreteTypesPerPlatform[$0] } ?? []
-        let includedAbstractRefsPerClass = platform.flatMap { dependencyGraph.includedAbstractReferencesPerPlatformPerClass[$0] } ?? [:]
+        let includedConcreteTypes = dependencyGraph.includedConcreteTypes
+        let includedAbstractRefsPerClass = dependencyGraph.includedAbstractReferencesPerClass
 
         var currentClass: ConcreteType?
 
