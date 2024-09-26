@@ -25,7 +25,9 @@ public final class SwiftGenerator {
     private let version: String
 
     private let swiftlintDisableAll: Bool
-    
+
+    private let mainActor: Bool
+
     public typealias ImportFilter = (String) -> Bool
     private let importFilter: ImportFilter
     
@@ -36,6 +38,7 @@ public final class SwiftGenerator {
                 version: String,
                 testableImports: [String]?,
                 swiftlintDisableAll: Bool,
+                mainActor: Bool,
                 importFilter: @escaping ImportFilter) throws {
 
         self.dependencyGraph = dependencyGraph
@@ -45,6 +48,7 @@ public final class SwiftGenerator {
         self.version = version
         self.testableImports = testableImports?.filter(importFilter)
         self.swiftlintDisableAll = swiftlintDisableAll
+        self.mainActor = mainActor
         self.importFilter = importFilter
     }
     
@@ -69,6 +73,7 @@ public final class SwiftGenerator {
             dependencyGraph,
             inspector,
             objcPrefix,
+            mainActor,
             version,
             testableImports,
             swiftlintDisableAll,
@@ -208,7 +213,9 @@ private final class MetaWeaverFile {
     private let testableImports: [String]?
 
     private let swiftlintDisableAll: Bool
-    
+
+    private let mainActor: Bool
+
     private let importFilter: SwiftGenerator.ImportFilter
     
     // Pre computed data
@@ -233,6 +240,7 @@ private final class MetaWeaverFile {
     init(_ dependencyGraph: DependencyGraph,
          _ inspector: Inspector,
          _ objcPrefix: String?,
+         _ mainActor: Bool,
          _ version: String,
          _ testableImports: [String]?,
          _ swiftlintDisableAll: Bool,
@@ -241,6 +249,7 @@ private final class MetaWeaverFile {
         self.dependencyGraph = dependencyGraph
         self.inspector = inspector
         self.objcPrefix = objcPrefix
+        self.mainActor = mainActor
         self.version = version
         self.testableImports = testableImports
         self.swiftlintDisableAll = swiftlintDisableAll
@@ -312,7 +321,7 @@ private final class MetaWeaverFile {
             dependencyResolverProxies(),
             publicDependencyInitExtensions(),
             propertyWrappers(),
-            providerClassAndFunctions()
+            mainActor == true ? providerClassAndFunctionsMainActor() : providerClassAndFunctions()
         ].flatMap { $0 }
     }
     
@@ -345,13 +354,30 @@ private final class MetaWeaverFile {
 private extension MetaWeaverFile {
 
     func mainDependencyContainer() throws -> Type {
-        return Type(identifier: .mainDependencyContainer)
+        var type = Type(identifier: .mainDependencyContainer)
+
+        if self.mainActor == true {
+            type = type.with(actorName: self.mainActor == true ? "MainActor" : nil)
+        }
+
+        type = type
             .with(objc: doesSupportObjc, prefix: objcPrefix)
             .adding(inheritedType: doesSupportObjc ? .nsObject : nil)
             .adding(member: EmptyLine())
             .adding(member: Property(variable: Variable(name: "provider").with(immutable: true).with(type: .provider)).with(accessLevel: .private))
             .adding(member: EmptyLine())
-            .adding(member: Function(kind: .`init`(convenience: false, optional: false))
+
+
+        if self.mainActor == true {
+
+            type = type.adding(member: PlainCode(code: """
+fileprivate init(provider: Provider? = nil) {
+    self.provider = provider ?? Provider()
+}
+"""))
+
+        } else {
+            type = type.adding(member: Function(kind: .`init`(convenience: false, optional: false))
                 .with(accessLevel: .fileprivate)
                 .adding(parameter: FunctionParameter(name: "provider", type: .provider).with(defaultValue: TypeIdentifier.provider.reference | .call()))
                 .adding(members: [
@@ -359,7 +385,9 @@ private extension MetaWeaverFile {
                     (doesSupportObjc ? Reference.named(.super) + .named("init") | .call() : .none)
                 ])
             )
-            .adding(member: dependencyGraph.hasPropertyWrapperAnnotations ? PlainCode(code: """
+		}
+
+        type = type.adding(member: dependencyGraph.hasPropertyWrapperAnnotations ? PlainCode(code: """
 
 private static var _dynamicResolvers = [Any]()
 private static var _dynamicResolversLock = NSRecursiveLock()
@@ -392,6 +420,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             .adding(members: try resolversImplementation())
             .adding(members: settersImplementation())
             .adding(members: try dependencyResolverCopyMethods())
+        return type
     }
     
     func propertyWrappers() throws -> [FileBodyMember] {
@@ -1303,6 +1332,109 @@ private extension MetaWeaverFile {
                     )))
             ]
         }
+    }
+
+    func providerClassAndFunctionsMainActor() throws -> [FileBodyMember] {
+        return [
+            EmptyLine(),
+            PlainCode(code: """
+            // MARK: - Fatal Error
+
+            extension MainDependencyContainer {
+
+                static var onFatalError: (String, StaticString, UInt) -> Never = { message, file, line in
+                    Swift.fatalError(message, file: file, line: line)
+                }
+
+                fileprivate static func fatalError(file: StaticString = #file, line: UInt = #line) -> Never {
+                    onFatalError("Invalid memory graph. This is never suppose to happen. Please file a ticket at https://github.com/scribd/Weaver", file, line)
+                }
+            }
+
+            // MARK: - Provider
+
+            @MainActor private final class Provider {
+
+                typealias ParametersCopier = (Provider) -> Void
+                typealias Builder<T> = (ParametersCopier?) -> T
+
+                private(set) var builders: Dictionary<String, Any>
+
+                init(builders: Dictionary<String, Any> = [:]) {
+                    self.builders = builders
+                }
+            }
+
+            @MainActor private extension Provider {
+
+                func addBuilders(_ builders: Dictionary<String, Any>) {
+                    builders.forEach { key, value in
+                        self.builders[key] = value
+                    }
+                }
+
+                func setBuilder<T>(_ name: String, _ builder: @escaping Builder<T>) {
+                    builders[name] = builder
+                }
+
+                func getBuilder<T>(_ name: String, _ type: T.Type) -> Builder<T> {
+                    guard let builder = builders[name] as? Builder<T> else {
+                        return Provider.fatalBuilder()
+                    }
+                    return builder
+                }
+
+                func copy() -> Provider {
+                    return Provider(builders: builders)
+                }
+            }
+
+            private extension Provider {
+
+                static func valueBuilder<T>(_ value: T) -> Builder<T> {
+                    return { _ in
+                        return value
+                    }
+                }
+
+                static func weakOptionalValueBuilder<T>(_ value: Optional<T>) -> Builder<Optional<T>> where T: AnyObject {
+                    return { [weak value] _ in
+                        return value
+                    }
+                }
+
+                static func lazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> {
+                    var _value: T?
+                    return { copyParameters in
+                        if let value = _value {
+                            return value
+                        }
+                        let value = builder(copyParameters)
+                        _value = value
+                        return value
+                    }
+                }
+
+                static func weakLazyBuilder<T>(_ builder: @escaping Builder<T>) -> Builder<T> where T: AnyObject {
+                    weak var _value: T?
+                    return { copyParameters in
+                        if let value = _value {
+                            return value
+                        }
+                        let value = builder(copyParameters)
+                        _value = value
+                        return value
+                    }
+                }
+
+                @MainActor static func fatalBuilder<T>() -> Builder<T> {
+                    return { _ in
+                        MainDependencyContainer.fatalError()
+                    }
+                }
+            }
+            """)
+        ]
     }
 
     func providerClassAndFunctions() throws -> [FileBodyMember] {
