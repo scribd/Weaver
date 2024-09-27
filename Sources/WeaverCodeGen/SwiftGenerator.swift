@@ -357,7 +357,7 @@ private extension MetaWeaverFile {
         var type = Type(identifier: .mainDependencyContainer)
 
         if self.mainActor == true {
-            type = type.with(actorName: self.mainActor == true ? "MainActor" : nil)
+            type = type.with(actorName: "MainActor")
         }
 
         type = type
