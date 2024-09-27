@@ -13,7 +13,7 @@ import Darwin
 import PathKit
 import Rainbow
 
-private let version = "1.1.5"
+private let version = "1.1.6"
 
 // MARK: - Linker
 
@@ -114,6 +114,7 @@ private enum Parameters {
     static let cachePath = Option<Path?>("cache-path", default: nil, description: "Cache path.")
     static let recursiveOff = OptionalFlag("recursive-off", disabledName: "recursive-on")
     static let pretty = Flag("pretty", default: false)
+    static let mainActor = Flag("mainactor", default: false)
     static let tests = OptionalFlag("tests", default: nil)
     static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
     static let swiftlintDisableAll = OptionalFlag("swiftlint-disable-all", default: nil)
@@ -137,6 +138,7 @@ public let weaverCommand = Group {
         Parameters.ignoredPath,
         Parameters.cachePath,
         Parameters.recursiveOff,
+        Parameters.mainActor,
         Parameters.tests,
         Parameters.testableImports,
         Parameters.swiftlintDisableAll,
@@ -153,6 +155,7 @@ public let weaverCommand = Group {
         ignoredPaths,
         cachePath,
         recursiveOff,
+        mainActor,
         tests,
         testableImports,
         swiftlintDisableAll,
@@ -231,6 +234,7 @@ public let weaverCommand = Group {
                 version: version,
                 testableImports: configuration.testableImports,
                 swiftlintDisableAll: configuration.swiftlintDisableAll,
+                mainActor: mainActor,
                 importFilter: configuration.importFilter
             )
 
