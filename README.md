@@ -5,6 +5,7 @@
 [![Build Status](https://travis-ci.com/scribd/Weaver.svg?branch=master)](https://travis-ci.com/scribd/Weaver)
 [![codecov](https://codecov.io/gh/scribd/Weaver/branch/master/graph/badge.svg)](https://codecov.io/gh/scribd/Weaver) 
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/scribd-weaver/Lobby)
+[![libs.tech recommends](https://libs.tech/project/128474738/badge.svg)](https://libs.tech/project/128474738/weaver)
 
 <a href="https://youtu.be/Rxhc9VJBoOI" alt="Watch the demo" target="_blank">
 	<img src="weaver.gif" alt="Watch the video" width="960" style="display: block; margin: 0 auto" />
