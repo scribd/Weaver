@@ -549,6 +549,7 @@ Options:
     --ignored-path - Paths to ignore.
     --cache-path - Where the cache gets stored.
     --recursive-off
+    --allow-tests-to-init-real-dependencies - Makes dependency resolvers available to @Testable imports.
     --tests - Activates the test helpers' generation.
     --testable-imports - Modules to imports in the test helpers.
     --swiftlint-disable-all - Disables all swiftlint rules.
@@ -578,6 +579,7 @@ weaver swift --project-path $PROJECT_DIR/$PROJECT_NAME --main-output-path Genera
 - `--platform` - Platform for which the generated code will be compiled (iOS, watchOS, OSX, macOS or tvOS).
 - `--included-imports` - Modules which can be imported in generated files.
 - `--excluded-imports` - Modules which can't be imported in generated files.
+- `--allow_tests_to_init_real_dependencies` - Will declare every DependencyResolver with internal access level so `@Testable import`s can invoke them to initialize real dependencies in tests.
 
 ### Configuration File:
 

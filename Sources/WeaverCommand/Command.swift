@@ -13,7 +13,7 @@ import Darwin
 import PathKit
 import Rainbow
 
-private let version = "1.1.6"
+private let version = "1.1.7"
 
 // MARK: - Linker
 
@@ -115,6 +115,7 @@ private enum Parameters {
     static let recursiveOff = OptionalFlag("recursive-off", disabledName: "recursive-on")
     static let pretty = Flag("pretty", default: false)
     static let mainActor = Flag("mainactor", default: false)
+    static let allowTestsToInitRealDependencies = OptionalFlag("allow-tests-to-init-real-dependencies", default: nil)
     static let tests = OptionalFlag("tests", default: nil)
     static let testableImports = VariadicOption<String>("testable-imports", default: [], description: "Modules to import for testing.")
     static let swiftlintDisableAll = OptionalFlag("swiftlint-disable-all", default: nil)
@@ -139,6 +140,7 @@ public let weaverCommand = Group {
         Parameters.cachePath,
         Parameters.recursiveOff,
         Parameters.mainActor,
+        Parameters.allowTestsToInitRealDependencies,
         Parameters.tests,
         Parameters.testableImports,
         Parameters.swiftlintDisableAll,
@@ -156,6 +158,7 @@ public let weaverCommand = Group {
         cachePath,
         recursiveOff,
         mainActor,
+        allowTestsToInitRealDependencies,
         tests,
         testableImports,
         swiftlintDisableAll,
@@ -174,6 +177,7 @@ public let weaverCommand = Group {
             cachePath: cachePath,
             recursiveOff: recursiveOff,
             tests: tests,
+            allowTestsToInitRealDependencies: allowTestsToInitRealDependencies,
             testableImports: testableImports.isEmpty ? nil : testableImports,
             swiftlintDisableAll: swiftlintDisableAll,
             platform: Platform(platform),
@@ -235,6 +239,7 @@ public let weaverCommand = Group {
                 testableImports: configuration.testableImports,
                 swiftlintDisableAll: configuration.swiftlintDisableAll,
                 mainActor: mainActor,
+                allowTestsToInitRealDependencies: configuration.allowTestsToInitRealDependencies,
                 importFilter: configuration.importFilter
             )
 
