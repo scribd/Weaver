@@ -24,6 +24,7 @@ struct Configuration {
     let cachePath: Path
     let recursiveOff: Bool
     let tests: Bool
+    let allowTestsToInitRealDependencies: Bool
     let testableImports: [String]?
     let swiftlintDisableAll: Bool
     let platform: Platform?
@@ -39,6 +40,7 @@ struct Configuration {
                  cachePath: Path?,
                  recursiveOff: Bool?,
                  tests: Bool?,
+                 allowTestsToInitRealDependencies: Bool?,
                  testableImports: [String]?,
                  swiftlintDisableAll: Bool?,
                  platform: Platform?,
@@ -57,6 +59,7 @@ struct Configuration {
         self.cachePath = cachePath ?? Defaults.cachePath
         self.recursiveOff = recursiveOff ?? Defaults.recursiveOff
         self.tests = tests ?? Defaults.tests
+        self.allowTestsToInitRealDependencies = allowTestsToInitRealDependencies ?? Defaults.allowTestsToInitRealDependencies
         self.testableImports = testableImports
         self.swiftlintDisableAll = swiftlintDisableAll ?? Defaults.swiftlintDisableAll
         self.platform = platform
@@ -74,6 +77,7 @@ struct Configuration {
          cachePath: Path? = nil,
          recursiveOff: Bool? = nil,
          tests: Bool? = nil,
+         allowTestsToInitRealDependencies: Bool? = nil,
          testableImports: [String]? = nil,
          swiftlintDisableAll: Bool? = nil,
          platform: Platform? = nil,
@@ -103,6 +107,7 @@ struct Configuration {
                 cachePath: _cachePath,
                 recursiveOff: recursiveOff,
                 tests: tests,
+                allowTestsToInitRealDependencies: allowTestsToInitRealDependencies,
                 testableImports: testableImports,
                 swiftlintDisableAll: swiftlintDisableAll,
                 platform: platform,
@@ -127,6 +132,7 @@ struct Configuration {
         self.cachePath = cachePath ?? configuration.cachePath
         self.recursiveOff = recursiveOff ?? configuration.recursiveOff
         self.tests = tests ?? configuration.tests
+        self.allowTestsToInitRealDependencies = allowTestsToInitRealDependencies ?? configuration.allowTestsToInitRealDependencies
         self.testableImports = testableImports ?? configuration.testableImports
         self.swiftlintDisableAll = swiftlintDisableAll ?? configuration.swiftlintDisableAll
         self.platform = platform ?? configuration.platform
@@ -172,6 +178,7 @@ extension Configuration {
         static let inputPathStrings = ["."]
         static let detailedResolvers = false
         static let tests = false
+        static let allowTestsToInitRealDependencies = false
         static let swiftlintDisableAll = true
         
         static var projectPath: Path {
@@ -197,6 +204,7 @@ extension Configuration: Decodable {
         case ignoredPaths = "ignored_paths"
         case recursive
         case tests
+        case allowTestsToInitRealDependencies = "allow_tests_to_init_real_dependencies"
         case testableImports = "testable_imports"
         case cachePath = "cache_path"
         case swiftlintDisableAll = "swiftlint_disable_all"
@@ -224,6 +232,7 @@ extension Configuration: Decodable {
             cachePath: try container.decodeIfPresent(Path.self, forKey: .cachePath),
             recursiveOff: recursive.map { !$0 },
             tests: try container.decodeIfPresent(Bool.self, forKey: .tests),
+            allowTestsToInitRealDependencies: try container.decodeIfPresent(Bool.self, forKey: .allowTestsToInitRealDependencies),
             testableImports: try container.decodeIfPresent([String].self, forKey: .testableImports),
             swiftlintDisableAll: try container.decodeIfPresent(Bool.self, forKey: .swiftlintDisableAll),
             platform: try container.decodeIfPresent(Platform.self, forKey: .platform),

@@ -28,6 +28,8 @@ public final class SwiftGenerator {
 
     private let mainActor: Bool
 
+    private let allowTestsToInitRealDependencies: Bool
+
     public typealias ImportFilter = (String) -> Bool
     private let importFilter: ImportFilter
     
@@ -39,6 +41,7 @@ public final class SwiftGenerator {
                 testableImports: [String]?,
                 swiftlintDisableAll: Bool,
                 mainActor: Bool,
+                allowTestsToInitRealDependencies: Bool,
                 importFilter: @escaping ImportFilter) throws {
 
         self.dependencyGraph = dependencyGraph
@@ -49,6 +52,7 @@ public final class SwiftGenerator {
         self.testableImports = testableImports?.filter(importFilter)
         self.swiftlintDisableAll = swiftlintDisableAll
         self.mainActor = mainActor
+        self.allowTestsToInitRealDependencies = allowTestsToInitRealDependencies
         self.importFilter = importFilter
     }
     
@@ -77,6 +81,7 @@ public final class SwiftGenerator {
             version,
             testableImports,
             swiftlintDisableAll,
+            allowTestsToInitRealDependencies,
             importFilter
         )
         _file = file
@@ -216,6 +221,8 @@ private final class MetaWeaverFile {
 
     private let mainActor: Bool
 
+    private let allowTestsToInitRealDependencies: Bool
+
     private let importFilter: SwiftGenerator.ImportFilter
     
     // Pre computed data
@@ -244,6 +251,7 @@ private final class MetaWeaverFile {
          _ version: String,
          _ testableImports: [String]?,
          _ swiftlintDisableAll: Bool,
+         _ allowTestsToInitRealDependencies: Bool,
          _ importFilter: @escaping SwiftGenerator.ImportFilter) throws {
         
         self.dependencyGraph = dependencyGraph
@@ -253,6 +261,7 @@ private final class MetaWeaverFile {
         self.version = version
         self.testableImports = testableImports
         self.swiftlintDisableAll = swiftlintDisableAll
+        self.allowTestsToInitRealDependencies = allowTestsToInitRealDependencies
         self.importFilter = importFilter
         
         let desambiguatedDeclarations = try MetaWeaverFile.desambiguatedDeclarations(from: dependencyGraph)
@@ -367,18 +376,17 @@ private extension MetaWeaverFile {
             .adding(member: Property(variable: Variable(name: "provider").with(immutable: true).with(type: .provider)).with(accessLevel: .private))
             .adding(member: EmptyLine())
 
-
+        let accessLevel: Meta.AccessLevel = self.allowTestsToInitRealDependencies ? .internal : .fileprivate
         if self.mainActor == true {
-
             type = type.adding(member: PlainCode(code: """
-fileprivate init(provider: Provider? = nil) {
+\(accessLevel.swiftString) init(provider: Provider? = nil) {
     self.provider = provider ?? Provider()
 }
 """))
 
         } else {
             type = type.adding(member: Function(kind: .`init`(convenience: false, optional: false))
-                .with(accessLevel: .fileprivate)
+                .with(accessLevel: accessLevel)
                 .adding(parameter: FunctionParameter(name: "provider", type: .provider).with(defaultValue: TypeIdentifier.provider.reference | .call()))
                 .adding(members: [
                     Assignment(variable: Reference.named(.`self`) + .named("provider"), value: Reference.named("provider")),
@@ -883,7 +891,7 @@ static func _pushDynamicResolver<Resolver>(_ resolver: Resolver) {
             EmptyLine(),
             Function(kind: .named(publicInterface ?
                 dependencyContainer.type.publicDependencyResolverVariable.name : dependencyContainer.type.dependencyResolverVariable.name))
-                .with(accessLevel: accessLevel)
+                .with(accessLevel: self.allowTestsToInitRealDependencies ? .internal : accessLevel)
                 .with(resultType: containsAmbiguousDeclarations ?
                     dependencyContainer.type.dependencyResolverProxyTypeID : dependencyContainer.type.dependencyResolverTypeID
                 )
@@ -1456,7 +1464,7 @@ private extension MetaWeaverFile {
 
             // MARK: - Provider
 
-            private final class Provider {
+            \(self.allowTestsToInitRealDependencies ? "internal" : "private") final class Provider {
 
                 typealias ParametersCopier = (Provider) -> Void
                 typealias Builder<T> = (ParametersCopier?) -> T
