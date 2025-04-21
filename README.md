@@ -655,6 +655,14 @@ For an output example, please check this [Gist](https://gist.github.com/trupin/9
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
 
+## Releasing a new version
+
+1. Navigate to the Github Releases tab.
+2. Ensure that whatever changes need to be released are merged into master.
+3. Create a new release with a matching tag on the commit you want to release.
+4. Wait up to 3 hours for Homebrew to automatically detect the new version and [trigger a PR into homebrew-core like this one](https://github.com/Homebrew/homebrew-core/pull/220659).
+5. The new version will be available to use from Homebrew after that PR gets approved and merged.
+
 ## License
 
 MIT license. See the [LICENSE file](./LICENSE) for details.
